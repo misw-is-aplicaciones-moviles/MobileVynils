@@ -1,0 +1,29 @@
+# Estilo de código de MobileVynils. Lo leen Android Studio y ktlint.
+# Base: Kotlin coding conventions + Android Kotlin style guide (ktlint_official).
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{kt,kts}]
+ktlint_code_style = ktlint_official
+max_line_length = 120
+ij_kotlin_allow_trailing_comma = true
+ij_kotlin_allow_trailing_comma_on_call_site = true
+# Composables van en PascalCase y pueden ignorar la regla de nombres de funciones.
+ktlint_function_naming_ignore_when_annotated_with = Composable, Preview
+
+[*.{yml,yaml,json,toml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+[*.xml]
+indent_size = 4

@@ -1,0 +1,29 @@
+# Gradle
+.gradle/
+build/
+/captures/
+.kotlin/
+
+# Android Studio / IntelliJ
+*.iml
+.idea/
+.cxx/
+local.properties
+*.hprof
+
+# Firmas y secretos (la keystore de depuración del proyecto sí se versiona en keystore/)
+*.jks
+!keystore/debug.keystore
+*.pem
+.env
+
+# Reportes y salidas
+/app/release/
+/app/debug/
+reports/
+lint-results*.html
+lint-results*.xml
+
+# Sistema
+.DS_Store
+Thumbs.db

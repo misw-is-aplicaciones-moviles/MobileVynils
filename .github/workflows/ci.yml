@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+    tags: ['sprint-*']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Calidad y pruebas unitarias
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/develop' }}
+
+      - name: Spotless (ktlint)
+        run: ./gradlew spotlessCheck --console=plain
+
+      - name: detekt
+        run: ./gradlew detekt --console=plain
+
+      - name: Android Lint
+        run: ./gradlew lintDebug --console=plain
+
+      - name: Pruebas unitarias y de arquitectura
+        run: ./gradlew testDebugUnitTest --console=plain
+
+      - name: Ensamblar debug
+        run: ./gradlew assembleDebug --console=plain
+
+      - name: Reportes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes
+          path: |
+            app/build/reports/
+            app/build/test-results/
+          retention-days: 14
+
+  release:
+    name: APK de release
+    if: startsWith(github.ref, 'refs/tags/sprint-')
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Ensamblar release
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --console=plain
+
+      - name: Renombrar APK
+        run: cp app/build/outputs/apk/release/app-release.apk vinilos-${{ github.ref_name }}.apk
+
+      - name: Adjuntar APK al release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: vinilos-${{ github.ref_name }}.apk
+          generate_release_notes: true

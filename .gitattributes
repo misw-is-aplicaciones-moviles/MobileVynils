@@ -1,0 +1,13 @@
+# Texto con LF en el repositorio y en el checkout, en cualquier sistema operativo.
+* text=auto eol=lf
+
+# Scripts de Windows conservan CRLF.
+*.bat text eol=crlf
+
+# Binarios.
+*.png binary
+*.jpg binary
+*.webp binary
+*.jar binary
+*.keystore binary
+*.jks binary

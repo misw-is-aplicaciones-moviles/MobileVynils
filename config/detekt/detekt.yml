@@ -1,0 +1,90 @@
+# Configuración de detekt para MobileVynils.
+# Se aplica sobre la configuración por defecto (buildUponDefaultConfig = true):
+# aquí solo van los ajustes propios del proyecto. Reglas: docs/03-lineamientos-kotlin.md.
+
+build:
+  maxIssues: 0
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+complexity:
+  LongMethod:
+    threshold: 60
+    ignoreAnnotated: ['Composable', 'Preview']
+  LongParameterList:
+    functionThreshold: 8
+    constructorThreshold: 8
+    ignoreAnnotated: ['Composable', 'Inject']
+  TooManyFunctions:
+    thresholdInFiles: 20
+    thresholdInClasses: 20
+    thresholdInInterfaces: 20
+    thresholdInObjects: 20
+    ignorePrivate: true
+    ignoreOverridden: true
+  CyclomaticComplexMethod:
+    threshold: 15
+  NestedBlockDepth:
+    threshold: 4
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Composable', 'Preview']
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][_A-Z0-9]*'
+  MatchingDeclarationName:
+    mustBeFirst: true
+
+style:
+  MagicNumber:
+    ignoreAnnotated: ['Composable', 'Preview']
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreEnums: true
+    ignoreNumbers: ['-1', '0', '1', '2']
+  MaxLineLength:
+    maxLineLength: 120
+    excludeCommentStatements: true
+  ReturnCount:
+    max: 3
+    excludeGuardClauses: true
+  UnusedPrivateMember:
+    ignoreAnnotated: ['Preview']
+  ForbiddenComment:
+    comments:
+      - reason: 'Registra la deuda como issue en GitHub en lugar de un comentario.'
+        value: 'FIXME'
+      - reason: 'Registra la deuda como issue en GitHub en lugar de un comentario.'
+        value: 'STOPSHIP'
+  WildcardImport:
+    active: true
+  UnnecessaryAbstractClass:
+    active: true
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: true
+    exceptionNames:
+      - Error
+      - Exception
+      - RuntimeException
+      - Throwable
+    allowedExceptionNameRegex: '_|(ignore|expected).*'
+  SwallowedException:
+    active: true
+    ignoredExceptionTypes:
+      - CancellationException
+
+coroutines:
+  GlobalCoroutineUsage:
+    active: true
+  InjectDispatcher:
+    active: true
+    dispatcherNames: ['IO', 'Default', 'Unconfined']
+  SuspendFunWithFlowReturnType:
+    active: true
+  SleepInsteadOfDelay:
+    active: true
+
