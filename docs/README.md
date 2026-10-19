@@ -13,6 +13,7 @@ Convenciones de ingeniería de la app Android Vinilos. Se acordaron antes de esc
 | [07-desempeno.md](07-desempeno.md) | Reglas de CPU, memoria y red; análisis estático y dinámico; plantilla de informe | Sprint 2 en adelante |
 | [08-flujo-de-trabajo-git.md](08-flujo-de-trabajo-git.md) | GitFlow, ramas, commits, pull requests, CI, releases y APK, wiki | Desde el primer commit |
 | [09-calidad-estatica.md](09-calidad-estatica.md) | ktlint, detekt, Android Lint, Konsist; configuración y uso | Al configurar el proyecto y al fallar una verificación |
+| [10-diseno-de-la-aplicacion.md](10-diseno-de-la-aplicacion.md) | Roles, mapa de navegación, inventario de pantallas, modelo de datos, especificación por historia, kit a Material 3, textos, hallazgos del Inception | Al diseñar o construir una pantalla de cualquier sprint |
 
 ## Principios
 

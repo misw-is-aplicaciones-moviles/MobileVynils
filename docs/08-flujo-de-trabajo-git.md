@@ -33,6 +33,8 @@ Ejemplos: `feat(albums): show album catalog from local cache`, `test(albums): co
 
 Como se hace squash and merge, el título del PR se convierte en el mensaje del commit en `develop`; debe cumplir el formato.
 
+Los commits y los pull requests son del equipo: no llevan coautoría ni menciones de asistentes de IA (`Co-Authored-By`, "Generated with" ni similares). Si un asistente ayudó a redactar código o texto, la autoría y la responsabilidad siguen siendo del integrante que lo revisa y lo publica.
+
 ## 3. Pull requests
 
 1. Se abre desde `feature/*` hacia `develop` con la plantilla de `.github/PULL_REQUEST_TEMPLATE.md`: historia e issue, qué cambia, cómo probarlo, capturas si toca UI, lista de verificación.

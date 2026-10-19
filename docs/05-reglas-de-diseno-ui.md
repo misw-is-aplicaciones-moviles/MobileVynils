@@ -43,39 +43,51 @@ fun AlbumListScreen(
 
 ## 3. Navegación
 
-- Un `NavHost` en `core/ui/navigation/VinilosNavHost.kt`. Rutas en `Routes.kt`:
+- Un `NavHost` en `core/ui/navigation/VinilosNavHost.kt`. Rutas en `Routes.kt`, las mismas de `10-diseno-de-la-aplicacion.md` (sección 3):
 
 ```kotlin
+@Serializable data object RoleSelect
 @Serializable data object AlbumList
 @Serializable data class AlbumDetail(val albumId: Int)
+@Serializable data object CreateAlbum
 @Serializable data object ArtistList
-@Serializable data class ArtistDetail(val artistId: Int)
+@Serializable data class ArtistDetail(val artistId: Int, val type: ArtistType)
+@Serializable data class AlbumPicker(val artistId: Int, val type: ArtistType)
+@Serializable data class MusicianPicker(val bandId: Int)
 @Serializable data object CollectorList
 @Serializable data class CollectorDetail(val collectorId: Int)
-@Serializable data object CreateAlbum
-@Serializable data class AddTrack(val albumId: Int)
+@Serializable data class ArtistPicker(val collectorId: Int)
 ```
 
-- Navegación principal con `NavigationBar` de tres destinos (Álbumes, Artistas, Coleccionistas), estado guardado por pestaña (`saveState`/`restoreState`, `launchSingleTop`).
-- Las pantallas de detalle y los formularios se apilan sobre la pestaña y vuelven con la flecha y con el gesto de retroceso predictivo.
-- El rol de usuario (visitante o coleccionista) se elige en una pantalla inicial y se guarda en el estado de la app; las acciones de coleccionista (crear álbum, agregar track) solo se muestran en ese rol.
+- Navegación principal con `NavigationBar` de tres destinos (Álbumes, Artistas, Coleccionistas), estado guardado por pestaña (`saveState`/`restoreState`, `launchSingleTop`). `RoleSelect` no muestra la barra.
+- Las pantallas de detalle se apilan sobre la pestaña y vuelven con la flecha y con el gesto de retroceso predictivo. `CreateAlbum` y los tres selectores abren a pantalla completa con icono "X".
+- Las hojas "Nueva canción" (HU08) y "Comentar álbum" (HU09) son `ModalBottomSheet` controladas por `AlbumDetailUiState.activeSheet`; no son rutas.
+- El rol (visitante o coleccionista) se elige en `RoleSelect` y vive en `SessionRepository`. Cada `UiState` expone `canEdit`; con él se ocultan el FAB "+", el FAB "Canción", el botón "Comentar" y los botones "Agregar álbum / integrante / favorito". El `RoleChip` de la barra superior vuelve a `RoleSelect`.
 - Transiciones por defecto de Navigation Compose; sin animaciones personalizadas en el MVP.
 
 ## 4. Componentes compartidos (`core/ui/components`)
 
 | Componente | Uso |
 |---|---|
-| `VinilosTopBar` | Título y acción de volver |
-| `AlbumCard`, `ArtistCard`, `CollectorCard` | Elementos de listado: imagen, título, subtítulo |
-| `LoadingContent`, `ErrorContent`, `EmptyContent` | Estados de pantalla |
-| `VinilosTextField` | Campo con etiqueta, error y teclado adecuado |
-| `SectionTitle` | Títulos de sección en detalle |
+| `VinilosTopBar` | Título, acción de volver o cerrar ("X") y `RoleChip` a la derecha |
+| `RoleChip` | `AssistChip` con el rol actual; al tocarlo vuelve a `RoleSelect` |
+| `AlbumCard`, `ArtistCard`, `CollectorCard` | Elementos de listado: imagen o avatar, título, subtítulo, tercera línea opcional, chevron |
+| `InitialsAvatar` | Avatar con iniciales para coleccionistas (el backend no tiene imagen) |
+| `InfoTile` | Ficha de dato con etiqueta y valor (Sello, Lanzamiento, Canciones, Teléfono, Correo) |
+| `LoadingContent`, `ErrorContent`, `EmptyContent` | Estados de pantalla; `ErrorContent` con icono, título, cuerpo y "Reintentar" |
+| `VinilosTextField` | Campo con etiqueta, error en `supportingText` y teclado adecuado |
+| `ChoiceChipGroup` | Fila de `FilterChip` de una sola selección (filtros, género, sello, coleccionista, valoración) |
+| `SectionTitle` | Título de sección con conteo ("Álbumes · 3") y acción opcional a la derecha |
+| `PickerScreen` | Lista en modo selección: búsqueda local, `RadioButton`, chip de estado por ítem, botón inferior con el nombre elegido |
+| `StatusChip` | `SuggestionChip` deshabilitado: "Ya agregado", "Ya integrante", "Ya es favorito", "Disponible" / "No disponible" |
+
+La correspondencia completa entre el kit del prototipo y Material 3 está en `10-diseno-de-la-aplicacion.md` (sección 7).
 
 Cada componente: `modifier` como primer parámetro opcional, sin acceder a ViewModels, con `@Preview` claro y oscuro.
 
 ## 5. Recursos y textos
 
-- Todo texto en `res/values/strings.xml` (español). Nombres `pantalla_elemento`. Plurales con `<plurals>`. Formatos con argumentos posicionales (`%1$s`).
+- Todo texto en `res/values/strings.xml` (español). Claves en `snake_case` minúsculas con prefijo de pantalla o de tipo (`album_list_title`, `error_required`, `action_cancel`, `snack_album_created`), tomadas del catálogo de `10-diseno-de-la-aplicacion.md` (sección 8). Plurales con `<plurals>`. Formatos con argumentos posicionales (`%1$s`). El hook del espacio de trabajo rechaza `Text("...")` literal en composables y claves mal formadas o repetidas.
 - Sin `strings` por defecto en inglés en el MVP; la estructura permite añadir `values-en` después.
 - Fechas con `java.time` y formato de la configuración regional del dispositivo.
 - Imágenes: `AsyncImage` con `contentDescription` descriptivo o `null` si es decorativa, `ContentScale.Crop` y tamaño fijo en listas para evitar saltos.
@@ -108,10 +120,12 @@ Cada componente: `modifier` como primer parámetro opcional, sin acceder a ViewM
 - [ ] 48 dp en todo elemento tocable.
 - [ ] Probada en claro y oscuro, fuente al 200 % y rotación.
 - [ ] Accessibility Scanner sin errores.
-- [ ] Coincide con el prototipo del Inception o la diferencia está justificada en el PR.
+- [ ] Coincide con su especificación en `10-diseno-de-la-aplicacion.md` (sección 6: campos, validaciones, mensajes, acciones por rol) o la diferencia está justificada en el PR.
+- [ ] Probada en los dos roles: el visitante no ve ninguna acción de escritura.
 
 ## 9. Bitácora de decisiones
 
 | Fecha | Decisión |
 |---|---|
 | 2026-10-07 | Material 3 con color dinámico, edge-to-edge, `NavigationBar` de tres destinos, plantilla de pantalla con cuatro estados, mínimos de accesibilidad desde el Sprint 1. |
+| 2026-10-14 | Rutas, componentes y claves de texto alineados con el prototipo de Figma y `10-diseno-de-la-aplicacion.md`: `RoleSelect` inicial con `RoleChip`, hojas inferiores para canción y comentario, `PickerScreen` común para HU15, HU12 y HU10. La paleta gris e Inter del prototipo no se replican: se usa el esquema M3. |
