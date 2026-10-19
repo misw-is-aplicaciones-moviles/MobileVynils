@@ -56,6 +56,13 @@ Archivo por sprint en la wiki (`Sprint N / Pruebas / Inventario`), una fila por 
 
 Ids: `CP-HUxx-nn`. Cada historia tiene al menos: camino feliz, sin red, error de backend, estado vacío, y para formularios, validaciones por campo.
 
+Casos derivados del prototipo (`10-diseno-de-la-aplicacion.md`, sección 6), obligatorios además de los anteriores:
+
+- **Roles**: cada pantalla con acciones de escritura se prueba como visitante (sin FAB, sin "Comentar", sin "Agregar …") y como coleccionista (con ellas). El selector de rol y el `RoleChip` tienen su propio caso (`CP-TR06-nn`).
+- **Formularios**: un caso por mensaje de error del prototipo ("Campo obligatorio", "Selecciona un género", "Selecciona un sello", "Ingresa la duración con formato mm:ss", "Selecciona un coleccionista", "Selecciona una valoración") y uno por `Snackbar` de éxito.
+- **Selectores**: ítems "Ya agregado" / "Ya integrante" / "Ya es favorito" deshabilitados, botón inferior deshabilitado sin selección, búsqueda local, y en HU12 el bloqueo "ya pertenece a otra banda".
+- **Combinaciones**: HU08 + HU09 sobre el mismo álbum y HU12 + HU15 sobre la misma banda, en ambos órdenes, verificando que los conteos de sección suben.
+
 ## 6. Reportes de defectos
 
 Los defectos son issues de GitHub con la etiqueta `bug` y la plantilla:
@@ -83,6 +90,10 @@ Se enlazan desde el inventario y se cierran con el PR que los corrige, que inclu
 - `domain.model..` no importa `android..` ni `androidx..`.
 - Interfaces `*Repository` tienen exactamente una implementación `*RepositoryImpl` enlazada en `di`.
 - Composables públicos tienen `modifier: Modifier = Modifier` como primer parámetro opcional.
+- Toda clase u objeto anotado con `@Serializable` en `core.ui.navigation` está en `Routes.kt`, y ningún otro paquete declara rutas.
+- Las funciones `*Screen` no reciben parámetros de tipo `ViewModel`; solo las `*Route` llaman a `hiltViewModel()`.
+- Toda `data class` con sufijo `UiState` en `feature..` declara la propiedad `canEdit` (regla de roles de `10-diseno-de-la-aplicacion.md`).
+- Ningún archivo de `feature..` ni `core.ui..` importa `androidx.compose.material.` salvo `androidx.compose.material.icons` (refuerza `ForbiddenImport` de detekt).
 
 ## 8. Pruebas aleatorias y de exploración sistemática (Sprint 3)
 
@@ -110,3 +121,4 @@ Se enlazan desde el inventario y se cierran con el PR que los corrige, que inclu
 | Fecha | Decisión |
 |---|---|
 | 2026-10-07 | Pirámide de cinco niveles, Page Objects, inventario `CP-HUxx-nn`, defectos como issues, Konsist para capas, Monkey y RIP en Sprint 3. |
+| 2026-10-14 | Casos obligatorios derivados del prototipo (roles, mensajes de error, selectores, combinaciones HU08 + HU09 y HU12 + HU15) y cuatro reglas Konsist nuevas: rutas solo en `Routes.kt`, `*Screen` sin ViewModel, `canEdit` en todo `UiState`, sin Material 2. |
