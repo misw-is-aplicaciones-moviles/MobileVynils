@@ -1,6 +1,6 @@
 # Vinilos (Android)
 
-[![CI](https://github.com/yoimar-uniandes/MobileVynils/actions/workflows/ci.yml/badge.svg)](https://github.com/yoimar-uniandes/MobileVynils/actions/workflows/ci.yml)
+[![CI](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/actions/workflows/ci.yml)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Android](https://img.shields.io/badge/Android-minSdk%2026%20%7C%20targetSdk%2036-3DDC84?logo=android&logoColor=white)](https://developer.android.com/)
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-BOM%202026.09-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/compose)

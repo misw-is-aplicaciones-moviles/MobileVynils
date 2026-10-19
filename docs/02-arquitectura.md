@@ -37,7 +37,8 @@ data class AlbumListUiState(
 
 - **Acciones**: `sealed interface XAction` cuando la pantalla tiene más de tres eventos; funciones sueltas del ViewModel cuando son pocas. Los nombres describen lo que hizo el usuario (`AlbumClicked`, `RetryClicked`), no lo que debe pasar.
 - **Efectos**: eventos de una sola vez (navegar, mostrar snackbar) por `Channel<XEffect>(Channel.BUFFERED)` expuesto con `receiveAsFlow()`. Todo lo demás es estado.
-- **Navegación**: `NavHost` único en `MainActivity`, rutas como `@Serializable data class`/`data object`, argumentos mínimos (ids), nunca objetos completos. La pantalla recibe callbacks de navegación (`onAlbumClick: (Int) -> Unit`), no el `NavController`.
+- **Navegación**: `NavHost` único en `MainActivity`, rutas como `@Serializable data class`/`data object`, argumentos mínimos (ids), nunca objetos completos. La pantalla recibe callbacks de navegación (`onAlbumClick: (Int) -> Unit`), no el `NavController`. Las rutas y el mapa completo están en `10-diseno-de-la-aplicacion.md` (sección 3): destino inicial `RoleSelect`, tres pestañas, detalles apilados, selectores a pantalla completa y hojas inferiores (`AddTrack`, `Comment`) controladas por el `UiState` de `AlbumDetail`, no por rutas.
+- **Rol**: `SessionRepository` (`data/session/`) guarda en memoria el `UserRole` elegido en `RoleSelect`. Cada `UiState` expone `canEdit: Boolean` y los composables ocultan con él las acciones de escritura; ningún composable consulta el rol directamente.
 
 ## 3. Estructura de paquetes
 
@@ -54,19 +55,30 @@ co.edu.uniandes.vinilos
 │   ├── database/                  # VinilosDatabase, entidades, DAOs, convertidores
 │   └── ui/                        # tema M3, componentes compartidos, navegación (Routes, NavHost)
 ├── domain/
-│   └── model/                     # Album, Artist, Collector, Track, Comment, Performer
+│   └── model/                     # Album, Track, Comment, Artist (+ArtistType), Collector, CollectorAlbum,
+│                                  # ArtistSummary, AlbumSummary, Genre, RecordLabel, AlbumStatus, UserRole
 ├── data/
+│   ├── session/                   # SessionRepository (rol en memoria)
 │   ├── album/                     # AlbumRepository, AlbumRepositoryImpl, AlbumServiceAdapter, mappers
-│   ├── artist/
+│   ├── artist/                    # une GET /musicians y GET /bands
 │   └── collector/
 └── feature/
+    ├── session/                   # RoleSelect (TR-06)
     ├── albums/
     │   ├── list/                  # AlbumListRoute, AlbumListScreen, AlbumListViewModel, AlbumListUiState
-    │   ├── detail/
-    │   └── create/                # HU07 y HU08
+    │   ├── detail/                # HU02 + hojas AddTrack (HU08) y Comment (HU09)
+    │   └── create/                # HU07
     ├── artists/
+    │   ├── list/                  # HU03, filtro Todos / Músicos / Bandas
+    │   ├── detail/                # HU04, secciones según ArtistType
+    │   └── picker/                # AlbumPicker (HU15) y MusicianPicker (HU12) sobre core/ui PickerScreen
     └── collectors/
+        ├── list/                  # HU05
+        ├── detail/                # HU06
+        └── picker/                # ArtistPicker (HU10)
 ```
+
+Los modelos, las entidades Room y las interfaces completas de los repositorios están en `10-diseno-de-la-aplicacion.md` (sección 5).
 
 Reglas:
 
@@ -142,10 +154,13 @@ Hilt en toda la app. Constructores con `@Inject`; interfaces enlazadas con `@Bin
 
 | Término (código, inglés) | Significado en el proyecto |
 |---|---|
-| `Album`, `Track`, `Comment` | Álbum, pista y comentario del catálogo |
-| `Artist` (`Musician`, `Band`) | Artista; el backend distingue músico y banda |
-| `Collector`, `CollectorAlbum` | Coleccionista y álbum de su colección |
-| `Performer` | Intérprete asociado a un álbum (músico o banda) |
+| `Album`, `Track`, `Comment` | Álbum, canción (así se nombra en la UI) y comentario del catálogo |
+| `Artist` con `ArtistType.MUSICIAN` / `BAND` | Artista; el backend distingue músico y banda, la app los une en una lista. Un músico de una banda es su "integrante" en la UI |
+| `Collector`, `CollectorAlbum` | Coleccionista y álbum de su colección, con precio y estado "Disponible" / "No disponible" |
+| `ArtistSummary`, `AlbumSummary` | Resúmenes para listas anidadas (intérpretes de un álbum, álbumes de un artista) sin ciclos |
+| `Performer` | Nombre del backend para músico o banda; en la app es `Artist` |
+| `UserRole`, `SessionRepository` | Rol elegido al abrir la app (visitante o coleccionista) y dónde vive |
+| `PickerScreen`, `*Picker` | Lista en modo selección reutilizada por HU15, HU12 y HU10 |
 | `Prize` | Premio de un artista |
 | `ServiceAdapter` | Fuente de datos remota sobre Retrofit |
 | `Repository` | Puerta única a datos locales y remotos |
@@ -168,3 +183,4 @@ Hilt en toda la app. Constructores con `@Inject`; interfaces enlazadas con `@Bin
 | Fecha | Decisión |
 |---|---|
 | 2026-10-07 | MVVM + UDF, un módulo, paquetes por capa y entidad. Sin casos de uso en el MVP. Room como fuente única de verdad. Propuesta pendiente de ratificación en el Inception. |
+| 2026-10-14 | Paquetes y modelos alineados con el prototipo y `10-diseno-de-la-aplicacion.md`: `data/session` y `feature/session` para el rol, `picker/` en artistas y coleccionistas sobre un `PickerScreen` compartido, hojas inferiores como estado de `AlbumDetail`, `Artist` único con `ArtistType`. |
