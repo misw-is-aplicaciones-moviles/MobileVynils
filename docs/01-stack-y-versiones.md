@@ -9,13 +9,13 @@ Decisiones de base técnica de Vinilos. Las versiones se fijaron el 2026-10-07 a
 | Lenguaje | Kotlin 2.4.x (el integrado en AGP 9 o KGP 2.4.20) | Requisito del curso; K2 estable |
 | Build | Android Gradle Plugin 9.4.1, Gradle 9.x, JDK 17 o superior (el JBR 25 de Android Studio) | Versiones estables vigentes |
 | IDE | Android Studio 2026.2 (Quail) o superior | Instalado en el equipo |
-| SDK | `compileSdk 37`, `targetSdk 36`, `minSdk 26` | Ver sección 2 |
+| SDK | `compileSdk 37`, `targetSdk 36`, `minSdk 23` | Ver sección 2 |
 | UI | Jetpack Compose + Material 3 (BOM 2026.09.00) | Toolkit recomendado por Google; pruebas de UI por semántica |
 | Arquitectura | MVVM con flujo unidireccional, un solo módulo | Requisito del curso; equipo de 4 y 8 semanas |
 | Inyección | Hilt 2.60.1 con KSP | Estándar en Android; soporte en pruebas |
 | Red | Retrofit 3.0.0 + OkHttp 5.x + kotlinx.serialization | Service Adapter del curso sobre REST |
 | Persistencia | Room 2.8.5 con KSP | Requisito del curso (caché local, fuente única de verdad) |
-| Navegación | Navigation Compose 2.10.2 con rutas `@Serializable` | Estable, documentado, integra Hilt |
+| Navegación | Navigation Compose 2.9.8 con rutas `@Serializable` | Estable, documentado, integra Hilt; 2.10 exige `minSdk 24` |
 | Imágenes | Coil 3.6.x | Carátulas de álbumes e imágenes de artistas |
 | Asincronía | kotlinx.coroutines 1.11.0 y Flow | Único mecanismo; sin RxJava ni LiveData |
 | Pruebas unitarias | JUnit 4, MockK 1.14.x, Turbine 1.2.x, kotlinx-coroutines-test, Truth 1.4.4, MockWebServer | Ver `06-pruebas.md` |
@@ -29,11 +29,11 @@ Decisiones de base técnica de Vinilos. Las versiones se fijaron el 2026-10-07 a
 
 | Valor | Nivel | Justificación |
 |---|---|---|
-| `minSdk` | 26 (Android 8.0) | Cubre la práctica totalidad de dispositivos activos; evita código de compatibilidad para notificaciones, `java.time` y adaptive icons |
+| `minSdk` | 23 (Android 6.0) | El mínimo que admite el stack (Compose UI, core-ktx, activity-compose, lifecycle, Room y Coil declaran 23). La rúbrica evalúa desde Lollipop (API 21), inalcanzable con Compose; API 21 y 22 quedan fuera y se documenta en la wiki. `java.time` llega por desugaring (`desugar_jdk_libs`) y el icono adaptativo tiene respaldo para API 23 a 25 |
 | `targetSdk` | 36 (Android 16) | Cumple el mínimo de Google Play (35+) y habilita edge-to-edge obligatorio y permisos modernos sin adoptar aún los cambios de comportamiento de 37 |
 | `compileSdk` | 37 | Plataforma instalada en el equipo; da acceso a las API más recientes de AndroidX |
 
-Matriz mínima de pruebas (requisito del curso: probar en distintas versiones y dispositivos antes de pasar a releases): emulador API 26, emulador API 33, emulador API 37 (Medium Phone) y al menos un dispositivo físico del equipo. Ver `06-pruebas.md`.
+Matriz mínima de pruebas (requisito del curso: probar en distintas versiones y dispositivos antes de pasar a releases): emulador API 23, emulador API 30, emulador API 37 (Medium Phone) y al menos un dispositivo físico del equipo. Ver `06-pruebas.md`.
 
 ## 3. Catálogo de versiones
 
@@ -48,13 +48,13 @@ coreKtx = "1.19.1"
 lifecycle = "2.11.0"
 activityCompose = "1.13.0"
 composeBom = "2026.09.00"
-navigation = "2.10.2"
+navigation = "2.9.8"              # 2.10 exige minSdk 24
 hilt = "2.60.1"
 hiltNavigationCompose = "1.4.0"
 room = "2.8.5"
 retrofit = "3.0.0"
 okhttp = "5.1.0"                  # verificar
-kotlinxSerialization = "1.9.0"    # verificar
+kotlinxSerialization = "1.12.0"
 coroutines = "1.11.0"
 coil = "3.6.3"
 timber = "5.0.1"
@@ -153,3 +153,4 @@ detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 |---|---|
 | 2026-10-07 | Stack inicial propuesto: Compose + M3, Navigation Compose 2.x, Hilt, Retrofit + kotlinx.serialization, Room, Coil. Pendiente de ratificación por el equipo en el Inception. |
 | 2026-10-07 | `minSdk 26`, `targetSdk 36`, `compileSdk 37`. |
+| 2026-10-21 | `minSdk 23` (antes 26), decidido por Yoimar para acercarse al requisito de Lollipop: es el piso técnico del stack. Navigation Compose 2.9.8 en lugar de 2.10.2 (que exige 24), kotlinx-serialization 1.12.0 verificado, desugaring de `java.time` con `desugar_jdk_libs` 2.1.5, icono adaptativo movido a `mipmap-anydpi-v26` con respaldo. Fuentes Outfit y Montserrat empaquetadas en `res/font` (OFL, `licenses/`) según los mockups v2. |

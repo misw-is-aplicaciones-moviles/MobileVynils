@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Vinilos" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Fondo carbón de la cabecera mientras arranca Compose, para evitar un destello blanco. -->
+    <style name="Theme.Vinilos" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/vinilos_charcoal</item>
+    </style>
 </resources>
