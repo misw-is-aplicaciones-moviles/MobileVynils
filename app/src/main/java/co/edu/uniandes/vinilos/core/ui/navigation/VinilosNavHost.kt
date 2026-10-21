@@ -13,7 +13,15 @@ fun VinilosNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
-    NavHost(navController = navController, startDestination = AlbumList, modifier = modifier) {
+    NavHost(
+        navController = navController,
+        startDestination = AlbumList,
+        modifier = modifier,
+        enterTransition = vinilosEnterTransition,
+        exitTransition = vinilosExitTransition,
+        popEnterTransition = vinilosPopEnterTransition,
+        popExitTransition = vinilosPopExitTransition,
+    ) {
         composable<AlbumList> {
             PendingTabScreen(titleRes = R.string.album_list_title, messageRes = R.string.pending_this_sprint)
         }
