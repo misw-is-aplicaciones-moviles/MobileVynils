@@ -52,7 +52,7 @@ internal fun PendingTabScreen(
                 text = stringResource(titleRes),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.inverseOnSurface,
-                modifier = Modifier.semantics { heading() },
+                modifier = Modifier.navContent().semantics { heading() },
             )
         }
         Surface(
@@ -66,6 +66,7 @@ internal fun PendingTabScreen(
             ) {
                 Text(
                     text = stringResource(messageRes),
+                    modifier = Modifier.navContent(),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,

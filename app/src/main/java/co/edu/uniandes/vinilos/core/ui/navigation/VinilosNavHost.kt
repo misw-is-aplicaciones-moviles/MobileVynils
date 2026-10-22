@@ -1,7 +1,9 @@
 package co.edu.uniandes.vinilos.core.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -22,14 +24,24 @@ fun VinilosNavHost(
         popEnterTransition = vinilosPopEnterTransition,
         popExitTransition = vinilosPopExitTransition,
     ) {
-        composable<AlbumList> {
+        screen<AlbumList> {
             PendingTabScreen(titleRes = R.string.album_list_title, messageRes = R.string.pending_this_sprint)
         }
-        composable<ArtistList> {
+        screen<ArtistList> {
             PendingTabScreen(titleRes = R.string.artist_list_title, messageRes = R.string.pending_next_sprint)
         }
-        composable<CollectorList> {
+        screen<CollectorList> {
             PendingTabScreen(titleRes = R.string.collector_list_title, messageRes = R.string.pending_next_sprint)
         }
+    }
+}
+
+/**
+ * Registra un destino y comparte su ámbito de animación con la pantalla, para que su título y su
+ * contenido (Modifier.navContent) hagan fade through sin superponerse con los de la pantalla anterior.
+ */
+private inline fun <reified T : Any> NavGraphBuilder.screen(noinline content: @Composable () -> Unit) {
+    composable<T> {
+        CompositionLocalProvider(LocalNavAnimatedScope provides this) { content() }
     }
 }
