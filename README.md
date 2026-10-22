@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/yoimar-uniandes/MobileVynils/actions/workflows/ci.yml/badge.svg)](https://github.com/yoimar-uniandes/MobileVynils/actions/workflows/ci.yml)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
-[![Android](https://img.shields.io/badge/Android-minSdk%2026%20%7C%20targetSdk%2036-3DDC84?logo=android&logoColor=white)](https://developer.android.com/)
+[![Android](https://img.shields.io/badge/Android-minSdk%2023%20%7C%20targetSdk%2036-3DDC84?logo=android&logoColor=white)](https://developer.android.com/)
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-BOM%202026.09-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/compose)
 [![Material 3](https://img.shields.io/badge/Material%203-1.4-6750A4?logo=materialdesign&logoColor=white)](https://m3.material.io/)
 [![Navigation Compose](https://img.shields.io/badge/Navigation%20Compose-2.10-4285F4)](https://developer.android.com/guide/navigation)
@@ -31,7 +31,7 @@ Nombre del equipo: por definir.
 
 ## Requisitos
 
-- Android Studio 2026.2 (Quail) o superior, con SDK 37, build-tools 36 y un emulador (recomendado: Medium Phone API 37; para la matriz de pruebas, también API 26 y API 33).
+- Android Studio 2026.2 (Quail) o superior, con SDK 37, build-tools 36 y un emulador (recomendado: Medium Phone API 37; para la matriz de pruebas, también API 23 y API 30).
 - JDK 17 o superior (Android Studio incluye uno).
 - Docker Desktop para el backend local.
 
