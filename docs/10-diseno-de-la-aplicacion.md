@@ -7,7 +7,7 @@ Documento de diseño que desarrolla la planeación del Inception: convierte el b
 | Fuente | Qué aporta | Estado revisado |
 |---|---|---|
 | Wiki del proyecto (Home, Acuerdos de Equipo, Inception, Backlog de Producto, HU01 a HU15, Sprint 1 a 3, Milestones 1 a 3, Wireframe navegable, actas) | Historias comprometidas, puntos, tareas, responsables, sprints, roles del prototipo | Commit `a7cc5c3` del 2026-10-14 |
-| Prototipo de media fidelidad en Figma (64 pantallas, 360 x 800) exportado en seis tableros | Pantallas, flujos, estados, validaciones y mensajes por historia; kit de componentes | Export del 2026-10-14 en `img/wireframes/` |
+| Prototipo de media fidelidad en Figma (64 pantallas, 360 x 800) exportado en seis tableros | Pantallas, flujos, estados, validaciones y mensajes por historia; kit de componentes | Revisado el 2026-10-14 en Figma (enlace en la página "Wireframe navegable" de la wiki) |
 | Documento del curso "App Vinilos: orden de las 15 historias y funcionamiento del backend" | Orden de las historias, endpoints, campos y restricciones; mapa de navegación propuesto | Contrastado con el código de `BackVynils` |
 | Código de `BackVynils` (entidades, servicios, validaciones Joi) | Reglas reales: listas de género y sello, rating 0 a 5, un músico por banda, estados `Active`/`Inactive` | Clon local |
 
@@ -15,13 +15,13 @@ Alcance: las 12 historias comprometidas (HU01 a HU08 del MVP y HU09, HU15, HU12 
 
 Los tableros del prototipo:
 
-| Tablero | Archivo | Contenido |
-|---|---|---|
-| Inicio y modo Visitante | `img/wireframes/00-inicio-y-modo-visitante.png` | Selector de rol y las nueve pantallas de consulta (HU01 a HU06) sin acciones |
-| Sprint 1 | `img/wireframes/01-sprint-1-albumes.png` | HU01 (catálogo y error), HU02 (detalle), HU07 (formulario con 7 estados), HU08 (hoja de canción con 4 estados) |
-| Sprint 2 | `img/wireframes/02-sprint-2-artistas-coleccionistas.png` | HU03 (lista con tres filtros), HU04 (músico y banda), HU05 (lista), HU06 (detalle) |
-| Sprint 3 | `img/wireframes/03-sprint-3-adicionales.png` | HU09, HU15, HU12 y HU10, más las combinaciones HU08 + HU09 y HU12 + HU15 en cualquier orden |
-| Kit | `img/wireframes/kit-componentes.png` | Botones, campos, chips, barra inferior, paleta de grises y tipografía Inter |
+| Tablero en Figma | Contenido |
+|---|---|
+| Inicio y modo Visitante | Selector de rol y las nueve pantallas de consulta (HU01 a HU06) sin acciones |
+| Sprint 1 | HU01 (catálogo y error), HU02 (detalle), HU07 (formulario con 7 estados), HU08 (hoja de canción con 4 estados) |
+| Sprint 2 | HU03 (lista con tres filtros), HU04 (músico y banda), HU05 (lista), HU06 (detalle) |
+| Sprint 3 | HU09, HU15, HU12 y HU10, más las combinaciones HU08 + HU09 y HU12 + HU15 en cualquier orden |
+| Kit | Botones, campos, chips, barra inferior, paleta de grises y tipografía Inter |
 
 El tablero "Grupo: Equipo 3" se exportó en blanco (solo contenía texto) y no se incluye.
 
