@@ -1,68 +1,87 @@
 # 06. Estrategia de pruebas
 
-Define qué se prueba, con qué herramienta, en qué nivel y cómo se documenta. Es el documento que se entrega en cada sprint como "estrategia de pruebas"; los artefactos (inventario, scripts, reportes de defectos, análisis) se enlazan desde la wiki del sprint.
+Define qué se prueba, con qué herramienta, en qué nivel y cómo se documenta. La estrategia de cada sprint (objetivos, plan, inventario, reportes) se publica en la wiki y se apoya en este documento.
 
 ## 1. Objetivos
 
-1. Verificar que cada historia de usuario cumple sus criterios de aceptación de extremo a extremo en Android.
+1. Verificar que cada historia de usuario cumple sus criterios de aceptación de extremo a extremo en Android, con pruebas E2E en Espresso (requisito de la rúbrica).
 2. Proteger la lógica de presentación y de datos con pruebas rápidas que corren en cada pull request.
-3. Evaluar atributos de calidad del curso: robustez (pruebas aleatorias y exploración sistemática), desempeño y accesibilidad.
-4. Ejecutar en varias versiones de Android antes de cada release.
+3. Evaluar robustez (exploratorias, aleatorias), desempeño y accesibilidad en los sprints que lo piden.
+4. Ejecutar en varias versiones de Android, desde Lollipop (API 21), antes de cada release.
 
 ## 2. Pirámide y niveles
 
 | Nivel | Qué prueba | Herramientas | Dónde | Cuándo corre |
 |---|---|---|---|---|
-| Unitarias | ViewModels, Repositories, Service Adapters, mappers, validaciones | JUnit 4, MockK, Turbine, kotlinx-coroutines-test, Truth, MockWebServer | `src/test` | Cada PR (CI) y local |
-| Arquitectura | Reglas de capas y nombres | Konsist (JUnit) | `src/test` | Cada PR |
-| Instrumentadas de componente | DAOs de Room contra SQLite real, pantallas Compose aisladas | AndroidX Test, Room testing, Compose UI test | `src/androidTest` | Antes de merge a `develop` |
-| E2E (end-to-end) | Flujos completos de cada historia contra el backend de pruebas | Compose UI test + Espresso, Hilt testing, Page Objects | `src/androidTest` | Antes de release y en la matriz de dispositivos |
-| Exploratorias y aleatorias | Robustez ante entradas no previstas | Monkey (`adb`), RIP (exploración sistemática) | Scripts en `tests/` | Sprint 3 y antes de release |
-| Accesibilidad | Reglas de accesibilidad en vistas reales | Accessibility Scanner, TalkBack, `AccessibilityChecks` en E2E | Manual + `androidTest` | Cada pantalla nueva; Sprint 3 |
-| Desempeño | CPU, memoria, red, fluidez | Android Profiler, LeakCanary, StrictMode, Macrobenchmark opcional | Manual + informe | Sprint 2 y 3 (`07-desempeno.md`) |
-
-Objetivo de cobertura: 80 % de líneas en `feature/*/ *ViewModel` y `data/*`; no se exige cobertura en Compose ni en módulos Hilt. Se mide con el reporte de cobertura de Android Studio o Jacoco en CI.
+| Unitarias | ViewModels, repositorios, service adapters, mappers, validaciones | JUnit 4, `InstantTaskExecutorRule`, kotlinx-coroutines-test, MockWebServer, fakes | `src/test` | Cada PR (CI) y local |
+| Pruebas de API | Contratos de BackVynils que usa cada historia | Colección de Postman o `curl` contra el backend local con la semilla | Wiki del sprint | Antes de implementar cada historia |
+| E2E | Flujos completos de cada historia en la app | Espresso (core y contrib), `ActivityScenarioRule`, Robots | `src/androidTest` | Antes de pedir revisión y en la matriz antes del release |
+| Exploratorias | Escenarios del inventario exploratorio del sprint | Manual, con tester cruzado | Wiki | Al cerrar las historias |
+| Aleatorias y sistemáticas | Robustez ante entradas no previstas | Monkey (`adb`), RIP | Scripts en `tests/` (se crean en el Sprint 3) | Sprint 3 |
+| Accesibilidad | Reglas de accesibilidad en vistas reales | Accessibility Scanner, TalkBack, `AccessibilityChecks` | Manual + `androidTest` | Sprint 3 |
+| Desempeño | CPU, memoria, red | Android Profiler, StrictMode | Manual + informe | Sprint 2 y 3 (`07-desempeno.md`) |
 
 ## 3. Pruebas unitarias
 
-- Nombre: `` `acción cuando condición entonces resultado` `` en inglés: `` fun `refresh emits error when backend fails`() ``.
+- Nombre: `` `acción cuando condición entonces resultado` `` en inglés: `` fun `refresh shows error when backend fails`() ``.
 - Estructura Given/When/Then separada por líneas en blanco.
-- ViewModel: `MainDispatcherRule`, `FakeAlbumRepository`, Turbine sobre `uiState` y `effects`.
-- Repository: fakes de DAO y Service Adapter; verificar que la red escribe en Room y que los errores se convierten en `DataError`.
-- Service Adapter: MockWebServer con respuestas JSON reales de `BackVynils` guardadas en `src/test/resources/api/`; verificar deserialización, mapeo y errores HTTP.
-- Mappers y validaciones: pruebas de tabla con parámetros.
-- Sin `Thread.sleep`, sin `runBlocking`: `runTest` y `advanceUntilIdle`.
+- ViewModel: `InstantTaskExecutorRule` (de `androidx.arch.core:core-testing`) para que `LiveData` publique al instante, `MainDispatcherRule` para `viewModelScope`, `FakeAlbumRepository` y lectura del estado con `getOrAwaitValue()`. `MainDispatcherRule` y `getOrAwaitValue` no vienen de una librería: los escribe TR-05 en `src/test`.
 
-## 4. Pruebas E2E con Espresso y Compose
+```kotlin
+class AlbumListViewModelTest {
+    @get:Rule val instantTaskExecutorRule = InstantTaskExecutorRule()
+    @get:Rule val mainDispatcherRule = MainDispatcherRule()
 
-- Runner: `HiltTestRunner` (`AndroidJUnitRunner` con `HiltTestApplication`).
-- Regla: `createAndroidComposeRule<MainActivity>()` con `@HiltAndroidTest` y `@BindValue` o `@TestInstallIn` para apuntar al backend de pruebas (MockWebServer dentro del test o `BackVynils` con datos semilla).
-- Selección por semántica: `onNodeWithText`, `onNodeWithContentDescription`, `onNodeWithTag` solo cuando no hay texto ni descripción. Los `testTag` se centralizan en `core/ui/TestTags.kt`.
-- Espresso para lo que Compose no cubre: Intents, teclado del sistema, vistas del sistema. `Espresso.pressBack()` para navegación hacia atrás.
-- Page Object (`AlbumListRobot`, `AlbumDetailRobot`) con funciones de acción y de aserción; la prueba se lee como el caso de prueba del inventario.
-- Una clase de prueba por historia de usuario: `HU01AlbumCatalogTest`, con un método por caso del inventario.
-- Idempotentes: cada prueba limpia Room (`clearAllTables()`) en `@Before`.
-- Matriz de ejecución antes de release: emulador API 26, API 33, API 37 y un dispositivo físico. Resultado por versión en la wiki.
+    @Test
+    fun `refresh shows albums when repository succeeds`() = runTest {
+        val repository = FakeAlbumRepository(albums = listOf(buscandoAmerica))
+
+        val viewModel = AlbumListViewModel(repository)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.getOrAwaitValue()
+        assertEquals(listOf(buscandoAmerica), state.albums)
+        assertFalse(state.isLoading)
+    }
+}
+```
+
+- Repository: fake del Service Adapter; verificar la caché y que los errores se convierten en `DataError`.
+- Service Adapter: MockWebServer con respuestas JSON reales de BackVynils en `src/test/resources/api/`; verificar deserialización, mapeo y errores HTTP.
+- Validaciones (HU07, HU08): pruebas de tabla con los valores límite del inventario.
+- Sin `Thread.sleep` ni `runBlocking`: `runTest` y `advanceUntilIdle`.
+
+## 4. Pruebas E2E con Espresso
+
+- Runner `androidx.test.runner.AndroidJUnitRunner`; regla `ActivityScenarioRule(MainActivity::class.java)`.
+- Backend: BackVynils local con la semilla (`docker compose up`), alcanzable desde el emulador en `10.0.2.2:3000`. Las pruebas que crean datos (HU07, HU08) usan nombres únicos para ser repetibles.
+- Espera de red: `IdlingResource` registrado en `IdlingRegistry` para las llamadas de Retrofit (lo define TR-05); nunca `Thread.sleep`. Un `CountingIdlingResource` usado desde el código de la app necesita `androidx.test.espresso:espresso-idling-resource` como dependencia `implementation`, que hay que agregar al catálogo y verificar con `minSdk 21`.
+- Selección por id de vista (`withId`) y por texto de recurso (`withText(R.string.x)`); listas con `RecyclerViewActions` de `espresso-contrib`.
+- Page Object (Robot) por pantalla: `AlbumListRobot`, `AlbumDetailRobot`; la prueba se lee como el caso del inventario.
+- Una clase por historia: `HU01AlbumCatalogTest`, un método por caso `CP-HU01-nn`.
+- Animaciones del sistema desactivadas antes de correr: `testOptions { animationsDisabled = true }` en Gradle (lo agrega TR-05) para `connectedDebugAndroidTest` y, con `am instrument`, `settings put global window_animation_scale 0` (y lo mismo para `transition_animation_scale` y `animator_duration_scale`).
+- **API 21:** no se escriben pruebas que hagan capturas de pantalla seguidas (`UiAutomation.takeScreenshot` cuadro a cuadro): congelan el emulador de Lollipop. Lo visual en API 21 se revisa a mano.
+- Matriz antes de release: emulador API 21 (`Vinilos_API_21`, arrancado con `-gpu host`), API 30, API 37 y un dispositivo físico. Resultado por versión en la wiki.
 
 ## 5. Inventario de casos de prueba
 
-Archivo por sprint en la wiki (`Sprint N / Pruebas / Inventario`), una fila por caso:
+Por sprint en la wiki, una fila por caso:
 
 | Id | HU | Nombre | Precondición | Pasos | Resultado esperado | Tipo | Automatizado (clase.método) | Estado |
 |---|---|---|---|---|---|---|---|---|
-| CP-HU01-01 | HU01 | Listar álbumes con conexión | Backend con 3 álbumes | Abrir app, pestaña Álbumes | Se muestran 3 tarjetas con nombre e imagen | E2E | `HU01AlbumCatalogTest.listsAlbums` | Pasa |
-| CP-HU01-02 | HU01 | Listar sin conexión con caché | Álbumes cargados antes; modo avión | Abrir app | Se muestran los álbumes en caché y aviso de sin conexión | E2E | ... | Pendiente |
-| CP-HU01-03 | HU01 | Error de backend sin caché | Backend caído; sin caché | Abrir app | Pantalla de error con reintentar | E2E | ... | Pendiente |
+| CP-HU01-01 | HU01 | Listar álbumes con conexión | Backend con la semilla (4 álbumes: Buscando América, Poeta del pueblo, A Night at the Opera, A Day at the Races) | Abrir la app, pestaña Álbumes | Se muestran 4 tarjetas con nombre, artista y "Género · Año" | E2E | `HU01AlbumCatalogTest.listsAlbums` | Pendiente |
 
-Ids: `CP-HUxx-nn`. Cada historia tiene al menos: camino feliz, sin red, error de backend, estado vacío, y para formularios, validaciones por campo.
+Ids: `CP-HUxx-nn`. Cada historia cubre al menos camino feliz, error de backend, estado vacío y, en formularios, las validaciones por campo.
+
+El inventario de pruebas exploratorias usa la plantilla del curso (identificador, fecha, tester, funcionalidad, requerimiento, tipo de escenario positivo, negativo o mixto, nombre del escenario).
 
 ## 6. Reportes de defectos
 
-Los defectos son issues de GitHub con la etiqueta `bug` y la plantilla:
+Los defectos son issues de GitHub con la etiqueta `bug`:
 
 ```
 **Historia / caso:** HU01 / CP-HU01-02
-**Dispositivo y versión:** Pixel 8 emulador, API 37
+**Dispositivo y versión:** emulador Vinilos_API_21, Android 5.0
 **Build:** commit abc1234, rama develop
 **Pasos:** 1. ... 2. ...
 **Resultado actual:** ...
@@ -71,42 +90,33 @@ Los defectos son issues de GitHub con la etiqueta `bug` y la plantilla:
 **Severidad:** bloqueante / alta / media / baja
 ```
 
-Se enlazan desde el inventario y se cierran con el PR que los corrige, que incluye una prueba de regresión. El resumen de defectos por sprint (abiertos, cerrados, por severidad) va en la wiki.
+Se enlazan desde el inventario y se cierran con el PR que los corrige, que incluye una prueba de regresión.
 
-## 7. Pruebas de arquitectura con Konsist
+## 7. Pruebas aleatorias y de exploración sistemática (Sprint 3)
 
-`src/test/.../architecture/ArchitectureTest.kt`:
+- **Monkey**: `adb shell monkey -p co.edu.uniandes.vinilos --throttle 200 -s 42 -v 2000`, con tres semillas en API 21 y API 37; cualquier crash o ANR es un defecto.
+- **RIP** (TheSoftwareDesignLab): exploración sistemática sobre el APK de release; se adjuntan el grafo de estados y la cobertura de pantallas.
 
-- Clases con sufijo `ViewModel` extienden `ViewModel`, están en `feature..`, tienen `@HiltViewModel` y no importan `android.content.Context`.
-- `feature..` no importa `core.network..`, `core.database..` ni `..RepositoryImpl`.
-- `data..` no importa `androidx.compose..` ni `feature..`.
-- `domain.model..` no importa `android..` ni `androidx..`.
-- Interfaces `*Repository` tienen exactamente una implementación `*RepositoryImpl` enlazada en `di`.
-- Composables públicos tienen `modifier: Modifier = Modifier` como primer parámetro opcional.
+## 8. Pruebas de accesibilidad (Sprint 3)
 
-## 8. Pruebas aleatorias y de exploración sistemática (Sprint 3)
+- `AccessibilityChecks.enable().setRunChecksFromRootView(true)` en las pruebas Espresso, con `androidx.test.espresso:espresso-accessibility` agregado al catálogo (no está todavía).
+- Accessibility Scanner en cada pantalla, con hallazgos y correcciones en la wiki.
+- Recorrido con TalkBack del flujo principal grabado como evidencia.
 
-- **Monkey** (aleatorias): `adb shell monkey -p co.edu.uniandes.vinilos.debug --throttle 200 -s 42 -v 2000`. Se corre con tres semillas distintas en API 26 y 37; cualquier crash o ANR es un defecto. Script en `tests/monkey.sh` y resultado en la wiki.
-- **RIP** (exploración sistemática, TheSoftwareDesignLab): recorre la app por su árbol de vistas y genera un grafo de estados. Se ejecuta sobre el APK de release contra el backend de pruebas y se adjuntan el grafo y las capturas. Se registra cobertura de pantallas (todas las del prototipo deben aparecer).
-
-## 9. Pruebas de accesibilidad (Sprint 3)
-
-- `AccessibilityChecks.enable().setRunChecksFromRootView(true)` en las pruebas E2E con Espresso.
-- Accessibility Scanner en cada pantalla con informe de hallazgos y corrección en la wiki.
-- Recorrido con TalkBack del flujo principal (listar, detalle, crear álbum) grabado como evidencia.
-- Pruebas Compose: `onNodeWithContentDescription` para iconos de acción y `assertHasClickAction`; `assertIsDisplayed` con fuente al 200 % mediante `@Config`/ajuste del emulador.
-
-## 10. Comandos
+## 9. Comandos
 
 ```bash
-./gradlew testDebugUnitTest                 # unitarias y Konsist
-./gradlew connectedDebugAndroidTest         # instrumentadas y E2E en el emulador conectado
-./gradlew spotlessCheck detekt lint           # calidad estática
-./gradlew koverHtmlReport                   # cobertura, si se adopta Kover
+./gradlew testDebugUnitTest                 # unitarias
+./gradlew spotlessCheck detekt lintDebug    # calidad estática
+./gradlew connectedDebugAndroidTest         # E2E en el emulador conectado
+adb shell am instrument -w co.edu.uniandes.vinilos.test/androidx.test.runner.AndroidJUnitRunner   # E2E sin Gradle
 ```
 
-## 11. Bitácora de decisiones
+En API 21, `connectedDebugAndroidTest` puede tardar varios minutos en cerrar tras terminar las pruebas; `am instrument` devuelve el resultado en cuanto terminan.
+
+## 10. Bitácora de decisiones
 
 | Fecha | Decisión |
 |---|---|
-| 2026-10-07 | Pirámide de cinco niveles, Page Objects, inventario `CP-HUxx-nn`, defectos como issues, Konsist para capas, Monkey y RIP en Sprint 3. |
+| 2026-10-07 | Pirámide de niveles, Page Objects, inventario `CP-HUxx-nn`, defectos como issues, Monkey y RIP en Sprint 3. |
+| 2026-10-26 | Reinicio con Vistas: E2E con Espresso y `ActivityScenarioRule`, unitarias de `LiveData` con `InstantTaskExecutorRule`, fakes sin librería de mocks, matriz API 21/30/37, sin capturas seguidas en API 21. Konsist y pruebas de Compose retiradas. |
