@@ -6,78 +6,74 @@ Patrones que usa Vinilos, con el problema que resuelven y cómo se aplican aquí
 
 ### Model-View-ViewModel (MVVM)
 
-Problema: separar la lógica de presentación de la vista para poder probarla sin Android. Aplicación: `XScreen` (View) solo dibuja `XUiState`; `XViewModel` posee el estado y la lógica; el Model son los modelos de dominio y el Repository. La vista nunca llama al Repository.
-
-### Flujo de datos unidireccional (UDF)
-
-Problema: estado inconsistente cuando varias vistas lo mutan. Aplicación: el estado baja (`StateFlow<UiState>`), los eventos suben (`onAction`). Un solo lugar (`_uiState.update { }`) cambia el estado.
+Problema: separar la lógica de presentación de la vista para poder probarla sin Android. Aplicación: el Fragment (View) solo dibuja el `UiState` y reenvía acciones; el `XViewModel` posee el estado en `LiveData` y la lógica; el Model son los `models` y el Repository. El Fragment nunca llama al Repository.
 
 ### Repository
 
-Problema: la UI no debe saber de dónde vienen los datos ni cómo se combinan. Aplicación: interfaz `AlbumRepository` con una implementación que coordina Room y el Service Adapter; única frontera de errores.
+Problema: el ViewModel no debe saber de dónde vienen los datos ni cómo se guardan en caché. Aplicación: interfaz `AlbumRepository` con una implementación que coordina la caché en memoria y el Service Adapter; única frontera de errores.
 
 ### Service Adapter
 
-Problema: aislar el protocolo de red (Retrofit, DTOs, códigos HTTP) del resto. Aplicación: `AlbumServiceAdapter` envuelve `VinilosApi`, deserializa y mapea a dominio. Cambiar de backend o de librería solo toca esta clase. Es la variante del patrón **Adapter** que pide el curso.
+Problema: aislar el protocolo de red (Retrofit, DTOs, códigos HTTP) del resto. Aplicación: `AlbumServiceAdapter` envuelve `VinilosApiService`, recibe DTOs y los mapea a `models`. Cambiar de backend o de librería solo toca esta capa. Es la variante del patrón **Adapter** que pide el curso.
 
-### Fuente única de verdad (Single Source of Truth)
+### Observer (`LiveData`)
 
-Problema: dos copias de los datos (red y caché) que divergen. Aplicación: la UI siempre observa Room; la red solo escribe en Room. Patrón **Offline-first** en su forma mínima: la lista se ve aunque no haya red, con un aviso.
+Problema: actualizar la vista cuando cambian los datos sin consultarlos ni fugar memoria. Aplicación: el Fragment observa `LiveData` con `viewLifecycleOwner`; el ViewModel publica estados nuevos. `LiveData` respeta el ciclo de vida: no entrega valores a vistas destruidas.
 
-### Inyección de dependencias (Hilt)
+### Inyección de dependencias manual (Service Locator acotado)
 
-Problema: acoplamiento a implementaciones concretas y objetos imposibles de reemplazar en pruebas. Aplicación: constructores `@Inject`, `@Binds` para interfaces, `@Provides` para terceros, qualifiers para dispatchers. En pruebas, `@TestInstallIn` reemplaza módulos por fakes.
+Problema: acoplamiento a implementaciones concretas y objetos imposibles de reemplazar en pruebas. Aplicación: `AppContainer` crea las dependencias una sola vez (`lazy`) y las entrega a las fábricas de ViewModel; las clases reciben todo por constructor. En pruebas unitarias se construyen con fakes sin tocar el contenedor.
 
 ## 2. Patrones de diseño (GoF y afines)
 
 | Patrón | Dónde | Para qué |
 |---|---|---|
-| **Observer** | `Flow`, `StateFlow`, DAOs de Room, `collectAsStateWithLifecycle` | La UI reacciona a cambios sin consultar |
-| **Adapter** | Service Adapter, mappers `toDomain()`/`toEntity()`/`toUi()` | Traducir entre DTO, entidad, dominio y UI |
-| **Factory** | `@Provides` de Retrofit, Room, `Json`, `ImageLoader` | Construcción centralizada de objetos complejos |
-| **Singleton** | `@Singleton` en Hilt para Retrofit, Room, repositorios | Una instancia, sin `object` global con estado |
-| **Strategy** | `SharingStarted`, `DataError.toUiText()` por tipo | Variar comportamiento por tipo sin `if` encadenados |
-| **State** | `sealed interface` para estados de carga de detalle o del formulario | Estados explícitos, `when` exhaustivo |
-| **Command** | `sealed interface XAction` | Eventos de UI como valores, fáciles de probar y registrar |
-| **Builder** | `OkHttpClient.Builder`, `Retrofit.Builder`, `ImageRequest.Builder` | Objetos de configuración de terceros |
-| **Null Object** | Listas vacías, `UiText.Empty` | Evitar nulos en el estado |
-| **Facade** | `VinilosDatabase` sobre los DAOs; `VinilosNavHost` sobre las rutas | Un punto de entrada simple |
-| **Template Method** (vía slots) | Componentes Compose con `content: @Composable () -> Unit` | Reutilizar estructura y variar contenido |
+| **Observer** | `LiveData`, `Observer` en Fragments | La vista reacciona a cambios sin consultar |
+| **Adapter** | Service Adapter, mappers `toModel()`, `RecyclerView.Adapter` | Traducir entre DTO y modelo; entre lista de modelos y vistas |
+| **Factory** | `ViewModelProvider.Factory` (`viewModelFactory { initializer { } }`), `AppContainer` | Construir ViewModels y objetos con dependencias |
+| **Singleton** | Instancias únicas dentro de `AppContainer` (Retrofit, OkHttp, repositorios) | Una instancia por app, sin `object` global con estado |
+| **State** | `UiState` con carga, error, vacío y contenido; estados del formulario de HU07 | Estados explícitos, `when` exhaustivo |
+| **Command** | `Event<T>` con eventos `sealed interface` (`OpenDetail`, `ShowMessage`) | Eventos de una sola vez como valores, fáciles de probar |
+| **Builder** | `OkHttpClient.Builder`, `Retrofit.Builder`, `MaterialAlertDialogBuilder` | Objetos de configuración de terceros |
+| **Null Object** | Listas vacías por defecto en el `UiState` | Evitar nulos en el estado |
+| **Facade** | Repository sobre caché y Service Adapter; `AppContainer` sobre la construcción | Un punto de entrada simple |
+| **ViewHolder** | `RecyclerView.ViewHolder` con ViewBinding del ítem | Reutilizar vistas al hacer scroll |
 
-## 3. Patrones de Compose
+## 3. Patrones de la Vista
 
-- **State hoisting**: el estado vive en el nivel más bajo que lo necesita y se sube solo cuando lo comparten varios hijos. Composables sin estado reciben `value` y `onValueChange`.
-- **Slot API**: componentes compartidos (`VinilosTopBar`, `VinilosCard`) reciben contenido como lambdas, no banderas booleanas.
-- **Modifier como primer parámetro opcional** aplicado al nodo raíz del componente.
-- **Previews por estado**: cada `Screen` tiene `@Preview` de carga, contenido, vacío y error, con datos de `core/ui/preview/PreviewData.kt`.
-- **Claves estables en listas**: `LazyColumn { items(albums, key = { it.id }) }`.
-- **Efectos mínimos**: `LaunchedEffect` con clave correcta para colectar efectos; `DisposableEffect` solo para recursos del sistema.
+- **ViewBinding con referencia nula** en Fragments (`_binding` se limpia en `onDestroyView`).
+- **`ListAdapter` + `DiffUtil.ItemCallback`** en toda lista: `submitList` calcula los cambios fuera del hilo principal.
+- **`include` para estados compartidos**: `view_state_loading.xml`, `view_state_error.xml` y `view_state_empty.xml` se incluyen en cada pantalla y se muestran según el `UiState`.
+- **Una función `render(state)`** por Fragment que dibuja todo el estado; nunca se cambia la vista desde varios observadores.
+- **Navegación por eventos**: el ViewModel emite `Event(OpenDetail(id))` y el Fragment llama a `findNavController().navigate(...)`.
 
 ## 4. Patrones de pruebas
 
-- **Fake sobre Mock** para Repository y Service Adapter: `FakeAlbumRepository` con `MutableStateFlow` controlable. MockK para colaboradores que no vale la pena fingir.
-- **MainDispatcherRule**: regla JUnit que instala `UnconfinedTestDispatcher` o `StandardTestDispatcher` en `Dispatchers.Main`.
-- **Turbine** para afirmar emisiones de `Flow`.
-- **MockWebServer** para probar el Service Adapter con respuestas reales del backend grabadas en `src/test/resources/`.
-- **Page Object** en pruebas E2E: una clase por pantalla (`AlbumListRobot`) con las acciones y aserciones de esa pantalla.
+- **Fake sobre Mock** para Repository y Service Adapter: `FakeAlbumRepository` con resultados configurables. Sin librería de mocks en el catálogo.
+- **InstantTaskExecutorRule** para que `LiveData` publique de forma síncrona en pruebas unitarias.
+- **MainDispatcherRule** que instala un `TestDispatcher` en `Dispatchers.Main` para `viewModelScope`. No es de una librería: se escribe en `src/test` (TR-05).
+- **`getOrAwaitValue`** (extensión propia en `src/test`, TR-05) para leer un `LiveData` que se publica más tarde; con `InstantTaskExecutorRule` basta `.value` para lo ya publicado.
+- **MockWebServer** para probar el Service Adapter con respuestas reales de BackVynils guardadas en `src/test/resources/`.
+- **Page Object (Robot)** en pruebas E2E: una clase por pantalla (`AlbumListRobot`) con las acciones y aserciones de Espresso de esa pantalla.
 
 ## 5. Antipatrones prohibidos
 
 | Antipatrón | Por qué | Alternativa |
 |---|---|---|
-| God ViewModel que conoce varias pantallas | Imposible de probar, estado compartido accidental | Un ViewModel por pantalla; lo común va al Repository |
-| `Context` o `Activity` en ViewModel | Fugas de memoria, no probable en JVM | `UiText`, `Application` solo vía Hilt si es imprescindible |
-| Lógica en el Composable (`if (repository...)`) | Recomposiciones costosas, no probable | Mover al ViewModel |
-| `LiveData` mezclado con `Flow` | Dos modelos de reactividad | Solo `Flow`/`StateFlow` |
-| `GlobalScope`, `runBlocking`, `Thread` | Fugas, ANR, cancelación rota | `viewModelScope`, dispatchers inyectados |
+| God ViewModel que atiende varias pantallas | Imposible de probar, estado compartido accidental | Un ViewModel por pantalla; lo común va al Repository |
+| `Context`, `View` o `Fragment` en el ViewModel | Fugas de memoria, no probable en JVM | Ids de recursos en el estado; el Fragment resuelve los textos |
+| Lógica en el Fragment (`if` sobre datos, llamadas al Repository) | Imposible de probar sin dispositivo | Mover al ViewModel |
+| Observar con `this` en un Fragment | Observadores duplicados tras volver a la pantalla | `viewLifecycleOwner` |
+| Retener el binding después de `onDestroyView` | Fuga de la jerarquía de vistas | `_binding = null` |
+| `LiveData` mezclado con `Flow` en la misma pantalla | Dos modelos de reactividad | Solo `LiveData` en la capa de presentación |
+| `GlobalScope`, `runBlocking`, `Thread`, `AsyncTask` | Fugas, ANR, cancelación rota | `viewModelScope` y funciones `suspend` |
 | `catch (e: Exception)` silencioso | Oculta `CancellationException` y errores reales | Excepciones concretas en la capa de datos |
-| Singletons manuales (`object Repo`) | Estado global, no reemplazable en pruebas | `@Singleton` en Hilt |
-| Pasar objetos completos por navegación | Límite de tamaño, estado duplicado | Pasar ids; la pantalla observa Room |
-| `!!` | Crash en producción | Tipos no nulos, `?:`, `requireNotNull` |
-| Números y textos mágicos | Imposibles de mantener y traducir | Constantes y `strings.xml` |
-| `var` en `UiState` o `MutableList` expuesta | Estado mutable compartido | `data class` con `val` y `copy` |
-| Mapear DTOs en la UI | Acoplamiento al backend | Mappers en `data/` |
-| Lógica de negocio en mappers | Difícil de encontrar y probar | Mappers solo traducen |
+| `object` con estado global (`object Repository`) | No reemplazable en pruebas | Instancia única dentro de `AppContainer` |
+| Pasar objetos completos entre Fragments | Límite de tamaño del `Bundle`, estado duplicado | Pasar ids; la pantalla pide el recurso |
+| `!!` | Crash en producción | Tipos no nulos, `?:`, `checkNotNull` |
+| Textos, colores y medidas literales | Imposibles de mantener y traducir | `strings.xml`, `colors.xml`, `dimens.xml` |
+| `notifyDataSetChanged()` | Redibuja toda la lista | `ListAdapter.submitList` con `DiffUtil` |
+| Mapear DTOs en la Vista | Acoplamiento al backend | Mappers en `network/` |
 | `@Suppress` sin motivo | Esconde deuda | Motivo en línea y revisión en PR |
 
 ## 6. Bitácora de decisiones
@@ -85,3 +81,4 @@ Problema: acoplamiento a implementaciones concretas y objetos imposibles de reem
 | Fecha | Decisión |
 |---|---|
 | 2026-10-07 | Catálogo inicial de patrones y antipatrones. Fakes antes que mocks. Page Object en E2E. |
+| 2026-10-26 | Patrones de la Vista con Fragments y RecyclerView; Observer con `LiveData`; inyección manual con `AppContainer`; pruebas con `InstantTaskExecutorRule` y Robots de Espresso. |

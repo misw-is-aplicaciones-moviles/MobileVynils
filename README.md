@@ -65,7 +65,7 @@ vinilos.baseUrl=http://<ip-de-tu-pc>:3000/
 ## Verificación
 
 ```bash
-./gradlew spotlessCheck detekt lint testDebugUnitTest   # calidad estática y pruebas unitarias
+./gradlew spotlessCheck detekt lintDebug testDebugUnitTest   # calidad estática y pruebas unitarias
 ./gradlew connectedDebugAndroidTest                   # pruebas instrumentadas y E2E (emulador encendido)
 ```
 
