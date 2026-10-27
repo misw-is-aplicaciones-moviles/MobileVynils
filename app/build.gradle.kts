@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.detekt)
 }
 
@@ -10,12 +9,15 @@ android {
 
     defaultConfig {
         applicationId = "co.edu.uniandes.vinilos"
-        minSdk = 26
+        // La rúbrica evalúa desde Lollipop (API 21). El catálogo fija versiones que admiten 21.
+        minSdk = 21
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // Íconos vectoriales con AppCompat en API 21 a 23.
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {
@@ -30,9 +32,16 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // java.time (fechas de lanzamiento) en API 21 a 25.
+        isCoreLibraryDesugaringEnabled = true
     }
     buildFeatures {
-        compose = true
+        viewBinding = true
+    }
+    lint {
+        // NewApi protege el mínimo de API 21; HardcodedText obliga a usar strings.xml.
+        error += setOf("NewApi", "HardcodedText")
+        abortOnError = true
     }
 }
 
@@ -53,18 +62,13 @@ tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.constraintlayout)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
 }
