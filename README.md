@@ -71,7 +71,19 @@ vinilos.baseUrl=http://<ip-de-tu-pc>:3000/
 
 ## APK de cada sprint
 
-Cada entrega se publica como GitHub Release con tag `sprint-N` y el APK de release adjunto, firmado con la keystore de depuración del proyecto.
+Cada entrega se publica como GitHub Release con tag `sprint-N` y el APK de release adjunto, firmado con la keystore de depuración del proyecto (`keystore/debug.keystore`, alias `vinilos`; ver `keystore/README.md`). Una copia del APK queda también en `apk/vinilos-sprint-N.apk`. El job "APK de release" del workflow solo corre al empujar un tag `sprint-*`, después de que "Calidad y pruebas unitarias" pase.
+
+Para firmar en local (`./gradlew assembleRelease`) añade a `local.properties` las contraseñas que comparte el equipo; en CI vienen de los secrets del repositorio. PKCS12 exige la misma contraseña para el almacén y la clave.
+
+| `local.properties` | Secret de GitHub Actions | Valor |
+|---|---|---|
+| `keystore.password` | `KEYSTORE_PASSWORD` | Contraseña del almacén |
+| `keystore.alias` | `KEY_ALIAS` | `vinilos` |
+| `keystore.keyPassword` | `KEY_PASSWORD` | Igual a la del almacén |
+
+Sin esos valores, `assembleRelease` falla indicando cuál falta; `assembleDebug` e `installDebug` no los necesitan.
+
+Flujo de cada entrega (`docs/08-flujo-de-trabajo-git.md`, sección 5): PR de `release/sprint-N` a `main`, merge, `git tag -a sprint-N -m "Sprint N: ..."`, `git push origin sprint-N`. El workflow adjunta `vinilos-sprint-N.apk` al release.
 
 ## Documentación
 

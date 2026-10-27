@@ -59,7 +59,7 @@ GitHub Actions (`.github/workflows/ci.yml`):
 4. PR de `release/sprint-N` a `main`, aprobación, merge (merge commit, no squash, para conservar historia) y tag `sprint-N` (`git tag -a sprint-1 -m "Sprint 1: HU01, HU02, HU07, HU08"`).
 5. La CI construye el APK de release desde el tag y publica un GitHub Release `Sprint N` con el APK, las historias incluidas y el enlace a la wiki.
 6. Merge de `main` de vuelta a `develop` (merge commit).
-7. Firma (pendiente de su PR; hoy el release sale sin firmar): keystore de depuración del proyecto versionada en `keystore/debug.keystore` con contraseñas en `local.properties` (no versionado) y en secrets de GitHub. Suficiente para "APK listo para instalar"; nunca una keystore de producción en el repositorio.
+7. Firma: keystore de depuración del proyecto versionada en `keystore/debug.keystore` con contraseñas en `local.properties` (no versionado) y en secrets de GitHub. Suficiente para "APK listo para instalar"; nunca una keystore de producción en el repositorio.
 
 ## 6. Wiki
 
