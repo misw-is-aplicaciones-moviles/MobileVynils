@@ -1,22 +1,21 @@
 # Vinilos (Android)
 
-[![CI](https://github.com/yoimar-uniandes/MobileVynils/actions/workflows/ci.yml/badge.svg)](https://github.com/yoimar-uniandes/MobileVynils/actions/workflows/ci.yml)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
-[![Android](https://img.shields.io/badge/Android-minSdk%2026%20%7C%20targetSdk%2036-3DDC84?logo=android&logoColor=white)](https://developer.android.com/)
-[![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-BOM%202026.09-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/compose)
-[![Material 3](https://img.shields.io/badge/Material%203-1.4-6750A4?logo=materialdesign&logoColor=white)](https://m3.material.io/)
-[![Navigation Compose](https://img.shields.io/badge/Navigation%20Compose-2.10-4285F4)](https://developer.android.com/guide/navigation)
-[![Hilt](https://img.shields.io/badge/Hilt-2.60-34A853)](https://dagger.dev/hilt/)
+[![CI](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/actions/workflows/ci.yml)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.2-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![Android](https://img.shields.io/badge/Android-minSdk%2021%20%7C%20targetSdk%2036-3DDC84?logo=android&logoColor=white)](https://developer.android.com/)
+[![Views](https://img.shields.io/badge/UI-XML%20%2B%20Fragments%20%2B%20ViewBinding-3DDC84)](https://developer.android.com/topic/libraries/view-binding)
+[![Material Components](https://img.shields.io/badge/Material%20Components-1.12-6750A4?logo=materialdesign&logoColor=white)](https://github.com/material-components/material-components-android)
+[![LiveData](https://img.shields.io/badge/ViewModel%20%2B%20LiveData-2.9-4285F4)](https://developer.android.com/topic/libraries/architecture/livedata)
+[![Navigation](https://img.shields.io/badge/Navigation-2.9-4285F4)](https://developer.android.com/guide/navigation)
 [![Retrofit](https://img.shields.io/badge/Retrofit-3.0-48B983)](https://square.github.io/retrofit/)
-[![Room](https://img.shields.io/badge/Room-2.8-4285F4)](https://developer.android.com/training/data-storage/room)
 [![Coroutines](https://img.shields.io/badge/Coroutines-1.11-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/docs/coroutines-overview.html)
-[![Coil](https://img.shields.io/badge/Coil-3.6-FF6F00)](https://coil-kt.github.io/coil/)
+[![Glide](https://img.shields.io/badge/Glide-4.16-4CAF50)](https://bumptech.github.io/glide/)
 [![Gradle](https://img.shields.io/badge/Gradle-9%20%7C%20AGP%209.4-02303A?logo=gradle&logoColor=white)](https://gradle.org/)
 [![ktlint](https://img.shields.io/badge/code%20style-ktlint-FF4081)](https://pinterest.github.io/ktlint/)
 [![detekt](https://img.shields.io/badge/static%20analysis-detekt-1976D2)](https://detekt.dev/)
-[![Espresso](https://img.shields.io/badge/tests-JUnit%20%7C%20MockK%20%7C%20Espresso-6DB33F)](docs/06-pruebas.md)
+[![Espresso](https://img.shields.io/badge/tests-JUnit%20%7C%20Espresso-6DB33F)](docs/06-pruebas.md)
 
-Versión móvil de Vinilos: catálogo de álbumes, artistas y coleccionistas de vinilos, construida en Kotlin con Jetpack Compose para el curso Ingeniería de software para aplicaciones móviles (MISO, Uniandes).
+Versión móvil de Vinilos: catálogo de álbumes, artistas y coleccionistas de vinilos, construida en Kotlin con Vistas XML, Fragments y el patrón MVVM (LiveData, Repository y Service Adapter con Retrofit) para el curso Ingeniería de software para aplicaciones móviles (MISO, Uniandes).
 
 ## Equipo
 
@@ -31,7 +30,8 @@ Nombre del equipo: por definir.
 
 ## Requisitos
 
-- Android Studio 2026.2 (Quail) o superior, con SDK 37, build-tools 36 y un emulador (recomendado: Medium Phone API 37; para la matriz de pruebas, también API 26 y API 33).
+- Android Studio 2026.2 (Quail) o superior, con SDK 37 y build-tools 36.
+- Emuladores de la matriz de pruebas: API 21 (Android 5.0, el mínimo que evalúa el curso), API 30 y API 37 (Medium Phone). En API 21 conviene arrancar el emulador con `-gpu host`.
 - JDK 17 o superior (Android Studio incluye uno).
 - Docker Desktop para el backend local.
 
@@ -45,7 +45,7 @@ cd BackVynils
 docker compose up --build
 ```
 
-Queda disponible en `http://localhost:3000`. Desde el emulador la app usa `http://10.0.2.2:3000/` (valor por defecto de `BASE_URL` en `debug`). Para un dispositivo físico, define en `local.properties`:
+Queda disponible en `http://localhost:3000`. La capa de red (TR-02) usará `http://10.0.2.2:3000/` desde el emulador como valor por defecto de `BASE_URL` en `debug`. Para un dispositivo físico, se definirá en `local.properties`:
 
 ```properties
 vinilos.baseUrl=http://<ip-de-tu-pc>:3000/

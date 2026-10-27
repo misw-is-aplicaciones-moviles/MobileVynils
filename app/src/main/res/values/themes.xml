@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Tema base con Material Components; los colores y fuentes del kit v2 llegan con TR-01. -->
+    <style name="Base.Theme.Vinilos" parent="Theme.Material3.DayNight.NoActionBar" />
 
-    <style name="Theme.Vinilos" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Vinilos" parent="Base.Theme.Vinilos" />
 </resources>
