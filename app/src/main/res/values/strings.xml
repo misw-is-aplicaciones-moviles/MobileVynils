@@ -1,4 +1,17 @@
 <resources>
     <string name="app_name">Vinilos</string>
-    <string name="welcome">Vinilos</string>
+
+    <!-- Barra inferior (TR-01) -->
+    <string name="nav_albums">Álbumes</string>
+    <string name="nav_artists">Artistas</string>
+    <string name="nav_collectors">Coleccionistas</string>
+
+    <!-- Títulos de las pestañas (docs/10, sección 8) -->
+    <string name="album_list_title">Catálogo</string>
+    <string name="artist_list_title">Artistas</string>
+    <string name="collector_list_title">Coleccionistas</string>
+
+    <!-- Contenido provisional de las pestañas hasta que llegue su historia -->
+    <string name="pending_this_sprint">El catálogo llega en este sprint.</string>
+    <string name="pending_next_sprint">Disponible en el próximo sprint</string>
 </resources>

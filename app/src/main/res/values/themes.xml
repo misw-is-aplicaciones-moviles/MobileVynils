@@ -1,7 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Tema base con Material Components; los colores y fuentes del kit v2 llegan con TR-01. -->
-    <style name="Base.Theme.Vinilos" parent="Theme.Material3.DayNight.NoActionBar" />
+    <!-- Tema claro del kit v2 sobre Material Components (docs/05, sección 1). -->
+    <style name="Base.Theme.Vinilos" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/vinilos_charcoal</item>
+        <item name="colorOnPrimary">@color/vinilos_cream</item>
+        <item name="colorSecondary">@color/vinilos_graphite</item>
+        <item name="colorOnSecondary">@color/vinilos_cream</item>
+        <item name="colorSurface">@color/vinilos_cream</item>
+        <item name="colorOnSurface">@color/vinilos_charcoal</item>
+        <item name="colorOnSurfaceVariant">@color/vinilos_graphite</item>
+        <item name="colorOutline">@color/vinilos_ash</item>
+        <item name="colorOutlineVariant">@color/vinilos_line</item>
+        <item name="android:colorBackground">@color/vinilos_cream</item>
+        <!-- Detrás de la hoja crema se ve el carbón de la cabecera. -->
+        <item name="android:windowBackground">@color/vinilos_charcoal</item>
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="fontFamily">@font/outfit_regular</item>
+    </style>
 
     <style name="Theme.Vinilos" parent="Base.Theme.Vinilos" />
+
+    <!-- Título de la cabecera: Outfit 400, 19/24 sp, crema sobre carbón. -->
+    <style name="TextAppearance.Vinilos.HeaderTitle" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="fontFamily">@font/outfit_regular</item>
+        <item name="android:textSize">19sp</item>
+        <item name="android:textColor">@color/vinilos_cream</item>
+    </style>
+
+    <!-- Cuerpo: Outfit 400, 15 sp, grafito. -->
+    <style name="TextAppearance.Vinilos.Body" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="fontFamily">@font/outfit_regular</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/vinilos_graphite</item>
+    </style>
+
+    <!-- Etiquetas de la barra inferior: Montserrat 10 sp en mayúsculas, espaciado 1 sp. -->
+    <style name="TextAppearance.Vinilos.NavLabel" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:fontFamily">@font/montserrat_semibold</item>
+        <item name="fontFamily">@font/montserrat_semibold</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="textAllCaps">true</item>
+    </style>
+
+    <style name="TextAppearance.Vinilos.NavLabel.Active">
+        <item name="android:fontFamily">@font/montserrat_bold</item>
+        <item name="fontFamily">@font/montserrat_bold</item>
+    </style>
+
+    <!-- Barra inferior del kit v2: fondo crema, sin indicador de pastilla, etiquetas siempre visibles. -->
+    <style name="Widget.Vinilos.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+        <item name="backgroundTint">@color/vinilos_cream</item>
+        <item name="itemIconTint">@color/bottom_nav_item</item>
+        <item name="itemTextColor">@color/bottom_nav_item</item>
+        <item name="itemTextAppearanceInactive">@style/TextAppearance.Vinilos.NavLabel</item>
+        <item name="itemTextAppearanceActive">@style/TextAppearance.Vinilos.NavLabel.Active</item>
+        <item name="itemActiveIndicatorStyle">@style/Widget.Vinilos.BottomNavigationView.NoIndicator</item>
+        <item name="labelVisibilityMode">labeled</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <style name="Widget.Vinilos.BottomNavigationView.NoIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@android:color/transparent</item>
+    </style>
 </resources>

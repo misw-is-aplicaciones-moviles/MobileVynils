@@ -112,3 +112,4 @@ Cada componente vive en `res/layout` o `res/values/styles.xml` y no conoce ViewM
 |---|---|
 | 2026-10-07 | Material 3 con Compose, color dinámico, `NavigationBar` de tres destinos, plantilla de pantalla con cuatro estados. |
 | 2026-10-26 | Reinicio con Vistas: Material Components 1.12, tokens del kit v2 (crema, carbón, Outfit y Montserrat) en recursos XML, `BottomNavigationView` con Navigation Component, `MaterialFadeThrough` de 300 ms, estados con `include`, hoja de canción como `BottomSheetDialogFragment`. |
+| 2026-10-26 | TR-01 en XML: la barra de Material no aplica sus propios insets (lo hace su contenedor; en API 21 sumaba 48 dp); el punto bajo la pestaña activa se posiciona a 4 dp de la etiqueta visible, calculado en `MainActivity`, porque `BottomNavigationView` no lo ofrece; íconos inactivos con contorno por selector de estado. |

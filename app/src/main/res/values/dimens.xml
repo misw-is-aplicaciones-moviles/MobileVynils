@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Escala de espaciado de 4 dp (docs/05, sección 1). -->
+    <dimen name="space_xs">4dp</dimen>
+    <dimen name="space_s">8dp</dimen>
+    <dimen name="space_m">12dp</dimen>
+    <dimen name="space_l">16dp</dimen>
+    <dimen name="space_xl">24dp</dimen>
+    <dimen name="space_xxl">32dp</dimen>
+
+    <!-- Cabecera y hoja del kit v2. -->
+    <dimen name="header_height">64dp</dimen>
+    <dimen name="header_horizontal_padding">22dp</dimen>
+    <dimen name="sheet_corner_radius">28dp</dimen>
+    <dimen name="paper_dot_spacing">7dp</dimen>
+    <dimen name="paper_dot_radius">0.6dp</dimen>
+
+    <!-- Barra inferior: punto bajo la pestaña activa. -->
+    <dimen name="nav_dot_size">4dp</dimen>
+    <dimen name="nav_dot_label_gap">4dp</dimen>
+</resources>

@@ -8,12 +8,13 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import org.hamcrest.Matchers.allOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** Prueba de humo: la app abre y muestra su pantalla inicial. Corre desde API 21. */
+/** Prueba de humo: la app abre en el catálogo. Corre desde API 21. */
 @RunWith(AndroidJUnit4::class)
 class ExampleInstrumentedTest {
     @get:Rule
@@ -26,8 +27,7 @@ class ExampleInstrumentedTest {
     }
 
     @Test
-    fun main_activity_shows_the_welcome_text() {
-        onView(withId(R.id.welcome)).check(matches(isDisplayed()))
-        onView(withId(R.id.welcome)).check(matches(withText(R.string.welcome)))
+    fun app_opens_on_the_catalog_tab() {
+        onView(allOf(withId(R.id.headerTitle), isDisplayed())).check(matches(withText(R.string.album_list_title)))
     }
 }

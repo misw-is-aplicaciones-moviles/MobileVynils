@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pestaña activa en carbón; inactivas en ceniza (kit v2). -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/vinilos_charcoal" android:state_checked="true" />
+    <item android:color="@color/vinilos_ash" />
+</selector>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Destinos de primer nivel (docs/10, sección 3). Cada historia reemplaza su pantalla provisional:
+     HU01 albumListFragment, HU03 performerListFragment, HU05 collectorListFragment. -->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/albumListFragment">
+
+    <fragment
+        android:id="@+id/albumListFragment"
+        android:name="co.edu.uniandes.vinilos.ui.common.PendingTabFragment"
+        android:label="@string/album_list_title">
+        <argument
+            android:name="titleRes"
+            android:defaultValue="@string/album_list_title"
+            app:argType="reference" />
+        <argument
+            android:name="messageRes"
+            android:defaultValue="@string/pending_this_sprint"
+            app:argType="reference" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/performerListFragment"
+        android:name="co.edu.uniandes.vinilos.ui.common.PendingTabFragment"
+        android:label="@string/artist_list_title">
+        <argument
+            android:name="titleRes"
+            android:defaultValue="@string/artist_list_title"
+            app:argType="reference" />
+        <argument
+            android:name="messageRes"
+            android:defaultValue="@string/pending_next_sprint"
+            app:argType="reference" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/collectorListFragment"
+        android:name="co.edu.uniandes.vinilos.ui.common.PendingTabFragment"
+        android:label="@string/collector_list_title">
+        <argument
+            android:name="titleRes"
+            android:defaultValue="@string/collector_list_title"
+            app:argType="reference" />
+        <argument
+            android:name="messageRes"
+            android:defaultValue="@string/pending_next_sprint"
+            app:argType="reference" />
+    </fragment>
+</navigation>
