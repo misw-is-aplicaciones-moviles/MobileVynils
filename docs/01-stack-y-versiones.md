@@ -86,7 +86,7 @@ Matriz mínima de pruebas (requisito del curso: probar en distintas versiones an
 - `gradle.properties`: `org.gradle.jvmargs=-Xmx4g ... -Djava.net.preferIPv4Stack=true`, `org.gradle.caching=true`, `org.gradle.configuration-cache=true`, `android.useAndroidX=true`, `android.nonTransitiveRClass=true`.
 - `buildFeatures { viewBinding = true }`; `compileOptions` con Java 17 e `isCoreLibraryDesugaringEnabled = true`.
 - `lint { error += setOf("NewApi", "HardcodedText"); abortOnError = true }`.
-- `buildTypes`: `debug` y `release`. El APK entregable de cada sprint es el de `release`, firmado con la keystore de depuración del proyecto (pendiente de su propio PR: hoy `assembleRelease` produce `app-release-unsigned.apk`); ver `08-flujo-de-trabajo-git.md`.
+- `buildTypes`: `debug` y `release`. El APK entregable de cada sprint es el de `release`, firmado con la keystore de depuración del proyecto (`keystore/debug.keystore`; credenciales en el entorno o en `local.properties`, ver `keystore/README.md`); ver `08-flujo-de-trabajo-git.md`.
 - URL del backend (la agrega TR-02, aún no existe): `buildFeatures { buildConfig = true }` (AGP no genera `BuildConfig` por defecto) y `buildConfigField` `BASE_URL` con `http://10.0.2.2:3000/` para el emulador; el del dispositivo físico se define en `local.properties` (no versionado).
 
 ## 6. Backend de desarrollo
@@ -102,3 +102,4 @@ Texto plano (lo configura TR-02, aún no existe): como el entregable es el APK d
 | 2026-10-07 | Stack inicial propuesto: Compose + M3, Navigation Compose, Hilt, Retrofit + kotlinx.serialization, Room, Coil; `minSdk 26`. |
 | 2026-10-21 | `minSdk 23` con Compose para acercarse a Lollipop (PR #82, cerrado). |
 | 2026-10-26 | Reinicio del stack con la propuesta de Daniela: Vistas XML + Fragments + ViewBinding, `LiveData`, Retrofit e inyección manual. `minSdk 21` por la rúbrica (Daniela proponía 26). Con Compose, llegar a API 21 exigía fijar AndroidX en versiones de 2025 y las pruebas de píxeles congelaban el emulador de Lollipop. PR #80, #81 y #82 cerrados sin integrar. Kotlin pasa a la versión integrada en AGP (2.2.10). Glide en lugar de Coil; Room fuera del camino crítico del Sprint 1. |
+| 2026-10-26 | Firma del release restaurada sobre el proyecto reiniciado: `keystore/debug.keystore` (alias `vinilos`) y `signingConfigs.release` con credenciales del entorno o de `local.properties`; sin ellas `assembleRelease` falla con un mensaje claro. |
