@@ -20,6 +20,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.navOptions
 import androidx.navigation.ui.setupWithNavController
 import co.edu.uniandes.vinilos.databinding.ActivityMainBinding
+import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -60,14 +61,7 @@ class MainActivity : AppCompatActivity() {
             (application as VinilosApplication)
                 .container.sessionRepository.role.value
         if (role != null || navController.currentDestination?.id == R.id.roleSelectFragment) return
-        navController.navigate(
-            R.id.roleSelectFragment,
-            null,
-            navOptions {
-                popUpTo(navController.graph.id) { inclusive = true }
-                launchSingleTop = true
-            },
-        )
+        navController.navigateToRoleSelector()
     }
 
     private fun setupBottomNavigation(navController: NavController) {

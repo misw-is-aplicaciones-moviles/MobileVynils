@@ -1,22 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Cabecera carbón del kit v2: 64 dp bajo la barra de estado, título Outfit 19 sp a 22 dp del borde.
-     TR-04 la amplía con la flecha o la X y el chip de rol. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Cabecera carbón del kit v2. El alto crece con la fuente; 64 dp es el mínimo bajo la barra de estado.
+     Atrás y cerrar quedan listos para el detalle y el formulario. Las pestañas no los muestran. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/header"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="@color/vinilos_charcoal">
+
+    <LinearLayout
+        android:id="@+id/headerNav"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/headerTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/headerTitle"
+        tools:visibility="visible">
+
+        <ImageButton
+            android:id="@+id/headerBack"
+            android:layout_width="@dimen/min_touch_target"
+            android:layout_height="@dimen/min_touch_target"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/action_back"
+            android:padding="@dimen/space_m"
+            android:scaleType="centerInside"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_arrow_back"
+            app:tint="@color/vinilos_cream"
+            tools:visibility="visible" />
+
+        <ImageButton
+            android:id="@+id/headerClose"
+            android:layout_width="@dimen/min_touch_target"
+            android:layout_height="@dimen/min_touch_target"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/action_close"
+            android:padding="@dimen/space_m"
+            android:scaleType="centerInside"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_close"
+            app:tint="@color/vinilos_cream" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/headerTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/header_height"
-        android:layout_marginStart="@dimen/header_horizontal_padding"
-        android:layout_marginEnd="@dimen/header_horizontal_padding"
-        android:accessibilityHeading="true"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_s"
+        android:layout_marginEnd="@dimen/space_s"
+        android:ellipsize="end"
         android:gravity="center_vertical"
         android:maxLines="1"
+        android:minHeight="@dimen/header_height"
         android:textAppearance="@style/TextAppearance.Vinilos.HeaderTitle"
-        tools:ignore="UnusedAttribute"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/roleChip"
+        app:layout_constraintStart_toEndOf="@id/headerNav"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_goneMarginEnd="@dimen/header_horizontal_padding"
+        app:layout_goneMarginStart="@dimen/header_horizontal_padding"
         tools:text="Catálogo" />
-</FrameLayout>
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/roleChip"
+        style="@style/Widget.Vinilos.Chip.Role"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/space_l"
+        android:visibility="gone"
+        app:chipIcon="@drawable/ic_swap"
+        app:layout_constraintBottom_toBottomOf="@id/headerTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/headerTitle"
+        tools:text="@string/role_visitor"
+        tools:visibility="visible" />
+</androidx.constraintlayout.widget.ConstraintLayout>

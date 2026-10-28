@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/space_xl"
+    android:paddingBottom="@dimen/space_xl">
+
+    <ImageView
+        android:layout_width="@dimen/min_touch_target"
+        android:layout_height="@dimen/min_touch_target"
+        android:importantForAccessibility="no"
+        android:padding="@dimen/space_m"
+        app:srcCompat="@drawable/ic_state_empty" />
+
+    <TextView
+        android:id="@+id/emptyMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/state_empty_message"
+        android:textAppearance="@style/TextAppearance.Vinilos.Body" />
+</LinearLayout>

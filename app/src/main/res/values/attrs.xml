@@ -5,4 +5,11 @@
         <attr name="artworkCornerRadius" format="dimension" />
         <attr name="artworkElevation" format="dimension" />
     </declare-styleable>
+
+    <declare-styleable name="NoticeView">
+        <attr name="noticeKind" format="enum">
+            <enum name="success" value="0" />
+            <enum name="error" value="1" />
+        </attr>
+    </declare-styleable>
 </resources>
