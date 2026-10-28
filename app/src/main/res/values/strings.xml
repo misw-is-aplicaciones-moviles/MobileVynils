@@ -25,4 +25,5 @@
     <string name="role_change_hint">Puedes cambiar de rol desde el catálogo.</string>
     <string name="role_visitor_action">Entrar como visitante. Consulta álbumes, artistas y coleccionistas.</string>
     <string name="role_collector_action">Entrar como coleccionista. Consulta y además crea álbumes, agrega canciones, comenta y administra artistas.</string>
+    <string name="pending_next_sprint">Disponible en el próximo sprint.</string>
 </resources>

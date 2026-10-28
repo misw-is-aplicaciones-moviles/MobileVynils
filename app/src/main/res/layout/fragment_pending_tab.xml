@@ -22,9 +22,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:accessibilityLiveRegion="polite"
             android:gravity="center"
             android:textAppearance="@style/TextAppearance.Vinilos.Body"
-            tools:text="Disponible en el próximo sprint" />
+            tools:text="Disponible en el próximo sprint." />
     </co.edu.uniandes.vinilos.ui.common.PaperSheetLayout>
 </LinearLayout>
