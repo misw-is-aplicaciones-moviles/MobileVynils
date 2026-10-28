@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.ksp)
 }
 
 // Firma del APK de release con la keystore de depuración del proyecto (docs/08, sección 5).
@@ -74,12 +75,19 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        // BuildConfig.DEBUG activa StrictMode en VinilosApplication.
+        buildConfig = true
     }
     lint {
         // NewApi protege el mínimo de API 21; HardcodedText obliga a usar strings.xml.
         error += setOf("NewApi", "HardcodedText")
         abortOnError = true
     }
+}
+
+// Esquema de Room versionado en git para escribir y probar migraciones.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 detekt {
@@ -115,6 +123,10 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    // Explícita para que la app use la misma versión que kotlinx-coroutines-test; la que trae Room es más vieja.
+    implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
@@ -123,6 +135,8 @@ dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.arch.core.testing)
+    androidTestImplementation(libs.androidx.room.testing)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.espresso.core)
