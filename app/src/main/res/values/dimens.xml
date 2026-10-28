@@ -18,4 +18,22 @@
     <!-- Barra inferior: punto bajo la pestaña activa. -->
     <dimen name="nav_dot_size">4dp</dimen>
     <dimen name="nav_dot_label_gap">4dp</dimen>
+
+    <!-- Mínimo de un control táctil (docs/05, sección 6). -->
+    <dimen name="min_touch_target">48dp</dimen>
+
+    <!-- Selector de rol. Los márgenes salen del marco 390 dp del mockup, no de posiciones absolutas. -->
+    <dimen name="role_card_radius">22dp</dimen>
+    <dimen name="role_card_margin_horizontal">20dp</dimen>
+    <dimen name="role_card_padding">20dp</dimen>
+    <dimen name="role_card_stroke">1dp</dimen>
+    <dimen name="role_brand_margin_start">24dp</dimen>
+    <dimen name="role_brand_icon">22dp</dimen>
+    <dimen name="role_icon_badge">58dp</dimen>
+    <dimen name="role_icon_badge_inner">29dp</dimen>
+    <dimen name="role_icon_size">16dp</dimen>
+    <dimen name="role_icon_elevation">6dp</dimen>
+    <dimen name="role_chevron">16dp</dimen>
+    <dimen name="role_cover_radius">8dp</dimen>
+    <dimen name="role_cover_elevation">16dp</dimen>
 </resources>

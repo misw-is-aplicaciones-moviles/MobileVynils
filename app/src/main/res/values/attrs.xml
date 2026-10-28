@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="VinylArtworkView">
+        <attr name="coverSrc" format="reference" />
+        <attr name="artworkCornerRadius" format="dimension" />
+        <attr name="artworkElevation" format="dimension" />
+    </declare-styleable>
+</resources>

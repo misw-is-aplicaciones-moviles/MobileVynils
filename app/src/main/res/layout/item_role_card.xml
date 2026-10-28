@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tarjeta de un rol. Visitante y coleccionista reutilizan este layout. -->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/roleCard"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:minHeight="@dimen/min_touch_target"
+    app:cardBackgroundColor="@color/vinilos_card_fill"
+    app:cardCornerRadius="@dimen/role_card_radius"
+    app:cardElevation="0dp"
+    app:rippleColor="@color/vinilos_stone"
+    app:strokeColor="@color/vinilos_charcoal"
+    app:strokeWidth="@dimen/role_card_stroke">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/role_card_padding">
+
+        <FrameLayout
+            android:id="@+id/roleIconBadge"
+            android:layout_width="@dimen/role_icon_badge"
+            android:layout_height="@dimen/role_icon_badge"
+            android:background="@drawable/bg_role_badge_clip"
+            android:elevation="@dimen/role_icon_elevation"
+            android:importantForAccessibility="no"
+            android:outlineProvider="background"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                android:scaleType="fitXY"
+                app:srcCompat="@drawable/bg_vinyl_disc" />
+
+            <View
+                android:layout_width="@dimen/role_icon_badge_inner"
+                android:layout_height="@dimen/role_icon_badge_inner"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_role_icon_well"
+                android:importantForAccessibility="no" />
+
+            <ImageView
+                android:id="@+id/roleIcon"
+                android:layout_width="@dimen/role_icon_size"
+                android:layout_height="@dimen/role_icon_size"
+                android:layout_gravity="center"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                tools:src="@drawable/ic_role_visitor" />
+        </FrameLayout>
+
+        <ImageView
+            android:id="@+id/roleChevron"
+            android:layout_width="@dimen/role_chevron"
+            android:layout_height="@dimen/role_chevron"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_chevron_end" />
+
+        <TextView
+            android:id="@+id/roleTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_l"
+            android:layout_marginEnd="@dimen/space_s"
+            android:importantForAccessibility="no"
+            android:textAppearance="@style/TextAppearance.Vinilos.RoleLabel"
+            app:layout_constraintEnd_toStartOf="@id/roleChevron"
+            app:layout_constraintStart_toEndOf="@id/roleIconBadge"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="@string/role_visitor" />
+
+        <TextView
+            android:id="@+id/roleDescription"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_l"
+            android:layout_marginTop="@dimen/space_xs"
+            android:layout_marginEnd="@dimen/space_s"
+            android:importantForAccessibility="no"
+            android:textAppearance="@style/TextAppearance.Vinilos.RoleDescription"
+            app:layout_constraintEnd_toStartOf="@id/roleChevron"
+            app:layout_constraintStart_toEndOf="@id/roleIconBadge"
+            app:layout_constraintTop_toBottomOf="@id/roleTitle"
+            tools:text="@string/role_visitor_description" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

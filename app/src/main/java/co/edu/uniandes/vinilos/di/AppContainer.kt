@@ -5,6 +5,8 @@ import androidx.room.Room
 import co.edu.uniandes.vinilos.database.VinilosDatabase
 import co.edu.uniandes.vinilos.database.dao.AlbumDao
 import co.edu.uniandes.vinilos.database.dao.TrackDao
+import co.edu.uniandes.vinilos.repositories.SessionRepository
+import co.edu.uniandes.vinilos.repositories.SessionRepositoryImpl
 
 /**
  * Crea y guarda las dependencias de la app. Solo VinilosApplication lo instancia.
@@ -26,4 +28,6 @@ class AppContainer(
     // Pasan a private cuando existan los repositorios (TR-02, HU01): el contenedor solo expondrá repositorios.
     internal val albumDao: AlbumDao by lazy { database.albumDao() }
     internal val trackDao: TrackDao by lazy { database.trackDao() }
+
+    val sessionRepository: SessionRepository by lazy { SessionRepositoryImpl() }
 }

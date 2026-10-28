@@ -66,4 +66,51 @@
     <style name="Widget.Vinilos.BottomNavigationView.NoIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
         <item name="android:color">@android:color/transparent</item>
     </style>
+
+    <!-- Marca del selector: Montserrat 800, 14 sp, tracking amplio, crema sobre carbón. -->
+    <style name="TextAppearance.Vinilos.Wordmark" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:fontFamily">@font/montserrat_extrabold</item>
+        <item name="fontFamily">@font/montserrat_extrabold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing">0.32</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="textAllCaps">true</item>
+        <item name="android:textColor">@color/vinilos_cream</item>
+    </style>
+
+    <!-- Pregunta del selector: Outfit 300, 28/35 sp. -->
+    <style name="TextAppearance.Vinilos.RoleQuestion" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:fontFamily">@font/outfit_light</item>
+        <item name="fontFamily">@font/outfit_light</item>
+        <item name="android:textSize">28sp</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+        <item name="android:lineSpacingMultiplier">1.25</item>
+    </style>
+
+    <!-- Nombre del rol: Montserrat 800, 14 sp, mayúsculas, tracking corto. -->
+    <style name="TextAppearance.Vinilos.RoleLabel" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/montserrat_extrabold</item>
+        <item name="fontFamily">@font/montserrat_extrabold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="textAllCaps">true</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Descripción de la tarjeta: Outfit 400, 14/20 sp. -->
+    <style name="TextAppearance.Vinilos.RoleDescription" parent="TextAppearance.Vinilos.Body">
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineSpacingMultiplier">1.43</item>
+    </style>
+
+    <!-- Nota al pie del selector: Outfit 400, 13 sp. -->
+    <style name="TextAppearance.Vinilos.RoleHint" parent="TextAppearance.Vinilos.Body">
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="ShapeAppearance.Vinilos.Circle" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
 </resources>
