@@ -28,7 +28,7 @@ class RoleSelectTest {
         onView(withText(R.string.role_collector)).check(matches(isDisplayed()))
         onView(withText(R.string.role_change_hint)).check(matches(isDisplayed()))
         onView(withText(R.string.role_title)).check(matches(isDisplayed()))
-        onView(withId(R.id.heroDisc)).check(matches(isDisplayed()))
+        onView(withId(R.id.artworkDisc)).check(matches(isDisplayed()))
         onView(withId(R.id.bottomNav)).check(matches(not(isDisplayed())))
     }
 

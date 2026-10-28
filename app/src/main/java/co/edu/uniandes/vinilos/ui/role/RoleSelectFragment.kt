@@ -14,7 +14,7 @@ import com.google.android.material.transition.MaterialFadeThrough
 /**
  * Destino inicial (TR-06). Compone [RoleStageFragment] y [RoleSheetFragment] y navega al catálogo.
  */
-class ajustalRoleSelectFragment : Fragment(R.layout.fragment_role_select) {
+class RoleSelectFragment : Fragment(R.layout.fragment_role_select) {
     private val viewModel: RoleSelectViewModel by viewModels { RoleSelectViewModel.Factory }
 
     override fun onCreate(savedInstanceState: Bundle?) {

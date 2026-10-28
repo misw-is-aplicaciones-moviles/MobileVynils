@@ -1,5 +1,6 @@
 package co.edu.uniandes.vinilos.ui.role
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.DrawableRes
@@ -46,11 +47,22 @@ class RoleSheetFragment : Fragment(R.layout.fragment_role_sheet) {
             actionRes = R.string.role_collector_action,
             role = UserRole.COLLECTOR,
         )
+        val scroll = binding.sheetScroll
+        val baseBottom = binding.sheetContent.paddingBottom
         // En esta pantalla la barra inferior está oculta, así que la hoja recibe el margen del sistema.
         ViewCompat.setOnApplyWindowInsetsListener(binding.sheetContent) { content, insets ->
-            val navigationBar = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-            val base = content.resources.getDimensionPixelSize(R.dimen.space_xl)
-            content.updatePadding(bottom = base + navigationBar)
+            val bars =
+                insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout(),
+                )
+            val landscape =
+                content.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+            // El fondo crema no entra bajo la barra de estado: en horizontal la hoja llega arriba.
+            scroll.updatePadding(
+                top = if (landscape) bars.top else 0,
+                right = if (landscape) bars.right else 0,
+            )
+            content.updatePadding(bottom = baseBottom + bars.bottom)
             insets
         }
         ViewCompat.requestApplyInsets(binding.sheetContent)

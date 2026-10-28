@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Disco a la derecha y carátula encima, a la izquierda. El alto lo da el marco 33:20. -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <View
+        android:id="@+id/artworkFrame"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:importantForAccessibility="no"
+        app:layout_constraintDimensionRatio="33:20"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/artworkDisc"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="@id/artworkFrame"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="@id/artworkFrame"
+        app:layout_constraintTop_toTopOf="@id/artworkFrame"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Vinilos.Circle"
+        app:srcCompat="@drawable/img_vinyl_disc" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/artworkCover"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:importantForAccessibility="no"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardCornerRadius="@dimen/role_cover_radius"
+        app:cardElevation="@dimen/role_cover_elevation"
+        app:layout_constraintBottom_toBottomOf="@id/artworkFrame"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintStart_toStartOf="@id/artworkFrame"
+        app:layout_constraintTop_toTopOf="@id/artworkFrame"
+        app:strokeWidth="0dp">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/artworkCoverImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:scaleType="centerCrop"
+            app:srcCompat="@drawable/img_album_cover" />
+    </com.google.android.material.card.MaterialCardView>
+</merge>
