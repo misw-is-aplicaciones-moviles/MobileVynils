@@ -28,7 +28,7 @@ Formato [Conventional Commits](https://www.conventionalcommits.org/) en inglés:
 Refs #<issue>
 ```
 
-Tipos: `feat`, `fix`, `refactor`, `test`, `docs`, `build`, `ci`, `chore`, `perf`, `style`. Ámbitos: `albums`, `artists`, `collectors`, `role`, `network`, `repositories`, `ui`, `nav`, `di`, `gradle`.
+Tipos: `feat`, `fix`, `refactor`, `test`, `docs`, `build`, `ci`, `chore`, `perf`, `style`. Ámbitos: `albums`, `artists`, `collectors`, `role`, `network`, `repositories`, `database`, `ui`, `nav`, `di`, `gradle`.
 
 Ejemplos: `feat(albums): show album catalog with cover and artist`, `test(albums): cover refresh error path`, `build: pin lifecycle 2.9.4 for minSdk 21`.
 
@@ -88,3 +88,4 @@ Cada sprint publica en la wiki el diseño arquitectónico de sus historias con d
 |---|---|
 | 2026-10-07 | GitFlow con `main`, `develop`, `feature/HUxx-*`, `release/sprint-N`; Conventional Commits en inglés; squash and merge; tags `sprint-N`; APK por CI en GitHub Release. |
 | 2026-10-26 | Reinicio con Vistas: ámbitos de commit por capa, verificación local en API 21 y API 37 antes de cada PR; el CI ya no ejecuta Konsist. |
+| 2026-10-27 | Ámbito `database` para el paquete de Room (TR-03). |

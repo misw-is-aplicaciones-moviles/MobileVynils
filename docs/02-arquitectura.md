@@ -18,7 +18,8 @@ Vinilos aplica los patrones que exige el curso: **Model-View-ViewModel** (MVVM),
           ▼ suspend
 ┌──────────────────────────────── Modelo ────────────────────────────────────────┐
 │  XRepository (interfaz) ── XRepositoryImpl: caché + frontera de errores         │
-│        └── XServiceAdapter: Retrofit (VinilosApiService) → API REST BackVynils  │
+│        ├── XServiceAdapter: Retrofit (VinilosApiService) → API REST BackVynils  │
+│        └── XDao: Room (VinilosDatabase) → caché local                           │
 │  models/: Album, Track, Comment, Performer, Collector                           │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -34,7 +35,9 @@ co.edu.uniandes.vinilos
 ├── VinilosApplication.kt           # crea el AppContainer
 ├── MainActivity.kt                 # NavHostFragment + BottomNavigationView
 ├── di/
-│   └── AppContainer.kt             # Retrofit, OkHttp, service adapters, repositorios, sesión
+│   └── AppContainer.kt             # Room, Retrofit, OkHttp, service adapters, repositorios, sesión
+├── database/                       # VinilosDatabase, Converters, dao/ (AlbumDao, TrackDao),
+│                                   # entities/ (AlbumEntity, TrackEntity, AlbumWithTracks)
 ├── models/                         # Album, Track, Comment, Performer, Collector, Genre, RecordLabel, UserRole,
 │                                   # DataError y DataResult (errores de datos)
 ├── network/
@@ -58,9 +61,10 @@ Reglas:
 
 1. `ui/*` solo importa `viewmodels`, `models` y `ui/common`. Nunca `network` ni `repositories`.
 2. `viewmodels/*` importa `repositories` (interfaces) y `models`. Nunca `android.view`, `android.content.Context` ni clases de `ui`.
-3. `repositories/*` importa `network` y `models`. Nunca `ui` ni `viewmodels`.
+3. `repositories/*` importa `network`, `database` y `models`. Nunca `ui` ni `viewmodels`.
 4. `network/*` importa `models` y Retrofit. Los DTO no salen de `network`: se mapean a `models` en el Service Adapter.
 5. `models/*` es Kotlin puro: no importa Android ni nada del proyecto.
+6. `database/*` importa Room y `models`. Las entidades no salen de `database` ni de `repositories`: se mapean a `models`. Sus clases son `internal`.
 
 ## 3. Vista (Fragments)
 
@@ -169,7 +173,7 @@ interface AlbumRepository {
 }
 ```
 
-En el Sprint 1 el repositorio guarda en memoria la última lista recibida (caché, como explica el curso) y la invalida tras una escritura. Si el equipo incorpora Room, la caché pasa a los DAO sin cambiar la interfaz.
+La caché del repositorio son los DAO de Room (`database/`): guardan lo recibido del backend y se actualizan tras cada escritura, sin cambiar la interfaz. Los DAO usan `@Upsert`, nunca `@Insert(onConflict = REPLACE)`, porque `REPLACE` borra la fila y el `CASCADE` se llevaría las canciones del álbum.
 
 ### Service Adapter
 
@@ -204,19 +208,31 @@ class VinilosApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        container = AppContainer()
+        if (BuildConfig.DEBUG) enableStrictMode()
+        container = AppContainer(this)
     }
 }
 
-class AppContainer {
+class AppContainer(context: Context) {
+    private val appContext = context.applicationContext
+    private val database: VinilosDatabase by lazy {
+        Room.databaseBuilder(appContext, VinilosDatabase::class.java, VinilosDatabase.NAME)
+            .fallbackToDestructiveMigration(dropAllTables = true)
+            .build()
+    }
     private val retrofit: Retrofit by lazy { /* OkHttp, BASE_URL, convertidor */ }
     private val apiService: VinilosApiService by lazy { retrofit.create(VinilosApiService::class.java) }
-    val albumRepository: AlbumRepository by lazy { AlbumRepositoryImpl(AlbumServiceAdapter(apiService)) }
+    val albumRepository: AlbumRepository by lazy {
+        AlbumRepositoryImpl(AlbumServiceAdapter(apiService), database.albumDao(), database.trackDao())
+    }
     val sessionRepository: SessionRepository by lazy { SessionRepositoryImpl() }
 }
 ```
 
 - Todo lo pesado se crea con `lazy` al primer uso.
+- Recibe el `Context` de la `Application` porque Room lo necesita, y guarda solo `applicationContext`.
+- Una sola `VinilosDatabase` en toda la app, sin `companion object` singleton: la unicidad la garantiza el contenedor.
+- `fallbackToDestructiveMigration`: la base es una caché del backend; un cambio de esquema sin migración la recrea en vez de cerrar la app.
 - Las clases reciben sus dependencias por constructor; nadie hace `AppContainer()` fuera de la `Application`.
 - En pruebas, los ViewModels se crean directamente con repositorios falsos; las pruebas E2E reemplazan el contenedor o apuntan a un backend de pruebas (`06-pruebas.md`).
 
@@ -256,3 +272,4 @@ class AppContainer {
 |---|---|
 | 2026-10-07 | MVVM con flujo unidireccional, Compose, Hilt y Room como fuente única de verdad (propuesta inicial). |
 | 2026-10-26 | Reinicio: Fragments + ViewBinding, `LiveData` con `Event` para eventos de una sola vez, inyección manual con `AppContainer`, paquetes por capa como en el ejemplo del curso, caché en memoria en el Repository para el Sprint 1. |
+| 2026-10-27 | TR-03: Room 2.7.2 como caché del Repository (`AlbumEntity`, `TrackEntity`), paquete `database/` con clases `internal`, `AppContainer(context)` dueño de la única `VinilosDatabase`, StrictMode en debug. |
