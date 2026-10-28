@@ -2,11 +2,14 @@ package co.edu.uniandes.vinilos.di
 
 import android.content.Context
 import androidx.room.Room
+import co.edu.uniandes.vinilos.BuildConfig
 import co.edu.uniandes.vinilos.database.VinilosDatabase
 import co.edu.uniandes.vinilos.database.dao.AlbumDao
 import co.edu.uniandes.vinilos.database.dao.TrackDao
+import co.edu.uniandes.vinilos.network.NetworkClient
 import co.edu.uniandes.vinilos.repositories.SessionRepository
 import co.edu.uniandes.vinilos.repositories.SessionRepositoryImpl
+import java.io.File
 
 /**
  * Crea y guarda las dependencias de la app. Solo VinilosApplication lo instancia.
@@ -17,6 +20,12 @@ class AppContainer(
 ) {
     private val appContext = context.applicationContext
 
+    // Se comparte entre Service Adapters y vive tanto como la aplicación.
+    // Su primer acceso se hace fuera del hilo principal, porque prepara la caché HTTP.
+    internal val networkClient: NetworkClient by lazy {
+        NetworkClient(BuildConfig.BASE_URL, File(appContext.cacheDir, "http"))
+    }
+
     private val database: VinilosDatabase by lazy {
         Room
             .databaseBuilder(appContext, VinilosDatabase::class.java, VinilosDatabase.NAME)
@@ -25,7 +34,7 @@ class AppContainer(
             .build()
     }
 
-    // Pasan a private cuando existan los repositorios (TR-02, HU01): el contenedor solo expondrá repositorios.
+    // Pasan a private cuando existan los repositorios de cada historia.
     internal val albumDao: AlbumDao by lazy { database.albumDao() }
     internal val trackDao: TrackDao by lazy { database.trackDao() }
 

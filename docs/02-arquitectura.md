@@ -41,6 +41,9 @@ co.edu.uniandes.vinilos
 ├── models/                         # Album, Track, Comment, Performer, Collector, Genre, RecordLabel, UserRole,
 │                                   # DataError y DataResult (errores de datos)
 ├── network/
+│   ├── NetworkClient.kt            # infraestructura Retrofit/OkHttp compartida desde AppContainer
+│   ├── NetworkRequest.kt           # conversión de errores remotos, invocada por el Repository
+│   ├── JsonResponseConverterFactory.kt # normaliza errores de estructura JSON
 │   ├── VinilosApiService.kt        # interfaz Retrofit con los endpoints
 │   ├── dto/                        # AlbumDto, TrackDto, ... y mappers toModel()
 │   └── AlbumServiceAdapter.kt      # un adaptador por entidad
@@ -234,6 +237,7 @@ class AppContainer(context: Context) {
 - Una sola `VinilosDatabase` en toda la app, sin `companion object` singleton: la unicidad la garantiza el contenedor.
 - `fallbackToDestructiveMigration`: la base es una caché del backend; un cambio de esquema sin migración la recrea en vez de cerrar la app.
 - Las clases reciben sus dependencias por constructor; nadie hace `AppContainer()` fuera de la `Application`.
+- TR-02: `AppContainer.networkClient` comparte una sola instancia de `NetworkClient` por aplicación, sin cambiar los DAO de Room. El primer acceso debe hacerse fuera del hilo principal porque prepara la caché HTTP. Cada historia añadirá sus contratos Retrofit, DTO, Service Adapter y Repository; `networkRequest` es una utilidad que el Repository invoca en su frontera de errores, no desde la Vista ni el ViewModel.
 - En pruebas, los ViewModels se crean directamente con repositorios falsos; las pruebas E2E reemplazan el contenedor o apuntan a un backend de pruebas (`06-pruebas.md`).
 
 ## 7. Concurrencia

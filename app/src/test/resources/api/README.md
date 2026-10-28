@@ -20,3 +20,4 @@ curl http://localhost:3000/albums/100 -o app/src/test/resources/api/album_100.js
 | Archivo | Origen | Uso |
 |---|---|---|
 | `albums.json` | `GET /albums` con la semilla (4 álbumes) | Prueba de humo de TR-05 y HU01 |
+| `albums_single.json` | Ejemplo sintético con la forma de BackVynils (1 álbum) | Pruebas de red de TR-02 |
