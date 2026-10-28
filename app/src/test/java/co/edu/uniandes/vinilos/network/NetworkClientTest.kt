@@ -199,6 +199,6 @@ class NetworkClientTest {
         const val SHORT_TIMEOUT_MILLIS = 100L
         const val DEFAULT_TEST_TIMEOUT_MILLIS = 2_000L
         const val REQUEST_WAIT_SECONDS = 5L
-        val albumsJson = checkNotNull(NetworkClientTest::class.java.getResource("/api/albums.json")).readText()
+        val albumsJson = checkNotNull(NetworkClientTest::class.java.getResource("/api/albums_single.json")).readText()
     }
 }

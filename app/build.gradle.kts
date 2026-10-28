@@ -99,6 +99,12 @@ android {
         error += setOf("NewApi", "HardcodedText")
         abortOnError = true
     }
+    testOptions {
+        // Espresso falla de forma intermitente con animaciones activas (docs/06-pruebas.md, sección 4).
+        animationsDisabled = true
+        // OkHttp 5 detecta android.jar en las unitarias y llama a android.util.Log; sin esto imprime una excepción.
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 // Esquema de Room versionado en git para escribir y probar migraciones.
@@ -152,11 +158,14 @@ dependencies {
     debugImplementation(libs.okhttp.logging)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     testImplementation(libs.junit)
-    testImplementation(libs.okhttp.mockwebserver)
-    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.androidx.arch.core.testing) // InstantTaskExecutorRule
+    testImplementation(libs.kotlinx.coroutines.test) // runTest, MainDispatcherRule
+    testImplementation(libs.okhttp.mockwebserver) // pruebas de API
     androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.espresso.contrib) // RecyclerViewActions
 }

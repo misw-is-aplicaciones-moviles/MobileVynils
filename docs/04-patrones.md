@@ -51,10 +51,11 @@ Problema: acoplamiento a implementaciones concretas y objetos imposibles de reem
 
 - **Fake sobre Mock** para Repository y Service Adapter: `FakeAlbumRepository` con resultados configurables. Sin librería de mocks en el catálogo.
 - **InstantTaskExecutorRule** para que `LiveData` publique de forma síncrona en pruebas unitarias.
-- **MainDispatcherRule** que instala un `TestDispatcher` en `Dispatchers.Main` para `viewModelScope`. No es de una librería: se escribe en `src/test` (TR-05).
-- **`getOrAwaitValue`** (extensión propia en `src/test`, TR-05) para leer un `LiveData` que se publica más tarde; con `InstantTaskExecutorRule` basta `.value` para lo ya publicado.
-- **MockWebServer** para probar el Service Adapter con respuestas reales de BackVynils guardadas en `src/test/resources/`.
-- **Page Object (Robot)** en pruebas E2E: una clase por pantalla (`AlbumListRobot`) con las acciones y aserciones de Espresso de esa pantalla.
+- **MainDispatcherRule** que instala un `TestDispatcher` en `Dispatchers.Main` para `viewModelScope`. No es de una librería: está en el paquete `testing` de `src/test` (TR-05).
+- **`getOrAwaitValue`** (extensión propia en `testing/LiveDataExtensions.kt`, TR-05) para leer un `LiveData` que se publica más tarde; con `InstantTaskExecutorRule` basta `.value` para lo ya publicado.
+- **MockWebServer** (`MockWebServerRule`) para probar el Service Adapter con respuestas reales de BackVynils guardadas en `src/test/resources/api/`.
+- **IdlingResource sobre OkHttp** (`OkHttpIdlingResourceRule` en `src/androidTest`) para que Espresso espere la red sin `Thread.sleep`.
+- **Page Object (Robot)** en pruebas E2E: una clase por pantalla en `robots/` (`AlbumListRobot`) con las acciones y aserciones de Espresso de esa pantalla.
 
 ## 5. Antipatrones prohibidos
 
