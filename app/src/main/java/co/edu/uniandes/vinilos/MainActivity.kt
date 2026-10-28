@@ -44,7 +44,30 @@ class MainActivity : AppCompatActivity() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNav) { _, insets -> insets }
 
         val navHost = binding.navHost.getFragment<NavHostFragment>()
-        setupBottomNavigation(navHost.navController)
+        val navController = navHost.navController
+        // El rol vive solo en memoria. Navigation sí guarda la pantalla: si el proceso murió,
+        // restaura el catálogo con el rol ya perdido. Un giro no entra aquí, porque el proceso sigue.
+        returnToRoleSelectorIfRoleWasLost(savedInstanceState, navController)
+        setupBottomNavigation(navController)
+    }
+
+    private fun returnToRoleSelectorIfRoleWasLost(
+        savedInstanceState: Bundle?,
+        navController: NavController,
+    ) {
+        if (savedInstanceState == null) return
+        val role =
+            (application as VinilosApplication)
+                .container.sessionRepository.role.value
+        if (role != null || navController.currentDestination?.id == R.id.roleSelectFragment) return
+        navController.navigate(
+            R.id.roleSelectFragment,
+            null,
+            navOptions {
+                popUpTo(navController.graph.id) { inclusive = true }
+                launchSingleTop = true
+            },
+        )
     }
 
     private fun setupBottomNavigation(navController: NavController) {
