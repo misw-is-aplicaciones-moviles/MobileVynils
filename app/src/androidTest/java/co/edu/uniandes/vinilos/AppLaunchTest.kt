@@ -16,7 +16,7 @@ import org.junit.runner.RunWith
 
 /** Prueba de humo: la app abre en el catálogo. Corre desde API 21. */
 @RunWith(AndroidJUnit4::class)
-class ExampleInstrumentedTest {
+class AppLaunchTest {
     @get:Rule
     val activityRule = ActivityScenarioRule(MainActivity::class.java)
 

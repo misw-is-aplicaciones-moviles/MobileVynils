@@ -32,6 +32,8 @@ class PendingTabFragment : Fragment(R.layout.fragment_pending_tab) {
         bindingOrNull = FragmentPendingTabBinding.bind(view)
         val args = requireArguments()
         binding.headerBar.headerTitle.setText(args.getInt(ARG_TITLE_RES))
+        // android:accessibilityHeading solo existe desde API 28; ViewCompat lo aplica desde API 21.
+        ViewCompat.setAccessibilityHeading(binding.headerBar.headerTitle, true)
         binding.pendingMessage.setText(args.getInt(ARG_MESSAGE_RES))
         // La cabecera carbón se extiende bajo la barra de estado (edge-to-edge).
         ViewCompat.setOnApplyWindowInsetsListener(binding.headerBar.header) { header, insets ->

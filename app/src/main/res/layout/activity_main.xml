@@ -39,6 +39,7 @@
             android:layout_height="@dimen/nav_dot_size"
             android:layout_gravity="top|start"
             android:background="@drawable/bg_nav_dot"
-            android:importantForAccessibility="no" />
+            android:importantForAccessibility="no"
+            android:visibility="invisible" />
     </FrameLayout>
 </LinearLayout>
