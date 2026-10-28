@@ -73,12 +73,12 @@ Reglas:
 
 ```kotlin
 class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
-    private var _binding: FragmentAlbumListBinding? = null
-    private val binding get() = checkNotNull(_binding)
+    private var bindingOrNull: FragmentAlbumListBinding? = null
+    private val binding get() = checkNotNull(bindingOrNull)
     private val viewModel: AlbumListViewModel by viewModels { AlbumListViewModel.Factory }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        _binding = FragmentAlbumListBinding.bind(view)
+        bindingOrNull = FragmentAlbumListBinding.bind(view)
         val adapter = AlbumAdapter(onAlbumClick = viewModel::onAlbumClicked)
         binding.albumList.adapter = adapter
         binding.errorState.retryButton.setOnClickListener { viewModel.refresh() }
@@ -90,7 +90,7 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        bindingOrNull = null
     }
 }
 ```

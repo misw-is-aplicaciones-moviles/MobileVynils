@@ -20,7 +20,8 @@ Base: [Kotlin coding conventions](https://kotlinlang.org/docs/coding-conventions
 | Fragments, adaptadores y vistas | `UpperCamelCase` con sufijo de tipo | `AlbumListFragment`, `AlbumAdapter`, `TrackCreateBottomSheet` |
 | Layouts e ids de vistas | `snake_case` con prefijo de tipo; ids en `camelCase` para ViewBinding | `fragment_album_list.xml`, `item_album.xml`, `@+id/albumList` |
 | Constantes (`const val`, `val` de nivel superior inmutable) | `SCREAMING_SNAKE_CASE` | `MAX_TRACKS_PER_ALBUM` |
-| Backing field de `LiveData` y del binding | prefijo `_` | `_uiState`, `_binding` |
+| Backing field de `LiveData` (propiedad pública) | prefijo `_` | `_uiState` |
+| Binding de un Fragment | `bindingOrNull` privado y `binding` privado no nulo; ktlint no admite `_` cuando la propiedad es privada | `bindingOrNull`, `binding` |
 | Pruebas | descripción con backticks | `` fun `refresh emits error when network fails`() `` |
 | Interfaces y su implementación | `Xxx` / `XxxImpl` solo cuando hay una implementación real; `FakeXxx` en pruebas | `AlbumRepository`, `FakeAlbumRepository` |
 | DTOs | sufijo por capa | `AlbumDto`, `NewAlbumRequest` |
@@ -32,7 +33,7 @@ No se usan prefijos húngaros ni abreviaturas no obvias. Se evitan nombres gené
 
 - Los tipos nulos se evitan en el dominio: un `Album` siempre tiene `name`; lo opcional se modela con valores por defecto o con tipos sellados.
 - Prohibido `!!`. Se usa `?.`, `?:`, `requireNotNull` con mensaje o `checkNotNull` cuando la ausencia es un error de programación.
-- `lateinit` solo para el contenedor en `VinilosApplication` y para pruebas; nunca en ViewModels ni datos. El binding de un Fragment usa la referencia nula `_binding` (`02-arquitectura.md`, sección 3).
+- `lateinit` solo para el contenedor en `VinilosApplication` y para pruebas; nunca en ViewModels ni datos. El binding de un Fragment usa la referencia nula `bindingOrNull` (`02-arquitectura.md`, sección 3).
 - Los DTOs de red declaran nulos lo que el backend pueda omitir y el mapper decide el valor por defecto.
 - Preferir `val` sobre `var`, colecciones de solo lectura (`List`, `Map`) sobre mutables, y `data class` con `copy` para cambios de estado.
 - `sealed interface` para estados y errores cerrados; `enum class` para conjuntos fijos sin datos asociados.
@@ -130,3 +131,4 @@ class AlbumDetailViewModel(
 |---|---|
 | 2026-10-07 | Estilo `ktlint_official`, 120 columnas, coma final, backing fields clásicos, sin `!!`, errores como valores. |
 | 2026-10-26 | Reglas de corrutinas y recursos adaptadas a Fragments y `LiveData`; nombres para Fragments, adaptadores, layouts e ids; `HardcodedText` y `NewApi` como errores de Lint. |
+| 2026-10-26 | El binding de los Fragments se llama `bindingOrNull` (ktlint `backing-property-naming` no admite `_` en propiedades privadas). |
