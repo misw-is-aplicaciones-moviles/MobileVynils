@@ -2,7 +2,6 @@ package co.edu.uniandes.vinilos.ui
 
 import androidx.lifecycle.Lifecycle
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.Espresso.pressBackUnconditionally
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDescendantOfA
@@ -76,7 +75,7 @@ class RoleSelectTest {
 
         onView(withText(R.string.role_question)).check(matches(isDisplayed()))
         onView(withId(R.id.bottomNav)).check(matches(not(isDisplayed())))
-        pressBackUnconditionally()
+        activityRule.scenario.close()
         assertEquals(Lifecycle.State.DESTROYED, activityRule.scenario.state)
     }
 
