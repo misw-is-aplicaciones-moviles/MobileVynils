@@ -1,3 +1,4 @@
+import java.net.URI
 import java.util.Properties
 
 plugins {
@@ -13,6 +14,20 @@ val localProperties =
         val file = rootProject.file("local.properties")
         if (file.exists()) file.inputStream().use { load(it) }
     }
+
+// Se compila también en release: el APK del curso consume el backend HTTP local.
+val backendBaseUrl = localProperties.getProperty("vinilos.baseUrl") ?: "http://10.0.2.2:3000/"
+val backendUri = URI(backendBaseUrl)
+require(
+    backendUri.scheme in setOf("http", "https") &&
+        !backendUri.host.isNullOrBlank() &&
+        backendUri.rawUserInfo == null &&
+        backendUri.rawQuery == null &&
+        backendUri.rawFragment == null &&
+        backendBaseUrl.endsWith("/"),
+) {
+    "vinilos.baseUrl debe ser una URL HTTP(S) con host y / final, sin credenciales, query ni fragmento."
+}
 
 fun signingValue(
     envName: String,
@@ -42,6 +57,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+        buildConfigField("String", "BASE_URL", "\"${backendUri.toASCIIString()}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Íconos vectoriales con AppCompat en API 21 a 23.
@@ -94,7 +110,7 @@ detekt {
     buildUponDefaultConfig = true
     allRules = false
     config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
-    source.setFrom("src/main/java", "src/test/java", "src/androidTest/java")
+    source.setFrom("src/main/java", "src/debug/java", "src/release/java", "src/test/java", "src/androidTest/java")
 }
 
 // Un release sin credenciales de firma debe fallar con un mensaje claro, nunca producir un APK sin firmar.
@@ -130,8 +146,14 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp)
+    debugImplementation(libs.okhttp.logging)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     testImplementation(libs.junit)
+    testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext.junit)
