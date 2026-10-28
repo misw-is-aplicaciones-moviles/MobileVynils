@@ -14,7 +14,7 @@ Define qué se prueba, con qué herramienta, en qué nivel y cómo se documenta.
 | Nivel | Qué prueba | Herramientas | Dónde | Cuándo corre |
 |---|---|---|---|---|
 | Unitarias | ViewModels, repositorios, service adapters, mappers, validaciones | JUnit 4, `InstantTaskExecutorRule`, kotlinx-coroutines-test, MockWebServer, fakes | `src/test` | Cada PR (CI) y local |
-| Pruebas de API | Contratos de BackVynils que usa cada historia | Colección de Postman o `curl` contra el backend local con la semilla | Wiki del sprint | Antes de implementar cada historia |
+| Pruebas de API | Contratos de BackVynils que usa cada historia: rutas, deserialización y errores HTTP | JUnit 4 + Retrofit + MockWebServer (`MockWebServerRule`) con respuestas reales en `src/test/resources/api/`. Antes, exploración con `curl` o Postman contra el backend local con la semilla | `src/test` | Cada PR (CI) y local |
 | E2E | Flujos completos de cada historia en la app | Espresso (core y contrib), `ActivityScenarioRule`, Robots | `src/androidTest` | Antes de pedir revisión y en la matriz antes del release |
 | Exploratorias | Escenarios del inventario exploratorio del sprint | Manual, con tester cruzado | Wiki | Al cerrar las historias |
 | Aleatorias y sistemáticas | Robustez ante entradas no previstas | Monkey (`adb`), RIP | Scripts en `tests/` (se crean en el Sprint 3) | Sprint 3 |
@@ -25,7 +25,7 @@ Define qué se prueba, con qué herramienta, en qué nivel y cómo se documenta.
 
 - Nombre: `` `acción cuando condición entonces resultado` `` en inglés: `` fun `refresh shows error when backend fails`() ``.
 - Estructura Given/When/Then separada por líneas en blanco.
-- ViewModel: `InstantTaskExecutorRule` (de `androidx.arch.core:core-testing`) para que `LiveData` publique al instante, `MainDispatcherRule` para `viewModelScope`, `FakeAlbumRepository` y lectura del estado con `getOrAwaitValue()`. `MainDispatcherRule` y `getOrAwaitValue` no vienen de una librería: los escribe TR-05 en `src/test`.
+- ViewModel: `InstantTaskExecutorRule` (de `androidx.arch.core:core-testing`) para que `LiveData` publique al instante, `MainDispatcherRule` para `viewModelScope`, `FakeAlbumRepository` y lectura del estado con `getOrAwaitValue()`. `MainDispatcherRule` y `getOrAwaitValue` no vienen de una librería: están en el paquete `testing` de `src/test` (sección 9).
 
 ```kotlin
 class AlbumListViewModelTest {
@@ -55,11 +55,11 @@ class AlbumListViewModelTest {
 
 - Runner `androidx.test.runner.AndroidJUnitRunner`; regla `ActivityScenarioRule(MainActivity::class.java)`.
 - Backend: BackVynils local con la semilla (`docker compose up`), alcanzable desde el emulador en `10.0.2.2:3000`. Las pruebas que crean datos (HU07, HU08) usan nombres únicos para ser repetibles.
-- Espera de red: `IdlingResource` registrado en `IdlingRegistry` para las llamadas de Retrofit (lo define TR-05); nunca `Thread.sleep`. Un `CountingIdlingResource` usado desde el código de la app necesita `androidx.test.espresso:espresso-idling-resource` como dependencia `implementation`, que hay que agregar al catálogo y verificar con `minSdk 21`.
+- Espera de red: `OkHttpIdlingResourceRule(client)` registra en `IdlingRegistry` un `IdlingResource` sobre el `Dispatcher` del `OkHttpClient` de la app y lo retira al terminar; nunca `Thread.sleep`. Vive en `src/androidTest`, así que la app no necesita `espresso-idling-resource`. El cliente lo expone el `AppContainer` (TR-03).
 - Selección por id de vista (`withId`) y por texto de recurso (`withText(R.string.x)`); listas con `RecyclerViewActions` de `espresso-contrib`.
 - Page Object (Robot) por pantalla: `AlbumListRobot`, `AlbumDetailRobot`; la prueba se lee como el caso del inventario.
 - Una clase por historia: `HU01AlbumCatalogTest`, un método por caso `CP-HU01-nn`.
-- Animaciones del sistema desactivadas antes de correr: `testOptions { animationsDisabled = true }` en Gradle (lo agrega TR-05) para `connectedDebugAndroidTest` y, con `am instrument`, `settings put global window_animation_scale 0` (y lo mismo para `transition_animation_scale` y `animator_duration_scale`).
+- Animaciones del sistema desactivadas antes de correr: `testOptions { animationsDisabled = true }` en Gradle para `connectedDebugAndroidTest` y, con `am instrument`, `settings put global window_animation_scale 0` (y lo mismo para `transition_animation_scale` y `animator_duration_scale`).
 - **API 21:** no se escriben pruebas que hagan capturas de pantalla seguidas (`UiAutomation.takeScreenshot` cuadro a cuadro): congelan el emulador de Lollipop. Lo visual en API 21 se revisa a mano.
 - Matriz antes de release: emulador API 21 (`Vinilos_API_21`, arrancado con `-gpu host`), API 30, API 37 y un dispositivo físico. Resultado por versión en la wiki.
 
@@ -103,7 +103,47 @@ Se enlazan desde el inventario y se cierran con el PR que los corrige, que inclu
 - Accessibility Scanner en cada pantalla, con hallazgos y correcciones en la wiki.
 - Recorrido con TalkBack del flujo principal grabado como evidencia.
 
-## 9. Comandos
+## 9. Cómo agregar una prueba
+
+El entorno ya está configurado (TR-05): dependencias en `app/build.gradle.kts` y utilidades en el paquete `co.edu.uniandes.vinilos.testing`. `testing/EnvironmentSmokeTest.kt` es el ejemplo mínimo de cada utilidad.
+
+| Utilidad | Dónde | Para qué |
+|---|---|---|
+| `MainDispatcherRule` | `src/test` | Cambia `Dispatchers.Main` por un `TestDispatcher`; `advanceUntilIdle()` avanza `viewModelScope` |
+| `getOrAwaitValue()` | `src/test` (`LiveDataExtensions.kt`) | Lee el primer valor de un `LiveData`; requiere `InstantTaskExecutorRule` |
+| `MockWebServerRule` | `src/test` | Servidor HTTP local: `baseUrl` para Retrofit y `enqueueJson("api/x.json", code)` |
+| `readResource(path)` | `src/test` (`TestResources.kt`) | Lee un archivo de `src/test/resources` |
+| `OkHttpIdlingResourceRule` | `src/androidTest` | Espresso espera las llamadas de red de la app |
+| `robots/` | `src/androidTest` | Page Objects por pantalla (`MainRobot` es el ejemplo) |
+
+En las unitarias, las clases de `android.*` no lanzan error sino que devuelven valores por defecto (`unitTests.isReturnDefaultValues = true`, necesario porque OkHttp 5 llama a `android.util.Log`). Por eso la lógica que se prueba en `src/test` no usa clases de Android: `TextUtils.isEmpty` devolvería `false` en silencio y la prueba pasaría por error. En su lugar se usa Kotlin puro (`isBlank()`), como ya exige la arquitectura para ViewModels y modelos.
+
+**ViewModel o Repository** (`src/test/java/.../viewmodels/AlbumListViewModelTest.kt`, mismo paquete que la clase probada): reglas `InstantTaskExecutorRule` y `MainDispatcherRule`, un `FakeAlbumRepository` en `src/test`, cuerpo en `runTest`. Ejemplo en la sección 3.
+
+**Service Adapter / API** (`src/test/java/.../network/AlbumServiceAdapterTest.kt`):
+
+```kotlin
+@get:Rule val mockWebServerRule = MockWebServerRule()
+
+@Test
+fun `getAlbums maps albums when server returns seed`() = runTest {
+    mockWebServerRule.enqueueJson("api/albums.json")
+    // El convertidor JSON lo elige TR-02; se agrega aquí con addConverterFactory(...).
+    val service = Retrofit.Builder().baseUrl(mockWebServerRule.baseUrl).build().create<VinilosApiService>()
+    val adapter = AlbumServiceAdapter(service)
+
+    val albums = adapter.getAlbums()
+
+    assertEquals(4, albums.size)
+    assertEquals("/albums", mockWebServerRule.server.takeRequest().path)
+}
+```
+
+La respuesta se captura del backend real (`src/test/resources/api/README.md`). Los casos de error encolan un `MockResponse().setResponseCode(500)` o un JSON de error.
+
+**E2E** (`src/androidTest/java/co/edu/uniandes/vinilos/HU01AlbumCatalogTest.kt`): `@RunWith(AndroidJUnit4::class)`, `ActivityScenarioRule(MainActivity::class.java)`, `OkHttpIdlingResourceRule` cuando la pantalla llama al backend, y un Robot por pantalla en `robots/`. Un método por caso del inventario (`CP-HU01-nn`).
+
+## 10. Comandos
 
 ```bash
 ./gradlew testDebugUnitTest                 # unitarias
@@ -114,9 +154,10 @@ adb shell am instrument -w co.edu.uniandes.vinilos.test/androidx.test.runner.And
 
 En API 21, `connectedDebugAndroidTest` puede tardar varios minutos en cerrar tras terminar las pruebas; `am instrument` devuelve el resultado en cuanto terminan.
 
-## 10. Bitácora de decisiones
+## 11. Bitácora de decisiones
 
 | Fecha | Decisión |
 |---|---|
 | 2026-10-07 | Pirámide de niveles, Page Objects, inventario `CP-HUxx-nn`, defectos como issues, Monkey y RIP en Sprint 3. |
 | 2026-10-26 | Reinicio con Vistas: E2E con Espresso y `ActivityScenarioRule`, unitarias de `LiveData` con `InstantTaskExecutorRule`, fakes sin librería de mocks, matriz API 21/30/37, sin capturas seguidas en API 21. Konsist y pruebas de Compose retiradas. |
+| 2026-10-27 | TR-05: entorno de pruebas listo. Utilidades en el paquete `testing` (`MainDispatcherRule`, `getOrAwaitValue`, `MockWebServerRule`, `OkHttpIdlingResourceRule`), Robots en `robots/`, `animationsDisabled`. Las pruebas de API pasan a JUnit + Retrofit + MockWebServer en `src/test`, con respuestas reales de BackVynils. |
