@@ -45,11 +45,13 @@ cd BackVynils
 docker compose up --build
 ```
 
-Queda disponible en `http://localhost:3000`. La capa de red (TR-02) usará `http://10.0.2.2:3000/` desde el emulador como valor por defecto de `BASE_URL` en `debug`. Para un dispositivo físico, se definirá en `local.properties`:
+Queda disponible en `http://localhost:3000`. La capa de red (TR-02) usa `http://10.0.2.2:3000/` desde el emulador como valor por defecto de `BuildConfig.BASE_URL`, tanto en `debug` como en `release`. Para un dispositivo físico, define en `local.properties` y vuelve a compilar:
 
 ```properties
 vinilos.baseUrl=http://<ip-de-tu-pc>:3000/
 ```
+
+La URL debe ser HTTP(S), incluir host y terminar en `/`, sin credenciales, query ni fragmento. Se permite HTTP en ambas variantes para consumir el backend local del curso. Solo `debug` registra las peticiones, con nivel BASIC.
 
 ## Compilar y ejecutar
 
@@ -68,6 +70,16 @@ vinilos.baseUrl=http://<ip-de-tu-pc>:3000/
 ./gradlew spotlessCheck detekt lintDebug testDebugUnitTest   # calidad estática y pruebas unitarias
 ./gradlew connectedDebugAndroidTest                   # pruebas instrumentadas y E2E (emulador encendido)
 ```
+
+Con BackVynils encendido y su semilla cargada, ejecuta la prueba de conexión desde Android:
+
+```bash
+./gradlew connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.network.BackendConnectionTest \
+  -Pandroid.testInstrumentationRunnerArguments.backendSmoke=true
+```
+
+Esta prueba consulta `/albums` usando la URL compilada y comprueba que la respuesta contiene álbumes con id y nombre. Se omite cuando no se pasa `backendSmoke=true`, para que las pruebas instrumentadas habituales no dependan del backend.
 
 ## APK de cada sprint
 

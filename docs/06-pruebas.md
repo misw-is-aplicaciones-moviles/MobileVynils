@@ -114,6 +114,20 @@ adb shell am instrument -w co.edu.uniandes.vinilos.test/androidx.test.runner.And
 
 En API 21, `connectedDebugAndroidTest` puede tardar varios minutos en cerrar tras terminar las pruebas; `am instrument` devuelve el resultado en cuanto terminan.
 
+### Capa de red (TR-02)
+
+`NetworkClientTest` usa MockWebServer y `src/test/resources/api/albums.json` para verificar rutas, deserialización, campos opcionales, catálogo vacío, códigos HTTP, JSON inválido, timeout, caché HTTP y cancelación. También comprueba que un POST cuya respuesta se pierde no se repite. `NetworkRequestTest` verifica errores DNS y la propagación de cancelación y errores de programación.
+
+`BackendConnectionTest` es una prueba de integración optativa, independiente de Espresso: requiere BackVynils con la semilla y un emulador o dispositivo con acceso a `BuildConfig.BASE_URL`. Se activa explícitamente:
+
+```bash
+./gradlew connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.network.BackendConnectionTest \
+  -Pandroid.testInstrumentationRunnerArguments.backendSmoke=true
+```
+
+Sin `backendSmoke=true`, se omite. Los contratos `ProbeApi` y `ProbeAlbumDto` pertenecen solo a las pruebas; cada historia añadirá sus contratos de producción.
+
 ## 10. Bitácora de decisiones
 
 | Fecha | Decisión |

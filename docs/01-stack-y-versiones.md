@@ -14,7 +14,7 @@ Decisiones de base técnica de Vinilos. El stack se reinició el 2026-10-26 con 
 | Arquitectura | MVVM con Repository y Service Adapter, un solo módulo | Requisito del curso (rúbrica: patrones MVVM, Repository y Service Adapter) |
 | Estado | `ViewModel` + `LiveData` (lifecycle 2.9.4) | Mecanismo de observación que enseña el curso para MVVM |
 | Inyección | Manual: `AppContainer` en `VinilosApplication` | Menor complejidad para un proyecto académico pequeño |
-| Red | Retrofit 3.0.0 + OkHttp 5.1.0 | Service Adapter del curso sobre REST. El convertidor JSON lo elige TR-02 |
+| Red | Retrofit 3.0.0 + OkHttp 5.1.0 + converter-gson 3.0.0 | Service Adapter del curso sobre REST; Gson con JSON estricto |
 | Navegación | Navigation Component 2.9.6 (`navigation-fragment-ktx`, `navigation-ui-ktx`) | Grafo XML, `BottomNavigationView` con `setupWithNavController` |
 | Listas | RecyclerView 1.4.0 con `ListAdapter` y `DiffUtil` | Listas eficientes con Vistas |
 | Imágenes | Glide 4.16.0 | Carátulas de álbumes e imágenes de artistas con Vistas |
@@ -89,13 +89,15 @@ Matriz mínima de pruebas (requisito del curso: probar en distintas versiones an
 - `buildFeatures { viewBinding = true }`; `compileOptions` con Java 17 e `isCoreLibraryDesugaringEnabled = true`.
 - `lint { error += setOf("NewApi", "HardcodedText"); abortOnError = true }`.
 - `buildTypes`: `debug` y `release`. El APK entregable de cada sprint es el de `release`, firmado con la keystore de depuración del proyecto (`keystore/debug.keystore`; credenciales en el entorno o en `local.properties`, ver `keystore/README.md`); ver `08-flujo-de-trabajo-git.md`.
-- URL del backend (la agrega TR-02, aún no existe): `buildFeatures { buildConfig = true }` (AGP no genera `BuildConfig` por defecto) y `buildConfigField` `BASE_URL` con `http://10.0.2.2:3000/` para el emulador; el del dispositivo físico se define en `local.properties` (no versionado).
+- URL del backend: `buildFeatures { buildConfig = true }` (AGP no genera `BuildConfig` por defecto) y `buildConfigField` `BASE_URL` con `http://10.0.2.2:3000/` para el emulador en ambas variantes. El dispositivo físico usa `vinilos.baseUrl` en `local.properties` (no versionado); requiere recompilar. Gradle valida HTTP(S), host y `/` final, sin credenciales, query ni fragmento.
 
 ## 6. Backend de desarrollo
 
 `BackVynils` (NestJS) corre local con Docker Compose en el puerto 3000 y responde por `http://`. La app apunta a `10.0.2.2:3000` desde el emulador y a la IP de la red local desde un dispositivo físico.
 
-Texto plano (lo configura TR-02, aún no existe): como el entregable es el APK de `release` y el backend del curso es `http://`, el permiso de texto plano va en el manifiesto de `main` (`android:usesCleartextTraffic="true"` en `<application>`), no solo en `debug`. Con `targetSdk 36` el texto plano está bloqueado por defecto desde API 28; en API 21 a 27 el atributo no cambia nada porque ya está permitido. Si se agrega un `network_security_config.xml`, debe permitir también la IP de la red local, no solo `10.0.2.2`.
+Texto plano: como el entregable es el APK de `release` y el backend del curso es `http://`, el permiso de texto plano está en el manifiesto de `main` (`android:usesCleartextTraffic="true"` en `<application>`), junto con el permiso `INTERNET`. Con `targetSdk 36` el texto plano está bloqueado por defecto desde API 28; en API 21 a 27 el atributo no cambia nada porque ya está permitido. Si se agrega un `network_security_config.xml`, debe permitir también la IP de la red local, no solo `10.0.2.2`.
+
+`NetworkClient` configura caché HTTP de 10 MB, conexión de 10 s y lectura de 30 s. Desactiva `retryOnConnectionFailure` para evitar repetir escrituras al perder una respuesta. La caché HTTP respeta las cabeceras del servidor; la caché en memoria de cada Repository sigue siendo independiente. `networkRequest` convierte errores HTTP, de JSON y de E/S en `DataError`; deja propagar la cancelación y los errores de programación. TR-03 compartirá el cliente desde `AppContainer`; los contratos de API y DTO de producción corresponden a cada historia.
 
 ## 7. Bitácora de decisiones
 
