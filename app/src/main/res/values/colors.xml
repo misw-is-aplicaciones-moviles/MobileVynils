@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Paleta del kit v2 (Figma "Vynils V2 MockUps", frame "Kit v2 · Componentes"). -->
+    <!-- Carbón: cabeceras, texto principal, botones primarios. -->
+    <color name="vinilos_charcoal">#FF232323</color>
+    <!-- Crema: hoja de contenido, barra inferior, texto sobre carbón. -->
+    <color name="vinilos_cream">#FFF2EFE7</color>
+    <!-- Piedra: botón deshabilitado y opción elegida. -->
+    <color name="vinilos_stone">#FFD9D6CE</color>
+    <!-- Línea: separadores y bordes suaves. -->
+    <color name="vinilos_line">#FFD2CFC7</color>
+    <!-- Grafito: texto secundario. -->
+    <color name="vinilos_graphite">#FF66645E</color>
+    <!-- Ceniza: íconos y etiquetas inactivos. -->
+    <color name="vinilos_ash">#FF8A8780</color>
+    <!-- Puntos de la textura de papel: carbón al 6 %. -->
+    <color name="vinilos_paper_dot">#0F232323</color>
+</resources>

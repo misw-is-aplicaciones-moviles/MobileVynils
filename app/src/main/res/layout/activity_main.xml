@@ -1,21 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Contenedor de navegación y barra inferior del kit v2 (TR-01, docs/05 sección 3). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/welcome"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/welcome"
-        android:textAppearance="?attr/textAppearanceHeadlineSmall"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/navHost"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:defaultNavHost="true"
+        app:navGraph="@navigation/nav_graph" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <!-- La barra recibe el margen de la navegación del sistema en este contenedor (MainActivity). -->
+    <FrameLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/vinilos_cream">
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNav"
+            style="@style/Widget.Vinilos.BottomNavigationView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:menu="@menu/bottom_nav"
+            app:paddingBottomSystemWindowInsets="false" />
+
+        <View
+            android:id="@+id/navDot"
+            android:layout_width="@dimen/nav_dot_size"
+            android:layout_height="@dimen/nav_dot_size"
+            android:layout_gravity="top|start"
+            android:background="@drawable/bg_nav_dot"
+            android:importantForAccessibility="no"
+            android:visibility="invisible" />
+    </FrameLayout>
+</LinearLayout>

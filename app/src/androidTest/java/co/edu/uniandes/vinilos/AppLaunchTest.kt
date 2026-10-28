@@ -9,9 +9,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** Prueba de humo: la app abre y muestra su pantalla inicial. Corre desde API 21. */
+/** Prueba de humo: la app abre en el catálogo. Corre desde API 21. */
 @RunWith(AndroidJUnit4::class)
-class ExampleInstrumentedTest {
+class AppLaunchTest {
     @get:Rule
     val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
@@ -22,7 +22,7 @@ class ExampleInstrumentedTest {
     }
 
     @Test
-    fun main_activity_shows_the_welcome_text() {
-        MainRobot().assertWelcomeShown()
+    fun app_opens_on_the_catalog_tab() {
+        MainRobot().assertCatalogShown()
     }
 }

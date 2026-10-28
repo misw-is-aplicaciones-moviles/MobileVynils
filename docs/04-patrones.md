@@ -41,7 +41,7 @@ Problema: acoplamiento a implementaciones concretas y objetos imposibles de reem
 
 ## 3. Patrones de la Vista
 
-- **ViewBinding con referencia nula** en Fragments (`_binding` se limpia en `onDestroyView`).
+- **ViewBinding con referencia nula** en Fragments (`bindingOrNull` se limpia en `onDestroyView`).
 - **`ListAdapter` + `DiffUtil.ItemCallback`** en toda lista: `submitList` calcula los cambios fuera del hilo principal.
 - **`include` para estados compartidos**: `view_state_loading.xml`, `view_state_error.xml` y `view_state_empty.xml` se incluyen en cada pantalla y se muestran según el `UiState`.
 - **Una función `render(state)`** por Fragment que dibuja todo el estado; nunca se cambia la vista desde varios observadores.
@@ -65,7 +65,7 @@ Problema: acoplamiento a implementaciones concretas y objetos imposibles de reem
 | `Context`, `View` o `Fragment` en el ViewModel | Fugas de memoria, no probable en JVM | Ids de recursos en el estado; el Fragment resuelve los textos |
 | Lógica en el Fragment (`if` sobre datos, llamadas al Repository) | Imposible de probar sin dispositivo | Mover al ViewModel |
 | Observar con `this` en un Fragment | Observadores duplicados tras volver a la pantalla | `viewLifecycleOwner` |
-| Retener el binding después de `onDestroyView` | Fuga de la jerarquía de vistas | `_binding = null` |
+| Retener el binding después de `onDestroyView` | Fuga de la jerarquía de vistas | `bindingOrNull = null` |
 | `LiveData` mezclado con `Flow` en la misma pantalla | Dos modelos de reactividad | Solo `LiveData` en la capa de presentación |
 | `GlobalScope`, `runBlocking`, `Thread`, `AsyncTask` | Fugas, ANR, cancelación rota | `viewModelScope` y funciones `suspend` |
 | `catch (e: Exception)` silencioso | Oculta `CancellationException` y errores reales | Excepciones concretas en la capa de datos |

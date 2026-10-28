@@ -20,7 +20,7 @@ Decisiones de base técnica de Vinilos. El stack se reinició el 2026-10-26 con 
 | Imágenes | Glide 4.16.0 | Carátulas de álbumes e imágenes de artistas con Vistas |
 | Asincronía | kotlinx.coroutines 1.11.0 (`viewModelScope`, funciones `suspend`) | Llamadas de red fuera del hilo principal |
 | Fechas | `java.time` con desugaring (`desugar_jdk_libs` 2.1.5) | `LocalDate` en API 21 a 25 |
-| Persistencia | Caché en memoria en el Repository (Sprint 1). Room 2.7.2 cuando el equipo lo decida | Room 2.8 exige API 23 |
+| Persistencia | Room 2.7.2 con KSP 2.3.12: `AlbumEntity` y `TrackEntity` en Sprint 1 (TR-03) | Room 2.8 exige API 23; `kapt` no funciona con el Kotlin integrado de AGP 9 |
 | Pruebas unitarias | JUnit 4, `core-testing` 2.2.0 (`InstantTaskExecutorRule`), kotlinx-coroutines-test, MockWebServer | Ver `06-pruebas.md` |
 | Pruebas instrumentadas y E2E | Espresso 3.7.0 (core y contrib), AndroidX Test 1.7.0, ext-junit 1.3.0 | La rúbrica exige Espresso |
 | Calidad estática | ktlint 1.8.0 (vía Spotless 8.10), detekt 1.23.8, Android Lint | Ver `09-calidad-estatica.md` |
@@ -58,6 +58,8 @@ Matriz mínima de pruebas (requisito del curso: probar en distintas versiones an
 | `lifecycle` | 2.9.4 | 2.10 exige 23 |
 | `navigation` | 2.9.6 | 2.10 exige 24 |
 | `recyclerview` | 1.4.0 | |
+| `room` | 2.7.2 | 2.8 exige 23. Sin `room-ktx`: desde 2.7 vive en `room-runtime` |
+| `ksp` | 2.3.12 | 2.3.10+ resuelve la clase R con el Kotlin integrado de AGP 9 |
 | `retrofit` / `okhttp` | 3.0.0 / 5.1.0 | |
 | `coroutines` | 1.11.0 | |
 | `glide` | 4.16.0 | |
@@ -103,3 +105,4 @@ Texto plano (lo configura TR-02, aún no existe): como el entregable es el APK d
 | 2026-10-21 | `minSdk 23` con Compose para acercarse a Lollipop (PR #82, cerrado). |
 | 2026-10-26 | Reinicio del stack con la propuesta de Daniela: Vistas XML + Fragments + ViewBinding, `LiveData`, Retrofit e inyección manual. `minSdk 21` por la rúbrica (Daniela proponía 26). Con Compose, llegar a API 21 exigía fijar AndroidX en versiones de 2025 y las pruebas de píxeles congelaban el emulador de Lollipop. PR #80, #81 y #82 cerrados sin integrar. Kotlin pasa a la versión integrada en AGP (2.2.10). Glide en lugar de Coil; Room fuera del camino crítico del Sprint 1. |
 | 2026-10-26 | Firma del release restaurada sobre el proyecto reiniciado: `keystore/debug.keystore` (alias `vinilos`) y `signingConfigs.release` con credenciales del entorno o de `local.properties`; sin ellas `assembleRelease` falla con un mensaje claro. |
+| 2026-10-27 | TR-03: Room 2.7.2 con KSP 2.3.12 (no `kapt`, incompatible con el Kotlin integrado). Esquema exportado con el argumento `room.schemaLocation` en `app/schemas/`, sin el plugin de Gradle de Room. `buildConfig = true` para `BuildConfig.DEBUG`. |
