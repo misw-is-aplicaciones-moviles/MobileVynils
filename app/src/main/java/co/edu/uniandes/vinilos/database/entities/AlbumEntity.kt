@@ -14,4 +14,5 @@ internal data class AlbumEntity(
     val description: String,
     val genre: String,
     val recordLabel: String,
+    val performerName: String?,
 )

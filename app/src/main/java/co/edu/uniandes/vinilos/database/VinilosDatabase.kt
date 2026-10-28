@@ -11,7 +11,7 @@ import co.edu.uniandes.vinilos.database.entities.TrackEntity
 // Sin singleton propio: la única instancia la crea AppContainer.
 @Database(
     entities = [AlbumEntity::class, TrackEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
