@@ -140,12 +140,12 @@ Los tres selectores comparten un layout `fragment_picker.xml` y un adaptador `Pi
 
 ### 5.2 Caché
 
-En el Sprint 1 cada repositorio guarda en memoria la última respuesta de sus listas y detalles (caché, como explica el curso) y la invalida tras una escritura sobre ese recurso. No hay base de datos local. Si el equipo incorpora Room (2.7.2 es la última versión que admite API 21), estas son las entidades previstas, sin cambiar las interfaces de los repositorios:
+Cada repositorio guarda en Room (2.7.2, la última versión que admite API 21) la última respuesta de sus listas y detalles, y la actualiza tras una escritura sobre ese recurso, sin cambiar las interfaces de los repositorios. TR-03 crea `AlbumEntity` y `TrackEntity` (Sprint 1); las demás entidades llegan con sus historias en el Sprint 2, con una migración por versión del esquema:
 
 | Entidad Room | Clave | Relación |
 |---|---|---|
-| `AlbumEntity` | `id` | — |
-| `TrackEntity` | `id` | `albumId` → `AlbumEntity` |
+| `AlbumEntity` (Sprint 1) | `id` | — |
+| `TrackEntity` (Sprint 1) | `id` | `albumId` → `AlbumEntity`, `CASCADE` al borrar |
 | `CommentEntity` | `id` | `albumId` → `AlbumEntity`; `collectorId`, `collectorName` opcionales |
 | `PerformerEntity` | `id` | `type`, `bandId` opcional (músico que pertenece a una banda) |
 | `AlbumPerformerCrossRef` | (`albumId`, `performerId`) | álbumes de un artista y artistas de un álbum |
@@ -328,3 +328,4 @@ Resultado de contrastar wiki, prototipo, documento del curso y código del backe
 |---|---|
 | 2026-10-14 | Documento creado a partir de la wiki (commit `a7cc5c3`), los seis tableros del prototipo y el código de BackVynils. Selector de rol inicial con chip de rol en todas las pantallas; hojas inferiores para canción y comentario; tres selectores sobre un `PickerScreen` común; validaciones del lado de la app para banda única, favoritos y álbumes repetidos. Pendientes de ratificar: persistencia del rol, orden de artistas. |
 | 2026-10-26 | Reinicio con Vistas: destinos del grafo de navegación con argumentos en `Bundle`, hojas como `BottomSheetDialogFragment`, `SessionRepository` con `LiveData`, caché en memoria en los repositorios (Room opcional), kit v2 llevado a Material Components; hallazgos 14 a 16 sobre el botón de canción, la regla de duración y los datos de los mockups. |
+| 2026-10-27 | TR-03: Room deja de ser opcional; `AlbumEntity` y `TrackEntity` en Sprint 1, el resto de entidades en Sprint 2. |
