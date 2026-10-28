@@ -125,6 +125,8 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
+    // Explícita para que la app use la misma versión que kotlinx-coroutines-test; la que trae Room es más vieja.
+    implementation(libs.kotlinx.coroutines.android)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.room.testing)
