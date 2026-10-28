@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Destino inicial. Solo compone el escenario y la hoja; no dibuja textos ni tarjetas. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/roleSelect"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/vinilos_charcoal"
+    android:orientation="vertical">
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/roleStage"
+        android:name="co.edu.uniandes.vinilos.ui.role.RoleStageFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:layout="@layout/fragment_role_stage" />
+
+    <!-- El alto sobrante es de la hoja. Si el texto no cabe, ella hace scroll. -->
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/roleSheet"
+        android:name="co.edu.uniandes.vinilos.ui.role.RoleSheetFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        tools:layout="@layout/fragment_role_sheet" />
+</LinearLayout>

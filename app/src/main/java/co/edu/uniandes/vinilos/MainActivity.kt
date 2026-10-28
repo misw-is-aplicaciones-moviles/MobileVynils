@@ -11,9 +11,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.descendants
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.navOptions
 import androidx.navigation.ui.setupWithNavController
@@ -57,14 +57,20 @@ class MainActivity : AppCompatActivity() {
                 navOptions {
                     launchSingleTop = true
                     restoreState = true
-                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                    // El inicio del grafo es el selector y sale de la pila al elegir rol.
+                    // Las pestañas se anclan al catálogo, que queda como raíz.
+                    popUpTo(R.id.albumListFragment) { saveState = true }
                 },
             )
             true
         }
         binding.bottomNav.setOnItemReselectedListener { }
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            binding.bottomNav.post { moveNavDot(destination.id) }
+            val showBottomBar = destination.id != R.id.roleSelectFragment
+            binding.bottomBar.isVisible = showBottomBar
+            if (showBottomBar) {
+                binding.bottomNav.post { moveNavDot(destination.id) }
+            }
         }
     }
 
