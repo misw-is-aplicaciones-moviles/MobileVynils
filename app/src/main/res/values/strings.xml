@@ -25,4 +25,25 @@
     <string name="role_change_hint">Puedes cambiar de rol desde el catálogo.</string>
     <string name="role_visitor_action">Entrar como visitante. Consulta álbumes, artistas y coleccionistas.</string>
     <string name="role_collector_action">Entrar como coleccionista. Consulta y además crea álbumes, agrega canciones, comenta y administra artistas.</string>
+
+    <!-- Cabecera compartida (TR-04) -->
+    <string name="action_back">Volver</string>
+    <string name="action_close">Cerrar</string>
+    <string name="role_chip_action">Cambiar de rol. Rol actual: %1$s</string>
+
+    <!-- Estados compartidos. El catálogo sustituye estos textos en HU01. -->
+    <string name="state_loading">Cargando</string>
+    <string name="state_error_title">No se pudo cargar</string>
+    <string name="state_error_body">Inténtalo de nuevo.</string>
+    <string name="action_retry">Reintentar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_create_album">Crear álbum</string>
+    <string name="picker_select_album">Selecciona un álbum</string>
+    <string name="snack_album_created">Álbum creado</string>
+    <string name="notice_musician_other_band">Ringo Starr ya pertenece a otra banda (The Beatles). Un músico solo puede estar en una banda.</string>
+    <string name="state_retry_later">La recarga llega con el catálogo.</string>
+    <string name="state_empty_message">Nada por aquí</string>
+    <string name="sample_album_name">Nombre del álbum</string>
+    <string name="sample_album_artist">Artista</string>
+    <string name="sample_album_meta">Género · Año</string>
 </resources>

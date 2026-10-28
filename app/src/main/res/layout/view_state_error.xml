@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:accessibilityLiveRegion="polite"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/space_xl"
+    android:paddingBottom="@dimen/space_xl">
+
+    <ImageView
+        android:layout_width="@dimen/min_touch_target"
+        android:layout_height="@dimen/min_touch_target"
+        android:importantForAccessibility="no"
+        android:padding="@dimen/space_m"
+        app:srcCompat="@drawable/ic_state_error" />
+
+    <TextView
+        android:id="@+id/errorTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/state_error_title"
+        android:textAppearance="@style/TextAppearance.Vinilos.ListTitle" />
+
+    <TextView
+        android:id="@+id/errorBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_s"
+        android:gravity="center"
+        android:text="@string/state_error_body"
+        android:textAppearance="@style/TextAppearance.Vinilos.Body" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/retryButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/Widget.Vinilos.Button.Secondary"
+        android:layout_marginTop="@dimen/space_l"
+        android:text="@string/action_retry" />
+</LinearLayout>

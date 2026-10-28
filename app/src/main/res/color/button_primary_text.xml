@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Crema sobre piedra no se lee. Deshabilitado, el texto pasa a carbón. -->
+    <item android:color="@color/vinilos_charcoal" android:state_enabled="false" />
+    <item android:color="@color/vinilos_cream" />
+</selector>

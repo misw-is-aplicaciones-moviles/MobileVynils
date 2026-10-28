@@ -21,4 +21,14 @@
     <color name="vinilos_disc">#FF141414</color>
     <!-- Surcos del disco: crema al 25 %. -->
     <color name="vinilos_groove">#40F2EFE7</color>
+    <!-- Borde del chip de rol: crema al 85 %. El texto y el ícono siguen en crema sólida. -->
+    <color name="vinilos_cream_border">#D9F2EFE7</color>
+    <!-- Ripple del botón primario: crema al 20 % sobre carbón. -->
+    <color name="vinilos_cream_ripple">#33F2EFE7</color>
+    <!-- Ripple del botón secundario: carbón al 12 % sobre la hoja. -->
+    <color name="vinilos_charcoal_ripple">#1F232323</color>
+    <!-- Aviso de error: blanco al 50 % sobre la hoja. -->
+    <color name="vinilos_notice_error_fill">#80FFFFFF</color>
+    <!-- Sombra del aviso de éxito: negro al 60 %. -->
+    <color name="vinilos_notice_shadow">#99000000</color>
 </resources>

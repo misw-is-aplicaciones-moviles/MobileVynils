@@ -16,6 +16,8 @@
         <item name="android:windowBackground">@color/vinilos_charcoal</item>
         <item name="android:fontFamily">@font/outfit_regular</item>
         <item name="fontFamily">@font/outfit_regular</item>
+        <item name="materialButtonStyle">@style/Widget.Vinilos.Button.Primary</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.Vinilos.Button.Secondary</item>
     </style>
 
     <style name="Theme.Vinilos" parent="Base.Theme.Vinilos" />
@@ -112,5 +114,118 @@
     <style name="ShapeAppearance.Vinilos.Circle" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- Título de una fila: Outfit 400, 16 sp, carbón. -->
+    <style name="TextAppearance.Vinilos.ListTitle" parent="TextAppearance.Vinilos.Body">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Tercera línea de la fila: Outfit 400, 13 sp. -->
+    <style name="TextAppearance.Vinilos.ListMeta" parent="TextAppearance.Vinilos.Body">
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <!-- Chip de rol: Montserrat 700, 9.5 sp, tracking 1.14 px (0.12 em), crema. -->
+    <style name="TextAppearance.Vinilos.RoleChip" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/montserrat_bold</item>
+        <item name="fontFamily">@font/montserrat_bold</item>
+        <item name="android:textSize">9.5sp</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="textAllCaps">true</item>
+        <item name="android:textColor">@color/vinilos_cream</item>
+    </style>
+
+    <!-- Píldora de 32 dp con radio completo. El toque sigue en 48 dp, fuera del trazo. -->
+    <style name="ShapeAppearance.Vinilos.RoleChip" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/role_chip_radius</item>
+    </style>
+
+    <style name="Widget.Vinilos.Chip.Role" parent="Widget.Material3.Chip.Assist">
+        <item name="android:checkable">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.RoleChip</item>
+        <item name="android:textColor">@color/vinilos_cream</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Vinilos.RoleChip</item>
+        <item name="shapeAppearanceOverlay">@null</item>
+        <!-- El fondo por defecto es colorSurface (crema) y tapa el texto crema. -->
+        <item name="chipSurfaceColor">@android:color/transparent</item>
+        <item name="chipBackgroundColor">@android:color/transparent</item>
+        <item name="chipStrokeColor">@color/vinilos_cream_border</item>
+        <item name="chipStrokeWidth">@dimen/role_chip_stroke</item>
+        <item name="chipIconTint">@color/vinilos_cream</item>
+        <item name="chipIconSize">@dimen/role_chip_icon</item>
+        <item name="chipMinHeight">@dimen/role_chip_height</item>
+        <item name="chipStartPadding">@dimen/role_chip_padding_start</item>
+        <item name="iconStartPadding">0dp</item>
+        <item name="iconEndPadding">@dimen/role_chip_icon_gap</item>
+        <item name="textStartPadding">0dp</item>
+        <item name="textEndPadding">0dp</item>
+        <item name="chipEndPadding">@dimen/role_chip_padding_end</item>
+        <item name="chipMinTouchTargetSize">@dimen/min_touch_target</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="closeIconVisible">false</item>
+        <item name="ensureMinTouchTargetSize">true</item>
+    </style>
+
+    <!-- Aviso: Outfit 400, 15 sp. El color lo pone el tipo de aviso. -->
+    <style name="TextAppearance.Vinilos.Notice" parent="TextAppearance.Vinilos.Body">
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <!-- Etiqueta de botón: Outfit 400, 15 sp. El color lo pone cada variante. -->
+    <style name="TextAppearance.Vinilos.Button" parent="TextAppearance.Vinilos.Body">
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="ShapeAppearance.Vinilos.Button" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/button_radius</item>
+    </style>
+
+    <!-- Píldora de 52 dp. El alto ya cubre el mínimo táctil, sin el inset de Material. -->
+    <style name="Widget.Vinilos.Button" parent="Widget.Material3.Button">
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minHeight">@dimen/button_height</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingLeft">@dimen/button_padding_horizontal</item>
+        <item name="android:paddingRight">@dimen/button_padding_horizontal</item>
+        <item name="android:paddingStart">@dimen/button_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/button_padding_horizontal</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.Button</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Vinilos.Button</item>
+        <item name="shapeAppearanceOverlay">@null</item>
+        <item name="strokeWidth">@dimen/button_stroke</item>
+        <item name="elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <!-- Relleno carbón. Deshabilitado: piedra, igual que el secundario. -->
+    <style name="Widget.Vinilos.Button.Primary" parent="Widget.Vinilos.Button">
+        <item name="backgroundTint">@color/button_filled</item>
+        <item name="strokeColor">@color/button_filled</item>
+        <item name="android:textColor">@color/button_primary_text</item>
+        <item name="iconTint">@color/button_primary_text</item>
+        <item name="rippleColor">@color/vinilos_cream_ripple</item>
+    </style>
+
+    <!-- Solo borde carbón. Deshabilitado: el mismo relleno piedra. -->
+    <style name="Widget.Vinilos.Button.Secondary" parent="Widget.Vinilos.Button">
+        <item name="backgroundTint">@color/button_secondary_background</item>
+        <item name="strokeColor">@color/button_filled</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+        <item name="iconTint">@color/vinilos_charcoal</item>
+        <item name="rippleColor">@color/vinilos_charcoal_ripple</item>
     </style>
 </resources>

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Pestaña provisional hasta que llegue su historia: cabecera carbón y hoja crema con textura. -->
+<!-- Pestaña provisional hasta que llegue su historia: cabecera carbón y hoja crema con textura.
+     Álbumes muestra la tarjeta y los estados compartidos. Las otras pestañas, solo el mensaje. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -14,8 +16,7 @@
         android:id="@+id/sheet"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:padding="@dimen/space_xxl">
+        android:layout_weight="1">
 
         <TextView
             android:id="@+id/pendingMessage"
@@ -23,7 +24,108 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
+            android:padding="@dimen/space_xxl"
             android:textAppearance="@style/TextAppearance.Vinilos.Body"
             tools:text="Disponible en el próximo sprint." />
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/componentPreview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:padding="@dimen/space_xxl"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/previewMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textAppearance="@style/TextAppearance.Vinilos.Body"
+                    tools:text="@string/pending_this_sprint" />
+
+                <include
+                    android:id="@+id/sampleAlbum"
+                    layout="@layout/item_album"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xl" />
+
+                <include
+                    android:id="@+id/loadingState"
+                    layout="@layout/view_state_loading"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xl" />
+
+                <include
+                    android:id="@+id/errorState"
+                    layout="@layout/view_state_error"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_l" />
+
+                <include
+                    android:id="@+id/emptyState"
+                    layout="@layout/view_state_empty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_l" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xl"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/primaryButton"
+                        style="@style/Widget.Vinilos.Button.Primary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/action_create_album" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/secondaryButton"
+                        style="@style/Widget.Vinilos.Button.Secondary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/button_gap"
+                        android:text="@string/action_cancel" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/disabledButton"
+                    style="@style/Widget.Vinilos.Button.Primary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/button_gap"
+                    android:enabled="false"
+                    android:text="@string/picker_select_album" />
+
+                <co.edu.uniandes.vinilos.ui.common.NoticeView
+                    android:id="@+id/successNotice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xl"
+                    android:text="@string/snack_album_created"
+                    app:noticeKind="success" />
+
+                <co.edu.uniandes.vinilos.ui.common.NoticeView
+                    android:id="@+id/errorNotice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/button_gap"
+                    android:text="@string/notice_musician_other_band"
+                    app:noticeKind="error" />
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
     </co.edu.uniandes.vinilos.ui.common.PaperSheetLayout>
 </LinearLayout>

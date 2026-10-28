@@ -36,4 +36,37 @@
     <dimen name="role_chevron">16dp</dimen>
     <dimen name="role_cover_radius">8dp</dimen>
     <dimen name="role_cover_elevation">16dp</dimen>
+
+    <!-- La carátula de la fila mide 56 dp. El collage es 33:20, así que el ancho es 56 * 33 / 20. -->
+    <dimen name="album_artwork_width">92dp</dimen>
+    <dimen name="album_artwork_radius">4dp</dimen>
+
+    <!-- Chip de rol. La píldora mide 32 dp; el área táctil de 48 dp la pone el propio Chip. -->
+    <dimen name="role_chip_height">32dp</dimen>
+    <dimen name="role_chip_radius">16dp</dimen>
+    <dimen name="role_chip_icon">12dp</dimen>
+    <dimen name="role_chip_stroke">1dp</dimen>
+    <dimen name="role_chip_padding_start">13dp</dimen>
+    <dimen name="role_chip_icon_gap">6dp</dimen>
+    <dimen name="role_chip_padding_end">14dp</dimen>
+
+    <!-- Botones del kit. 15 sp de Outfit y 23 dp a cada lado reproducen los anchos de Figma. -->
+    <dimen name="button_height">52dp</dimen>
+    <dimen name="button_radius">26dp</dimen>
+    <dimen name="button_stroke">1dp</dimen>
+    <dimen name="button_padding_horizontal">23dp</dimen>
+    <dimen name="button_gap">10dp</dimen>
+
+    <!-- Avisos. El éxito es una píldora de 50 dp; el error crece con el texto y usa radio de 16 dp. -->
+    <dimen name="notice_success_height">50dp</dimen>
+    <dimen name="notice_success_radius">25dp</dimen>
+    <dimen name="notice_error_radius">16dp</dimen>
+    <dimen name="notice_error_stroke">2dp</dimen>
+    <dimen name="notice_padding_horizontal">24dp</dimen>
+    <dimen name="notice_padding_vertical">16dp</dimen>
+    <!-- box-shadow: 0 14px 26px -12px. La sombra cabe bajo la píldora. -->
+    <dimen name="notice_shadow_offset_y">14dp</dimen>
+    <dimen name="notice_shadow_blur">26dp</dimen>
+    <dimen name="notice_shadow_spread">12dp</dimen>
+    <dimen name="notice_shadow_inset_bottom">28dp</dimen>
 </resources>
