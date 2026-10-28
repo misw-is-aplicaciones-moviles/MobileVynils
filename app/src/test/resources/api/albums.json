@@ -1,0 +1,14 @@
+[
+  {
+    "id": 100,
+    "name": "Buscando América",
+    "cover": "https://example.com/buscando.jpg",
+    "releaseDate": "1984-08-01T00:00:00.000Z",
+    "description": "Fixture sintético con la forma de BackVynils.",
+    "genre": "Salsa",
+    "recordLabel": "Elektra",
+    "tracks": [],
+    "performers": [],
+    "comments": []
+  }
+]
