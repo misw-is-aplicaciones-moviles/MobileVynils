@@ -15,4 +15,10 @@
     <color name="vinilos_ash">#FF8A8780</color>
     <!-- Puntos de la textura de papel: carbón al 6 %. -->
     <color name="vinilos_paper_dot">#0F232323</color>
+    <!-- Relleno de las tarjetas del selector: blanco al 30 % sobre la hoja crema. -->
+    <color name="vinilos_card_fill">#4DFFFFFF</color>
+    <!-- Cuerpo del disco, un poco más oscuro que el carbón de la cabecera para que se lea encima. -->
+    <color name="vinilos_disc">#FF141414</color>
+    <!-- Surcos del disco: crema al 25 %. -->
+    <color name="vinilos_groove">#40F2EFE7</color>
 </resources>

@@ -7,6 +7,8 @@ import co.edu.uniandes.vinilos.database.VinilosDatabase
 import co.edu.uniandes.vinilos.database.dao.AlbumDao
 import co.edu.uniandes.vinilos.database.dao.TrackDao
 import co.edu.uniandes.vinilos.network.NetworkClient
+import co.edu.uniandes.vinilos.repositories.SessionRepository
+import co.edu.uniandes.vinilos.repositories.SessionRepositoryImpl
 import java.io.File
 
 /**
@@ -35,4 +37,6 @@ class AppContainer(
     // Pasan a private cuando existan los repositorios de cada historia.
     internal val albumDao: AlbumDao by lazy { database.albumDao() }
     internal val trackDao: TrackDao by lazy { database.trackDao() }
+
+    val sessionRepository: SessionRepository by lazy { SessionRepositoryImpl() }
 }

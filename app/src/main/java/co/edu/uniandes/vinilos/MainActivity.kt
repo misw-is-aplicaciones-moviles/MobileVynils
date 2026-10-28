@@ -44,7 +44,30 @@ class MainActivity : AppCompatActivity() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNav) { _, insets -> insets }
 
         val navHost = binding.navHost.getFragment<NavHostFragment>()
-        setupBottomNavigation(navHost.navController)
+        val navController = navHost.navController
+        // El rol vive solo en memoria. Navigation sí guarda la pantalla: si el proceso murió,
+        // restaura el catálogo con el rol ya perdido. Un giro no entra aquí, porque el proceso sigue.
+        returnToRoleSelectorIfRoleWasLost(savedInstanceState, navController)
+        setupBottomNavigation(navController)
+    }
+
+    private fun returnToRoleSelectorIfRoleWasLost(
+        savedInstanceState: Bundle?,
+        navController: NavController,
+    ) {
+        if (savedInstanceState == null) return
+        val role =
+            (application as VinilosApplication)
+                .container.sessionRepository.role.value
+        if (role != null || navController.currentDestination?.id == R.id.roleSelectFragment) return
+        navController.navigate(
+            R.id.roleSelectFragment,
+            null,
+            navOptions {
+                popUpTo(navController.graph.id) { inclusive = true }
+                launchSingleTop = true
+            },
+        )
     }
 
     private fun setupBottomNavigation(navController: NavController) {
@@ -59,19 +82,20 @@ class MainActivity : AppCompatActivity() {
                 navOptions {
                     launchSingleTop = true
                     restoreState = true
-                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                    // El inicio del grafo es el selector y sale de la pila al elegir rol.
+                    // Las pestañas se anclan al catálogo, que queda como raíz.
+                    popUpTo(R.id.albumListFragment) { saveState = true }
                 },
             )
             true
         }
-        // Sin efecto mientras las pestañas no tengan pantallas internas. HU02 y HU04: volver a la raíz de la pestaña.
         binding.bottomNav.setOnItemReselectedListener { }
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            binding.bottomNav.doOnLayout { moveNavDot(destination.id) }
-        }
-        // Recalcula el punto cuando cambia la medida de la barra (rotación, tamaño de fuente).
-        binding.bottomNav.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            moveNavDot(binding.bottomNav.selectedItemId)
+            val showBottomBar = destination.id != R.id.roleSelectFragment
+            binding.bottomBar.isVisible = showBottomBar
+            if (showBottomBar) {
+                binding.bottomNav.post { moveNavDot(destination.id) }
+            }
         }
     }
 
@@ -85,8 +109,6 @@ class MainActivity : AppCompatActivity() {
         val dot = binding.navDot
         dot.translationX = labelLocation[0] - barLocation[0] + label.width / 2f - dot.width / 2f
         dot.translationY = labelLocation[1] - barLocation[1] + label.height + gap
-        // Arranca invisible en el layout para no aparecer en la esquina antes de la primera medida.
-        dot.isVisible = true
     }
 
     /** La etiqueta visible del ítem (Material alterna entre una etiqueta pequeña y una grande). */

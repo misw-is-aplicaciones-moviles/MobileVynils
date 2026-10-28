@@ -30,6 +30,10 @@ class BottomNavigationTest {
     @get:Rule
     val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
+    private fun enterAsVisitor() {
+        onView(withText(R.string.role_visitor)).perform(click())
+    }
+
     private fun tapTab(
         @IdRes itemId: Int,
     ) {
@@ -44,6 +48,7 @@ class BottomNavigationTest {
 
     @Test
     fun bottom_bar_switches_between_the_three_tabs() {
+        enterAsVisitor()
         assertTitle(R.string.album_list_title)
 
         tapTab(R.id.performerListFragment)
@@ -58,6 +63,7 @@ class BottomNavigationTest {
 
     @Test
     fun back_from_a_tab_returns_to_the_catalog() {
+        enterAsVisitor()
         tapTab(R.id.performerListFragment)
         assertTitle(R.string.artist_list_title)
 

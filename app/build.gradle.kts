@@ -150,6 +150,8 @@ dependencies {
     // Explícita para que la app use la misma versión que kotlinx-coroutines-test; la que trae Room es más vieja.
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.fragment.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.retrofit)
