@@ -87,6 +87,7 @@ class TrackDaoTest {
                 description = "Primer álbum de Rubén Blades con Seis del Solar.",
                 genre = "Salsa",
                 recordLabel = "Elektra",
+                performerName = null,
             )
         val otherAlbum = album.copy(id = 101, name = "Poeta del pueblo")
         val firstTrack = TrackEntity(id = 1, name = "Decisiones", duration = "5:05", albumId = 100)

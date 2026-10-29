@@ -6,9 +6,14 @@ import co.edu.uniandes.vinilos.BuildConfig
 import co.edu.uniandes.vinilos.database.VinilosDatabase
 import co.edu.uniandes.vinilos.database.dao.AlbumDao
 import co.edu.uniandes.vinilos.database.dao.TrackDao
+import co.edu.uniandes.vinilos.network.AlbumServiceAdapterImpl
 import co.edu.uniandes.vinilos.network.NetworkClient
+import co.edu.uniandes.vinilos.network.VinilosApiService
+import co.edu.uniandes.vinilos.repositories.AlbumRepository
+import co.edu.uniandes.vinilos.repositories.AlbumRepositoryImpl
 import co.edu.uniandes.vinilos.repositories.SessionRepository
 import co.edu.uniandes.vinilos.repositories.SessionRepositoryImpl
+import kotlinx.coroutines.Dispatchers
 import java.io.File
 
 /**
@@ -34,9 +39,20 @@ class AppContainer(
             .build()
     }
 
-    // Pasan a private cuando existan los repositorios de cada historia.
-    internal val albumDao: AlbumDao by lazy { database.albumDao() }
+    private val albumDao: AlbumDao by lazy { database.albumDao() }
     internal val trackDao: TrackDao by lazy { database.trackDao() }
 
     val sessionRepository: SessionRepository by lazy { SessionRepositoryImpl() }
+
+    // Construirlo no toca networkClient: el adaptador crea la API en su primera llamada.
+    val albumRepository: AlbumRepository by lazy {
+        AlbumRepositoryImpl(
+            albumDao,
+            AlbumServiceAdapterImpl(
+                apiProvider = { networkClient.create(VinilosApiService::class.java) },
+                ioDispatcher = Dispatchers.IO,
+                defaultDispatcher = Dispatchers.Default,
+            ),
+        )
+    }
 }

@@ -98,6 +98,30 @@ class AlbumDaoTest {
             assertNull(result)
         }
 
+    @Test
+    fun performer_name_is_stored_and_read_back() =
+        runTest {
+            albumDao.upsert(buscando)
+
+            assertEquals("Rubén Blades", albumDao.getAll().single().performerName)
+        }
+
+    @Test
+    fun null_performer_name_is_stored_and_read_back() =
+        runTest {
+            albumDao.upsert(buscando.copy(performerName = null))
+
+            assertNull(albumDao.getAll().single().performerName)
+        }
+
+    @Test
+    fun get_all_folds_only_ascii_case_so_accented_names_sort_last() =
+        runTest {
+            albumDao.upsertAll(listOf(buscando.copy(id = 1, name = "Ágape"), buscando.copy(id = 2, name = "Zeta")))
+
+            assertEquals(listOf("Zeta", "Ágape"), albumDao.getAll().map { it.name })
+        }
+
     private companion object {
         val buscando =
             AlbumEntity(
@@ -108,6 +132,7 @@ class AlbumDaoTest {
                 description = "Primer álbum de Rubén Blades con Seis del Solar.",
                 genre = "Salsa",
                 recordLabel = "Elektra",
+                performerName = "Rubén Blades",
             )
         val poeta =
             AlbumEntity(
@@ -118,6 +143,7 @@ class AlbumDaoTest {
                 description = "Recopilación de Rubén Blades.",
                 genre = "Salsa",
                 recordLabel = "Elektra",
+                performerName = "Rubén Blades",
             )
         val decisiones = TrackEntity(id = 1, name = "Decisiones", duration = "5:05", albumId = 100)
         val otraCancion = TrackEntity(id = 2, name = "Te están buscando", duration = "4:36", albumId = 101)
