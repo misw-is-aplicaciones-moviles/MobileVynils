@@ -3,6 +3,7 @@ package co.edu.uniandes.vinilos.repositories
 import co.edu.uniandes.vinilos.models.Album
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.NewAlbum
 
 /** Source of album data; the catalog is cached in Room and expected remote failures are returned as values. */
 interface AlbumRepository {
@@ -17,4 +18,7 @@ interface AlbumRepository {
         id: Int,
         forceRefresh: Boolean = false,
     ): DataResult<Album, DataError>
+
+    /** Creates [draft] in the backend and keeps the saved album in Room. */
+    suspend fun createAlbum(draft: NewAlbum): DataResult<Album, DataError>
 }

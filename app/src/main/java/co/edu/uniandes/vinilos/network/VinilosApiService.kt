@@ -1,9 +1,12 @@
 package co.edu.uniandes.vinilos.network
 
 import co.edu.uniandes.vinilos.network.dto.AlbumDto
+import co.edu.uniandes.vinilos.network.dto.NewAlbumRequest
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.POST
 import retrofit2.http.Path
 
 internal interface VinilosApiService {
@@ -15,4 +18,9 @@ internal interface VinilosApiService {
         @Path("id") id: Int,
         @Header("Cache-Control") cacheControl: String? = null,
     ): Response<AlbumDto>
+
+    @POST("albums")
+    suspend fun createAlbum(
+        @Body body: NewAlbumRequest,
+    ): AlbumDto
 }

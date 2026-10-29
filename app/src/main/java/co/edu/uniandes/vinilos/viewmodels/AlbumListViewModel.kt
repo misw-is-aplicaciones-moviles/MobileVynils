@@ -52,7 +52,15 @@ class AlbumListViewModel(
     }
 
     fun onCreateAlbumClicked() {
-        _events.value = Event(AlbumListEvent.ShowCreatePending)
+        _events.value = Event(AlbumListEvent.OpenCreateAlbum)
+    }
+
+    /** The new album form just saved an album in Room: show the list with it and confirm. */
+    fun onAlbumCreated() {
+        viewModelScope.launch {
+            publish(albumRepository.getAlbums(forceRefresh = false))
+            _events.value = Event(AlbumListEvent.ShowAlbumCreated)
+        }
     }
 
     fun onRoleChipClicked() {

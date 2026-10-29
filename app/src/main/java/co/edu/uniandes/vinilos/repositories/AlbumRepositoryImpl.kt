@@ -1,11 +1,13 @@
 package co.edu.uniandes.vinilos.repositories
 
+import android.database.sqlite.SQLiteException
 import co.edu.uniandes.vinilos.database.dao.AlbumDao
 import co.edu.uniandes.vinilos.database.toEntity
 import co.edu.uniandes.vinilos.database.toModel
 import co.edu.uniandes.vinilos.models.Album
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.NewAlbum
 import co.edu.uniandes.vinilos.network.AlbumServiceAdapter
 import co.edu.uniandes.vinilos.network.networkRequest
 import com.google.gson.JsonParseException
@@ -49,5 +51,21 @@ internal class AlbumRepositoryImpl(
                     }
                 }
             }
+        }
+
+    // Same mutex as getAlbums: a refresh that fetched the list before this POST would otherwise
+    // finish later and its replaceAll would delete the album just created.
+    override suspend fun createAlbum(draft: NewAlbum): DataResult<Album, DataError> =
+        mutex.withLock {
+            val result = networkRequest { serviceAdapter.createAlbum(draft) }
+            if (result is DataResult.Success) {
+                try {
+                    albumDao.upsert(result.value.toEntity())
+                } catch (_: SQLiteException) {
+                    // The backend already saved it: reporting a failure would make the user retry and duplicate it.
+                    // Room catches up on the next forced refresh.
+                }
+            }
+            result
         }
 }

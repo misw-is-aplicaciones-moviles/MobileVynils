@@ -1,7 +1,9 @@
 package co.edu.uniandes.vinilos.network
 
 import co.edu.uniandes.vinilos.models.Album
+import co.edu.uniandes.vinilos.models.NewAlbum
 import co.edu.uniandes.vinilos.network.dto.toModel
+import co.edu.uniandes.vinilos.network.dto.toRequest
 import com.google.gson.JsonParseException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -16,6 +18,9 @@ internal interface AlbumServiceAdapter {
         id: Int,
         forceRefresh: Boolean = false,
     ): Album
+
+    /** Creates [draft] in the backend and returns the saved album; throws like [getAlbums]. */
+    suspend fun createAlbum(draft: NewAlbum): Album
 }
 
 internal class AlbumServiceAdapterImpl(
@@ -40,5 +45,11 @@ internal class AlbumServiceAdapterImpl(
         return withContext(defaultDispatcher) {
             response.body()?.toModel() ?: throw JsonParseException("Missing album response")
         }
+    }
+
+    override suspend fun createAlbum(draft: NewAlbum): Album {
+        val request = draft.toRequest()
+        val dto = withContext(ioDispatcher) { api.createAlbum(request) }
+        return withContext(defaultDispatcher) { dto.toModel() }
     }
 }

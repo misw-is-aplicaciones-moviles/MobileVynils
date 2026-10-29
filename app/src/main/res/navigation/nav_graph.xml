@@ -26,6 +26,10 @@
         <action
             android:id="@+id/action_albumList_to_albumDetail"
             app:destination="@id/albumDetailFragment" />
+        <action
+            android:id="@+id/action_albumList_to_albumCreate"
+            app:destination="@id/albumCreateFragment"
+            app:launchSingleTop="true" />
     </fragment>
 
     <fragment
@@ -34,6 +38,11 @@
         android:label="@string/album_detail_title">
         <argument android:name="albumId" app:argType="integer" />
     </fragment>
+    <!-- Formulario de nuevo álbum: pantalla completa sobre el catálogo, sin barra inferior (MainActivity). -->
+    <fragment
+        android:id="@+id/albumCreateFragment"
+        android:name="co.edu.uniandes.vinilos.ui.albums.AlbumCreateFragment"
+        android:label="@string/create_album_title" />
 
     <fragment
         android:id="@+id/performerListFragment"

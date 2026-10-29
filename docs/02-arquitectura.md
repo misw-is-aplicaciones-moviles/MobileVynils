@@ -39,16 +39,19 @@ co.edu.uniandes.vinilos
 ├── database/                       # VinilosDatabase, Converters, dao/ (AlbumDao, TrackDao),
 │                                   # entities/ (AlbumEntity, TrackEntity, AlbumWithTracks)
 ├── models/                         # Album, Track, Comment, Performer, Collector, Genre, RecordLabel, UserRole,
+│                                   # borradores de escritura (NewAlbum, NewTrack),
 │                                   # DataError y DataResult (errores de datos)
 ├── network/
 │   ├── NetworkClient.kt            # infraestructura Retrofit/OkHttp compartida desde AppContainer
 │   ├── NetworkRequest.kt           # conversión de errores remotos, invocada por el Repository
 │   ├── JsonResponseConverterFactory.kt # normaliza errores de estructura JSON
 │   ├── VinilosApiService.kt        # interfaz Retrofit con los endpoints
-│   ├── dto/                        # AlbumDto, TrackDto, ... y mappers toModel()
+│   ├── dto/                        # AlbumDto, TrackDto, ... y mappers toModel();
+│   │                               # cuerpos de escritura (NewAlbumRequest) y mappers toRequest()
 │   └── AlbumServiceAdapter.kt      # un adaptador por entidad
 ├── repositories/                   # AlbumRepository + AlbumRepositoryImpl, SessionRepository
-├── viewmodels/                     # AlbumListViewModel, AlbumDetailViewModel, ... sus UiState y Event
+├── viewmodels/                     # AlbumListViewModel, AlbumDetailViewModel, ... sus UiState y Event;
+│                                   # validadores de formularios (AlbumFormValidator)
 └── ui/
     ├── common/                     # extensiones de vistas, PickerAdapter, utilidades de la Vista
     ├── role/                       # RoleSelectFragment (TR-06)
@@ -101,6 +104,7 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
 - Se observa siempre con `viewLifecycleOwner`, nunca con `this`.
 - El Fragment no decide nada: dibuja el `UiState` y reenvía las acciones al ViewModel.
 - La navegación la ejecuta el Fragment con `findNavController()` cuando recibe un evento del ViewModel. Los argumentos son ids en un `Bundle` (`bundleOf(ARG_ALBUM_ID to id)`), nunca objetos completos.
+- Un destino de pantalla completa que devuelve un resultado a la pantalla anterior (HU07: "álbum creado") lo deja en `findNavController().previousBackStackEntry?.savedStateHandle` antes de `popBackStack()`. La pantalla anterior lo observa con `currentBackStackEntry?.savedStateHandle?.getLiveData(...)` y lo borra al consumirlo. Las hojas inferiores usan `setFragmentResult` (`10-diseno-de-la-aplicacion.md`, sección 3).
 
 ## 4. ViewModel
 
@@ -163,6 +167,7 @@ data class AlbumListUiState(
 - `postValue` solo desde hilos de fondo; en `viewModelScope` (hilo principal) se usa `value`.
 - Un ViewModel no llama a `observe` (no tiene ciclo de vida). Para combinar el rol de `SessionRepository.role` con el estado de la pantalla (`canEdit`), el `uiState` público es un `MediatorLiveData` con `addSource(sessionRepository.role)`, o se deriva con `map`/`switchMap` de `lifecycle-livedata-ktx`.
 - El estado que debe sobrevivir a la muerte del proceso (id seleccionado) llega por los argumentos del Fragment o `SavedStateHandle`.
+- **Formularios** (HU07, HU08): los valores escritos viven en el `UiState` del ViewModel, que sobrevive a la rotación. Las reglas están en un validador de Kotlin puro en `viewmodels/` (`AlbumFormValidator`) que devuelve un error tipado por campo; el ViewModel nunca guarda textos y el Fragment traduce cada error a `strings.xml`. El ViewModel arma el borrador de `models/` (`NewAlbum`) solo cuando no hay errores, y un `isSubmitting` en el `UiState` evita un segundo envío.
 
 ## 5. Modelo: Repository y Service Adapter
 
@@ -287,3 +292,4 @@ class AppContainer(context: Context) {
 | 2026-10-26 | Reinicio: Fragments + ViewBinding, `LiveData` con `Event` para eventos de una sola vez, inyección manual con `AppContainer`, paquetes por capa como en el ejemplo del curso, caché en memoria en el Repository para el Sprint 1. |
 | 2026-10-27 | TR-03: Room 2.7.2 como caché del Repository (`AlbumEntity`, `TrackEntity`), paquete `database/` con clases `internal`, `AppContainer(context)` dueño de la única `VinilosDatabase`, StrictMode en debug. |
 | 2026-10-28 | HU01-01: política "mostrar lo guardado y revalidar" en `AlbumRepository` (`hasCachedAlbums()`); los Service Adapters reciben un proveedor del servicio Retrofit y los dispatchers por constructor, para que el primer acceso a `networkClient` no ocurra en el hilo principal; el botón "+" de la barra lo muestra el Fragment a través de `PrimaryActionHost` según `canEdit` de su `UiState`. |
+| 2026-10-28 | HU07-01: formularios con validador puro y errores tipados en `viewmodels/`; borradores de escritura en `models/` (`NewAlbum`) y cuerpos de petición en `network/dto/` (`NewAlbumRequest`); `createAlbum` guarda en Room el álbum que responde el backend; resultado de una pantalla completa a la anterior por `savedStateHandle` de la pila de navegación. |
