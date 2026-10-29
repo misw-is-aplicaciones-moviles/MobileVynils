@@ -29,7 +29,7 @@
             app:launchSingleTop="true" />
     </fragment>
 
-    <!-- HU07: pantalla completa sobre el catálogo, sin barra inferior (MainActivity). -->
+    <!-- Formulario de nuevo álbum: pantalla completa sobre el catálogo, sin barra inferior (MainActivity). -->
     <fragment
         android:id="@+id/albumCreateFragment"
         android:name="co.edu.uniandes.vinilos.ui.albums.AlbumCreateFragment"

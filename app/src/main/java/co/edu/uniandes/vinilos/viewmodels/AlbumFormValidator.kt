@@ -3,7 +3,7 @@ package co.edu.uniandes.vinilos.viewmodels
 import co.edu.uniandes.vinilos.models.Genre
 import co.edu.uniandes.vinilos.models.NewAlbum
 
-/** Rules of the new album form (docs/10, HU07): every field is required. Pure Kotlin, no Android. */
+/** Rules of the new album form (docs/10): every field is required. Pure Kotlin, no Android. */
 object AlbumFormValidator {
     fun validate(form: AlbumForm): AlbumFormResult {
         val genre = form.genre?.takeUnless { it == Genre.UNKNOWN }

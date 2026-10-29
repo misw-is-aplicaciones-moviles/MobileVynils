@@ -44,7 +44,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
- * New album form (HU07). Forwards what the collector types to the ViewModel, draws its state and
+ * New album form. Forwards what the collector types to the ViewModel, draws its state and
  * reacts to its events. On success it tells the catalog through the back stack and closes.
  */
 class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {

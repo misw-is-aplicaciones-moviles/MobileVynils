@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 /**
- * New album form (HU07). Keeps what the collector typed across rotations, validates on "Crear álbum"
+ * New album form. Keeps what the collector typed across rotations, validates on "Crear álbum"
  * and sends the album once. Each change clears the error of its own field.
  */
 class AlbumCreateViewModel(

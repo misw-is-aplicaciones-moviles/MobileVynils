@@ -94,7 +94,7 @@
     <dimen name="button_padding_horizontal">23dp</dimen>
     <dimen name="button_gap">10dp</dimen>
 
-    <!-- Formulario "Nuevo álbum" (HU07). Campos de 25 dp de radio, como los botones. -->
+    <!-- Formulario de nuevo álbum. Campos de 25 dp de radio, como los botones. -->
     <dimen name="form_padding_horizontal">20dp</dimen>
     <dimen name="form_section_gap">16dp</dimen>
     <dimen name="form_label_gap">8dp</dimen>

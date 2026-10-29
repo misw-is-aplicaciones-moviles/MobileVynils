@@ -16,7 +16,7 @@
     <string name="album_no_artist">sin artista</string>
     <string name="album_genre_year">%1$s · %2$d</string>
     <string name="album_item_description">%1$s, %2$s, %3$s</string>
-    <!-- Nuevo álbum (HU07, docs/10 sección 6 y textos) -->
+    <!-- Formulario de nuevo álbum (docs/10, sección 6 y textos) -->
     <string name="create_album_title">Nuevo álbum</string>
     <string name="create_album_all_required">Todos los campos son obligatorios.</string>
     <string name="create_album_cover_hint">Vista previa. La portada se carga desde la URL que pegues abajo.</string>

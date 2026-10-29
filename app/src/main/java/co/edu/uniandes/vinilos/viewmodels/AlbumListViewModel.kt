@@ -55,7 +55,7 @@ class AlbumListViewModel(
         _events.value = Event(AlbumListEvent.OpenCreateAlbum)
     }
 
-    /** The new album form (HU07) just saved an album in Room: show the list with it and confirm. */
+    /** The new album form just saved an album in Room: show the list with it and confirm. */
     fun onAlbumCreated() {
         viewModelScope.launch {
             publish(albumRepository.getAlbums(forceRefresh = false))

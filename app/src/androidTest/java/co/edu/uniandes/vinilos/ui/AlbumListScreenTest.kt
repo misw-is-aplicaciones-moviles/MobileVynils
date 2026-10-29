@@ -24,7 +24,7 @@ import org.junit.runner.RunWith
 
 /**
  * HU01-03: el catálogo contra BackVynils local (10.0.2.2:3000 con la semilla).
- * El visitante no ve el botón "+"; el coleccionista lo ve y su toque abre el formulario de HU07.
+ * El visitante no ve el botón "+"; el coleccionista lo ve y su toque abre el formulario de nuevo álbum.
  */
 @RunWith(AndroidJUnit4::class)
 class AlbumListScreenTest {

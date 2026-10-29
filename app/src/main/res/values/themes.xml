@@ -356,7 +356,7 @@
         <item name="rippleColor">@color/vinilos_charcoal_ripple</item>
     </style>
 
-    <!-- Formulario "Nuevo álbum" (HU07). Etiqueta encima del campo: Montserrat 600, mayúsculas, carbón. -->
+    <!-- Formularios. Etiqueta encima del campo: Montserrat 600, mayúsculas, carbón. -->
     <style name="TextAppearance.Vinilos.FieldLabel" parent="TextAppearance.Vinilos.Overline">
         <item name="android:textColor">@color/vinilos_charcoal</item>
     </style>

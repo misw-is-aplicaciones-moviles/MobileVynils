@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Nuevo álbum (HU07, mockups "HU07 · 1" a "HU07 · 6"): cabecera con X, hoja crema con el formulario
+<!-- Nuevo álbum: cabecera con X, hoja crema con el formulario
      y los botones fijos abajo. Cada etiqueta apunta a su campo con labelFor para TalkBack. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
