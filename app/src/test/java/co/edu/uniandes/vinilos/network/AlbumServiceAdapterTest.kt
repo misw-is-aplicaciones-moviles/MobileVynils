@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.SocketPolicy
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -19,6 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.time.LocalDate
 import java.util.concurrent.Executors
 
 class AlbumServiceAdapterTest {
@@ -134,9 +136,20 @@ class AlbumServiceAdapterTest {
             val album = newAdapter(testScheduler).getAlbum(100)
 
             assertEquals(100, album.id)
+            assertEquals("Buscando América", album.name)
+            assertTrue(album.coverUrl.startsWith("https://"))
+            assertEquals(LocalDate.of(1984, 8, 1), album.releaseDate)
+            assertEquals(Genre.SALSA, album.genre)
+            assertEquals("Elektra", album.recordLabel)
+            assertTrue(album.description.startsWith("Buscando América es el primer álbum"))
+            assertEquals(listOf(100, 101), album.tracks.map { it.id })
             assertEquals(listOf("Decisiones", "Desapariciones"), album.tracks.map { it.name })
+            assertEquals(listOf("5:05", "6:29"), album.tracks.map { it.duration })
+            assertEquals(100, album.performers.single().id)
             assertEquals("Rubén Blades Bellido de Luna", album.performers.single().name)
             assertTrue(checkNotNull(album.performers.single().imageUrl).startsWith("https://"))
+            assertEquals(100, album.comments.single().id)
+            assertEquals("The most relevant album of Ruben Blades", album.comments.single().description)
             assertEquals(5, album.comments.single().rating)
             val request = serverRule.server.takeRequest()
             assertEquals("GET", request.method)
@@ -155,23 +168,94 @@ class AlbumServiceAdapterTest {
         }
 
     @Test
-    fun `detail query preserves 404 and classifies null and empty bodies`() =
+    fun `missing detail preserves the backend 404 response`() =
         runTest {
+            serverRule.enqueueJson("api/album_not_found.json", HTTP_NOT_FOUND)
             val adapter = newAdapter(testScheduler)
-            serverRule.server.enqueue(MockResponse().setResponseCode(HTTP_NOT_FOUND))
+
             assertEquals(
                 DataResult.Failure(DataError.Http(HTTP_NOT_FOUND)),
+                networkRequest { adapter.getAlbum(MISSING_ALBUM_ID) },
+            )
+            assertEquals("/albums/$MISSING_ALBUM_ID", serverRule.server.takeRequest().path)
+        }
+
+    @Test
+    fun `detail server failure becomes an HTTP data error`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setResponseCode(HTTP_SERVER_ERROR))
+            val adapter = newAdapter(testScheduler)
+
+            assertEquals(
+                DataResult.Failure(DataError.Http(HTTP_SERVER_ERROR)),
                 networkRequest { adapter.getAlbum(100) },
             )
-            serverRule.server.enqueue(MockResponse().setBody("null"))
-            assertEquals(DataResult.Failure(DataError.Serialization), networkRequest { adapter.getAlbum(100) })
-            serverRule.server.enqueue(MockResponse().setResponseCode(HTTP_NO_CONTENT))
+        }
+
+    @Test
+    fun `detail connection failure becomes a network data error`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START))
+            val adapter = newAdapter(testScheduler)
+
+            assertEquals(DataResult.Failure(DataError.Network), networkRequest { adapter.getAlbum(100) })
+        }
+
+    @Test
+    fun `malformed detail JSON becomes a serialization error`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setBody("{invalid}"))
+            val adapter = newAdapter(testScheduler)
+
             assertEquals(DataResult.Failure(DataError.Serialization), networkRequest { adapter.getAlbum(100) })
         }
 
+    @Test
+    fun `detail without required name becomes a serialization error`() =
+        runTest {
+            val body = JsonParser.parseString(readResource("api/album_100.json")).asJsonObject
+            body.remove("name")
+            serverRule.server.enqueue(MockResponse().setBody(body.toString()))
+            val adapter = newAdapter(testScheduler)
+
+            assertEquals(DataResult.Failure(DataError.Serialization), networkRequest { adapter.getAlbum(100) })
+        }
+
+    @Test
+    fun `null detail body becomes a serialization error`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setBody("null"))
+            val adapter = newAdapter(testScheduler)
+
+            assertEquals(DataResult.Failure(DataError.Serialization), networkRequest { adapter.getAlbum(100) })
+        }
+
+    @Test
+    fun `detail without content becomes a serialization error`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setResponseCode(HTTP_NO_CONTENT))
+            val adapter = newAdapter(testScheduler)
+
+            assertEquals(DataResult.Failure(DataError.Serialization), networkRequest { adapter.getAlbum(100) })
+        }
+
+    @Test
+    fun `detail with empty tracks and comments remains a valid album`() =
+        runTest {
+            val body = JsonParser.parseString(readResource("api/albums.json")).asJsonArray[1]
+            serverRule.server.enqueue(MockResponse().setBody(body.toString()))
+
+            val album = newAdapter(testScheduler).getAlbum(101)
+
+            assertEquals(101, album.id)
+            assertEquals("Poeta del pueblo", album.name)
+            assertTrue(album.tracks.isEmpty())
+            assertTrue(album.comments.isEmpty())
+            assertEquals("/albums/101", serverRule.server.takeRequest().path)
+        }
+
     private fun enqueueDetail() {
-        val album = JsonParser.parseString(readResource("api/albums.json")).asJsonArray.first()
-        serverRule.server.enqueue(MockResponse().setBody(album.toString()))
+        serverRule.enqueueJson("api/album_100.json")
     }
 
     private fun newAdapter(
@@ -197,6 +281,7 @@ class AlbumServiceAdapterTest {
     }
 
     private companion object {
+        const val MISSING_ALBUM_ID = 2147483647
         const val HTTP_NOT_FOUND = 404
         const val HTTP_NO_CONTENT = 204
         const val HTTP_SERVER_ERROR = 500
