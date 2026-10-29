@@ -94,7 +94,7 @@ Destinos de `res/navigation/nav_graph.xml` y sus argumentos (`Bundle`, claves en
 Comportamiento de navegación:
 
 - `roleSelectFragment` es el destino inicial; al elegir rol se navega a `albumListFragment` con `popUpTo` del selector (`inclusive = true`). El chip de rol vuelve al selector limpiando la pila. La barra inferior se oculta en el selector.
-- Los detalles se apilan sobre su pestaña y vuelven con la flecha y con el botón atrás. Los selectores y `albumCreateFragment` abren a pantalla completa con "X" y vuelven al detalle que los abrió.
+- Los detalles se apilan sobre su pestaña y vuelven con la flecha y con el botón atrás. Los selectores abren a pantalla completa con "X" y vuelven al detalle que los abrió. `albumCreateFragment` abre a pantalla completa con "X", sin barra inferior, y vuelve al catálogo; si crea el álbum, deja el resultado en `previousBackStackEntry.savedStateHandle` antes de cerrarse (HU07, sección 6).
 - `TrackCreateBottomSheet` y `CommentCreateBottomSheet` son `BottomSheetDialogFragment` abiertos desde el detalle con `show(childFragmentManager, TAG)`. Al guardar, la hoja llama a `parentFragmentManager.setFragmentResult(...)` y el detalle, que escucha con `childFragmentManager.setFragmentResultListener(...)`, vuelve a cargar el álbum. Así "HU08 + HU09 en cualquier orden" se cumple sin apilar destinos.
 - Tras una escritura exitosa se vuelve a la pantalla de origen y se muestra un `Snackbar` de confirmación.
 - Transición `MaterialFadeThrough` de 300 ms entre destinos.
@@ -134,7 +134,7 @@ Los tres selectores comparten un layout `fragment_picker.xml` y un adaptador `Pi
 | `Performer` (tabla única con herencia: `Musician` con `birthDate` y `band`; `Band` con `creationDate` y `musicians[]`), campos `id`, `name`, `image`, `description`, `albums[]` | `Performer(id, type: PerformerType, name, imageUrl, description, date: LocalDate, albums: List<AlbumSummary>, members: List<PerformerSummary>, bandId: Int?)` | Los ids de músicos y bandas no chocan: comparten la secuencia de `performer`. `PerformerType { MUSICIAN, BAND }` |
 | `Collector`: `id`, `name`, `telephone`, `email`, `favoritePerformers[]`, `comments[]`, `collectorAlbums[]` | `Collector(id, name, telephone, email, favorites: List<PerformerSummary>, albums: List<CollectorAlbum>)` | Sin imagen: avatar con iniciales |
 | `CollectorAlbum`: `id`, `price`, `status` (`Active`/`Inactive`), `album` | `CollectorAlbum(album: AlbumSummary, price: Int, status: AlbumStatus)` | Se obtiene con `GET /collectors/:id/albums`; estado visible como "Disponible" / "No disponible" |
-| Enumeraciones Joi: `genre` ∈ Classical, Salsa, Rock, Folk; `recordLabel` ∈ Sony Music, EMI, Discos Fuentes, Elektra, Fania Records; `rating` ∈ 0..5; `status` ∈ Active, Inactive | `Genre`, `RecordLabel`, `AlbumStatus` como `enum class` con `apiValue` | Las listas se dibujan como chips en el formulario |
+| Enumeraciones Joi: `genre` ∈ Classical, Salsa, Rock, Folk; `recordLabel` ∈ Sony Music, EMI, Discos Fuentes, Elektra, Fania Records; `rating` ∈ 0..5; `status` ∈ Active, Inactive | `Genre`, `RecordLabel`, `AlbumStatus` como `enum class` con `apiName` | Las listas se dibujan como chips en el formulario |
 
 `PerformerSummary(id, type, name)` y `AlbumSummary(id, name, year, coverUrl)` evitan ciclos entre modelos.
 
@@ -190,11 +190,81 @@ Convenciones comunes a todas las pantallas: cabecera carbón (`view_header.xml`:
 
 **Selector de rol (TR-06).** Logotipo, título "Vinilos", pregunta "¿Cómo quieres ingresar?" y dos tarjetas con icono, nombre y descripción: "Visitante: Consulta álbumes, artistas y coleccionistas" y "Coleccionista: Consulta y además crea álbumes, agrega canciones, comenta y administra artistas". Sin barra inferior.
 
-**HU01 · Catálogo.** `RecyclerView` de `item_album_catalog.xml` (fila de 136 dp: número "01", carátula de 96 dp con el disco asomando, nombre en mayúsculas hasta dos líneas, artista principal, "Género · Año"; medidas en el diseño técnico de HU01, sección 3). Orden alfabético por nombre. Artista = primer `performer`; si no hay, "sin artista". Chevron a la derecha. Estado de error de pantalla completa con ilustración de alerta en anillos punteados, "No se pudo cargar el catálogo", "Revisa tu conexión e inténtalo de nuevo." y botón "Reintentar". Si hay datos en caché y falla el refresco, se muestra el contenido con `Snackbar`. Botón "+" (en la joroba de la barra inferior, según los mockups v2) solo para coleccionista; abre `albumCreateFragment` (hasta HU07, un `Snackbar` con `album_create_pending`).
+**HU01 · Catálogo.** `RecyclerView` de `item_album_catalog.xml` (fila de 136 dp: número "01", carátula de 96 dp con el disco asomando, nombre en mayúsculas hasta dos líneas, artista principal, "Género · Año"; medidas en el diseño técnico de HU01, sección 3). Orden alfabético por nombre. Artista = primer `performer`; si no hay, "sin artista". Chevron a la derecha. Estado de error de pantalla completa con ilustración de alerta en anillos punteados, "No se pudo cargar el catálogo", "Revisa tu conexión e inténtalo de nuevo." y botón "Reintentar". Si hay datos en caché y falla el refresco, se muestra el contenido con `Snackbar`. Botón "+" (en la joroba de la barra inferior, según los mockups v2) solo para coleccionista; abre `albumCreateFragment` (HU07).
 
 **HU02 · Detalle de álbum.** Cabecera con carátula, "Género · Año", nombre y artista; tres fichas: Sello, Lanzamiento (fecha corta "1 ago 1984") y Canciones (conteo); descripción; sección "Canciones" numerada `01`, `02` con duración a la derecha; sección "Comentarios" con avatar, nombre, estrellas (rating sobre 5) y texto. Para coleccionista: botón "Comentar" junto al título de la sección y botón "+" para agregar una canción (los mockups v2 lo ponen en la joroba de la barra inferior; el prototipo v1 decía "+ Canción", ver hallazgo 14). Álbum inexistente (404): estado de error con mensaje "No encontramos este álbum".
 
-**HU07 · Nuevo álbum.** Pantalla completa con X. Aviso "Todos los campos son obligatorios". Vista previa de la portada cargada desde la URL escrita. Campos: Nombre, URL de la portada, Fecha de lanzamiento (`MaterialDatePicker`, formato `dd / mm / aaaa`), Descripción (multilínea), Género (chips de una sola selección: Classical, Salsa, Rock, Folk), Sello discográfico (chips: Sony Music, EMI, Discos Fuentes, Elektra, Fania Records). Botones inferiores "Cancelar" y "Crear álbum". Validación en el ViewModel al tocar "Crear álbum": "Campo obligatorio" bajo cada campo vacío, "Selecciona un género" y "Selecciona un sello" bajo los grupos de chips. Mientras envía, el formulario se atenúa y el botón se deshabilita. En éxito se vuelve al catálogo con snackbar "Álbum creado" y el nuevo álbum aparece al final de la lista.
+**HU07 · Nuevo álbum.** Pantalla completa con X. Aviso "Todos los campos son obligatorios". Vista previa de la portada cargada desde la URL escrita. Campos: Nombre, URL de la portada, Fecha de lanzamiento (`MaterialDatePicker`, formato `dd / mm / aaaa`), Descripción (multilínea), Género (chips de una sola selección: Classical, Salsa, Rock, Folk), Sello discográfico (chips: Sony Music, EMI, Discos Fuentes, Elektra, Fania Records). Botones inferiores "Cancelar" y "Crear álbum". Validación en el ViewModel al tocar "Crear álbum": "Campo obligatorio" bajo cada campo vacío, "Selecciona un género" y "Selecciona un sello" bajo los grupos de chips. Mientras envía, el formulario se atenúa y el botón se deshabilita. En éxito se vuelve al catálogo con snackbar "Álbum creado" y el nuevo álbum aparece en su posición alfabética, porque el catálogo ordena por nombre.
+
+*Diseño técnico de HU07 (HU07-01).*
+
+Estados de los mockups v2 (`docs/docs_daniela/Vynils temp version wireframe/HU07 · n …`):
+
+| # | Estado | Qué se ve |
+|---|---|---|
+| 1 | Formulario vacío | Aviso, vista previa con la carátula gris por defecto, campos con su pista, chips sin selección, "Cancelar" y "Crear álbum" |
+| 2 | Campos obligatorios | Tras tocar "Crear álbum" vacío: "Campo obligatorio" bajo los cuatro campos, "Selecciona un género" y "Selecciona un sello" bajo los chips |
+| 3 | Datos sin fecha | Todo lleno salvo la fecha; la vista previa ya muestra la portada de la URL |
+| 4 | Falta la fecha | Tras tocar "Crear álbum": solo la fecha muestra "Campo obligatorio" |
+| 5 | Seleccionar fecha | `MaterialDatePicker` con título "Seleccionar fecha" y botones "Cancelar" y "Aceptar" |
+| 6 | Listo para crear | Todo lleno, sin errores |
+| 7 | Álbum creado | Catálogo con el álbum nuevo y snackbar "Álbum creado" sobre el "+" |
+
+Validación (`AlbumFormValidator`, Kotlin puro en `viewmodels/`):
+
+| Campo | Control | Regla | Error |
+|---|---|---|---|
+| Nombre | `TextInputEditText`, `inputType="textCapSentences"`, `actionNext` | Obligatorio: no vacío tras `isBlank()` | `error_required` |
+| URL de la portada | `TextInputEditText`, `inputType="textUri"`, `actionNext` | Obligatorio | `error_required` |
+| Fecha de lanzamiento | `TextInputEditText` de solo lectura que abre el `MaterialDatePicker` | Obligatoria | `error_required` |
+| Descripción | `TextInputEditText` multilínea | Obligatoria | `error_required` |
+| Género | `ChipGroup` de selección única con `Genre.entries` sin `UNKNOWN` | Uno seleccionado | `error_select_genre` |
+| Sello | `ChipGroup` de selección única con `RecordLabel.entries` | Uno seleccionado | `error_select_label` |
+
+- La validación corre al tocar "Crear álbum" y muestra todos los errores a la vez. Desde ese momento, cada cambio de un campo limpia su propio error.
+- No se valida el formato de la URL ni que la fecha sea pasada: los mockups solo piden campos obligatorios y el backend no lo exige.
+- El ViewModel expone los errores como tipos (`AlbumFormErrors` con un `FieldError?` por campo), nunca como textos; el Fragment los traduce a `strings.xml` (`02-arquitectura.md`, sección 4).
+- Mientras `isSubmitting` es verdadero, un segundo toque de "Crear álbum" no hace nada.
+
+Contrato de `POST /albums` (BackVynils, sin autenticación):
+
+```json
+{
+  "name": "The Game",
+  "cover": "https://ejemplo.com/portadas/the-game.jpg",
+  "releaseDate": "1980-06-30T00:00:00.000Z",
+  "description": "Álbum de estudio de Queen…",
+  "genre": "Rock",
+  "recordLabel": "EMI"
+}
+```
+
+- Verificado contra el código de BackVynils (`src/album/album.controller.ts`, `album.service.ts`): responde **200** y devuelve el álbum guardado con `id`, `name`, `cover`, `releaseDate`, `description`, `genre` y `recordLabel`, sin las claves `tracks`, `performers` ni `comments`. Se mapea con el `AlbumDto.toModel()` existente (que ya tolera esas claves ausentes), así que llega "sin artista".
+- El esquema Joi del backend exige los seis campos (`name`, `cover`, `releaseDate`, `description`, `genre`, `recordLabel`), cada texto no vacío, y **rechaza campos desconocidos**: el cuerpo no debe llevar `id` ni ningún otro campo. Un campo faltante, vacío, un campo extra o un `genre`/`recordLabel` fuera de las listas responde **400** y llega a la pantalla como `DataError.Http(400)`. El backend no usa 412 en este endpoint.
+- La fecha elegida en el `MaterialDatePicker` (milisegundos UTC) se convierte a `LocalDate` en UTC y se envía como medianoche UTC, que es como `parseReleaseDate` de `AlbumMappers.kt` la vuelve a leer: el año no se corre en UTC-5.
+
+Clases (`02-arquitectura.md`, sección 2):
+
+| Capa | Clase | Responsabilidad |
+|---|---|---|
+| `models/` | `RecordLabel` | `enum class` con `apiName`, como `Genre` |
+| `models/` | `NewAlbum(name, coverUrl, releaseDate: LocalDate, description, genre: Genre, recordLabel: RecordLabel)` | Borrador que el formulario entrega al repositorio |
+| `network/dto/` | `NewAlbumRequest` y `NewAlbum.toRequest()` | Cuerpo del POST; da formato ISO a la fecha |
+| `network/` | `VinilosApiService.createAlbum(body)`, `AlbumServiceAdapter.createAlbum(draft): Album` | Llamada y mapeo de la respuesta |
+| `repositories/` | `AlbumRepository.createAlbum(draft): DataResult<Album, DataError>` | `networkRequest` y, si tiene éxito, `AlbumDao.upsert` del álbum recibido |
+| `viewmodels/` | `AlbumFormValidator`, `AlbumCreateUiState`, `AlbumCreateEvent`, `AlbumCreateViewModel` | Valores, errores por campo, envío y eventos de una sola vez |
+| `ui/albums/` | `AlbumCreateFragment`, `fragment_album_create.xml` | Dibuja el estado, abre el selector de fecha, carga la vista previa con Glide |
+
+`Album.recordLabel` sigue siendo `String`: HU07 no cambia el modelo ni la entidad de HU01.
+
+Flujo:
+
+1. "+" del catálogo → `AlbumListViewModel.onCreateAlbumClicked()` emite `OpenCreateAlbum` → `AlbumListFragment` navega con `action_albumList_to_albumCreate`. Reemplaza al aviso `album_create_pending` de HU01, que se elimina.
+2. "X", "Cancelar" y el botón atrás cierran el formulario sin crear nada.
+3. Al crear, `AlbumCreateFragment` deja `album_created = true` en `previousBackStackEntry.savedStateHandle` y cierra con `popBackStack()`.
+4. `AlbumListFragment` observa esa clave, la borra al consumirla (no se repite al rotar) y llama a `AlbumListViewModel.onAlbumCreated()`, que vuelve a leer Room y emite `ShowAlbumCreated` para el snackbar `snack_album_created` anclado con `PrimaryActionHost.snackbarAnchor`.
+5. Si el envío falla, el formulario conserva lo escrito y muestra `create_album_error` en un snackbar. Si el POST sale bien pero Room no logra guardar la respuesta (`SQLiteException`), el repositorio informa éxito igual: el álbum ya existe en el servidor y un error haría que el usuario lo duplicara al reintentar. El álbum entra a la caché al deslizar para actualizar o al abrir de nuevo la app.
+6. El chip de rol del formulario hace lo mismo que en el catálogo: limpia el rol y vuelve al selector.
 
 **HU08 · Nueva canción.** `TrackCreateBottomSheet` (`BottomSheetDialogFragment`) sobre el detalle, con sobretítulo "BUSCANDO AMÉRICA · CANCIÓN 03" (nombre del álbum y número que tendrá la pista), campos Nombre y Duración (mm:ss) con teclado numérico, botones "Cancelar" y "Guardar canción". Errores: "Campo obligatorio" e "Ingresa la duración con formato mm:ss" (regex `^\d{1,2}:[0-5]\d$`). En éxito se cierra la hoja, la ficha "Canciones" sube a 3, la pista aparece numerada y se muestra "Canción agregada al álbum".
 
@@ -261,14 +331,18 @@ Claves para `res/values/strings.xml` según el prototipo. El código usa los nom
 | `album_list_offline_notice` | Sin conexión. Mostrando los datos guardados |
 | `album_list_refresh_error` | No se pudo actualizar el catálogo |
 | `album_genre_year` | %1$s · %2$d |
-| `album_create_pending` | Crear álbumes llega con la siguiente historia. |
 | `album_label` / `album_release` / `album_tracks` | Sello / Lanzamiento / Canciones |
 | `album_section_tracks` / `album_section_comments` | Canciones / Comentarios |
 | `album_action_add_track` / `album_action_comment` | Canción / Comentar |
 | `create_album_title` / `create_album_all_required` | Nuevo álbum / Todos los campos son obligatorios. |
 | `create_album_cover_hint` | Vista previa. La portada se carga desde la URL que pegues abajo. |
 | `field_name` / `field_cover_url` / `field_release_date` / `field_description` / `field_genre` / `field_record_label` | Nombre / URL de la portada / Fecha de lanzamiento / Descripción / Género / Sello discográfico |
+| `hint_album_name` / `hint_description` | Nombre del álbum / Describe el álbum |
+| `hint_cover_url` | https://ejemplo.com/portada.jpg |
+| `hint_release_date` | dd / mm / aaaa |
+| `create_album_cover_description` / `date_picker_title` / `action_accept` | Vista previa de la portada / Seleccionar fecha / Aceptar |
 | `error_required` / `error_select_genre` / `error_select_label` | Campo obligatorio / Selecciona un género / Selecciona un sello |
+| `create_album_error` | No se pudo crear el álbum. Inténtalo de nuevo. |
 | `action_cancel` / `action_create_album` / `snack_album_created` | Cancelar / Crear álbum / Álbum creado |
 | `track_sheet_title` / `track_sheet_subtitle` | Nueva canción / %1$s · Canción %2$02d |
 | `field_track_name` / `field_track_duration` / `error_duration_format` | Nombre / Duración (mm:ss) / Ingresa la duración con formato mm:ss |
@@ -335,3 +409,4 @@ Resultado de contrastar wiki, prototipo, documento del curso y código del backe
 | 2026-10-26 | Reinicio con Vistas: destinos del grafo de navegación con argumentos en `Bundle`, hojas como `BottomSheetDialogFragment`, `SessionRepository` con `LiveData`, caché en memoria en los repositorios (Room opcional), kit v2 llevado a Material Components; hallazgos 14 a 16 sobre el botón de canción, la regla de duración y los datos de los mockups. |
 | 2026-10-27 | TR-03: Room deja de ser opcional; `AlbumEntity` y `TrackEntity` en Sprint 1, el resto de entidades en Sprint 2. |
 | 2026-10-28 | HU01-01: el catálogo se guarda en Room (`AlbumEntity` con `performerName`, base de datos versión 2), orden alfabético, fila propia `item_album_catalog.xml` con las medidas del mockup (carátula de 96 dp, ya no 56 dp), estado de error con ilustración, botón "+" en la joroba de la barra para el coleccionista (lo muestra el Fragment según `canEdit` de su `UiState`) y cinco textos nuevos del catálogo (`album_list_empty`, `album_list_offline_notice`, `album_list_refresh_error`, `album_genre_year`, `album_create_pending`). |
+| 2026-10-28 | HU07-01: diseño técnico del formulario "Nuevo álbum" (sección 6): siete estados, validación de campos obligatorios en `AlbumFormValidator` con errores como tipos, contrato de `POST /albums` con fecha en medianoche UTC, `RecordLabel` con `apiName` (antes decía `apiValue`), `NewAlbumRequest` como cuerpo del POST, resultado al catálogo por `savedStateHandle`. El álbum nuevo aparece en su posición alfabética (antes decía "al final"); `album_create_pending` se retira y se suman los textos de pista, selector de fecha y error al crear. |

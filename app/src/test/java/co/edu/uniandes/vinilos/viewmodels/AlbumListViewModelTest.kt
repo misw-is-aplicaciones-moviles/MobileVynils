@@ -251,12 +251,12 @@ class AlbumListViewModelTest {
     }
 
     @Test
-    fun `onCreateAlbumClicked opens the track sheet`() {
+    fun `onCreateAlbumClicked asks to open the new album form`() {
         val viewModel = viewModel(FakeAlbumRepository())
 
         viewModel.onCreateAlbumClicked()
 
-        assertEquals(AlbumListEvent.OpenTrackSheet, viewModel.events.value?.getContentIfNotHandled())
+        assertEquals(AlbumListEvent.OpenCreateAlbum, viewModel.events.value?.getContentIfNotHandled())
     }
 
     @Test

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Portada vacía de la vista previa del formulario de álbum: piedra con borde punteado. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/vinilos_stone" />
+    <stroke
+        android:width="@dimen/cover_placeholder_stroke"
+        android:color="@color/vinilos_ash"
+        android:dashWidth="@dimen/cover_placeholder_dash"
+        android:dashGap="@dimen/cover_placeholder_dash_gap" />
+</shape>

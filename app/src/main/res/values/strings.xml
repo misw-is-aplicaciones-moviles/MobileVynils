@@ -15,8 +15,29 @@
     <string name="album_list_refresh_error">No se pudo actualizar el catálogo</string>
     <string name="album_no_artist">sin artista</string>
     <string name="album_genre_year">%1$s · %2$d</string>
-    <string name="album_create_pending">Crear álbumes llega con la siguiente historia.</string>
     <string name="album_item_description">%1$s, %2$s, %3$s</string>
+    <!-- Formulario de nuevo álbum (docs/10, sección 6 y textos) -->
+    <string name="create_album_title">Nuevo álbum</string>
+    <string name="create_album_all_required">Todos los campos son obligatorios.</string>
+    <string name="create_album_cover_hint">Vista previa. La portada se carga desde la URL que pegues abajo.</string>
+    <string name="create_album_cover_description">Vista previa de la portada</string>
+    <string name="create_album_error">No se pudo crear el álbum. Inténtalo de nuevo.</string>
+    <string name="field_name">Nombre</string>
+    <string name="field_cover_url">URL de la portada</string>
+    <string name="field_release_date">Fecha de lanzamiento</string>
+    <string name="field_description">Descripción</string>
+    <string name="field_genre">Género</string>
+    <string name="field_record_label">Sello discográfico</string>
+    <string name="hint_album_name">Nombre del álbum</string>
+    <string name="hint_cover_url">https://ejemplo.com/portada.jpg</string>
+    <string name="hint_release_date">dd / mm / aaaa</string>
+    <string name="hint_description">Describe el álbum</string>
+    <string name="date_picker_title">Seleccionar fecha</string>
+    <string name="action_accept">Aceptar</string>
+    <string name="error_required">Campo obligatorio</string>
+    <string name="error_select_genre">Selecciona un género</string>
+    <string name="error_select_label">Selecciona un sello</string>
+
     <string name="artist_list_title">Artistas</string>
     <string name="collector_list_title">Coleccionistas</string>
 

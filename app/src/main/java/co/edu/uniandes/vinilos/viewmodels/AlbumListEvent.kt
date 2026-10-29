@@ -13,6 +13,9 @@ sealed interface AlbumListEvent {
     ) : AlbumListEvent
 
     data object OpenTrackSheet : AlbumListEvent
+    data object OpenCreateAlbum : AlbumListEvent
+
+    data object ShowAlbumCreated : AlbumListEvent
 
     data object OpenRoleSelector : AlbumListEvent
 }

@@ -392,6 +392,21 @@
         <item name="fontFamily">@font/outfit_medium</item>
         <item name="lineHeight">16sp</item>
         <item name="android:lineHeight" tools:targetApi="28">16sp</item>
+    <!-- Formularios. Etiqueta encima del campo: Montserrat 600, mayúsculas, carbón. -->
+    <style name="TextAppearance.Vinilos.FieldLabel" parent="TextAppearance.Vinilos.Overline">
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Texto escrito en un campo: Outfit 400, 16 sp, carbón. -->
+    <style name="TextAppearance.Vinilos.FieldInput" parent="TextAppearance.Vinilos.Body">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Error bajo un campo: Outfit 500, 13 sp, carbón (los mockups no usan rojo). -->
+    <style name="TextAppearance.Vinilos.FieldError" parent="TextAppearance.Vinilos.Body">
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="fontFamily">@font/outfit_medium</item>
         <item name="android:textSize">13sp</item>
         <item name="android:textColor">@color/vinilos_charcoal</item>
     </style>
@@ -462,5 +477,84 @@
     <style name="ShapeAppearance.Vinilos.BottomSheet" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">0dp</item>
+    <!-- Etiqueta de un campo, con el espacio hasta el campo anterior y el suyo. -->
+    <style name="Widget.Vinilos.FieldLabel" parent="Widget.Vinilos.TextView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/form_section_gap</item>
+        <item name="android:layout_marginBottom">@dimen/form_label_gap</item>
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.FieldLabel</item>
+    </style>
+
+    <!-- Error bajo un grupo de chips. Oculto hasta que haya error; TalkBack lo anuncia al aparecer.
+         La sangría inicial es la misma que TextInputLayout da a sus errores, para que todos queden alineados. -->
+    <style name="Widget.Vinilos.FieldError" parent="Widget.Vinilos.TextView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/space_xs</item>
+        <item name="android:paddingStart">@dimen/space_l</item>
+        <item name="android:paddingEnd">@dimen/space_l</item>
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.FieldError</item>
+        <item name="android:visibility">gone</item>
+        <item name="android:accessibilityLiveRegion">polite</item>
+    </style>
+
+    <style name="ShapeAppearance.Vinilos.Field" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/field_radius</item>
+    </style>
+
+    <!-- Campo de texto del kit (docs/05): píldora con borde carbón, sin etiqueta flotante. La pista va en el EditText. -->
+    <style name="Widget.Vinilos.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="hintEnabled">false</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Vinilos.Field</item>
+        <item name="shapeAppearanceOverlay">@null</item>
+        <item name="boxBackgroundColor">@color/vinilos_card_fill</item>
+        <item name="boxStrokeColor">@color/text_field_stroke</item>
+        <item name="boxStrokeWidth">@dimen/field_stroke</item>
+        <item name="boxStrokeWidthFocused">@dimen/field_stroke_focused</item>
+        <item name="boxStrokeErrorColor">@color/vinilos_charcoal</item>
+        <item name="errorTextColor">@color/vinilos_charcoal</item>
+        <item name="errorTextAppearance">@style/TextAppearance.Vinilos.FieldError</item>
+        <item name="errorIconDrawable">@null</item>
+        <item name="endIconTint">@color/vinilos_charcoal</item>
+    </style>
+
+    <style name="Widget.Vinilos.TextInputEditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.FieldInput</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+        <item name="android:textColorHint">@color/vinilos_ash</item>
+    </style>
+
+    <!-- Chip de una sola elección (género, sello; docs/05): borde carbón, relleno carbón al elegirlo. -->
+    <style name="Widget.Vinilos.Chip" parent="Widget.Material3.Chip.Filter">
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.FieldInput</item>
+        <item name="android:textColor">@color/chip_choice_text</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Vinilos.Circle</item>
+        <item name="shapeAppearanceOverlay">@null</item>
+        <item name="chipSurfaceColor">@android:color/transparent</item>
+        <item name="chipBackgroundColor">@color/chip_choice_background</item>
+        <item name="chipStrokeColor">@color/vinilos_charcoal</item>
+        <item name="chipStrokeWidth">@dimen/chip_stroke</item>
+        <item name="chipMinHeight">@dimen/chip_height</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="chipIconVisible">false</item>
+        <item name="closeIconVisible">false</item>
+        <item name="rippleColor">@color/vinilos_charcoal_ripple</item>
+        <item name="ensureMinTouchTargetSize">true</item>
+        <item name="chipMinTouchTargetSize">@dimen/min_touch_target</item>
+    </style>
+
+    <!-- Calendario de la fecha de lanzamiento con los colores del kit. -->
+    <style name="ThemeOverlay.Vinilos.DatePicker" parent="ThemeOverlay.Material3.MaterialCalendar">
+        <item name="colorPrimary">@color/vinilos_charcoal</item>
+        <item name="colorOnPrimary">@color/vinilos_cream</item>
+        <item name="colorSurface">@color/vinilos_cream</item>
+        <!-- El diálogo de Material 3 pinta su fondo con los contenedores de superficie (lila por defecto). -->
+        <item name="colorSurfaceContainer">@color/vinilos_cream</item>
+        <item name="colorSurfaceContainerHigh">@color/vinilos_cream</item>
+        <item name="colorSurfaceContainerHighest">@color/vinilos_cream</item>
+        <item name="colorOnSurface">@color/vinilos_charcoal</item>
+        <item name="colorOnSurfaceVariant">@color/vinilos_graphite</item>
     </style>
 </resources>

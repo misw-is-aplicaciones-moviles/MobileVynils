@@ -134,12 +134,22 @@ class MainActivity :
             )
             true
         }
-        binding.bottomNav.setOnItemReselectedListener { }
+        binding.bottomNav.setOnItemReselectedListener { item ->
+            if (item.itemId == R.id.albumListFragment &&
+                navController.currentDestination?.id == R.id.albumDetailFragment
+            ) {
+                navController.popBackStack(R.id.albumListFragment, false)
+            }
+        }
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            val showBottomBar = destination.id != R.id.roleSelectFragment
+            val showBottomBar = destination.id !in DESTINATIONS_WITHOUT_BOTTOM_BAR
             binding.bottomBar.isVisible = showBottomBar
             if (showBottomBar) {
-                binding.bottomNav.post { moveNavDot(destination.id) }
+                val tabId = if (destination.id == R.id.albumDetailFragment) R.id.albumListFragment else destination.id
+                binding.bottomNav.menu
+                    .findItem(tabId)
+                    ?.isChecked = true
+                binding.bottomNav.post { moveNavDot(tabId) }
             }
         }
     }
@@ -159,4 +169,9 @@ class MainActivity :
     /** La etiqueta visible del ítem (Material alterna entre una etiqueta pequeña y una grande). */
     private fun ViewGroup.visibleLabel(): TextView? =
         descendants.filterIsInstance<TextView>().firstOrNull { it.isShown && it.text.isNotEmpty() }
+
+    private companion object {
+        /** El selector de rol y las pantallas completas (formulario de nuevo álbum) se dibujan sin la barra inferior. */
+        val DESTINATIONS_WITHOUT_BOTTOM_BAR = setOf(R.id.roleSelectFragment, R.id.albumCreateFragment)
+    }
 }

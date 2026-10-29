@@ -27,7 +27,7 @@ import org.junit.runner.RunWith
 
 /**
  * HU01-03: el catálogo contra BackVynils local (10.0.2.2:3000 con la semilla).
- * El visitante no ve el botón "+"; el coleccionista lo ve y abre la hoja de canción.
+ * El visitante no ve el botón "+"; el coleccionista lo ve y su toque abre el formulario de nuevo álbum.
  */
 @RunWith(AndroidJUnit4::class)
 class AlbumListScreenTest {
@@ -44,7 +44,7 @@ class AlbumListScreenTest {
     }
 
     @Test
-    fun collector_sees_the_create_button_and_it_opens_the_track_sheet() {
+    fun collector_sees_the_create_button_and_it_opens_the_new_album_form() {
         onView(withText(R.string.role_collector)).perform(click())
 
         waitForDisplayed(withId(R.id.albumList))
@@ -52,41 +52,7 @@ class AlbumListScreenTest {
 
         onView(withId(R.id.primaryAction)).perform(click())
 
-        waitForDisplayed(withText(R.string.track_sheet_title))
-        onView(withText(R.string.track_duration_empty)).check(matches(isDisplayed()))
-        onView(withText(R.string.action_save_track)).check(matches(isDisplayed()))
-        onView(withText(R.string.action_cancel)).perform(click())
-        onView(withText(R.string.track_sheet_title)).check(doesNotExist())
-    }
-
-    @Test
-    fun collector_save_shows_the_field_errors_and_clears_them_when_filled() {
-        onView(withText(R.string.role_collector)).perform(click())
-        waitForDisplayed(withId(R.id.albumList))
-        onView(withId(R.id.primaryAction)).perform(click())
-        waitForDisplayed(withText(R.string.track_sheet_title))
-
-        onView(withId(R.id.saveTrack)).perform(click())
-        onView(withText(R.string.error_required)).check(matches(isDisplayed()))
-        onView(withText(R.string.error_duration_format)).check(matches(isDisplayed()))
-
-        onView(withId(R.id.trackNameField)).perform(replaceText("América"), closeSoftKeyboard())
-        onView(withText(R.string.error_required)).check(matches(not(isDisplayed())))
-
-        onView(withId(R.id.key1)).perform(click())
-        onView(withId(R.id.key3)).perform(click())
-        onView(withId(R.id.key0)).perform(click())
-        onView(withText("01:30")).check(matches(isDisplayed()))
-        onView(withText(R.string.error_duration_format)).check(matches(not(isDisplayed())))
-
-        onView(withId(R.id.keyClear)).perform(click())
-        onView(withText(R.string.track_duration_empty)).check(matches(isDisplayed()))
-        onView(withText(R.string.error_duration_format)).check(matches(isDisplayed()))
-
-        onView(withId(R.id.keyDelete)).perform(click())
-        onView(withId(R.id.key2)).perform(click())
-        onView(withId(R.id.keyDelete)).perform(click())
-        onView(withText(R.string.track_duration_empty)).check(matches(isDisplayed()))
+        waitForDisplayed(withText(R.string.create_album_all_required))
     }
 
     /** El título de la fila [position], leído del ViewHolder ya enlazado. */

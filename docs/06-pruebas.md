@@ -48,7 +48,8 @@ class AlbumListViewModelTest {
 
 - Repository: fake del Service Adapter; verificar la caché y que los errores se convierten en `DataError`.
 - Service Adapter: MockWebServer con respuestas JSON reales de BackVynils en `src/test/resources/api/`; verificar deserialización, mapeo y errores HTTP.
-- Validaciones (HU07, HU08): pruebas de tabla con los valores límite del inventario.
+- Validaciones (HU07, HU08): pruebas de tabla con los valores límite del inventario. HU07: `AlbumFormValidatorTest` cubre cada campo vacío o con solo espacios, sin género, sin sello, `Genre.UNKNOWN` y el caso válido.
+- Pruebas de API de `POST /albums` (HU07-06): con `MockWebServerRule` se verifica el método, la ruta, el cuerpo JSON con los seis campos y la fecha en medianoche UTC, y la respuesta 400 por campos faltantes, campos extra o valores fuera de las listas (`DataError.Http(400)`), según el esquema Joi de BackVynils.
 - Sin `Thread.sleep` ni `runBlocking`: `runTest` y `advanceUntilIdle`.
 
 ## 4. Pruebas E2E con Espresso
@@ -70,6 +71,40 @@ Por sprint en la wiki, una fila por caso:
 | Id | HU | Nombre | Precondición | Pasos | Resultado esperado | Tipo | Automatizado (clase.método) | Estado |
 |---|---|---|---|---|---|---|---|---|
 | CP-HU01-01 | HU01 | Listar álbumes con conexión | Backend con la semilla (4 álbumes: A Day at the Races, A Night at the Opera, Buscando América, Poeta del pueblo, en orden alfabético) | Abrir la app, pestaña Álbumes | Se muestran 4 tarjetas con nombre, artista y "Género · Año", en orden alfabético | E2E | `HU01AlbumCatalogTest.listsAlbums` | Pendiente |
+| CP-HU07-01 | HU07 | Crear un álbum con datos válidos | Rol Coleccionista; backend local; nombre único por ejecución | Catálogo, tocar "+", llenar los seis campos (fecha con el selector), tocar "Crear álbum" | Vuelve al catálogo, aparece "Álbum creado" y el álbum nuevo está en la lista | E2E | `HU07AlbumCreateTest.createsAlbumWithValidData` | Pendiente |
+| CP-HU07-02 | HU07 | Enviar el formulario vacío | Rol Coleccionista; formulario abierto | Tocar "Crear álbum" sin llenar nada | "Campo obligatorio" bajo nombre, URL, fecha y descripción; "Selecciona un género" y "Selecciona un sello"; no se crea nada | E2E | `HU07AlbumCreateTest.showsRequiredErrorsWhenEmpty` | Pendiente |
+| CP-HU07-03 | HU07 | Enviar sin fecha | Rol Coleccionista; todo lleno salvo la fecha | Tocar "Crear álbum" | Solo la fecha muestra "Campo obligatorio"; se conserva lo escrito | E2E | `HU07AlbumCreateTest.showsOnlyDateErrorWhenDateIsMissing` | Pendiente |
+| CP-HU07-04 | HU07 | El error desaparece al corregir | Rol Coleccionista; formulario con errores visibles | Escribir un nombre y elegir un género | Desaparecen los errores de ese campo y de ese grupo; los demás siguen | E2E | `HU07AlbumCreateTest.clearsFieldErrorWhenFieldIsFilled` | Pendiente |
+| CP-HU07-05 | HU07 | El visitante no puede crear álbumes | Rol Visitante | Abrir el catálogo | No aparece el botón "+" | E2E | `HU07AlbumCreateTest.hidesCreateActionForVisitor` | Pendiente |
+| CP-HU07-06 | HU07 | Cancelar la creación | Rol Coleccionista; formulario con datos escritos | Tocar "Cancelar" y repetir con la "X" | Vuelve al catálogo sin "Álbum creado" y sin álbum nuevo | E2E | `HU07AlbumCreateTest.cancelsWithoutCreating` | Pendiente |
+| CP-HU07-07 | HU07 | Error del backend al crear | Repositorio falso que responde `DataError.Network` | Llenar el formulario válido y enviar | Emite `Failed`, `isSubmitting` vuelve a `false` y se conservan los valores escritos | Unitaria | `AlbumCreateViewModelTest` | Pendiente |
+| CP-HU07-08 | HU07 | Cuerpo del POST con datos válidos | MockWebServer con `album_created.json` | Llamar a `createAlbum` con un `NewAlbum` válido | `POST /albums` con exactamente los seis campos y la fecha en medianoche UTC; la respuesta 200 se mapea a `Album` | API | `AlbumServiceAdapterTest` | Pendiente |
+| CP-HU07-09 | HU07 | Campos faltantes o fuera de las listas | MockWebServer con 400 y `album_create_error.json` | Llamar a `createAlbum` desde el repositorio | `DataError.Http(400)` y nada se escribe en Room | API | `AlbumServiceAdapterTest`, `AlbumRepositoryImplTest` | Pendiente |
+| CP-HU07-10 | HU07 | Valores de las listas | — | Recorrer `Genre` (sin `UNKNOWN`) y `RecordLabel` | Cada `apiName` coincide con el esquema Joi de BackVynils | API | `NewAlbumRequestMappersTest` | Pendiente |
+
+Casos automatizados de HU02 (clase existente `AlbumDetailScreenTest`):
+
+| Id | HU | Nombre | Precondición | Pasos | Resultado esperado | Tipo | Automatizado (clase.método) | Estado |
+|---|---|---|---|---|---|---|---|---|
+| CP-HU02-01 | HU02 | Detalle y regreso con cabecera | Backend con semilla; rol Coleccionista | Tocar Buscando América, revisar datos, canciones y comentarios; pulsar Atrás | Contenido correcto; acción de crear solo en catálogo | E2E | `AlbumDetailScreenTest.catalog_card_opens_its_detail_and_returns_without_collector_actions` | Correcto · tablet API 31 |
+| CP-HU02-02 | HU02 | Visitante y Atrás del sistema | Backend con semilla | Entrar como Visitante, abrir álbum, pulsar Atrás del sistema | Vuelve al catálogo con Álbumes seleccionado y sin acción de crear | E2E | `AlbumDetailScreenTest.visitor_returns_to_catalog_with_system_back` | Correcto · tablet API 31 |
+| CP-HU02-03 | HU02 | Rotación y pestaña Álbumes | Backend con semilla | Abrir álbum, cambiar orientación y tocar de nuevo Álbumes | Conserva el detalle; la pestaña vuelve al catálogo | E2E | `AlbumDetailScreenTest.rotation_preserves_detail_and_reselecting_albums_returns_to_catalog` | Correcto · tablet API 31 |
+| CP-HU02-04 | HU02 | Canciones y comentarios vacíos | Poeta del pueblo sin canciones ni comentarios | Abrir el álbum y recorrer ambas secciones | Mensajes vacíos por sección, conservando el álbum | E2E | `AlbumDetailScreenTest.empty_tracks_and_comments_keep_the_album_visible` | Correcto · tablet API 31 |
+
+### Ejecutar los casos de HU02 en la tablet
+
+Con BackVynils disponible en el puerto 3000 y la tablet conectada por USB:
+
+```bash
+/home/kausaustralis/Android/Sdk/platform-tools/adb -d reverse tcp:3000 tcp:3000
+./gradlew connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.ui.AlbumDetailScreenTest
+```
+
+La clase contiene cuatro recorridos con datos reales del backend. Los estados
+404, error de servidor y desconexión siguen cubiertos por las pruebas unitarias
+del ViewModel, Repository y Service Adapter. No se requieren proxy ni argumentos
+especiales para la ejecución instrumentada general.
 
 Ids: `CP-HUxx-nn`. Cada historia cubre al menos camino feliz, error de backend, estado vacío y, en formularios, las validaciones por campo.
 
@@ -200,3 +235,4 @@ Todos los casos unitarios usan MockWebServer o excepciones controladas, sin depe
 | 2026-10-07 | Pirámide de niveles, Page Objects, inventario `CP-HUxx-nn`, defectos como issues, Monkey y RIP en Sprint 3. |
 | 2026-10-26 | Reinicio con Vistas: E2E con Espresso y `ActivityScenarioRule`, unitarias de `LiveData` con `InstantTaskExecutorRule`, fakes sin librería de mocks, matriz API 21/30/37, sin capturas seguidas en API 21. Konsist y pruebas de Compose retiradas. |
 | 2026-10-27 | TR-05: entorno de pruebas listo. Utilidades en el paquete `testing` (`MainDispatcherRule`, `getOrAwaitValue`, `MockWebServerRule`, `OkHttpIdlingResourceRule`), Robots en `robots/`, `animationsDisabled`. Las pruebas de API pasan a JUnit + Retrofit + MockWebServer en `src/test`, con respuestas reales de BackVynils. |
+| 2026-10-28 | HU07-01: inventario CP-HU07-01 a CP-HU07-10 (E2E con `HU07AlbumCreateTest`, error del backend en el ViewModel y pruebas de API de `POST /albums` con MockWebServer), validaciones por tabla. |

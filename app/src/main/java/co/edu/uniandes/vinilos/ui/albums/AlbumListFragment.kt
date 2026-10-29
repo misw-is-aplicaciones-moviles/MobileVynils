@@ -3,6 +3,7 @@ package co.edu.uniandes.vinilos.ui.albums
 import android.os.Bundle
 import android.view.View
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -17,6 +18,7 @@ import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
+import co.edu.uniandes.vinilos.viewmodels.AlbumDetailViewModel
 import co.edu.uniandes.vinilos.viewmodels.AlbumListEvent
 import co.edu.uniandes.vinilos.viewmodels.AlbumListUiState
 import co.edu.uniandes.vinilos.viewmodels.AlbumListViewModel
@@ -50,7 +52,18 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
         viewModel.events.observe(viewLifecycleOwner) { event ->
             event.getContentIfNotHandled()?.let(::handle)
         }
+        observeAlbumCreated()
         ViewCompat.requestApplyInsets(binding.headerBar.header)
+    }
+
+    // The new album form leaves its result in this entry before closing. Removing it keeps a rotation from repeating it.
+    private fun observeAlbumCreated() {
+        val handle = findNavController().currentBackStackEntry?.savedStateHandle ?: return
+        handle.getLiveData<Boolean>(AlbumCreateFragment.RESULT_ALBUM_CREATED).observe(viewLifecycleOwner) { created ->
+            if (created != true) return@observe
+            handle.remove<Boolean>(AlbumCreateFragment.RESULT_ALBUM_CREATED)
+            viewModel.onAlbumCreated()
+        }
     }
 
     override fun onDestroyView() {
@@ -143,13 +156,30 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
         }
     }
 
-    // TODO(#15): navigate to albumDetailFragment when HU02 adds it (OpenDetail)
     private fun handle(event: AlbumListEvent) {
         when (event) {
-            is AlbumListEvent.OpenDetail -> Unit
-            is AlbumListEvent.ShowRefreshError -> showRefreshError(event.error)
-            AlbumListEvent.OpenTrackSheet -> openTrackSheet()
-            AlbumListEvent.OpenRoleSelector -> findNavController().navigateToRoleSelector()
+            is AlbumListEvent.OpenDetail -> {
+                findNavController().navigate(
+                    R.id.action_albumList_to_albumDetail,
+                    bundleOf(AlbumDetailViewModel.ARG_ALBUM_ID to event.albumId),
+                )
+            }
+
+            is AlbumListEvent.ShowRefreshError -> {
+                showRefreshError(event.error)
+            }
+
+            AlbumListEvent.OpenRoleSelector -> {
+                findNavController().navigateToRoleSelector()
+            }
+
+            AlbumListEvent.OpenCreateAlbum -> {
+                findNavController().navigate(R.id.action_albumList_to_albumCreate)
+            }
+
+            AlbumListEvent.ShowAlbumCreated -> {
+                showMessage(R.string.snack_album_created)
+            }
         }
     }
 
