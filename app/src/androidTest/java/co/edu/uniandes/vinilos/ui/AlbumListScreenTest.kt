@@ -1,73 +1,87 @@
 package co.edu.uniandes.vinilos.ui
 
-import android.view.View
-import android.widget.TextView
-import androidx.recyclerview.widget.RecyclerView
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.BoundedMatcher
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
+import co.edu.uniandes.vinilos.robots.AlbumListRobot
+import co.edu.uniandes.vinilos.testing.createAlbumOnBackend
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
-import org.hamcrest.Description
-import org.hamcrest.Matcher
-import org.hamcrest.Matchers.not
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * HU01-03: el catálogo contra BackVynils local (10.0.2.2:3000 con la semilla).
- * El visitante no ve el botón "+"; el coleccionista lo ve y su toque abre el formulario de nuevo álbum.
+ * Catálogo contra BackVynils local (10.0.2.2:3000 con la semilla); un método por caso del inventario de docs/06.
+ * Los álbumes que crean las pruebas empiezan por letras posteriores a "Poeta", así que la semilla conserva sus filas.
  */
 @RunWith(AndroidJUnit4::class)
 class AlbumListScreenTest {
     @get:Rule val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
-    @Test
-    fun visitor_sees_the_alphabetical_catalog_without_the_create_button() {
-        onView(withText(R.string.role_visitor)).perform(click())
+    private val catalog = AlbumListRobot()
+    private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
-        waitForDisplayed(withId(R.id.albumList))
-        onView(withId(R.id.albumList)).check(matches(hasTitleAt(position = 0, title = "A Day at the Races")))
-        onView(withText("A Day at the Races")).check(matches(isDisplayed()))
-        onView(withId(R.id.primaryAction)).check(matches(not(isDisplayed())))
+    @Test
+    fun visitor_sees_the_seed_albums_in_alphabetical_order_without_the_create_button() {
+        catalog
+            .enterAs(R.string.role_visitor)
+            .assertRow(
+                position = 0,
+                number = "01",
+                title = "A Day at the Races",
+                artist = "Queen",
+                meta = "Rock · 1976",
+            ).assertTitles("A Day at the Races", "A Night at the Opera", "Buscando América", "Poeta del pueblo")
+            .assertCreateButtonHidden()
     }
 
     @Test
     fun collector_sees_the_create_button_and_it_opens_the_new_album_form() {
-        onView(withText(R.string.role_collector)).perform(click())
-
-        waitForDisplayed(withId(R.id.albumList))
-        onView(withId(R.id.primaryAction)).check(matches(isDisplayed()))
-
-        onView(withId(R.id.primaryAction)).perform(click())
+        catalog
+            .enterAs(R.string.role_collector)
+            .assertTitles("A Day at the Races", "A Night at the Opera", "Buscando América", "Poeta del pueblo")
+            .assertCreateButtonShown()
+            .tapCreate()
 
         waitForDisplayed(withText(R.string.create_album_all_required))
     }
 
-    /** El título de la fila [position], leído del ViewHolder ya enlazado. */
-    private fun hasTitleAt(
-        position: Int,
-        title: String,
-    ): Matcher<View> =
-        object : BoundedMatcher<View, RecyclerView>(RecyclerView::class.java) {
-            override fun describeTo(description: Description) {
-                description.appendText("RecyclerView con \"$title\" en la fila $position")
-            }
+    @Test
+    fun album_without_performers_shows_no_artist() {
+        val name = "Sin artista ${System.currentTimeMillis()}"
+        createAlbumOnBackend(name)
 
-            override fun matchesSafely(list: RecyclerView): Boolean {
-                val holder = list.findViewHolderForAdapterPosition(position) ?: return false
-                return holder.itemView
-                    .findViewById<TextView>(R.id.albumTitle)
-                    .text
-                    .toString() == title
-            }
-        }
+        catalog
+            .enterAs(R.string.role_visitor)
+            .assertArtistOf(name, context.getString(R.string.album_no_artist))
+    }
+
+    @Test
+    fun pull_to_refresh_shows_an_album_added_on_the_backend() {
+        val name = "Refresco ${System.currentTimeMillis()}"
+        catalog
+            .enterAs(R.string.role_visitor)
+            .assertTitles("A Day at the Races")
+        createAlbumOnBackend(name)
+
+        catalog
+            .pullToRefresh()
+            .scrollTo(name)
+            .assertShown(name)
+    }
+
+    @Test
+    fun recreating_the_screen_keeps_the_catalog_and_its_position() {
+        catalog
+            .enterAs(R.string.role_visitor)
+            .scrollTo("Poeta del pueblo")
+
+        activityRule.scenario.recreate()
+
+        waitForDisplayed(withText("Poeta del pueblo"))
+        catalog.assertCreateButtonHidden()
+    }
 }
