@@ -1,6 +1,6 @@
 # 11. HU02 · Diseño técnico del detalle de álbum
 
-Estado: diseño de referencia para implementar por tareas; avance registrado en la sección 8.
+Estado: diseño de referencia para implementar por tareas; avance registrado en las secciones 8 a 12.
 Tarea: [HU02-01 · #13](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/issues/13).
 Responsable: @ManfredAriel91122.
 Base revisada: `develop`, commit `5f2399e`, con HU01-03 integrada.
@@ -337,3 +337,47 @@ La validación queda limitada a esta tablet y versión de Android.
 Esta tarea cambia únicamente pruebas, su herramienta local y documentación.
 No modifica código de aplicación, recursos ni dependencias.
 La ampliación de pruebas de API corresponde a HU02-06.
+
+## 12. Avance de HU02-06 · Pruebas de API
+
+Ampliada la clase existente `AlbumServiceAdapterTest`, con `MockWebServerRule`,
+el cliente Retrofit, el adaptador y `networkRequest` del proyecto. Se conservan
+las siete pruebas previas del catálogo; los diez casos de detalle cubren:
+
+| Caso | Contrato verificado |
+|---|---|
+| Respuesta válida | GET y ruta `/albums/100`; datos del álbum, fecha UTC, canciones con duración, artista y comentario con calificación |
+| Revalidación | Encabezado `Cache-Control: no-cache` cuando se solicita actualización forzada |
+| Álbum inexistente | Ruta con el ID solicitado y `DataError.Http(404)` |
+| Error del servidor | `DataError.Http(500)` |
+| Conexión interrumpida | `DataError.Network` |
+| JSON inválido | `DataError.Serialization` |
+| Nombre requerido ausente | `DataError.Serialization` |
+| Cuerpo JSON `null` | `DataError.Serialization` |
+| HTTP 204 sin contenido | `DataError.Serialization` |
+| Secciones vacías | Poeta del pueblo conserva el contenido con listas vacías |
+
+Antes de automatizar se consultó el backend local mediante GET: `/albums/100`
+respondió 200 con dos canciones, un artista y un comentario;
+`/albums/2147483647` respondió 404 con el mensaje de álbum inexistente.
+Sus respuestas se guardaron sin cambios de contenido en `api/album_100.json`
+y `api/album_not_found.json`. La procedencia y los comandos de captura están en
+[el README de fixtures](../app/src/test/resources/api/README.md).
+Los demás errores son escenarios controlados de MockWebServer, no fallos
+observados en el backend. Las consultas reales no modificaron sus datos.
+
+Ejecución focalizada reproducible, sin dispositivos ni backend activo:
+
+```bash
+./gradlew testDebugUnitTest --tests co.edu.uniandes.vinilos.network.AlbumServiceAdapterTest
+```
+
+Resultado: **17 pruebas del adaptador y 98 pruebas unitarias totales correctas**,
+sin fallos, errores ni omisiones. `spotlessCheck`, `detekt` y `lintDebug` correctos.
+HU02-06 modifica solo pruebas, fixtures y documentación; no cambia código de
+aplicación, recursos de interfaz, dependencias ni persistencia.
+
+Las seis subtareas de HU02 quedan implementadas e integradas en la rama local de
+la historia. La validación de interfaz realizada corresponde a la tablet API 31;
+la matriz de otras versiones de Android y la revisión por PR hacia develop
+siguen pendientes. No se ejecutaron emuladores para esta tarea.
