@@ -52,7 +52,7 @@ class AlbumListViewModel(
     }
 
     fun onCreateAlbumClicked() {
-        _events.value = Event(AlbumListEvent.ShowCreatePending)
+        _events.value = Event(AlbumListEvent.OpenTrackSheet)
     }
 
     fun onRoleChipClicked() {

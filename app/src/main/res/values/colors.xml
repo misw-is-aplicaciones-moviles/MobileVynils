@@ -33,4 +33,15 @@
     <color name="vinilos_notice_error_fill">#80FFFFFF</color>
     <!-- Sombra del aviso de éxito: negro al 60 %. -->
     <color name="vinilos_notice_shadow">#99000000</color>
+    <!-- Velo de la hoja de canción: carbón al 55 %. -->
+    <color name="vinilos_sheet_scrim">#8C232323</color>
+    <!-- Sombra superior de esa hoja: negro al 18 %. -->
+    <color name="vinilos_sheet_shadow">#2E000000</color>
+    <!-- Campo de nombre: blanco al 35 % sobre la hoja. Con error sube al 60 %. -->
+    <color name="vinilos_field_fill">#59FFFFFF</color>
+    <color name="vinilos_field_fill_error">#99FFFFFF</color>
+    <!-- Duración vacía: crema al 45 %. -->
+    <color name="vinilos_duration_empty">#73F2EFE7</color>
+    <!-- Sombra de la caja de duración: carbón al 70 %. -->
+    <color name="vinilos_duration_shadow">#B3232323</color>
 </resources>

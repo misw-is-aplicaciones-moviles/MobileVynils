@@ -355,4 +355,112 @@
         <item name="iconTint">@color/vinilos_charcoal</item>
         <item name="rippleColor">@color/vinilos_charcoal_ripple</item>
     </style>
+
+    <!-- "Guardar canción" es Outfit 500; el primario compartido queda en 400. -->
+    <style name="TextAppearance.Vinilos.Button.Medium" parent="TextAppearance.Vinilos.Button">
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="fontFamily">@font/outfit_medium</item>
+    </style>
+
+    <style name="Widget.Vinilos.Button.Primary.Medium" parent="Widget.Vinilos.Button.Primary">
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.Button.Medium</item>
+    </style>
+
+    <!-- Título de la hoja: Outfit 400, 22/28 sp, carbón. -->
+    <style name="TextAppearance.Vinilos.SheetTitle" parent="TextAppearance.Vinilos.Body">
+        <item name="lineHeight">28sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">28sp</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Placeholder y "Limpiar": Outfit 400, 15/19 sp, grafito o carbón. -->
+    <style name="TextAppearance.Vinilos.Field" parent="TextAppearance.Vinilos.Body">
+        <item name="lineHeight">19sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">19sp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/vinilos_graphite</item>
+    </style>
+
+    <style name="TextAppearance.Vinilos.Field.Charcoal">
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Error de campo: Outfit 500, 13/16 sp, carbón. -->
+    <style name="TextAppearance.Vinilos.FieldError" parent="TextAppearance.Vinilos.Body">
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="fontFamily">@font/outfit_medium</item>
+        <item name="lineHeight">16sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">16sp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Duración vacía: Outfit 500, 24/30 sp, tracking 0.3 em. -->
+    <style name="TextAppearance.Vinilos.Duration" parent="TextAppearance.Vinilos.Body">
+        <item name="lineHeight">30sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">30sp</item>
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="fontFamily">@font/outfit_medium</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:letterSpacing">0.3</item>
+        <item name="android:textColor">@color/vinilos_duration_empty</item>
+    </style>
+
+    <!-- Dígito del teclado: Outfit 500, 21/26 sp, carbón. -->
+    <style name="TextAppearance.Vinilos.Key" parent="TextAppearance.Vinilos.Body">
+        <item name="lineHeight">26sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">26sp</item>
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="fontFamily">@font/outfit_medium</item>
+        <item name="android:textSize">21sp</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <style name="ShapeAppearance.Vinilos.Key" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/track_key_radius</item>
+    </style>
+
+    <!-- Tecla sin fondo. 44 dp, como el mockup, por debajo del mínimo táctil de 48 dp. -->
+    <style name="Widget.Vinilos.Key" parent="Widget.Material3.Button.TextButton">
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minHeight">@dimen/track_key_height</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingLeft">0dp</item>
+        <item name="android:paddingRight">0dp</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">0dp</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.Key</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="rippleColor">@color/vinilos_charcoal_ripple</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Vinilos.Key</item>
+        <item name="shapeAppearanceOverlay">@null</item>
+        <item name="elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <style name="ThemeOverlay.Vinilos.BottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.Vinilos.BottomSheet</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:statusBarColor">@color/vinilos_sheet_scrim</item>
+        <item name="android:navigationBarColor">@color/vinilos_cream</item>
+    </style>
+
+    <style name="Widget.Vinilos.BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Vinilos.BottomSheet</item>
+    </style>
+
+    <style name="ShapeAppearance.Vinilos.BottomSheet" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">0dp</item>
+    </style>
 </resources>

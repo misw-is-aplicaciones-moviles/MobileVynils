@@ -137,7 +137,7 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
     private fun renderPrimaryAction(state: AlbumListUiState) {
         val host = activity as? PrimaryActionHost ?: return
         if (state.canEdit) {
-            host.showPrimaryAction(R.string.action_create_album) { viewModel.onCreateAlbumClicked() }
+            host.showPrimaryAction(R.string.track_sheet_title) { viewModel.onCreateAlbumClicked() }
         } else {
             host.hidePrimaryAction()
         }
@@ -148,9 +148,14 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
         when (event) {
             is AlbumListEvent.OpenDetail -> Unit
             is AlbumListEvent.ShowRefreshError -> showRefreshError(event.error)
-            AlbumListEvent.ShowCreatePending -> showMessage(R.string.album_create_pending)
+            AlbumListEvent.OpenTrackSheet -> openTrackSheet()
             AlbumListEvent.OpenRoleSelector -> findNavController().navigateToRoleSelector()
         }
+    }
+
+    private fun openTrackSheet() {
+        if (childFragmentManager.findFragmentByTag(TrackCreateBottomSheet.TAG) != null) return
+        TrackCreateBottomSheet().show(childFragmentManager, TrackCreateBottomSheet.TAG)
     }
 
     private fun showRefreshError(error: DataError) {
