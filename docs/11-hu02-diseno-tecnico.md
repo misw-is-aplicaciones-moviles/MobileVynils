@@ -1,6 +1,6 @@
 # 11. HU02 · Diseño técnico del detalle de álbum
 
-Estado: propuesta para implementar; esta tarea solo modifica documentación.
+Estado: diseño de referencia para implementar por tareas; avance registrado en la sección 8.
 Tarea: [HU02-01 · #13](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/issues/13).
 Responsable: @ManfredAriel91122.
 Base revisada: `develop`, commit `5f2399e`, con HU01-03 integrada.
@@ -186,3 +186,29 @@ Base técnica verificada antes de HU02-01: 72 pruebas unitarias correctas y
 en develop 5f2399e. Es evidencia de la base, no de funcionalidades todavía por implementar.
 La pantalla nueva deberá validarse con los checks del repositorio, instrumentadas,
 API 21/37, rotación y fuente grande, conforme a docs/05 y docs/06.
+
+## 8. Avance de HU02-02 · Consulta por ID
+
+Implementada la consulta `GET /albums/{id}` mediante el servicio, adaptador y
+repositorio existentes. El adaptador conserva el proveedor diferido y los dispatchers.
+El repositorio reutiliza `networkRequest`, valida el ID y devuelve el álbum completo
+sin leer ni escribir la caché de Room del catálogo.
+
+Se reutilizan los DTO y mappers. La única ampliación de datos es la imagen opcional
+del artista (`PerformerDto.image` → `PerformerSummary.imageUrl`), presente en las
+respuestas de la semilla, para el avatar previsto en el diseño.
+
+Verificación local de esta tarea:
+
+- 82 pruebas unitarias correctas, sin errores ni omisiones: las 72 de la base
+  y 10 nuevas sobre la consulta y el campo de imagen opcional.
+- Se verifican los datos anidados, la revalidación HTTP, el 404, los cuerpos nulos
+  o sin contenido, los errores remotos, la cancelación y los IDs inválidos.
+- Se comprueba que la consulta de detalle no lee ni modifica Room.
+- Detekt, Android Lint y compilación debug correctos; formato aplicado con Spotless.
+- Las pruebas del adaptador simulan el objeto de un álbum a partir del fixture
+  existente `api/albums.json`; no se presentan como una consulta al backend real.
+  La verificación de API de HU02-06 sigue pendiente.
+
+Esta tarea no modifica ViewModels, navegación, layouts, estilos, AppContainer,
+dependencias ni persistencia. La pantalla se implementará en HU02-03.
