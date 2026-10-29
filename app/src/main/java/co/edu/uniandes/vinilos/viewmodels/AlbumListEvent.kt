@@ -12,7 +12,6 @@ sealed interface AlbumListEvent {
         val error: DataError,
     ) : AlbumListEvent
 
-    data object OpenTrackSheet : AlbumListEvent
     data object OpenCreateAlbum : AlbumListEvent
 
     data object ShowAlbumCreated : AlbumListEvent

@@ -2,6 +2,9 @@ package co.edu.uniandes.vinilos.network
 
 import co.edu.uniandes.vinilos.models.Album
 import co.edu.uniandes.vinilos.models.NewAlbum
+import co.edu.uniandes.vinilos.models.NewTrack
+import co.edu.uniandes.vinilos.models.Track
+import co.edu.uniandes.vinilos.network.dto.toCreatedTrackModel
 import co.edu.uniandes.vinilos.network.dto.toModel
 import co.edu.uniandes.vinilos.network.dto.toRequest
 import com.google.gson.JsonParseException
@@ -21,6 +24,12 @@ internal interface AlbumServiceAdapter {
 
     /** Creates [draft] in the backend and returns the saved album; throws like [getAlbums]. */
     suspend fun createAlbum(draft: NewAlbum): Album
+
+    /** Adds [draft] to [albumId] and returns the backend-assigned track; throws like [getAlbums]. */
+    suspend fun addTrack(
+        albumId: Int,
+        draft: NewTrack,
+    ): Track
 }
 
 internal class AlbumServiceAdapterImpl(
@@ -51,5 +60,18 @@ internal class AlbumServiceAdapterImpl(
         val request = draft.toRequest()
         val dto = withContext(ioDispatcher) { api.createAlbum(request) }
         return withContext(defaultDispatcher) { dto.toModel() }
+    }
+
+    override suspend fun addTrack(
+        albumId: Int,
+        draft: NewTrack,
+    ): Track {
+        val request = draft.toRequest()
+        val dto = withContext(ioDispatcher) { api.addTrack(albumId, request) }
+        dto.album?.let { album ->
+            val responseAlbumId = album.id ?: throw JsonParseException("Missing track album id")
+            if (responseAlbumId != albumId) throw JsonParseException("Unexpected track album id")
+        }
+        return withContext(defaultDispatcher) { dto.toCreatedTrackModel() }
     }
 }

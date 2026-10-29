@@ -35,6 +35,13 @@ internal fun TrackDto.toModel(): Track =
         duration = duration.orEmpty(),
     )
 
+internal fun TrackDto.toCreatedTrackModel(): Track =
+    Track(
+        id = id ?: missing("track id"),
+        name = name ?: missing("track name"),
+        duration = duration ?: missing("track duration"),
+    )
+
 internal fun PerformerDto.toModel(): PerformerSummary =
     PerformerSummary(
         id = id ?: missing("performer id"),

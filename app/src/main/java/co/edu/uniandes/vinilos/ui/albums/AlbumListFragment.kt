@@ -67,7 +67,10 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
     }
 
     override fun onDestroyView() {
-        (activity as? PrimaryActionHost)?.hidePrimaryAction()
+        // The detail screen configures this shared button; don't let the outgoing list hide it later.
+        if (findNavController().currentDestination?.id != R.id.albumDetailFragment) {
+            (activity as? PrimaryActionHost)?.hidePrimaryAction()
+        }
         binding.albumList.adapter = null
         super.onDestroyView()
         bindingOrNull = null
@@ -181,11 +184,6 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
                 showMessage(R.string.snack_album_created)
             }
         }
-    }
-
-    private fun openTrackSheet() {
-        if (childFragmentManager.findFragmentByTag(TrackCreateBottomSheet.TAG) != null) return
-        TrackCreateBottomSheet().show(childFragmentManager, TrackCreateBottomSheet.TAG)
     }
 
     private fun showRefreshError(error: DataError) {

@@ -2,6 +2,8 @@ package co.edu.uniandes.vinilos.testing
 
 import co.edu.uniandes.vinilos.models.Album
 import co.edu.uniandes.vinilos.models.NewAlbum
+import co.edu.uniandes.vinilos.models.NewTrack
+import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.network.AlbumServiceAdapter
 import kotlinx.coroutines.CompletableDeferred
 
@@ -14,6 +16,7 @@ internal class FakeAlbumServiceAdapter(
     var failure: Throwable? = null,
     var gate: CompletableDeferred<Unit>? = null,
     var createdAlbum: Album? = null,
+    var createdTrack: Track? = null,
 ) : AlbumServiceAdapter {
     var callCount = 0
         private set
@@ -45,5 +48,16 @@ internal class FakeAlbumServiceAdapter(
         createdDrafts += draft
         failure?.let { throw it }
         return checkNotNull(createdAlbum) { "Set createdAlbum before calling createAlbum" }
+    }
+
+    val addedTrackRequests = mutableListOf<Pair<Int, NewTrack>>()
+
+    override suspend fun addTrack(
+        albumId: Int,
+        draft: NewTrack,
+    ): Track {
+        addedTrackRequests += albumId to draft
+        failure?.let { throw it }
+        return checkNotNull(createdTrack) { "Set createdTrack before calling addTrack" }
     }
 }

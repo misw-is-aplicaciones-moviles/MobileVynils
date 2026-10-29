@@ -386,12 +386,6 @@
         <item name="android:textColor">@color/vinilos_charcoal</item>
     </style>
 
-    <!-- Error de campo: Outfit 500, 13/16 sp, carbón. -->
-    <style name="TextAppearance.Vinilos.FieldError" parent="TextAppearance.Vinilos.Body">
-        <item name="android:fontFamily">@font/outfit_medium</item>
-        <item name="fontFamily">@font/outfit_medium</item>
-        <item name="lineHeight">16sp</item>
-        <item name="android:lineHeight" tools:targetApi="28">16sp</item>
     <!-- Formularios. Etiqueta encima del campo: Montserrat 600, mayúsculas, carbón. -->
     <style name="TextAppearance.Vinilos.FieldLabel" parent="TextAppearance.Vinilos.Overline">
         <item name="android:textColor">@color/vinilos_charcoal</item>
@@ -407,6 +401,8 @@
     <style name="TextAppearance.Vinilos.FieldError" parent="TextAppearance.Vinilos.Body">
         <item name="android:fontFamily">@font/outfit_medium</item>
         <item name="fontFamily">@font/outfit_medium</item>
+        <item name="lineHeight">16sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">16sp</item>
         <item name="android:textSize">13sp</item>
         <item name="android:textColor">@color/vinilos_charcoal</item>
     </style>
@@ -477,6 +473,7 @@
     <style name="ShapeAppearance.Vinilos.BottomSheet" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">0dp</item>
+    </style>
     <!-- Etiqueta de un campo, con el espacio hasta el campo anterior y el suyo. -->
     <style name="Widget.Vinilos.FieldLabel" parent="Widget.Vinilos.TextView">
         <item name="android:layout_width">match_parent</item>

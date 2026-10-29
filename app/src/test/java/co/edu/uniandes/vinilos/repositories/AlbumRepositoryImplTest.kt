@@ -1,15 +1,19 @@
 package co.edu.uniandes.vinilos.repositories
 
+import android.database.sqlite.SQLiteException
+import co.edu.uniandes.vinilos.database.entities.TrackEntity
 import co.edu.uniandes.vinilos.database.toEntity
 import co.edu.uniandes.vinilos.models.Album
 import co.edu.uniandes.vinilos.models.Comment
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.Genre
+import co.edu.uniandes.vinilos.models.NewTrack
 import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.testing.FakeAlbumDao
 import co.edu.uniandes.vinilos.testing.FakeAlbumServiceAdapter
+import co.edu.uniandes.vinilos.testing.FakeTrackDao
 import com.google.gson.JsonParseException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -40,7 +44,12 @@ class AlbumRepositoryImplTest {
     fun `filled Room without force refresh does not call the adapter`() =
         runTest {
             val adapter = FakeAlbumServiceAdapter(albums = network)
-            val repository = AlbumRepositoryImpl(FakeAlbumDao(listOf(album(9, "Cached").toEntity())), adapter)
+            val repository =
+                AlbumRepositoryImpl(
+                    FakeAlbumDao(listOf(album(9, "Cached").toEntity())),
+                    FakeTrackDao(),
+                    adapter,
+                )
 
             val result = repository.getAlbums()
 
@@ -53,7 +62,7 @@ class AlbumRepositoryImplTest {
         runTest {
             val dao = FakeAlbumDao()
             val adapter = FakeAlbumServiceAdapter(albums = network)
-            val repository = AlbumRepositoryImpl(dao, adapter)
+            val repository = AlbumRepositoryImpl(dao, FakeTrackDao(), adapter)
 
             val result = repository.getAlbums()
 
@@ -69,7 +78,12 @@ class AlbumRepositoryImplTest {
     fun `force refresh goes to the network even with a cache`() =
         runTest {
             val adapter = FakeAlbumServiceAdapter(albums = network)
-            val repository = AlbumRepositoryImpl(FakeAlbumDao(listOf(album(9, "Cached").toEntity())), adapter)
+            val repository =
+                AlbumRepositoryImpl(
+                    FakeAlbumDao(listOf(album(9, "Cached").toEntity())),
+                    FakeTrackDao(),
+                    adapter,
+                )
 
             val result = repository.getAlbums(forceRefresh = true)
 
@@ -81,7 +95,12 @@ class AlbumRepositoryImplTest {
     fun `IO failure returns a network error and leaves Room intact`() =
         runTest {
             val dao = FakeAlbumDao(listOf(album(9, "Cached").toEntity()))
-            val repository = AlbumRepositoryImpl(dao, FakeAlbumServiceAdapter(failure = IOException("offline")))
+            val repository =
+                AlbumRepositoryImpl(
+                    dao,
+                    FakeTrackDao(),
+                    FakeAlbumServiceAdapter(failure = IOException("offline")),
+                )
 
             val result = repository.getAlbums(forceRefresh = true)
 
@@ -93,9 +112,15 @@ class AlbumRepositoryImplTest {
     @Test
     fun `has cached albums reflects the Room content`() =
         runTest {
-            assertFalse(AlbumRepositoryImpl(FakeAlbumDao(), FakeAlbumServiceAdapter()).hasCachedAlbums())
+            assertFalse(
+                AlbumRepositoryImpl(FakeAlbumDao(), FakeTrackDao(), FakeAlbumServiceAdapter()).hasCachedAlbums(),
+            )
             assertTrue(
-                AlbumRepositoryImpl(FakeAlbumDao(listOf(album(1, "A").toEntity())), FakeAlbumServiceAdapter())
+                AlbumRepositoryImpl(
+                    FakeAlbumDao(listOf(album(1, "A").toEntity())),
+                    FakeTrackDao(),
+                    FakeAlbumServiceAdapter(),
+                )
                     .hasCachedAlbums(),
             )
         }
@@ -105,7 +130,7 @@ class AlbumRepositoryImplTest {
         runTest {
             val gate = CompletableDeferred<Unit>()
             val adapter = FakeAlbumServiceAdapter(albums = network, gate = gate)
-            val repository = AlbumRepositoryImpl(FakeAlbumDao(), adapter)
+            val repository = AlbumRepositoryImpl(FakeAlbumDao(), FakeTrackDao(), adapter)
 
             val calls = List(2) { async { repository.getAlbums() } }
             runCurrent()
@@ -120,7 +145,12 @@ class AlbumRepositoryImplTest {
     fun `network failure with empty Room leaves Room empty`() =
         runTest {
             val dao = FakeAlbumDao()
-            val repository = AlbumRepositoryImpl(dao, FakeAlbumServiceAdapter(failure = IOException("offline")))
+            val repository =
+                AlbumRepositoryImpl(
+                    dao,
+                    FakeTrackDao(),
+                    FakeAlbumServiceAdapter(failure = IOException("offline")),
+                )
 
             val result = repository.getAlbums()
 
@@ -133,7 +163,8 @@ class AlbumRepositoryImplTest {
     fun `HTTP error returns an HTTP data error`() =
         runTest {
             val error = HttpException(Response.error<Any>(HTTP_SERVER_ERROR, "".toResponseBody()))
-            val repository = AlbumRepositoryImpl(FakeAlbumDao(), FakeAlbumServiceAdapter(failure = error))
+            val repository =
+                AlbumRepositoryImpl(FakeAlbumDao(), FakeTrackDao(), FakeAlbumServiceAdapter(failure = error))
 
             assertEquals(DataResult.Failure(DataError.Http(HTTP_SERVER_ERROR)), repository.getAlbums())
         }
@@ -151,7 +182,7 @@ class AlbumRepositoryImplTest {
                 )
             val adapter = FakeAlbumServiceAdapter().apply { detailResult = complete }
 
-            val result = AlbumRepositoryImpl(dao, adapter).getAlbum(1)
+            val result = AlbumRepositoryImpl(dao, FakeTrackDao(), adapter).getAlbum(1)
 
             assertEquals(DataResult.Success(complete), result)
             assertEquals(listOf(1 to false), adapter.detailRequests)
@@ -166,7 +197,7 @@ class AlbumRepositoryImplTest {
         runTest {
             val adapter = FakeAlbumServiceAdapter(albums = network)
 
-            AlbumRepositoryImpl(FakeAlbumDao(), adapter).getAlbum(1, forceRefresh = true)
+            AlbumRepositoryImpl(FakeAlbumDao(), FakeTrackDao(), adapter).getAlbum(1, forceRefresh = true)
 
             assertEquals(listOf(1 to true), adapter.detailRequests)
         }
@@ -183,7 +214,8 @@ class AlbumRepositoryImplTest {
             for ((failure, expected) in failures) {
                 val dao = FakeAlbumDao(listOf(album(9, "Cached").toEntity()))
 
-                val result = AlbumRepositoryImpl(dao, FakeAlbumServiceAdapter(failure = failure)).getAlbum(1)
+                val result =
+                    AlbumRepositoryImpl(dao, FakeTrackDao(), FakeAlbumServiceAdapter(failure = failure)).getAlbum(1)
 
                 assertEquals(DataResult.Failure(expected), result)
                 assertEquals(0, dao.readCount)
@@ -196,7 +228,7 @@ class AlbumRepositoryImplTest {
         runTest {
             val adapter = FakeAlbumServiceAdapter().apply { detailResult = album(2, "Other") }
 
-            val result = AlbumRepositoryImpl(FakeAlbumDao(), adapter).getAlbum(1)
+            val result = AlbumRepositoryImpl(FakeAlbumDao(), FakeTrackDao(), adapter).getAlbum(1)
 
             assertEquals(DataResult.Failure(DataError.Serialization), result)
         }
@@ -206,7 +238,7 @@ class AlbumRepositoryImplTest {
         runTest {
             val adapter = FakeAlbumServiceAdapter(albums = network)
             try {
-                AlbumRepositoryImpl(FakeAlbumDao(), adapter).getAlbum(0)
+                AlbumRepositoryImpl(FakeAlbumDao(), FakeTrackDao(), adapter).getAlbum(0)
             } finally {
                 assertTrue(adapter.detailRequests.isEmpty())
             }
@@ -217,7 +249,62 @@ class AlbumRepositoryImplTest {
         runTest {
             val adapter = FakeAlbumServiceAdapter(failure = CancellationException("cancelled"))
 
-            AlbumRepositoryImpl(FakeAlbumDao(), adapter).getAlbum(1)
+            AlbumRepositoryImpl(FakeAlbumDao(), FakeTrackDao(), adapter).getAlbum(1)
+        }
+
+    @Test
+    fun `created track is cached with the requested album id`() =
+        runTest {
+            val track = Track(777, "Bohemian Rhapsody", "5:55")
+            val draft = NewTrack("Bohemian Rhapsody", "5:55")
+            val trackDao = FakeTrackDao()
+            val adapter = FakeAlbumServiceAdapter(createdTrack = track)
+
+            val result = AlbumRepositoryImpl(FakeAlbumDao(), trackDao, adapter).addTrack(100, draft)
+
+            assertEquals(DataResult.Success(track), result)
+            assertEquals(listOf(100 to draft), adapter.addedTrackRequests)
+            assertEquals(listOf(TrackEntity(777, "Bohemian Rhapsody", "5:55", 100)), trackDao.getByAlbum(100))
+            assertTrue(trackDao.getByAlbum(101).isEmpty())
+        }
+
+    @Test
+    fun `track remains successful when Room cannot cache a backend success`() =
+        runTest {
+            val track = Track(777, "Bohemian Rhapsody", "5:55")
+            val trackDao = FakeTrackDao().apply { writeFailure = SQLiteException("disk full") }
+            val adapter = FakeAlbumServiceAdapter(createdTrack = track)
+
+            val result = AlbumRepositoryImpl(FakeAlbumDao(), trackDao, adapter)
+                .addTrack(100, NewTrack(track.name, track.duration))
+
+            assertEquals(DataResult.Success(track), result)
+            assertEquals(1, trackDao.writeCount)
+        }
+
+    @Test
+    fun `track network failure is returned and leaves Room untouched`() =
+        runTest {
+            val trackDao = FakeTrackDao()
+            val adapter = FakeAlbumServiceAdapter(failure = IOException("offline"))
+
+            val result = AlbumRepositoryImpl(FakeAlbumDao(), trackDao, adapter)
+                .addTrack(100, NewTrack("Bohemian Rhapsody", "5:55"))
+
+            assertEquals(DataResult.Failure(DataError.Network), result)
+            assertEquals(0, trackDao.writeCount)
+        }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `invalid track album id does not reach the adapter`() =
+        runTest {
+            val adapter = FakeAlbumServiceAdapter(createdTrack = Track(1, "Song", "1:00"))
+            try {
+                AlbumRepositoryImpl(FakeAlbumDao(), FakeTrackDao(), adapter)
+                    .addTrack(0, NewTrack("Song", "1:00"))
+            } finally {
+                assertTrue(adapter.addedTrackRequests.isEmpty())
+            }
         }
 
     private companion object {

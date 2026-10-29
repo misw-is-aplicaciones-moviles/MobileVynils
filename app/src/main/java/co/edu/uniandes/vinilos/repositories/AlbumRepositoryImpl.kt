@@ -2,12 +2,15 @@ package co.edu.uniandes.vinilos.repositories
 
 import android.database.sqlite.SQLiteException
 import co.edu.uniandes.vinilos.database.dao.AlbumDao
+import co.edu.uniandes.vinilos.database.dao.TrackDao
 import co.edu.uniandes.vinilos.database.toEntity
 import co.edu.uniandes.vinilos.database.toModel
 import co.edu.uniandes.vinilos.models.Album
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.NewAlbum
+import co.edu.uniandes.vinilos.models.NewTrack
+import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.network.AlbumServiceAdapter
 import co.edu.uniandes.vinilos.network.networkRequest
 import com.google.gson.JsonParseException
@@ -16,6 +19,7 @@ import kotlinx.coroutines.sync.withLock
 
 internal class AlbumRepositoryImpl(
     private val albumDao: AlbumDao,
+    private val trackDao: TrackDao,
     private val serviceAdapter: AlbumServiceAdapter,
 ) : AlbumRepository {
     private val mutex = Mutex()
@@ -68,4 +72,23 @@ internal class AlbumRepositoryImpl(
             }
             result
         }
+
+    // Share the catalog mutex: replaceAll removes missing albums and their tracks via CASCADE.
+    override suspend fun addTrack(
+        albumId: Int,
+        draft: NewTrack,
+    ): DataResult<Track, DataError> {
+        require(albumId > 0) { "albumId must be positive" }
+        return mutex.withLock {
+            val result = networkRequest { serviceAdapter.addTrack(albumId, draft) }
+            if (result is DataResult.Success) {
+                try {
+                    trackDao.upsert(result.value.toEntity(albumId))
+                } catch (_: SQLiteException) {
+                    // The backend already saved it. Room can catch up on a later album detail request.
+                }
+            }
+            result
+        }
+    }
 }

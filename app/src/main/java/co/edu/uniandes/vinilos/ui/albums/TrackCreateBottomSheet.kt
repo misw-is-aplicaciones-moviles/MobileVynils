@@ -12,6 +12,7 @@ import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -20,20 +21,21 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.viewModels
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.FragmentTrackCreateSheetBinding
+import co.edu.uniandes.vinilos.models.Album
+import co.edu.uniandes.vinilos.models.DataError
+import co.edu.uniandes.vinilos.models.Track
+import co.edu.uniandes.vinilos.viewmodels.TrackCreateEvent
 import co.edu.uniandes.vinilos.viewmodels.TrackCreateUiState
 import co.edu.uniandes.vinilos.viewmodels.TrackCreateViewModel
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
-/**
- * Hoja para agregar una canción. El nombre y la duración se editan aquí.
- * Guardar muestra los errores; el envío al álbum llega con el resto de HU08.
- */
+/** Hoja para validar y agregar una canción al álbum recibido en sus argumentos. */
 class TrackCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_track_create_sheet) {
     private var bindingOrNull: FragmentTrackCreateSheetBinding? = null
     private val binding get() = checkNotNull(bindingOrNull)
-    private val viewModel: TrackCreateViewModel by viewModels()
+    private val viewModel: TrackCreateViewModel by viewModels { TrackCreateViewModel.Factory }
 
     override fun getTheme(): Int = R.style.ThemeOverlay_Vinilos_BottomSheet
 
@@ -56,10 +58,17 @@ class TrackCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_track
         savedInstanceState: Bundle?,
     ) {
         bindingOrNull = FragmentTrackCreateSheetBinding.bind(view)
+        bindAlbumContext()
         bindKeypad()
         bindFields()
         bindInsets()
         viewModel.uiState.observe(viewLifecycleOwner, ::render)
+        viewModel.events.observe(viewLifecycleOwner) { event ->
+            when (val content = event.getContentIfNotHandled()) {
+                is TrackCreateEvent.Created -> onTrackCreated(content.track)
+                null -> Unit
+            }
+        }
     }
 
     override fun onDestroyView() {
@@ -89,6 +98,13 @@ class TrackCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_track
         binding.key0.setOnClickListener { onDigit(0) }
         binding.keyClear.setOnClickListener { onDigitAction { viewModel.onClearDuration() } }
         binding.keyDelete.setOnClickListener { onDigitAction { viewModel.onDeleteDigit() } }
+    }
+
+    private fun bindAlbumContext() {
+        val args = arguments ?: return
+        val albumName = args.getString(ARG_ALBUM_NAME) ?: return
+        val nextTrackNumber = args.getInt(ARG_NEXT_TRACK_NUMBER, 1)
+        binding.sheetSubtitle.text = getString(R.string.track_sheet_subtitle, albumName, nextTrackNumber)
     }
 
     private fun bindFields() {
@@ -125,6 +141,53 @@ class TrackCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_track
         renderDuration(state)
         binding.nameError.isVisible = state.isNameMissing
         binding.durationError.isVisible = state.isDurationInvalid
+        binding.submitError.isVisible = state.submitError != null
+        state.submitError?.let { binding.submitError.setText(submitErrorMessage(it)) }
+        binding.saveTrack.isEnabled = !state.isSubmitting
+        binding.saveTrack.setText(if (state.isSubmitting) R.string.track_saving else R.string.action_save_track)
+        binding.cancelTrack.isEnabled = !state.isSubmitting
+        binding.closeSheet.isEnabled = !state.isSubmitting
+        binding.trackNameField.isEnabled = !state.isSubmitting
+        keypadButtons().forEach { it.isEnabled = !state.isSubmitting }
+        isCancelable = !state.isSubmitting
+    }
+
+    private fun keypadButtons() =
+        listOf(
+            binding.key0,
+            binding.key1,
+            binding.key2,
+            binding.key3,
+            binding.key4,
+            binding.key5,
+            binding.key6,
+            binding.key7,
+            binding.key8,
+            binding.key9,
+            binding.keyClear,
+            binding.keyDelete,
+        )
+
+    private fun submitErrorMessage(error: DataError): Int =
+        when (error) {
+            DataError.Network -> R.string.track_create_network_error
+            is DataError.Http -> R.string.track_create_error
+            DataError.Serialization -> R.string.track_create_error
+            is DataError.Unknown -> R.string.track_create_error
+        }
+
+    private fun onTrackCreated(track: Track) {
+        val args = requireArguments()
+        parentFragmentManager.setFragmentResult(
+            RESULT_TRACK_CREATED,
+            bundleOf(
+                RESULT_ALBUM_ID to args.getInt(TrackCreateViewModel.ARG_ALBUM_ID),
+                RESULT_TRACK_ID to track.id,
+                RESULT_TRACK_NAME to track.name,
+                RESULT_TRACK_DURATION to track.duration,
+            ),
+        )
+        dismiss()
     }
 
     private fun renderName(state: TrackCreateUiState) {
@@ -180,5 +243,23 @@ class TrackCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_track
 
     companion object {
         const val TAG = "track-create"
+        const val RESULT_TRACK_CREATED = "track_created"
+        const val RESULT_ALBUM_ID = "track_created_album_id"
+        const val RESULT_TRACK_ID = "track_created_id"
+        const val RESULT_TRACK_NAME = "track_created_name"
+        const val RESULT_TRACK_DURATION = "track_created_duration"
+
+        private const val ARG_ALBUM_NAME = "albumName"
+        private const val ARG_NEXT_TRACK_NUMBER = "nextTrackNumber"
+
+        fun newInstance(album: Album): TrackCreateBottomSheet =
+            TrackCreateBottomSheet().apply {
+                arguments =
+                    bundleOf(
+                        TrackCreateViewModel.ARG_ALBUM_ID to album.id,
+                        ARG_ALBUM_NAME to album.name,
+                        ARG_NEXT_TRACK_NUMBER to album.tracks.size + 1,
+                    )
+            }
     }
 }

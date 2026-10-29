@@ -4,6 +4,8 @@ import co.edu.uniandes.vinilos.models.Album
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.NewAlbum
+import co.edu.uniandes.vinilos.models.NewTrack
+import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.repositories.AlbumRepository
 import kotlinx.coroutines.CompletableDeferred
 
@@ -18,8 +20,10 @@ internal class FakeAlbumRepository(
     var remoteResult: DataResult<List<Album>, DataError> = DataResult.Success(emptyList()),
     var remoteGate: CompletableDeferred<Unit>? = null,
     var createResult: DataResult<Album, DataError> = DataResult.Failure(DataError.Network),
+    var addTrackResult: DataResult<Track, DataError> = DataResult.Failure(DataError.Network),
 ) : AlbumRepository {
     val createdDrafts = mutableListOf<NewAlbum>()
+    val addedTrackRequests = mutableListOf<Pair<Int, NewTrack>>()
 
     var localCalls = 0
         private set
@@ -53,5 +57,13 @@ internal class FakeAlbumRepository(
     override suspend fun createAlbum(draft: NewAlbum): DataResult<Album, DataError> {
         createdDrafts += draft
         return createResult
+    }
+
+    override suspend fun addTrack(
+        albumId: Int,
+        draft: NewTrack,
+    ): DataResult<Track, DataError> {
+        addedTrackRequests += albumId to draft
+        return addTrackResult
     }
 }

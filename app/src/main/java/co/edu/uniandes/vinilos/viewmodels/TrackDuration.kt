@@ -31,6 +31,13 @@ internal object TrackDuration {
         return "%02d:%02d".format(Locale.ROOT, minutes, seconds)
     }
 
+    /** BackVynils examples use unpadded minutes (for example, `5:55`). */
+    fun formatForRequest(value: Int): String {
+        val minutes = value / MINUTES_PER_HUNDRED
+        val seconds = value % MINUTES_PER_HUNDRED
+        return "%d:%02d".format(Locale.ROOT, minutes, seconds)
+    }
+
     fun isValid(value: Int): Boolean {
         val minutes = value / MINUTES_PER_HUNDRED
         val seconds = value % MINUTES_PER_HUNDRED
