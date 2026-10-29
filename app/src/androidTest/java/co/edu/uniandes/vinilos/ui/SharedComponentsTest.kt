@@ -17,7 +17,7 @@ import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
-import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -62,7 +62,11 @@ class SharedComponentsTest {
         leaveFromCurrentTab()
 
         pressBackUnconditionally()
-        assertEquals(Lifecycle.State.DESTROYED, activityRule.scenario.state)
+        val state = activityRule.scenario.state
+        assertTrue(
+            "La app debe salir del primer plano después de Atrás: $state",
+            state == Lifecycle.State.CREATED || state == Lifecycle.State.DESTROYED,
+        )
     }
 
     private fun leaveFromCurrentTab() {

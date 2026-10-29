@@ -4,4 +4,5 @@ package co.edu.uniandes.vinilos.models
 data class PerformerSummary(
     val id: Int,
     val name: String,
+    val imageUrl: String? = null,
 )

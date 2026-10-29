@@ -3,6 +3,7 @@ package co.edu.uniandes.vinilos.ui.albums
 import android.os.Bundle
 import android.view.View
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -17,6 +18,7 @@ import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
+import co.edu.uniandes.vinilos.viewmodels.AlbumDetailViewModel
 import co.edu.uniandes.vinilos.viewmodels.AlbumListEvent
 import co.edu.uniandes.vinilos.viewmodels.AlbumListUiState
 import co.edu.uniandes.vinilos.viewmodels.AlbumListViewModel
@@ -154,14 +156,30 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
         }
     }
 
-    // TODO(#15): navigate to albumDetailFragment when HU02 adds it (OpenDetail)
     private fun handle(event: AlbumListEvent) {
         when (event) {
-            is AlbumListEvent.OpenDetail -> Unit
-            is AlbumListEvent.ShowRefreshError -> showRefreshError(event.error)
-            AlbumListEvent.OpenCreateAlbum -> findNavController().navigate(R.id.action_albumList_to_albumCreate)
-            AlbumListEvent.ShowAlbumCreated -> showMessage(R.string.snack_album_created)
-            AlbumListEvent.OpenRoleSelector -> findNavController().navigateToRoleSelector()
+            is AlbumListEvent.OpenDetail -> {
+                findNavController().navigate(
+                    R.id.action_albumList_to_albumDetail,
+                    bundleOf(AlbumDetailViewModel.ARG_ALBUM_ID to event.albumId),
+                )
+            }
+
+            is AlbumListEvent.ShowRefreshError -> {
+                showRefreshError(event.error)
+            }
+
+            AlbumListEvent.OpenRoleSelector -> {
+                findNavController().navigateToRoleSelector()
+            }
+
+            AlbumListEvent.OpenCreateAlbum -> {
+                findNavController().navigate(R.id.action_albumList_to_albumCreate)
+            }
+
+            AlbumListEvent.ShowAlbumCreated -> {
+                showMessage(R.string.snack_album_created)
+            }
         }
     }
 

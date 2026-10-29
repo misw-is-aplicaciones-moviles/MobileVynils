@@ -17,6 +17,20 @@ internal class FakeAlbumServiceAdapter(
 ) : AlbumServiceAdapter {
     var callCount = 0
         private set
+    var detailResult: Album? = null
+    val detailRequests = mutableListOf<Pair<Int, Boolean>>()
+
+    override suspend fun getAlbum(
+        id: Int,
+        forceRefresh: Boolean,
+    ): Album {
+        detailRequests.add(id to forceRefresh)
+        gate?.await()
+        failure?.let { throw it }
+        return checkNotNull(detailResult ?: albums.firstOrNull { it.id == id }) {
+            "No detail configured for album $id"
+        }
+    }
 
     val createdDrafts = mutableListOf<NewAlbum>()
 

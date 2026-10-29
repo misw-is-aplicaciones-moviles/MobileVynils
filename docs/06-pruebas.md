@@ -82,6 +82,30 @@ Por sprint en la wiki, una fila por caso:
 | CP-HU07-09 | HU07 | Campos faltantes o fuera de las listas | MockWebServer con 400 y `album_create_error.json` | Llamar a `createAlbum` desde el repositorio | `DataError.Http(400)` y nada se escribe en Room | API | `AlbumServiceAdapterTest`, `AlbumRepositoryImplTest` | Pendiente |
 | CP-HU07-10 | HU07 | Valores de las listas | — | Recorrer `Genre` (sin `UNKNOWN`) y `RecordLabel` | Cada `apiName` coincide con el esquema Joi de BackVynils | API | `NewAlbumRequestMappersTest` | Pendiente |
 
+Casos automatizados de HU02 (clase existente `AlbumDetailScreenTest`):
+
+| Id | HU | Nombre | Precondición | Pasos | Resultado esperado | Tipo | Automatizado (clase.método) | Estado |
+|---|---|---|---|---|---|---|---|---|
+| CP-HU02-01 | HU02 | Detalle y regreso con cabecera | Backend con semilla; rol Coleccionista | Tocar Buscando América, revisar datos, canciones y comentarios; pulsar Atrás | Contenido correcto; acción de crear solo en catálogo | E2E | `AlbumDetailScreenTest.catalog_card_opens_its_detail_and_returns_without_collector_actions` | Correcto · tablet API 31 |
+| CP-HU02-02 | HU02 | Visitante y Atrás del sistema | Backend con semilla | Entrar como Visitante, abrir álbum, pulsar Atrás del sistema | Vuelve al catálogo con Álbumes seleccionado y sin acción de crear | E2E | `AlbumDetailScreenTest.visitor_returns_to_catalog_with_system_back` | Correcto · tablet API 31 |
+| CP-HU02-03 | HU02 | Rotación y pestaña Álbumes | Backend con semilla | Abrir álbum, cambiar orientación y tocar de nuevo Álbumes | Conserva el detalle; la pestaña vuelve al catálogo | E2E | `AlbumDetailScreenTest.rotation_preserves_detail_and_reselecting_albums_returns_to_catalog` | Correcto · tablet API 31 |
+| CP-HU02-04 | HU02 | Canciones y comentarios vacíos | Poeta del pueblo sin canciones ni comentarios | Abrir el álbum y recorrer ambas secciones | Mensajes vacíos por sección, conservando el álbum | E2E | `AlbumDetailScreenTest.empty_tracks_and_comments_keep_the_album_visible` | Correcto · tablet API 31 |
+
+### Ejecutar los casos de HU02 en la tablet
+
+Con BackVynils disponible en el puerto 3000 y la tablet conectada por USB:
+
+```bash
+/home/kausaustralis/Android/Sdk/platform-tools/adb -d reverse tcp:3000 tcp:3000
+./gradlew connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.ui.AlbumDetailScreenTest
+```
+
+La clase contiene cuatro recorridos con datos reales del backend. Los estados
+404, error de servidor y desconexión siguen cubiertos por las pruebas unitarias
+del ViewModel, Repository y Service Adapter. No se requieren proxy ni argumentos
+especiales para la ejecución instrumentada general.
+
 Ids: `CP-HUxx-nn`. Cada historia cubre al menos camino feliz, error de backend, estado vacío y, en formularios, las validaciones por campo.
 
 El inventario de pruebas exploratorias usa la plantilla del curso (identificador, fecha, tester, funcionalidad, requerimiento, tipo de escenario positivo, negativo o mixto, nombre del escenario).

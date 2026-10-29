@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="album_detail_title">Álbum</string>
+    <string name="album_detail_error">No se pudo cargar el álbum</string>
+    <string name="album_detail_error_body">Inténtalo de nuevo más tarde.</string>
+    <string name="album_detail_not_found">No encontramos este álbum</string>
+    <string name="album_detail_not_found_body">Vuelve al catálogo y selecciona otro álbum.</string>
+    <string name="album_detail_label">Sello</string>
+    <string name="album_detail_release">Lanzamiento</string>
+    <string name="album_detail_tracks">Canciones</string>
+    <string name="album_detail_comments">Comentarios</string>
+    <string name="album_detail_no_tracks">Este álbum no tiene canciones.</string>
+    <string name="album_detail_no_comments">Este álbum no tiene comentarios.</string>
+    <string name="album_detail_comment_author">Coleccionista</string>
+    <string name="album_detail_rating">Calificación: %1$d de 5</string>
+    <string name="album_detail_count">%1$d</string>
+    <string name="album_detail_track_number">%1$02d</string>
+</resources>
