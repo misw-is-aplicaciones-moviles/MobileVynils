@@ -22,7 +22,18 @@
     <fragment
         android:id="@+id/albumListFragment"
         android:name="co.edu.uniandes.vinilos.ui.albums.AlbumListFragment"
-        android:label="@string/album_list_title" />
+        android:label="@string/album_list_title">
+        <action
+            android:id="@+id/action_albumList_to_albumDetail"
+            app:destination="@id/albumDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/albumDetailFragment"
+        android:name="co.edu.uniandes.vinilos.ui.albums.AlbumDetailFragment"
+        android:label="@string/album_detail_title">
+        <argument android:name="albumId" app:argType="integer" />
+    </fragment>
 
     <fragment
         android:id="@+id/performerListFragment"

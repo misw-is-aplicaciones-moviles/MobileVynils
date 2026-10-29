@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/bg_vinyl_disc" />
+    <item android:left="@dimen/space_s" android:top="@dimen/space_s"
+        android:right="@dimen/space_s" android:bottom="@dimen/space_s">
+        <shape android:shape="oval"><solid android:color="@color/vinilos_cream" /></shape>
+    </item>
+</layer-list>

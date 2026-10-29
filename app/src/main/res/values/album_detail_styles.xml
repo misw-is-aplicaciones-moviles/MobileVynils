@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Solo HU02: el título del catálogo conserva su estilo original de 14 sp. -->
+    <style name="TextAppearance.Vinilos.AlbumDetailTitle" parent="TextAppearance.Vinilos.AlbumTitle">
+        <item name="android:textSize">26sp</item>
+        <item name="android:letterSpacing">0.04</item>
+        <item name="lineHeight">30sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">30sp</item>
+    </style>
+    <style name="TextAppearance.Vinilos.AlbumDetailBody" parent="TextAppearance.Vinilos.Body">
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+        <item name="lineHeight">23sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">23sp</item>
+    </style>
+    <style name="TextAppearance.Vinilos.AlbumDetailValue" parent="TextAppearance.Vinilos.AlbumDetailBody">
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="fontFamily">@font/outfit_medium</item>
+    </style>
+</resources>
