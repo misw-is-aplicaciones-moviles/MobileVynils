@@ -24,7 +24,7 @@ import org.junit.runner.RunWith
 
 /**
  * HU01-03: el catálogo contra BackVynils local (10.0.2.2:3000 con la semilla).
- * El visitante no ve el botón "+"; el coleccionista lo ve y su toque avisa que crear llega después.
+ * El visitante no ve el botón "+"; el coleccionista lo ve y su toque abre el formulario de nuevo álbum.
  */
 @RunWith(AndroidJUnit4::class)
 class AlbumListScreenTest {
@@ -41,7 +41,7 @@ class AlbumListScreenTest {
     }
 
     @Test
-    fun collector_sees_the_create_button_and_it_announces_the_pending_screen() {
+    fun collector_sees_the_create_button_and_it_opens_the_new_album_form() {
         onView(withText(R.string.role_collector)).perform(click())
 
         waitForDisplayed(withId(R.id.albumList))
@@ -49,7 +49,7 @@ class AlbumListScreenTest {
 
         onView(withId(R.id.primaryAction)).perform(click())
 
-        waitForDisplayed(withText(R.string.album_create_pending))
+        waitForDisplayed(withText(R.string.create_album_all_required))
     }
 
     /** El título de la fila [position], leído del ViewHolder ya enlazado. */

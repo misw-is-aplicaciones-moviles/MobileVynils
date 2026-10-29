@@ -251,12 +251,12 @@ class AlbumListViewModelTest {
     }
 
     @Test
-    fun `onCreateAlbumClicked asks to show the pending notice`() {
+    fun `onCreateAlbumClicked asks to open the new album form`() {
         val viewModel = viewModel(FakeAlbumRepository())
 
         viewModel.onCreateAlbumClicked()
 
-        assertEquals(AlbumListEvent.ShowCreatePending, viewModel.events.value?.getContentIfNotHandled())
+        assertEquals(AlbumListEvent.OpenCreateAlbum, viewModel.events.value?.getContentIfNotHandled())
     }
 
     @Test

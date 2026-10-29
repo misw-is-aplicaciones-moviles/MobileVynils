@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chip de género o sello: relleno carbón cuando está elegido, transparente si no. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/vinilos_charcoal" android:state_checked="true" />
+    <item android:color="@android:color/transparent" />
+</selector>

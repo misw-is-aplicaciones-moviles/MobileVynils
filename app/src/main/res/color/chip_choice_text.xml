@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Texto del chip de género o sello: crema sobre carbón cuando está elegido. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/vinilos_cream" android:state_checked="true" />
+    <item android:color="@color/vinilos_charcoal" />
+</selector>
