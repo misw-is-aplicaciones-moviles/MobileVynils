@@ -14,6 +14,7 @@ Convenciones de ingeniería de la app Android Vinilos. Se acordaron antes de esc
 | [08-flujo-de-trabajo-git.md](08-flujo-de-trabajo-git.md) | GitFlow, ramas, commits, pull requests, CI, releases y APK, wiki | Desde el primer commit |
 | [09-calidad-estatica.md](09-calidad-estatica.md) | ktlint, detekt, Android Lint; configuración y uso | Al configurar el proyecto y al fallar una verificación |
 | [10-diseno-de-la-aplicacion.md](10-diseno-de-la-aplicacion.md) | Roles, mapa de navegación, pantallas, modelo de datos, especificación por historia, textos, hallazgos | Antes de construir cualquier pantalla |
+| [11-hu02-diseno-tecnico.md](11-hu02-diseno-tecnico.md) | Alcance mínimo, reutilización, componentes y flujo de datos del detalle de álbum | Antes de implementar HU02 |
 
 ## Principios
 

@@ -25,6 +25,9 @@ internal class FakeAlbumRepository(
         private set
     var remoteCalls = 0
         private set
+    var detailResult: DataResult<Album, DataError> = DataResult.Failure(DataError.Http(404))
+    var detailGate: CompletableDeferred<Unit>? = null
+    val detailRequests = mutableListOf<Pair<Int, Boolean>>()
 
     override suspend fun getAlbums(forceRefresh: Boolean): DataResult<List<Album>, DataError> {
         if (!forceRefresh) {
@@ -37,6 +40,15 @@ internal class FakeAlbumRepository(
     }
 
     override suspend fun hasCachedAlbums(): Boolean = hasCache
+
+    override suspend fun getAlbum(
+        id: Int,
+        forceRefresh: Boolean,
+    ): DataResult<Album, DataError> {
+        detailRequests.add(id to forceRefresh)
+        detailGate?.await()
+        return detailResult
+    }
 
     override suspend fun createAlbum(draft: NewAlbum): DataResult<Album, DataError> {
         createdDrafts += draft
