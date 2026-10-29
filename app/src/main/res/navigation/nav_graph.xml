@@ -22,7 +22,18 @@
     <fragment
         android:id="@+id/albumListFragment"
         android:name="co.edu.uniandes.vinilos.ui.albums.AlbumListFragment"
-        android:label="@string/album_list_title" />
+        android:label="@string/album_list_title">
+        <action
+            android:id="@+id/action_albumList_to_albumCreate"
+            app:destination="@id/albumCreateFragment"
+            app:launchSingleTop="true" />
+    </fragment>
+
+    <!-- HU07: pantalla completa sobre el catálogo, sin barra inferior (MainActivity). -->
+    <fragment
+        android:id="@+id/albumCreateFragment"
+        android:name="co.edu.uniandes.vinilos.ui.albums.AlbumCreateFragment"
+        android:label="@string/create_album_title" />
 
     <fragment
         android:id="@+id/performerListFragment"

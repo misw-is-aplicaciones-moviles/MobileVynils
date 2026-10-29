@@ -12,7 +12,9 @@ sealed interface AlbumListEvent {
         val error: DataError,
     ) : AlbumListEvent
 
-    data object ShowCreatePending : AlbumListEvent
+    data object OpenCreateAlbum : AlbumListEvent
+
+    data object ShowAlbumCreated : AlbumListEvent
 
     data object OpenRoleSelector : AlbumListEvent
 }

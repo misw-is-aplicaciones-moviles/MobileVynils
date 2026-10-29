@@ -50,7 +50,18 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
         viewModel.events.observe(viewLifecycleOwner) { event ->
             event.getContentIfNotHandled()?.let(::handle)
         }
+        observeAlbumCreated()
         ViewCompat.requestApplyInsets(binding.headerBar.header)
+    }
+
+    // The new album form leaves its result in this entry before closing. Removing it keeps a rotation from repeating it.
+    private fun observeAlbumCreated() {
+        val handle = findNavController().currentBackStackEntry?.savedStateHandle ?: return
+        handle.getLiveData<Boolean>(AlbumCreateFragment.RESULT_ALBUM_CREATED).observe(viewLifecycleOwner) { created ->
+            if (created != true) return@observe
+            handle.remove<Boolean>(AlbumCreateFragment.RESULT_ALBUM_CREATED)
+            viewModel.onAlbumCreated()
+        }
     }
 
     override fun onDestroyView() {
@@ -148,7 +159,8 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
         when (event) {
             is AlbumListEvent.OpenDetail -> Unit
             is AlbumListEvent.ShowRefreshError -> showRefreshError(event.error)
-            AlbumListEvent.ShowCreatePending -> showMessage(R.string.album_create_pending)
+            AlbumListEvent.OpenCreateAlbum -> findNavController().navigate(R.id.action_albumList_to_albumCreate)
+            AlbumListEvent.ShowAlbumCreated -> showMessage(R.string.snack_album_created)
             AlbumListEvent.OpenRoleSelector -> findNavController().navigateToRoleSelector()
         }
     }
