@@ -263,7 +263,7 @@ Flujo:
 2. "X", "Cancelar" y el botón atrás cierran el formulario sin crear nada.
 3. Al crear, `AlbumCreateFragment` deja `album_created = true` en `previousBackStackEntry.savedStateHandle` y cierra con `popBackStack()`.
 4. `AlbumListFragment` observa esa clave, la borra al consumirla (no se repite al rotar) y llama a `AlbumListViewModel.onAlbumCreated()`, que vuelve a leer Room y emite `ShowAlbumCreated` para el snackbar `snack_album_created` anclado con `PrimaryActionHost.snackbarAnchor`.
-5. Si el envío falla, el formulario conserva lo escrito y muestra `create_album_error` en un snackbar.
+5. Si el envío falla, el formulario conserva lo escrito y muestra `create_album_error` en un snackbar. Si el POST sale bien pero Room no logra guardar la respuesta (`SQLiteException`), el repositorio informa éxito igual: el álbum ya existe en el servidor y un error haría que el usuario lo duplicara al reintentar. El álbum entra a la caché al deslizar para actualizar o al abrir de nuevo la app.
 6. El chip de rol del formulario hace lo mismo que en el catálogo: limpia el rol y vuelve al selector.
 
 **HU08 · Nueva canción.** `TrackCreateBottomSheet` (`BottomSheetDialogFragment`) sobre el detalle, con sobretítulo "BUSCANDO AMÉRICA · CANCIÓN 03" (nombre del álbum y número que tendrá la pista), campos Nombre y Duración (mm:ss) con teclado numérico, botones "Cancelar" y "Guardar canción". Errores: "Campo obligatorio" e "Ingresa la duración con formato mm:ss" (regex `^\d{1,2}:[0-5]\d$`). En éxito se cierra la hoja, la ficha "Canciones" sube a 3, la pista aparece numerada y se muestra "Canción agregada al álbum".
