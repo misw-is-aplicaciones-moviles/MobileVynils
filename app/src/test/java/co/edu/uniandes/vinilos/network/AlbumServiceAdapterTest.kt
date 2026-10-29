@@ -3,19 +3,26 @@ package co.edu.uniandes.vinilos.network
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.Genre
+import co.edu.uniandes.vinilos.models.NewAlbum
+import co.edu.uniandes.vinilos.models.RecordLabel
+import co.edu.uniandes.vinilos.repositories.AlbumRepositoryImpl
+import co.edu.uniandes.vinilos.testing.FakeAlbumDao
 import co.edu.uniandes.vinilos.testing.MockWebServerRule
+import com.google.gson.JsonParser
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.SocketPolicy
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.time.LocalDate
 import java.util.concurrent.Executors
 
 class AlbumServiceAdapterTest {
@@ -123,6 +130,70 @@ class AlbumServiceAdapterTest {
             }
         }
 
+    @Test
+    fun `create album posts exactly the six backend fields and maps the saved album`() =
+        runTest {
+            serverRule.enqueueJson("api/album_created.json")
+
+            val album = newAdapter(testScheduler).createAlbum(draft)
+
+            val request = serverRule.server.takeRequest()
+            assertEquals("POST", request.method)
+            assertEquals("/albums", request.path)
+            val body = JsonParser.parseString(request.body.readUtf8()).asJsonObject
+            assertEquals(setOf("name", "cover", "releaseDate", "description", "genre", "recordLabel"), body.keySet())
+            assertEquals("The Game", body["name"].asString)
+            assertEquals("https://example.com/the-game.jpg", body["cover"].asString)
+            assertEquals("1980-06-30T00:00:00.000Z", body["releaseDate"].asString)
+            assertEquals("Noveno álbum de Queen.", body["description"].asString)
+            assertEquals("Rock", body["genre"].asString)
+            assertEquals("EMI", body["recordLabel"].asString)
+            assertEquals(101, album.id)
+            assertEquals("The Game", album.name)
+            assertEquals(Genre.ROCK, album.genre)
+            assertEquals("EMI", album.recordLabel)
+            assertEquals(LocalDate.of(1980, 6, 30), album.releaseDate)
+        }
+
+    @Test
+    fun `create album with a missing field becomes HTTP 400 and stores nothing`() =
+        runTest {
+            serverRule.enqueueJson("api/album_create_missing_field.json", HTTP_BAD_REQUEST)
+            val dao = FakeAlbumDao()
+            val repository = AlbumRepositoryImpl(dao, newAdapter(testScheduler))
+
+            val result = repository.createAlbum(draft)
+
+            assertEquals(DataResult.Failure(DataError.Http(HTTP_BAD_REQUEST)), result)
+            assertTrue(dao.getAll().isEmpty())
+        }
+
+    @Test
+    fun `create album with a value outside the backend lists becomes HTTP 400 and stores nothing`() =
+        runTest {
+            serverRule.enqueueJson("api/album_create_invalid_genre.json", HTTP_BAD_REQUEST)
+            val dao = FakeAlbumDao()
+            val repository = AlbumRepositoryImpl(dao, newAdapter(testScheduler))
+
+            val result = repository.createAlbum(draft)
+
+            assertEquals(DataResult.Failure(DataError.Http(HTTP_BAD_REQUEST)), result)
+            assertTrue(dao.getAll().isEmpty())
+        }
+
+    @Test
+    fun `create album with the connection cut becomes a network error and stores nothing`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AFTER_REQUEST))
+            val dao = FakeAlbumDao()
+            val repository = AlbumRepositoryImpl(dao, newAdapter(testScheduler))
+
+            val result = repository.createAlbum(draft)
+
+            assertEquals(DataResult.Failure(DataError.Network), result)
+            assertTrue(dao.getAll().isEmpty())
+        }
+
     private fun newAdapter(
         scheduler: TestCoroutineScheduler,
         ioDispatcher: CoroutineDispatcher = StandardTestDispatcher(scheduler),
@@ -147,6 +218,17 @@ class AlbumServiceAdapterTest {
 
     private companion object {
         const val HTTP_SERVER_ERROR = 500
+        const val HTTP_BAD_REQUEST = 400
+
+        val draft =
+            NewAlbum(
+                name = "The Game",
+                coverUrl = "https://example.com/the-game.jpg",
+                releaseDate = LocalDate.of(1980, 6, 30),
+                description = "Noveno álbum de Queen.",
+                genre = Genre.ROCK,
+                recordLabel = RecordLabel.EMI,
+            )
         const val IO_THREAD_NAME = "io-test"
         const val ALBUM_WITHOUT_NAME = "[{\"id\":1,\"releaseDate\":\"1984-08-01T00:00:00.000Z\"}]"
     }

@@ -1,10 +1,13 @@
 package co.edu.uniandes.vinilos.repositories
 
+import android.database.sqlite.SQLiteException
 import co.edu.uniandes.vinilos.database.toEntity
 import co.edu.uniandes.vinilos.models.Album
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.Genre
+import co.edu.uniandes.vinilos.models.NewAlbum
+import co.edu.uniandes.vinilos.models.RecordLabel
 import co.edu.uniandes.vinilos.testing.FakeAlbumDao
 import co.edu.uniandes.vinilos.testing.FakeAlbumServiceAdapter
 import kotlinx.coroutines.CompletableDeferred
@@ -133,8 +136,53 @@ class AlbumRepositoryImplTest {
             assertEquals(DataResult.Failure(DataError.Http(HTTP_SERVER_ERROR)), repository.getAlbums())
         }
 
+    @Test
+    fun `album created on the backend is reported even if Room fails to store it`() =
+        runTest {
+            val dao = FakeAlbumDao(upsertFailure = SQLiteException("disk I/O error"))
+            val adapter = FakeAlbumServiceAdapter(createdAlbum = album(101, "The Game"))
+            val repository = AlbumRepositoryImpl(dao, adapter)
+
+            val result = repository.createAlbum(draft)
+
+            assertEquals(DataResult.Success(album(101, "The Game")), result)
+            assertEquals(listOf(draft), adapter.createdDrafts)
+            assertTrue(dao.getAll().isEmpty())
+        }
+
+    @Test
+    fun `refresh that fetched the list before the POST does not delete the new album`() =
+        runTest {
+            val gate = CompletableDeferred<Unit>()
+            val adapter = FakeAlbumServiceAdapter(albums = network, gate = gate, createdAlbum = album(101, "The Game"))
+            val dao = FakeAlbumDao()
+            val repository = AlbumRepositoryImpl(dao, adapter)
+
+            // The refresh already holds the list without the new album and waits on the gate.
+            val refresh = async { repository.getAlbums(forceRefresh = true) }
+            runCurrent()
+            val create = async { repository.createAlbum(draft) }
+            runCurrent()
+            gate.complete(Unit)
+            refresh.await()
+
+            assertTrue(create.await() is DataResult.Success)
+            assertTrue("The new album must survive the refresh", dao.getAll().any { it.id == 101 })
+            assertEquals(network.size + 1, dao.getAll().size)
+        }
+
     private companion object {
         const val HTTP_SERVER_ERROR = 500
+
+        val draft =
+            NewAlbum(
+                name = "The Game",
+                coverUrl = "",
+                releaseDate = LocalDate.of(1980, 6, 30),
+                description = "",
+                genre = Genre.ROCK,
+                recordLabel = RecordLabel.EMI,
+            )
     }
 
     private fun album(
