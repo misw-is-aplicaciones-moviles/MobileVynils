@@ -146,7 +146,12 @@ class AlbumDetailViewModelTest {
 
             viewModel.onTrackCreated(track)
 
-            assertEquals(album.tracks + track, viewModel.uiState.value?.album?.tracks)
+            assertEquals(
+                album.tracks + track,
+                viewModel.uiState.value
+                    ?.album
+                    ?.tracks,
+            )
             assertEquals(listOf(album.id to false), repository.detailRequests)
         }
 

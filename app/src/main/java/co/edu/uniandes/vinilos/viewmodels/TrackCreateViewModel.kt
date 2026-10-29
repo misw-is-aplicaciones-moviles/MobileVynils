@@ -34,9 +34,10 @@ class TrackCreateViewModel(
         update {
             copy(
                 name = name,
-                errors = errors.copy(
-                    name = if (validationAttempted && name.isBlank()) TrackFieldError.REQUIRED else null,
-                ),
+                errors =
+                    errors.copy(
+                        name = if (validationAttempted && name.isBlank()) TrackFieldError.REQUIRED else null,
+                    ),
                 submitError = null,
             )
         }
@@ -82,8 +83,10 @@ class TrackCreateViewModel(
         val state = currentState()
         if (state.isSubmitting) return
         when (val validation = TrackCreateValidator.validate(state.name, state.durationValue)) {
-            is TrackCreateValidation.Invalid ->
+            is TrackCreateValidation.Invalid -> {
                 update { copy(errors = validation.errors, validationAttempted = true, submitError = null) }
+            }
+
             is TrackCreateValidation.Valid -> {
                 update {
                     copy(

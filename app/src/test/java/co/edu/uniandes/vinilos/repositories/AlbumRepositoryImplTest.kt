@@ -120,8 +120,7 @@ class AlbumRepositoryImplTest {
                     FakeAlbumDao(listOf(album(1, "A").toEntity())),
                     FakeTrackDao(),
                     FakeAlbumServiceAdapter(),
-                )
-                    .hasCachedAlbums(),
+                ).hasCachedAlbums(),
             )
         }
 
@@ -275,8 +274,9 @@ class AlbumRepositoryImplTest {
             val trackDao = FakeTrackDao().apply { writeFailure = SQLiteException("disk full") }
             val adapter = FakeAlbumServiceAdapter(createdTrack = track)
 
-            val result = AlbumRepositoryImpl(FakeAlbumDao(), trackDao, adapter)
-                .addTrack(100, NewTrack(track.name, track.duration))
+            val result =
+                AlbumRepositoryImpl(FakeAlbumDao(), trackDao, adapter)
+                    .addTrack(100, NewTrack(track.name, track.duration))
 
             assertEquals(DataResult.Success(track), result)
             assertEquals(1, trackDao.writeCount)
@@ -288,8 +288,9 @@ class AlbumRepositoryImplTest {
             val trackDao = FakeTrackDao()
             val adapter = FakeAlbumServiceAdapter(failure = IOException("offline"))
 
-            val result = AlbumRepositoryImpl(FakeAlbumDao(), trackDao, adapter)
-                .addTrack(100, NewTrack("Bohemian Rhapsody", "5:55"))
+            val result =
+                AlbumRepositoryImpl(FakeAlbumDao(), trackDao, adapter)
+                    .addTrack(100, NewTrack("Bohemian Rhapsody", "5:55"))
 
             assertEquals(DataResult.Failure(DataError.Network), result)
             assertEquals(0, trackDao.writeCount)

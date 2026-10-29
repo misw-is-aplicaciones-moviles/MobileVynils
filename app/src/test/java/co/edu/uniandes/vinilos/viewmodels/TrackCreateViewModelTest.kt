@@ -20,6 +20,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class TrackCreateViewModelTest {
     @get:Rule val instantTaskExecutorRule = InstantTaskExecutorRule()
+
     @get:Rule val mainDispatcherRule = MainDispatcherRule()
 
     private val repository = FakeAlbumRepository()

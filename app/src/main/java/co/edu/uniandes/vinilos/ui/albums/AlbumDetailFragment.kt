@@ -12,7 +12,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.snackbar.Snackbar
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.FragmentAlbumDetailBinding
 import co.edu.uniandes.vinilos.models.Album
@@ -24,6 +23,7 @@ import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailEvent
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailUiState
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailViewModel
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
 
 class AlbumDetailFragment : Fragment(R.layout.fragment_album_detail) {
