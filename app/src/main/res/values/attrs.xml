@@ -4,6 +4,10 @@
         <attr name="coverSrc" format="reference" />
         <attr name="artworkCornerRadius" format="dimension" />
         <attr name="artworkElevation" format="dimension" />
+        <!-- "ancho:alto" del marco con el ancho fijo. Por defecto 33:20. -->
+        <attr name="artworkRatio" format="string" />
+        <!-- Diámetro del disco respecto al alto del marco. Por defecto 1. -->
+        <attr name="discScale" format="float" />
     </declare-styleable>
 
     <declare-styleable name="NoticeView">

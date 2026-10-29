@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fila del catálogo (mockup "HU01 · Catálogo"): número, carátula con disco, texto y chevron.
+     Toda la fila es un solo nodo accesible: la descripción la pone el adaptador. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/albumRow"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/album_row_height"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:clipChildren="false"
+    android:focusable="true"
+    android:paddingStart="@dimen/album_row_padding_horizontal"
+    android:paddingEnd="@dimen/album_row_padding_horizontal">
+
+    <TextView
+        android:id="@+id/albumNumber"
+        android:includeFontPadding="false"
+        android:layout_width="@dimen/album_number_width"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
+        android:textAppearance="@style/TextAppearance.Vinilos.ListNumber"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="01" />
+
+    <co.edu.uniandes.vinilos.ui.common.VinylArtworkView
+        android:id="@+id/albumArtwork"
+        android:layout_width="@dimen/album_catalog_artwork_width"
+        android:layout_height="@dimen/album_catalog_artwork_height"
+        android:layout_marginStart="@dimen/album_row_gap"
+        android:clipChildren="false"
+        android:importantForAccessibility="no"
+        app:artworkCornerRadius="@dimen/album_catalog_artwork_radius"
+        app:artworkElevation="@dimen/album_catalog_artwork_elevation"
+        app:artworkRatio="71:48"
+        app:discScale="@dimen/album_disc_scale"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/albumNumber"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/albumTitle"
+        android:includeFontPadding="false"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/album_row_gap"
+        android:layout_marginEnd="@dimen/album_row_gap"
+        android:ellipsize="end"
+        android:importantForAccessibility="no"
+        android:maxLines="2"
+        android:textAppearance="@style/TextAppearance.Vinilos.AlbumTitle"
+        app:layout_constraintBottom_toTopOf="@id/albumSubtitle"
+        app:layout_constraintEnd_toStartOf="@id/albumChevron"
+        app:layout_constraintStart_toEndOf="@id/albumArtwork"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Buscando América" />
+
+    <TextView
+        android:id="@+id/albumSubtitle"
+        android:includeFontPadding="false"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/album_subtitle_gap"
+        android:ellipsize="end"
+        android:importantForAccessibility="no"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.Vinilos.Overline"
+        app:layout_constraintBottom_toTopOf="@id/albumMeta"
+        app:layout_constraintEnd_toEndOf="@id/albumTitle"
+        app:layout_constraintStart_toStartOf="@id/albumTitle"
+        app:layout_constraintTop_toBottomOf="@id/albumTitle"
+        tools:text="Rubén Blades" />
+
+    <TextView
+        android:id="@+id/albumMeta"
+        android:includeFontPadding="false"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/album_meta_gap"
+        android:ellipsize="end"
+        android:importantForAccessibility="no"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.Vinilos.Caption"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/albumTitle"
+        app:layout_constraintStart_toStartOf="@id/albumTitle"
+        app:layout_constraintTop_toBottomOf="@id/albumSubtitle"
+        tools:text="Salsa · 1984" />
+
+    <ImageView
+        android:id="@+id/albumChevron"
+        android:layout_width="@dimen/album_chevron_size"
+        android:layout_height="@dimen/album_chevron_size"
+        android:importantForAccessibility="no"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_chevron_end"
+        app:tint="@color/vinilos_ash" />
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,11 +1,14 @@
 package co.edu.uniandes.vinilos
 
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -20,9 +23,15 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.navOptions
 import androidx.navigation.ui.setupWithNavController
 import co.edu.uniandes.vinilos.databinding.ActivityMainBinding
+import co.edu.uniandes.vinilos.ui.common.BottomBarHumpEdgeTreatment
+import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
+import com.google.android.material.shape.MaterialShapeDrawable
+import com.google.android.material.shape.ShapeAppearanceModel
 
-class MainActivity : AppCompatActivity() {
+class MainActivity :
+    AppCompatActivity(),
+    PrimaryActionHost {
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,6 +44,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        applyBarShape(withHump = false)
 
         // El contenedor es el único que aplica el margen de la navegación del sistema; la barra de
         // Material lo añadiría otra vez por su cuenta (en API 21 sumaba 48 dp de más).
@@ -50,6 +60,47 @@ class MainActivity : AppCompatActivity() {
         // restaura el catálogo con el rol ya perdido. Un giro no entra aquí, porque el proceso sigue.
         returnToRoleSelectorIfRoleWasLost(savedInstanceState, navController)
         setupBottomNavigation(navController)
+    }
+
+    override val snackbarAnchor: View
+        get() = if (binding.primaryAction.isVisible) binding.primaryAction else binding.bottomBar
+
+    override fun showPrimaryAction(
+        @StringRes contentDescription: Int,
+        onClick: () -> Unit,
+    ) {
+        binding.primaryAction.contentDescription = getString(contentDescription)
+        binding.primaryAction.setOnClickListener { onClick() }
+        binding.primaryAction.isVisible = true
+        applyBarShape(withHump = true)
+    }
+
+    override fun hidePrimaryAction() {
+        binding.primaryAction.setOnClickListener(null)
+        binding.primaryAction.isVisible = false
+        applyBarShape(withHump = false)
+    }
+
+    /** Fondo de la barra: crema con sombra superior suave; con joroba solo mientras el botón "+" está visible. */
+    private fun applyBarShape(withHump: Boolean) {
+        val shape = ShapeAppearanceModel.builder()
+        if (withHump) {
+            shape.setTopEdge(
+                BottomBarHumpEdgeTreatment(
+                    radius = resources.getDimension(R.dimen.bottom_bar_hump_radius),
+                    centerRise = resources.getDimension(R.dimen.primary_action_center_rise),
+                    flare = resources.getDimension(R.dimen.bottom_bar_hump_flare),
+                ),
+            )
+        }
+        val elevation = resources.getDimension(R.dimen.bottom_bar_shadow_elevation)
+        binding.bottomBar.background =
+            MaterialShapeDrawable(shape.build()).apply {
+                fillColor = ColorStateList.valueOf(ContextCompat.getColor(this@MainActivity, R.color.vinilos_cream))
+                // La sombra propia de Material sí admite formas no convexas desde API 21.
+                shadowCompatibilityMode = MaterialShapeDrawable.SHADOW_COMPAT_MODE_ALWAYS
+                this.elevation = elevation
+            }
     }
 
     private fun returnToRoleSelectorIfRoleWasLost(

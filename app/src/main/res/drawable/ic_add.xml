@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Más del botón de acción principal, trazo 2.4 como en el kit v2. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M12,5V19M5,12H19"
+        android:strokeWidth="2.4"
+        android:strokeColor="@color/vinilos_cream"
+        android:strokeLineCap="round" />
+</vector>

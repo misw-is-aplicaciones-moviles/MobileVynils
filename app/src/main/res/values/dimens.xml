@@ -41,6 +41,43 @@
     <dimen name="album_artwork_width">92dp</dimen>
     <dimen name="album_artwork_radius">4dp</dimen>
 
+    <!-- Fila del catálogo (Figma, 1 px = 1 dp). -->
+    <dimen name="album_row_height">136dp</dimen>
+    <dimen name="album_row_padding_horizontal">18dp</dimen>
+    <dimen name="album_row_gap">10dp</dimen>
+    <dimen name="album_number_width">24dp</dimen>
+    <dimen name="album_catalog_artwork_width">142dp</dimen>
+    <dimen name="album_catalog_artwork_height">96dp</dimen>
+    <dimen name="album_catalog_artwork_radius">6dp</dimen>
+    <dimen name="album_catalog_artwork_elevation">8dp</dimen>
+    <dimen name="album_subtitle_gap">5dp</dimen>
+    <dimen name="album_meta_gap">6dp</dimen>
+    <dimen name="album_chevron_size">16dp</dimen>
+    <item name="album_disc_scale" format="float" type="dimen">0.9375</item>
+
+    <!-- Lista del catálogo: separador, degradado del pie y espacio para la joroba del botón "+". -->
+    <dimen name="list_divider_thickness">1dp</dimen>
+    <dimen name="list_divider_inset">18dp</dimen>
+    <dimen name="list_fade_height">72dp</dimen>
+    <dimen name="album_list_bottom_padding">64dp</dimen>
+
+    <!-- Botón "+" de la barra inferior: el centro queda 24 dp sobre el borde superior de la barra. -->
+    <dimen name="primary_action_icon">24dp</dimen>
+    <dimen name="primary_action_elevation">10dp</dimen>
+    <dimen name="primary_action_center_rise">24dp</dimen>
+    <dimen name="primary_action_drop">4dp</dimen>
+    <dimen name="bottom_bar_hump_radius">35dp</dimen>
+    <dimen name="bottom_bar_hump_flare">75dp</dimen>
+    <dimen name="bottom_bar_shadow_elevation">8dp</dimen>
+
+    <!-- Estado de error con ilustración de anillos. -->
+    <dimen name="state_illustration_size">132dp</dimen>
+    <dimen name="state_title_gap">22dp</dimen>
+    <dimen name="state_body_gap">8dp</dimen>
+    <dimen name="state_button_gap">24dp</dimen>
+    <dimen name="state_button_min_width">132dp</dimen>
+    <dimen name="state_padding_horizontal">32dp</dimen>
+
     <!-- Chip de rol. La píldora mide 32 dp; el área táctil de 48 dp la pone el propio Chip. -->
     <dimen name="role_chip_height">32dp</dimen>
     <dimen name="role_chip_radius">16dp</dimen>
