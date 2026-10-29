@@ -60,6 +60,21 @@ class AlbumMappersTest {
     }
 
     @Test
+    fun `optional performer image is preserved for the detail avatar`() {
+        val image = "https://example.com/artist.jpg"
+        val dto = fullDto.copy(performers = listOf(PerformerDto(7, "Rubén", image)))
+
+        assertEquals(
+            image,
+            dto
+                .toModel()
+                .performers
+                .single()
+                .imageUrl,
+        )
+    }
+
+    @Test
     fun `empty or missing performers produce a null performer name`() {
         assertNull(fullDto.copy(performers = emptyList()).toModel().performerName)
         assertNull(fullDto.copy(performers = null).toModel().performerName)

@@ -39,6 +39,7 @@ internal fun PerformerDto.toModel(): PerformerSummary =
     PerformerSummary(
         id = id ?: missing("performer id"),
         name = name ?: missing("performer name"),
+        imageUrl = image,
     )
 
 internal fun CommentDto.toModel(): Comment =

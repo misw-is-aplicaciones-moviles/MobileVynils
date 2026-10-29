@@ -20,6 +20,7 @@ internal class FakeAlbumRepository(
         private set
     var remoteCalls = 0
         private set
+    var detailResult: DataResult<Album, DataError> = DataResult.Failure(DataError.Http(404))
 
     override suspend fun getAlbums(forceRefresh: Boolean): DataResult<List<Album>, DataError> {
         if (!forceRefresh) {
@@ -32,4 +33,9 @@ internal class FakeAlbumRepository(
     }
 
     override suspend fun hasCachedAlbums(): Boolean = hasCache
+
+    override suspend fun getAlbum(
+        id: Int,
+        forceRefresh: Boolean,
+    ): DataResult<Album, DataError> = detailResult
 }

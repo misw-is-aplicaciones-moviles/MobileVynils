@@ -23,6 +23,7 @@ internal data class TrackDto(
 internal data class PerformerDto(
     val id: Int? = null,
     val name: String? = null,
+    val image: String? = null,
 )
 
 internal data class CommentDto(
