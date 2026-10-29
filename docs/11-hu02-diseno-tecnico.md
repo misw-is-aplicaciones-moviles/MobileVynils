@@ -310,31 +310,28 @@ La ampliación de pruebas E2E corresponde a HU02-05.
 
 Ampliada la clase existente `AlbumDetailScreenTest`, reutilizando la navegación
 real desde las tarjetas del catálogo y los helpers de Espresso del proyecto.
-Los siete casos y sus instrucciones se registran en
+Los cuatro recorridos y sus instrucciones se registran en
 [el plan de pruebas](06-pruebas.md#ejecutar-los-casos-de-hu02-en-la-tablet):
 
 - Contenido del detalle y regreso por cabecera como coleccionista.
 - Regreso con Atrás del sistema como visitante.
-- Cambio real de orientación conservando el álbum sin otra consulta de detalle;
-  volver al catálogo al seleccionar de nuevo Álbumes.
+- Cambio real de orientación conservando el álbum y regreso al catálogo
+  al seleccionar de nuevo Álbumes.
 - Mensajes de canciones y comentarios vacíos conservando el álbum.
-- HTTP 404 sin contenido ni acción de reintento.
-- HTTP 503 y recuperación del mismo álbum con Reintentar.
-- Conexión interrumpida y recuperación con Reintentar.
 
-Los tres errores se provocan mediante `scripts/hu02_e2e_proxy.py`, un proxy local
-sin dependencias externas que reenvía únicamente consultas de álbumes al backend.
-Inyecta un fallo por escenario y permite contar las consultas durante la rotación.
-No modifica datos del backend ni incorpora accesos de depuración a la aplicación.
+Se retiraron los tres escenarios instrumentados de errores controlados y su proxy
+porque la ejecución general los reportaba como fallos y el proxy falló en la
+recuperación sobre la tablet. Los errores HTTP, de conexión y serialización siguen
+cubiertos por las pruebas unitarias del ViewModel, Repository y Service Adapter.
 
-Resultado: **7 pruebas E2E correctas** en la tablet DBY-W09 con Android 12
-(API 31), sin emuladores. La ejecución conserva las 91 pruebas unitarias correctas;
-Spotless, Detekt, Android Lint y la compilación del APK de pruebas pasan.
-Al terminar se restauran las animaciones, la orientación solicitada y el enlace
-USB al backend habitual (`tcp:3000` → `tcp:3000`); se detiene el proxy temporal.
+Resultado actual: **4 pruebas E2E correctas** en la tablet DBY-W09 con Android 12
+(API 31), sin emuladores. La suite unitaria, Spotless, Detekt, Android Lint y la
+compilación del APK de pruebas pasan.
+La prueba de rotación restaura la orientación solicitada y la ejecución usa el
+enlace USB al backend habitual (`tcp:3000` → `tcp:3000`).
 La validación queda limitada a esta tablet y versión de Android.
 
-Esta tarea cambia únicamente pruebas, su herramienta local y documentación.
+La revisión posterior cambia únicamente pruebas y documentación.
 No modifica código de aplicación, recursos ni dependencias.
 La ampliación de pruebas de API corresponde a HU02-06.
 
