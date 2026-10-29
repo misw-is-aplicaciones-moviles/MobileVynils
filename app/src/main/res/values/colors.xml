@@ -5,6 +5,8 @@
     <color name="vinilos_charcoal">#FF232323</color>
     <!-- Crema: hoja de contenido, barra inferior, texto sobre carbón. -->
     <color name="vinilos_cream">#FFF2EFE7</color>
+    <!-- Crema transparente: extremo del degradado de pie de lista. -->
+    <color name="vinilos_cream_clear">#00F2EFE7</color>
     <!-- Piedra: botón deshabilitado y opción elegida. -->
     <color name="vinilos_stone">#FFD9D6CE</color>
     <!-- Línea: separadores y bordes suaves. -->

@@ -8,6 +8,15 @@
 
     <!-- Títulos de las pestañas (docs/10, sección 8) -->
     <string name="album_list_title">Catálogo</string>
+    <string name="album_list_error_title">No se pudo cargar el catálogo</string>
+    <string name="album_list_error_body">Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="album_list_empty">Aún no hay álbumes en el catálogo</string>
+    <string name="album_list_offline_notice">Sin conexión. Mostrando los datos guardados</string>
+    <string name="album_list_refresh_error">No se pudo actualizar el catálogo</string>
+    <string name="album_no_artist">sin artista</string>
+    <string name="album_genre_year">%1$s · %2$d</string>
+    <string name="album_create_pending">Crear álbumes llega con la siguiente historia.</string>
+    <string name="album_item_description">%1$s, %2$s, %3$s</string>
     <string name="artist_list_title">Artistas</string>
     <string name="collector_list_title">Coleccionistas</string>
 

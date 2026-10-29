@@ -6,6 +6,7 @@ import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.ColorFilter
 import android.graphics.Matrix
+import android.graphics.Outline
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PixelFormat
@@ -14,6 +15,8 @@ import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.view.View
+import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import androidx.core.content.ContextCompat
 import co.edu.uniandes.vinilos.R
@@ -23,9 +26,8 @@ import kotlin.math.roundToInt
  * Hoja crema del kit v2: esquinas superiores redondeadas y una retícula sutil de puntos ("papel").
  * Contenedor de cada pantalla bajo la cabecera carbón.
  *
- * El fondo no recorta a los hijos: cuando HU01 ponga un RecyclerView en la hoja, el contenido
- * puede pasar por encima de las esquinas al hacer scroll. Se resuelve allí con un
- * ViewOutlineProvider y clipToOutline.
+ * Recorta a los hijos con las mismas esquinas superiores (clipToOutline, API 21): la lista de HU01
+ * hace scroll bajo ellas sin pasar por encima de las esquinas.
  */
 class PaperSheetLayout
     @JvmOverloads
@@ -36,6 +38,9 @@ class PaperSheetLayout
     ) : FrameLayout(context, attrs, defStyleAttr) {
         init {
             background = PaperSheetDrawable(context)
+            val radius = context.resources.getDimension(R.dimen.sheet_corner_radius)
+            outlineProvider = TopCornersOutline(radius)
+            clipToOutline = true
         }
     }
 
@@ -99,5 +104,17 @@ private class PaperSheetDrawable(
                 Canvas(tile).drawCircle(size / 2f, size / 2f, radius, paint)
             }
         }
+    }
+}
+
+/** Rectángulo con solo las esquinas superiores redondeadas: el borde inferior se empuja fuera de la vista. */
+private class TopCornersOutline(
+    private val radius: Float,
+) : ViewOutlineProvider() {
+    override fun getOutline(
+        view: View,
+        outline: Outline,
+    ) {
+        outline.setRoundRect(0, 0, view.width, view.height + radius.roundToInt(), radius)
     }
 }

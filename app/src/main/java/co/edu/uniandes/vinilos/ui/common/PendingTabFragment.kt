@@ -13,13 +13,12 @@ import co.edu.uniandes.vinilos.VinilosApplication
 import co.edu.uniandes.vinilos.databinding.FragmentPendingTabBinding
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.repositories.SessionRepository
-import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
 
 /**
- * Pantalla provisional de una pestaña mientras llega su historia (HU01, HU03, HU05 la reemplazan).
+ * Pantalla provisional de una pestaña mientras llega su historia (HU03 y HU05 la reemplazan).
  * Título y mensaje llegan como argumentos desde nav_graph.xml.
- * Álbumes enseña la tarjeta y los estados compartidos; el chip vuelve al selector.
+ * El chip vuelve al selector. Álbumes ya no la usa: tiene AlbumListFragment (HU01).
  */
 class PendingTabFragment : Fragment(R.layout.fragment_pending_tab) {
     private var bindingOrNull: FragmentPendingTabBinding? = null
@@ -78,21 +77,7 @@ class PendingTabFragment : Fragment(R.layout.fragment_pending_tab) {
     }
 
     private fun bindContent(messageRes: Int) {
-        val showPreview = findNavController().currentDestination?.id == R.id.albumListFragment
-        binding.pendingMessage.isVisible = !showPreview
-        binding.componentPreview.isVisible = showPreview
         binding.pendingMessage.setText(messageRes)
-        if (!showPreview) return
-        binding.previewMessage.setText(messageRes)
-        binding.sampleAlbum.albumTitle.setText(R.string.sample_album_name)
-        binding.sampleAlbum.albumSubtitle.setText(R.string.sample_album_artist)
-        binding.sampleAlbum.albumMeta.setText(R.string.sample_album_meta)
-        binding.errorState.retryButton.setOnClickListener {
-            Snackbar
-                .make(requireActivity().findViewById(R.id.main), R.string.state_retry_later, Snackbar.LENGTH_SHORT)
-                .setAnchorView(R.id.bottomBar)
-                .show()
-        }
     }
 
     private companion object {

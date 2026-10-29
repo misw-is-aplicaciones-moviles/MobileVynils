@@ -4,7 +4,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBackUnconditionally
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDescendantOfA
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -23,37 +22,28 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** TR-04: cabecera con chip, tarjeta de álbum y estados de carga, error y vacío. */
+/** TR-04: cabecera con chip de rol y vuelta al selector. El catálogo (HU01) los usa tal cual. */
 @RunWith(AndroidJUnit4::class)
 class SharedComponentsTest {
     @get:Rule val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
     @Test
-    fun catalog_shows_the_role_chip_the_card_and_the_three_states() {
+    fun catalog_shows_the_header_and_the_role_chip() {
         onView(withText(R.string.role_visitor)).perform(click())
 
         onView(withId(R.id.headerTitle)).check(matches(withText(R.string.album_list_title)))
         onView(withId(R.id.roleChip)).check(matches(allOf(isDisplayed(), withText(R.string.role_visitor))))
         onView(withId(R.id.roleChip)).check(matches(withContentDescription(chipDescription(R.string.role_visitor))))
-        onView(allOf(withId(R.id.previewMessage), isDisplayed())).check(matches(withText(R.string.pending_this_sprint)))
-        onView(withText(R.string.sample_album_name)).check(matches(isDisplayed()))
-        onView(withText(R.string.sample_album_artist)).check(matches(isDisplayed()))
-        onView(withText(R.string.sample_album_meta)).check(matches(isDisplayed()))
-        onView(withText(R.string.state_loading)).check(matches(isDisplayed()))
-        onView(withText(R.string.state_error_title)).check(matches(isDisplayed()))
-        onView(withText(R.string.state_error_body)).check(matches(isDisplayed()))
-        onView(withText(R.string.state_empty_message)).perform(scrollTo()).check(matches(isDisplayed()))
         onView(withId(R.id.headerBack)).check(matches(not(isDisplayed())))
         onView(withId(R.id.headerClose)).check(matches(not(isDisplayed())))
     }
 
     @Test
-    fun retry_says_the_reload_arrives_with_the_catalog() {
+    fun collector_chip_describes_the_collector_role() {
         onView(withText(R.string.role_collector)).perform(click())
 
-        onView(withId(R.id.retryButton)).perform(click())
-
-        onView(withText(R.string.state_retry_later)).check(matches(isDisplayed()))
+        onView(withId(R.id.roleChip)).check(matches(allOf(isDisplayed(), withText(R.string.role_collector))))
+        onView(withId(R.id.roleChip)).check(matches(withContentDescription(chipDescription(R.string.role_collector))))
     }
 
     @Test
@@ -63,7 +53,6 @@ class SharedComponentsTest {
 
         onView(withText(R.string.role_collector)).perform(click())
         onView(allOf(withId(R.id.performerListFragment), isDescendantOfA(withId(R.id.bottomNav)))).perform(click())
-        onView(withId(R.id.componentPreview)).check(matches(not(isDisplayed())))
         onView(allOf(withId(R.id.pendingMessage), isDisplayed())).check(matches(withText(R.string.pending_next_sprint)))
         onView(withId(R.id.roleChip)).check(matches(withText(R.string.role_collector)))
         leaveFromCurrentTab()

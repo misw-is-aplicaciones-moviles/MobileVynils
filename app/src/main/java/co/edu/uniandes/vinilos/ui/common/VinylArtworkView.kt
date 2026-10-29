@@ -12,8 +12,9 @@ import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.ViewVinylArtworkBinding
 
 /**
- * Disco con carátula. Con el ancho fijo, el alto sigue la proporción 33:20.
- * Si el ancho no viene fijo, el marco es el mayor 33:20 que cabe en los dos topes.
+ * Disco con carátula. Con el ancho fijo, el alto sigue `app:artworkRatio` (por defecto 33:20).
+ * Si el ancho no viene fijo, el marco es el mayor con esa proporción que cabe en los dos topes.
+ * `app:discScale` (por defecto 1) fija el diámetro del disco respecto al alto del marco.
  * La carátula cambia con [setCoverResource] o con `app:coverSrc`. El disco no cambia.
  */
 class VinylArtworkView
@@ -25,6 +26,8 @@ class VinylArtworkView
     ) : ConstraintLayout(context, attrs, defStyleAttr) {
         private var bindingOrNull: ViewVinylArtworkBinding? = null
         private val binding get() = checkNotNull(bindingOrNull)
+        private var ratioWidth = RATIO_WIDTH
+        private var ratioHeight = RATIO_HEIGHT
 
         /** Imagen de la carátula. El listado carga aquí la portada del álbum. */
         val coverView: ImageView
@@ -49,7 +52,7 @@ class VinylArtworkView
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec)
                 return
             }
-            val (width, height) = fitSize(maxWidth, maxHeight)
+            val (width, height) = fitSize(maxWidth, maxHeight, ratioWidth, ratioHeight)
             super.onMeasure(
                 MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY),
@@ -94,8 +97,33 @@ class VinylArtworkView
                         R.styleable.VinylArtworkView_artworkElevation,
                         resources.getDimension(R.dimen.role_cover_elevation),
                     )
+                applyProportions(
+                    styled.getString(R.styleable.VinylArtworkView_artworkRatio),
+                    styled.getFloat(R.styleable.VinylArtworkView_discScale, DEFAULT_DISC_SCALE),
+                )
             } finally {
                 styled.recycle()
+            }
+        }
+
+        private fun applyProportions(
+            ratio: String?,
+            discScale: Float,
+        ) {
+            if (ratio != null) {
+                val (width, height) = parseRatio(ratio)
+                ratioWidth = width
+                ratioHeight = height
+                val frame = binding.artworkFrame.layoutParams as LayoutParams
+                frame.dimensionRatio = "$width:$height"
+                binding.artworkFrame.layoutParams = frame
+            }
+            if (discScale != DEFAULT_DISC_SCALE) {
+                require(discScale > 0f && discScale <= 1f) { "discScale debe estar entre 0 y 1, pero es $discScale" }
+                val disc = binding.artworkDisc.layoutParams as LayoutParams
+                disc.matchConstraintDefaultHeight = LayoutParams.MATCH_CONSTRAINT_PERCENT
+                disc.matchConstraintPercentHeight = discScale
+                binding.artworkDisc.layoutParams = disc
             }
         }
 
@@ -114,16 +142,32 @@ class VinylArtworkView
             const val RATIO_WIDTH = 33
             const val RATIO_HEIGHT = 20
 
-            /** Mayor marco 33:20 que cabe en los topes. Un tope nulo no limita ese lado. */
+            private const val DEFAULT_DISC_SCALE = 1f
+            private const val RATIO_SEPARATOR = ':'
+
+            /** Mayor marco con la proporción dada que cabe en los topes. Un tope nulo no limita ese lado. */
             fun fitSize(
                 maxWidth: Int?,
                 maxHeight: Int?,
+                ratioWidth: Int = RATIO_WIDTH,
+                ratioHeight: Int = RATIO_HEIGHT,
             ): Pair<Int, Int> {
-                var width = maxWidth ?: (((maxHeight ?: 0).toLong() * RATIO_WIDTH) / RATIO_HEIGHT).toInt()
-                var height = ((width.toLong() * RATIO_HEIGHT) / RATIO_WIDTH).toInt()
+                var width = maxWidth ?: (((maxHeight ?: 0).toLong() * ratioWidth) / ratioHeight).toInt()
+                var height = ((width.toLong() * ratioHeight) / ratioWidth).toInt()
                 if (maxHeight != null && height > maxHeight) {
                     height = maxHeight
-                    width = ((height.toLong() * RATIO_WIDTH) / RATIO_HEIGHT).toInt()
+                    width = ((height.toLong() * ratioWidth) / ratioHeight).toInt()
+                }
+                return width to height
+            }
+
+            /** Lee "ancho:alto" con dos enteros positivos. Cualquier otra forma es un error del layout. */
+            fun parseRatio(value: String): Pair<Int, Int> {
+                val parts = value.split(RATIO_SEPARATOR)
+                val width = parts.getOrNull(0)?.trim()?.toIntOrNull()
+                val height = parts.getOrNull(1)?.trim()?.toIntOrNull()
+                require(parts.size == 2 && width != null && height != null && width > 0 && height > 0) {
+                    "artworkRatio debe ser \"ancho:alto\" con enteros positivos (como \"33:20\"), pero es \"$value\""
                 }
                 return width to height
             }

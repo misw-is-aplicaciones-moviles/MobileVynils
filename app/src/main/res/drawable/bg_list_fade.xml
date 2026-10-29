@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Degradado de la hoja sobre las últimas filas, encima de la barra inferior. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:endColor="@color/vinilos_cream"
+        android:startColor="@color/vinilos_cream_clear" />
+</shape>
