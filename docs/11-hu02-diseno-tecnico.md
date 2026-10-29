@@ -305,3 +305,35 @@ Los observadores de LiveData usados en las pruebas se retiran al terminar.
 Esta tarea modifica exclusivamente pruebas, el fake compartido y documentación.
 No cambia código de aplicación, recursos, dependencias ni configuración de dispositivos.
 La ampliación de pruebas E2E corresponde a HU02-05.
+
+## 11. Avance de HU02-05 · Pruebas E2E en tablet
+
+Ampliada la clase existente `AlbumDetailScreenTest`, reutilizando la navegación
+real desde las tarjetas del catálogo y los helpers de Espresso del proyecto.
+Los siete casos y sus instrucciones se registran en
+[el plan de pruebas](06-pruebas.md#ejecutar-los-casos-de-hu02-en-la-tablet):
+
+- Contenido del detalle y regreso por cabecera como coleccionista.
+- Regreso con Atrás del sistema como visitante.
+- Cambio real de orientación conservando el álbum sin otra consulta de detalle;
+  volver al catálogo al seleccionar de nuevo Álbumes.
+- Mensajes de canciones y comentarios vacíos conservando el álbum.
+- HTTP 404 sin contenido ni acción de reintento.
+- HTTP 503 y recuperación del mismo álbum con Reintentar.
+- Conexión interrumpida y recuperación con Reintentar.
+
+Los tres errores se provocan mediante `scripts/hu02_e2e_proxy.py`, un proxy local
+sin dependencias externas que reenvía únicamente consultas de álbumes al backend.
+Inyecta un fallo por escenario y permite contar las consultas durante la rotación.
+No modifica datos del backend ni incorpora accesos de depuración a la aplicación.
+
+Resultado: **7 pruebas E2E correctas** en la tablet DBY-W09 con Android 12
+(API 31), sin emuladores. La ejecución conserva las 91 pruebas unitarias correctas;
+Spotless, Detekt, Android Lint y la compilación del APK de pruebas pasan.
+Al terminar se restauran las animaciones, la orientación solicitada y el enlace
+USB al backend habitual (`tcp:3000` → `tcp:3000`); se detiene el proxy temporal.
+La validación queda limitada a esta tablet y versión de Android.
+
+Esta tarea cambia únicamente pruebas, su herramienta local y documentación.
+No modifica código de aplicación, recursos ni dependencias.
+La ampliación de pruebas de API corresponde a HU02-06.
