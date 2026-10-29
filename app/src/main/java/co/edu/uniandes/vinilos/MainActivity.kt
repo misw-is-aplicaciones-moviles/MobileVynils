@@ -134,12 +134,22 @@ class MainActivity :
             )
             true
         }
-        binding.bottomNav.setOnItemReselectedListener { }
+        binding.bottomNav.setOnItemReselectedListener { item ->
+            if (item.itemId == R.id.albumListFragment &&
+                navController.currentDestination?.id == R.id.albumDetailFragment
+            ) {
+                navController.popBackStack(R.id.albumListFragment, false)
+            }
+        }
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val showBottomBar = destination.id != R.id.roleSelectFragment
             binding.bottomBar.isVisible = showBottomBar
             if (showBottomBar) {
-                binding.bottomNav.post { moveNavDot(destination.id) }
+                val tabId = if (destination.id == R.id.albumDetailFragment) R.id.albumListFragment else destination.id
+                binding.bottomNav.menu
+                    .findItem(tabId)
+                    ?.isChecked = true
+                binding.bottomNav.post { moveNavDot(tabId) }
             }
         }
     }

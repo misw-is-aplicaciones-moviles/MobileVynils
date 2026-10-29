@@ -212,3 +212,67 @@ Verificación local de esta tarea:
 
 Esta tarea no modifica ViewModels, navegación, layouts, estilos, AppContainer,
 dependencias ni persistencia. La pantalla se implementará en HU02-03.
+
+## 9. Avance de HU02-03 · Pantalla y navegación
+
+Implementados `AlbumDetailViewModel`, su estado y evento de cambio de rol,
+`AlbumDetailFragment` y un único `AlbumDetailAdapter` para el contenido desplazable.
+La Factory obtiene el ID de SavedStateHandle y utiliza los repositorios del
+AppContainer existente. Se resuelven carga, contenido, error, 404 y reintento.
+
+El evento existente del catálogo ahora abre `albumDetailFragment` con el ID de la
+tarjeta real. La Activity solo se ajusta para mantener Álbumes seleccionado en el
+detalle y volver al catálogo al tocar nuevamente esa pestaña.
+
+Se reutilizan la cabecera, los estados, la hoja con recorte, la carátula con disco,
+el chip de rol y la barra inferior. Las tres fichas comparten un solo layout.
+Los recursos nuevos tienen nombres específicos del detalle y sus estilos derivan
+de los existentes. No se modifican el tema global, los recursos compartidos, la
+capa de datos, AppContainer, Room ni las dependencias.
+
+Verificación de esta entrega:
+
+- 84 pruebas unitarias correctas: las 82 anteriores y dos comprobaciones mínimas
+  del ViewModel (carga válida y 404).
+- Spotless, Detekt, Android Lint, APK debug y APK de pruebas compilados correctamente.
+- Una prueba mínima de navegación en tablet DBY-W09, Android 12 (API 31), con la
+  semilla de BackVynils: entrar como coleccionista, tocar «Buscando América», revisar
+  canciones y comentarios, comprobar que el botón de crear no aparece en el detalle,
+  regresar y comprobar que el botón del catálogo vuelve a aparecer.
+- La misma prueba pasa con fuente normal y al 200 %. Se revisan capturas de portada
+  y comentarios en ambas configuraciones. Fuente y animaciones se restauran al terminar.
+- La prueba usa únicamente la navegación del producto, sin IDs de acceso temporal
+  ni extras de depuración en la aplicación.
+
+Por restricción del equipo del responsable se utiliza la tablet física; no se
+volverán a iniciar emuladores. Esta ejecución no cubre otras versiones de Android.
+La cobertura completa del ViewModel y de los flujos se amplía en HU02-04 y HU02-05,
+reutilizando las pruebas mínimas ya creadas en lugar de duplicarlas.
+
+### Reproducir en la tablet por USB
+
+Con BackVynils activo en el puerto 3000, usar esta configuración local ignorada por Git:
+
+```properties
+sdk.dir=<ruta local del SDK>
+vinilos.baseUrl=http://127.0.0.1:3000/
+```
+
+Conectar el puerto del backend a la tablet e instalar la aplicación:
+
+```bash
+adb -d reverse tcp:3000 tcp:3000
+./gradlew installDebug
+```
+
+Abrir la app, elegir un rol y tocar una tarjeta del catálogo. Para la comprobación
+automatizada, con la tablet como único dispositivo conectado:
+
+```bash
+./gradlew connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.ui.AlbumDetailScreenTest
+```
+
+Las capturas opcionales se activan con `captureScreenshots=true`; se guardan como
+`hu02-03-header.png` y `hu02-03-comments.png` en los archivos privados de la app.
+No se toman capturas sucesivas en API 21.
