@@ -71,6 +71,52 @@ Por sprint en la wiki, una fila por caso:
 |---|---|---|---|---|---|---|---|---|
 | CP-HU01-01 | HU01 | Listar álbumes con conexión | Backend con la semilla (4 álbumes: A Day at the Races, A Night at the Opera, Buscando América, Poeta del pueblo, en orden alfabético) | Abrir la app, pestaña Álbumes | Se muestran 4 tarjetas con nombre, artista y "Género · Año", en orden alfabético | E2E | `HU01AlbumCatalogTest.listsAlbums` | Pendiente |
 
+Casos automatizados de HU02 (clase existente `AlbumDetailScreenTest`):
+
+| Id | HU | Nombre | Precondición | Pasos | Resultado esperado | Tipo | Automatizado (clase.método) | Estado |
+|---|---|---|---|---|---|---|---|---|
+| CP-HU02-01 | HU02 | Detalle y regreso con cabecera | Backend con semilla; rol Coleccionista | Tocar Buscando América, revisar datos, canciones y comentarios; pulsar Atrás | Contenido correcto; acción de crear solo en catálogo | E2E | `AlbumDetailScreenTest.catalog_card_opens_its_detail_and_returns_without_collector_actions` | Correcto · tablet API 31 |
+| CP-HU02-02 | HU02 | Visitante y Atrás del sistema | Backend con semilla | Entrar como Visitante, abrir álbum, pulsar Atrás del sistema | Vuelve al catálogo con Álbumes seleccionado y sin acción de crear | E2E | `AlbumDetailScreenTest.visitor_returns_to_catalog_with_system_back` | Correcto · tablet API 31 |
+| CP-HU02-03 | HU02 | Rotación y pestaña Álbumes | Backend con semilla; proxy para contar consultas | Abrir álbum, cambiar orientación y tocar de nuevo Álbumes | Conserva detalle sin otra consulta; la pestaña vuelve al catálogo | E2E | `AlbumDetailScreenTest.rotation_preserves_detail_and_reselecting_albums_returns_to_catalog` | Correcto · tablet API 31 |
+| CP-HU02-04 | HU02 | Canciones y comentarios vacíos | Poeta del pueblo sin canciones ni comentarios | Abrir el álbum y recorrer ambas secciones | Mensajes vacíos por sección, conservando el álbum | E2E | `AlbumDetailScreenTest.empty_tracks_and_comments_keep_the_album_visible` | Correcto · tablet API 31 |
+| CP-HU02-05 | HU02 | Detalle inexistente | Proxy: fallo único HTTP 404 en detalle | Tocar una tarjeta real y volver con Atrás | Mensaje de álbum inexistente, sin contenido ni Reintentar | E2E controlado | `AlbumDetailScreenTest.missing_album_shows_404_and_allows_return` | Correcto · tablet API 31 |
+| CP-HU02-06 | HU02 | Error de servidor y recuperación | Proxy: fallo único HTTP 503 en detalle | Tocar una tarjeta y pulsar Reintentar | Muestra error y luego el contenido real del mismo álbum | E2E controlado | `AlbumDetailScreenTest.server_error_recovers_after_retry` | Correcto · tablet API 31 |
+| CP-HU02-07 | HU02 | Fallo de conexión y recuperación | Proxy: cerrar una conexión antes de responder | Abrir álbum y pulsar Reintentar | Mensaje de conexión y recuperación del contenido | E2E controlado | `AlbumDetailScreenTest.connection_failure_shows_network_message_and_retry_recovers` | Correcto · tablet API 31 |
+
+### Ejecutar los casos de HU02 en la tablet
+
+El proxy de `scripts/hu02_e2e_proxy.py` es una herramienta local de prueba, sin
+dependencias externas. Solo reenvía consultas GET de álbumes a BackVynils.
+Sus controles simulan un único fallo en la siguiente consulta de detalle; las
+peticiones posteriores vuelven al backend real. Los datos del backend permanecen
+sin cambios y las respuestas del proxy usan `no-store` para aislar los escenarios.
+
+Con BackVynils en el puerto 3000 y la configuración local de HU02-03
+(`vinilos.baseUrl=http://127.0.0.1:3000/`), iniciar en una terminal:
+
+```bash
+python3 scripts/hu02_e2e_proxy.py --port 3301
+```
+
+En otra terminal, conectar la tablet al proxy y ejecutar la clase:
+
+```bash
+adb -d reverse tcp:3000 tcp:3301
+./gradlew connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.ui.AlbumDetailScreenTest \
+  -Pandroid.testInstrumentationRunnerArguments.hu02E2eProxy=true
+```
+
+Al terminar, restaurar `adb -d reverse tcp:3000 tcp:3000` y detener el proxy con Ctrl+C.
+El proxy escucha únicamente en 127.0.0.1. Gradle desactiva las animaciones para las
+instrumentadas; con `am instrument` deben guardarse sus valores y restaurarse después.
+La prueba de rotación restaura la orientación solicitada por la actividad.
+
+Sin `hu02E2eProxy=true` se pueden ejecutar los cuatro casos del backend real;
+los tres casos de fallos controlados quedan omitidos mediante una precondición.
+Para considerar completa la ejecución de HU02-05 deben correr los siete casos.
+Por la restricción del equipo del responsable se utiliza la tablet física.
+
 Ids: `CP-HUxx-nn`. Cada historia cubre al menos camino feliz, error de backend, estado vacío y, en formularios, las validaciones por campo.
 
 El inventario de pruebas exploratorias usa la plantilla del curso (identificador, fecha, tester, funcionalidad, requerimiento, tipo de escenario positivo, negativo o mixto, nombre del escenario).
