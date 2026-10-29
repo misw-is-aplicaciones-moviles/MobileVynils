@@ -65,7 +65,8 @@ Cada pantalla tiene cabecera carbón con el título (y la flecha o la X cuando c
 |---|---|---|
 | Cabecera | `view_header.xml` (título, botón atrás o cerrar, chip de rol) | Todas las pantallas |
 | Chip de rol | `Chip` con estilo propio ("⇄ VISITANTE" / "⇄ COLECCIONISTA") | Vuelve al selector de rol |
-| Tarjetas de lista | `item_album.xml`, `item_performer.xml`, `item_collector.xml` (imagen, título, subtítulo, número) | Listados |
+| Tarjetas de lista | `item_album.xml`, `item_performer.xml`, `item_collector.xml` (imagen, título, subtítulo, número) | Listados y selectores |
+| Fila del catálogo | `item_album_catalog.xml` (136 dp: número, carátula de 96 dp con disco, título en dos líneas, artista, "Género · Año", chevron) | Catálogo de álbumes (HU01) |
 | Estados | `view_state_loading.xml`, `view_state_error.xml` (mensaje y "Reintentar"), `view_state_empty.xml` | Todas las listas y detalles |
 | Ficha de dato | `view_info_tile.xml` (etiqueta y valor) | Sello, Lanzamiento, Canciones, Teléfono, Correo |
 | Campo de texto | Estilo `Widget.Vinilos.TextInputLayout` | Formularios |
