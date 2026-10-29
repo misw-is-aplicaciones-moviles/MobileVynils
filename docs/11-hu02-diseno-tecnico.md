@@ -276,3 +276,32 @@ automatizada, con la tablet como único dispositivo conectado:
 Las capturas opcionales se activan con `captureScreenshots=true`; se guardan como
 `hu02-03-header.png` y `hu02-03-comments.png` en los archivos privados de la app.
 No se toman capturas sucesivas en API 21.
+
+## 10. Avance de HU02-04 · Pruebas unitarias del ViewModel
+
+Ampliada la clase existente
+[`AlbumDetailViewModelTest`](../app/src/test/java/co/edu/uniandes/vinilos/viewmodels/AlbumDetailViewModelTest.kt),
+reutilizando `FakeAlbumRepository`, `FakeSessionRepository`,
+`MainDispatcherRule`, `InstantTaskExecutorRule` y el fixture `api/albums.json`.
+El fake compartido registra las consultas por ID y permite suspender su respuesta
+para verificar que Reintentar no duplique una petición activa.
+
+| Caso | Comportamiento verificado |
+|---|---|
+| Carga válida | Publica el álbum completo y el rol; consulta una vez el ID solicitado |
+| Álbum inexistente | Publica HTTP 404 sin contenido |
+| Errores remotos | Conserva la clasificación de conexión, HTTP 503 y serialización |
+| Reintento | Limpia el error, muestra carga y consulta el mismo ID con revalidación forzada |
+| Solicitud activa | Ignora reintentos mientras espera la respuesta |
+| Secciones vacías | Mantiene un álbum válido como contenido |
+| ID inválido | Rechaza cero o negativos antes de consultar el repositorio |
+| Cambio de rol | Actualiza el estado de la cabecera sin recargar el álbum |
+| Chip de rol | Limpia la sesión y entrega una única vez el evento de navegación |
+
+Resultado: 9 pruebas del ViewModel y 91 pruebas unitarias en la suite completa,
+sin fallos, errores ni omisiones. Spotless, Detekt y Android Lint correctos.
+Los observadores de LiveData usados en las pruebas se retiran al terminar.
+
+Esta tarea modifica exclusivamente pruebas, el fake compartido y documentación.
+No cambia código de aplicación, recursos, dependencias ni configuración de dispositivos.
+La ampliación de pruebas E2E corresponde a HU02-05.
