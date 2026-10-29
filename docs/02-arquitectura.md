@@ -107,7 +107,10 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
 - Un ViewModel por pantalla, en `viewmodels/`. Estado privado mutable y público de solo lectura:
 
 ```kotlin
-class AlbumListViewModel(private val albumRepository: AlbumRepository) : ViewModel() {
+class AlbumListViewModel(
+    private val albumRepository: AlbumRepository,
+    private val sessionRepository: SessionRepository, // canEdit, ver más abajo
+) : ViewModel() {
     private val _uiState = MutableLiveData(AlbumListUiState(isLoading = true))
     val uiState: LiveData<AlbumListUiState> = _uiState
 
@@ -136,7 +139,7 @@ class AlbumListViewModel(private val albumRepository: AlbumRepository) : ViewMod
         val Factory = viewModelFactory {
             initializer {
                 val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as VinilosApplication
-                AlbumListViewModel(app.container.albumRepository)
+                AlbumListViewModel(app.container.albumRepository, app.container.sessionRepository)
             }
         }
     }
@@ -170,6 +173,7 @@ Interfaz en `repositories/` y una implementación. Es la puerta única de los Vi
 ```kotlin
 interface AlbumRepository {
     suspend fun getAlbums(forceRefresh: Boolean = false): DataResult<List<Album>, DataError>
+    suspend fun hasCachedAlbums(): Boolean                                            // HU01: revalidar sin indicador de carga
     suspend fun getAlbum(id: Int, forceRefresh: Boolean = false): DataResult<Album, DataError>
     suspend fun createAlbum(draft: NewAlbum): DataResult<Album, DataError>          // HU07
     suspend fun addTrack(albumId: Int, draft: NewTrack): DataResult<Track, DataError> // HU08
@@ -180,7 +184,7 @@ La caché del repositorio son los DAO de Room (`database/`): guardan lo recibido
 
 ### Service Adapter
 
-Nombre del curso para la fuente remota. Uno por entidad (`AlbumServiceAdapter`, `PerformerServiceAdapter`, `CollectorServiceAdapter`); envuelve `VinilosApiService` (Retrofit), llama al endpoint, recibe DTOs y los mapea a `models`. No sabe de caché ni de UI. Sus funciones son `suspend` y Retrofit ya las ejecuta fuera del hilo principal.
+Nombre del curso para la fuente remota. Uno por entidad (`AlbumServiceAdapter`, `PerformerServiceAdapter`, `CollectorServiceAdapter`); envuelve `VinilosApiService` (Retrofit), llama al endpoint, recibe DTOs y los mapea a `models`. No sabe de caché ni de UI. Sus funciones son `suspend` y Retrofit ya las ejecuta fuera del hilo principal. Recibe por constructor un proveedor del servicio (`() -> VinilosApiService`) y los dispatchers: resuelve el servicio una sola vez con `withContext(ioDispatcher)`, porque el primer acceso a `networkClient` prepara la caché HTTP en disco, y mapea en `defaultDispatcher`.
 
 ### Errores
 
@@ -223,10 +227,15 @@ class AppContainer(context: Context) {
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }
-    private val retrofit: Retrofit by lazy { /* OkHttp, BASE_URL, convertidor */ }
-    private val apiService: VinilosApiService by lazy { retrofit.create(VinilosApiService::class.java) }
+    internal val networkClient: NetworkClient by lazy { NetworkClient(BuildConfig.BASE_URL, File(appContext.cacheDir, "http")) }
+    // El proveedor difiere el primer acceso a networkClient hasta la llamada suspend del adaptador.
     val albumRepository: AlbumRepository by lazy {
-        AlbumRepositoryImpl(AlbumServiceAdapter(apiService), database.albumDao(), database.trackDao())
+        val adapter = AlbumServiceAdapter(
+            apiProvider = { networkClient.create(VinilosApiService::class.java) },
+            ioDispatcher = Dispatchers.IO,
+            defaultDispatcher = Dispatchers.Default,
+        )
+        AlbumRepositoryImpl(database.albumDao(), adapter)
     }
     val sessionRepository: SessionRepository by lazy { SessionRepositoryImpl() }
 }
@@ -277,3 +286,4 @@ class AppContainer(context: Context) {
 | 2026-10-07 | MVVM con flujo unidireccional, Compose, Hilt y Room como fuente única de verdad (propuesta inicial). |
 | 2026-10-26 | Reinicio: Fragments + ViewBinding, `LiveData` con `Event` para eventos de una sola vez, inyección manual con `AppContainer`, paquetes por capa como en el ejemplo del curso, caché en memoria en el Repository para el Sprint 1. |
 | 2026-10-27 | TR-03: Room 2.7.2 como caché del Repository (`AlbumEntity`, `TrackEntity`), paquete `database/` con clases `internal`, `AppContainer(context)` dueño de la única `VinilosDatabase`, StrictMode en debug. |
+| 2026-10-28 | HU01-01: política "mostrar lo guardado y revalidar" en `AlbumRepository` (`hasCachedAlbums()`); los Service Adapters reciben un proveedor del servicio Retrofit y los dispatchers por constructor, para que el primer acceso a `networkClient` no ocurra en el hilo principal; el botón "+" de la barra lo muestra el Fragment a través de `PrimaryActionHost` según `canEdit` de su `UiState`. |

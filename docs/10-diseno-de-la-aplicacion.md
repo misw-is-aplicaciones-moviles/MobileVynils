@@ -190,7 +190,7 @@ Convenciones comunes a todas las pantallas: cabecera carbón (`view_header.xml`:
 
 **Selector de rol (TR-06).** Logotipo, título "Vinilos", pregunta "¿Cómo quieres ingresar?" y dos tarjetas con icono, nombre y descripción: "Visitante: Consulta álbumes, artistas y coleccionistas" y "Coleccionista: Consulta y además crea álbumes, agrega canciones, comenta y administra artistas". Sin barra inferior.
 
-**HU01 · Catálogo.** `RecyclerView` de `item_album.xml` (carátula 56 dp, nombre, artista principal, "Género · Año"). Artista = primer `performer`; si no hay, "sin artista". Chevron a la derecha. Estado de error de pantalla completa con icono de alerta, "No se pudo cargar el catálogo", "Revisa tu conexión e inténtalo de nuevo" y botón "Reintentar". Si hay datos en caché y falla el refresco, se muestra el contenido con `Snackbar`. Botón "+" (en la joroba de la barra inferior, según los mockups v2) solo para coleccionista; abre `albumCreateFragment`.
+**HU01 · Catálogo.** `RecyclerView` de `item_album_catalog.xml` (fila de 136 dp: número "01", carátula de 96 dp con el disco asomando, nombre en mayúsculas hasta dos líneas, artista principal, "Género · Año"; medidas en el diseño técnico de HU01, sección 3). Orden alfabético por nombre. Artista = primer `performer`; si no hay, "sin artista". Chevron a la derecha. Estado de error de pantalla completa con ilustración de alerta en anillos punteados, "No se pudo cargar el catálogo", "Revisa tu conexión e inténtalo de nuevo." y botón "Reintentar". Si hay datos en caché y falla el refresco, se muestra el contenido con `Snackbar`. Botón "+" (en la joroba de la barra inferior, según los mockups v2) solo para coleccionista; abre `albumCreateFragment` (hasta HU07, un `Snackbar` con `album_create_pending`).
 
 **HU02 · Detalle de álbum.** Cabecera con carátula, "Género · Año", nombre y artista; tres fichas: Sello, Lanzamiento (fecha corta "1 ago 1984") y Canciones (conteo); descripción; sección "Canciones" numerada `01`, `02` con duración a la derecha; sección "Comentarios" con avatar, nombre, estrellas (rating sobre 5) y texto. Para coleccionista: botón "Comentar" junto al título de la sección y botón "+" para agregar una canción (los mockups v2 lo ponen en la joroba de la barra inferior; el prototipo v1 decía "+ Canción", ver hallazgo 14). Álbum inexistente (404): estado de error con mensaje "No encontramos este álbum".
 
@@ -257,6 +257,11 @@ Claves para `res/values/strings.xml` según el prototipo. El código usa los nom
 | `album_list_title` / `album_detail_title` | Catálogo / Álbum |
 | `album_list_error_title` / `album_list_error_body` / `action_retry` | No se pudo cargar el catálogo / Revisa tu conexión e inténtalo de nuevo. / Reintentar |
 | `album_no_artist` | sin artista |
+| `album_list_empty` | Aún no hay álbumes en el catálogo |
+| `album_list_offline_notice` | Sin conexión. Mostrando los datos guardados |
+| `album_list_refresh_error` | No se pudo actualizar el catálogo |
+| `album_genre_year` | %1$s · %2$d |
+| `album_create_pending` | Crear álbumes llega con la siguiente historia. |
 | `album_label` / `album_release` / `album_tracks` | Sello / Lanzamiento / Canciones |
 | `album_section_tracks` / `album_section_comments` | Canciones / Comentarios |
 | `album_action_add_track` / `album_action_comment` | Canción / Comentar |
@@ -329,3 +334,4 @@ Resultado de contrastar wiki, prototipo, documento del curso y código del backe
 | 2026-10-14 | Documento creado a partir de la wiki (commit `a7cc5c3`), los seis tableros del prototipo y el código de BackVynils. Selector de rol inicial con chip de rol en todas las pantallas; hojas inferiores para canción y comentario; tres selectores sobre un `PickerScreen` común; validaciones del lado de la app para banda única, favoritos y álbumes repetidos. Pendientes de ratificar: persistencia del rol, orden de artistas. |
 | 2026-10-26 | Reinicio con Vistas: destinos del grafo de navegación con argumentos en `Bundle`, hojas como `BottomSheetDialogFragment`, `SessionRepository` con `LiveData`, caché en memoria en los repositorios (Room opcional), kit v2 llevado a Material Components; hallazgos 14 a 16 sobre el botón de canción, la regla de duración y los datos de los mockups. |
 | 2026-10-27 | TR-03: Room deja de ser opcional; `AlbumEntity` y `TrackEntity` en Sprint 1, el resto de entidades en Sprint 2. |
+| 2026-10-28 | HU01-01: el catálogo se guarda en Room (`AlbumEntity` con `performerName`, base de datos versión 2), orden alfabético, fila propia `item_album_catalog.xml` con las medidas del mockup (carátula de 96 dp, ya no 56 dp), estado de error con ilustración, botón "+" en la joroba de la barra para el coleccionista (lo muestra el Fragment según `canEdit` de su `UiState`) y cinco textos nuevos del catálogo (`album_list_empty`, `album_list_offline_notice`, `album_list_refresh_error`, `album_genre_year`, `album_create_pending`). |

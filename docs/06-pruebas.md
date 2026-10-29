@@ -59,7 +59,7 @@ class AlbumListViewModelTest {
 - Selección por id de vista (`withId`) y por texto de recurso (`withText(R.string.x)`); listas con `RecyclerViewActions` de `espresso-contrib`.
 - Page Object (Robot) por pantalla: `AlbumListRobot`, `AlbumDetailRobot`; la prueba se lee como el caso del inventario.
 - Una clase por historia: `HU01AlbumCatalogTest`, un método por caso `CP-HU01-nn`.
-- Animaciones del sistema desactivadas antes de correr: `testOptions { animationsDisabled = true }` en Gradle para `connectedDebugAndroidTest` y, con `am instrument`, `settings put global window_animation_scale 0` (y lo mismo para `transition_animation_scale` y `animator_duration_scale`).
+- Animaciones del sistema desactivadas antes de ejecutar: `testOptions { animationsDisabled = true }` en Gradle para `connectedDebugAndroidTest` y, con `am instrument`, `settings put global window_animation_scale 0` (y lo mismo para `transition_animation_scale` y `animator_duration_scale`).
 - **API 21:** no se escriben pruebas que hagan capturas de pantalla seguidas (`UiAutomation.takeScreenshot` cuadro a cuadro): congelan el emulador de Lollipop. Lo visual en API 21 se revisa a mano.
 - Matriz antes de release: emulador API 21 (`Vinilos_API_21`, arrancado con `-gpu host`), API 30, API 37 y un dispositivo físico. Resultado por versión en la wiki.
 
@@ -69,7 +69,7 @@ Por sprint en la wiki, una fila por caso:
 
 | Id | HU | Nombre | Precondición | Pasos | Resultado esperado | Tipo | Automatizado (clase.método) | Estado |
 |---|---|---|---|---|---|---|---|---|
-| CP-HU01-01 | HU01 | Listar álbumes con conexión | Backend con la semilla (4 álbumes: Buscando América, Poeta del pueblo, A Night at the Opera, A Day at the Races) | Abrir la app, pestaña Álbumes | Se muestran 4 tarjetas con nombre, artista y "Género · Año" | E2E | `HU01AlbumCatalogTest.listsAlbums` | Pendiente |
+| CP-HU01-01 | HU01 | Listar álbumes con conexión | Backend con la semilla (4 álbumes: A Day at the Races, A Night at the Opera, Buscando América, Poeta del pueblo, en orden alfabético) | Abrir la app, pestaña Álbumes | Se muestran 4 tarjetas con nombre, artista y "Género · Año", en orden alfabético | E2E | `HU01AlbumCatalogTest.listsAlbums` | Pendiente |
 
 Ids: `CP-HUxx-nn`. Cada historia cubre al menos camino feliz, error de backend, estado vacío y, en formularios, las validaciones por campo.
 
