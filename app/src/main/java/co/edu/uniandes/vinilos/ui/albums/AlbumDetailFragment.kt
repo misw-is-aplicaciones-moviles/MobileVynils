@@ -14,13 +14,16 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.FragmentAlbumDetailBinding
+import co.edu.uniandes.vinilos.models.Album
 import co.edu.uniandes.vinilos.models.DataError
+import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailEvent
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailUiState
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailViewModel
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
 
 class AlbumDetailFragment : Fragment(R.layout.fragment_album_detail) {
@@ -45,6 +48,7 @@ class AlbumDetailFragment : Fragment(R.layout.fragment_album_detail) {
         binding.detailList.layoutManager = LinearLayoutManager(requireContext())
         binding.detailList.adapter = adapter
         binding.errorState.retryButton.setOnClickListener { viewModel.retry() }
+        bindTrackCreatedResult()
         viewModel.uiState.observe(viewLifecycleOwner) { render(it, adapter) }
         viewModel.events.observe(viewLifecycleOwner) { event ->
             when (event.getContentIfNotHandled()) {
@@ -55,6 +59,10 @@ class AlbumDetailFragment : Fragment(R.layout.fragment_album_detail) {
     }
 
     override fun onDestroyView() {
+        // When returning, the restored catalog owns the button and may already have rendered it.
+        if (findNavController().currentDestination?.id != R.id.albumListFragment) {
+            (activity as? PrimaryActionHost)?.hidePrimaryAction()
+        }
         binding.detailList.adapter = null
         bindingOrNull = null
         super.onDestroyView()
@@ -100,6 +108,47 @@ class AlbumDetailFragment : Fragment(R.layout.fragment_album_detail) {
             },
         )
         binding.errorState.retryButton.isVisible = !notFound
+        renderPrimaryAction(state.album, state.role)
+    }
+
+    private fun renderPrimaryAction(
+        album: Album?,
+        role: UserRole?,
+    ) {
+        val host = activity as? PrimaryActionHost ?: return
+        if (album != null && role == UserRole.COLLECTOR) {
+            host.showPrimaryAction(R.string.track_sheet_title) { openTrackSheet(album) }
+        } else {
+            host.hidePrimaryAction()
+        }
+    }
+
+    private fun openTrackSheet(album: Album) {
+        if (childFragmentManager.findFragmentByTag(TrackCreateBottomSheet.TAG) != null) return
+        TrackCreateBottomSheet.newInstance(album).show(childFragmentManager, TrackCreateBottomSheet.TAG)
+    }
+
+    private fun bindTrackCreatedResult() {
+        childFragmentManager.setFragmentResultListener(
+            TrackCreateBottomSheet.RESULT_TRACK_CREATED,
+            viewLifecycleOwner,
+        ) { _, result ->
+            val album = viewModel.uiState.value?.album ?: return@setFragmentResultListener
+            if (result.getInt(TrackCreateBottomSheet.RESULT_ALBUM_ID) != album.id) return@setFragmentResultListener
+            val trackId = result.getInt(TrackCreateBottomSheet.RESULT_TRACK_ID)
+            val trackName = result.getString(TrackCreateBottomSheet.RESULT_TRACK_NAME)
+            val trackDuration = result.getString(TrackCreateBottomSheet.RESULT_TRACK_DURATION)
+            if (trackId <= 0 || trackName == null || trackDuration == null) return@setFragmentResultListener
+
+            viewModel.onTrackCreated(Track(trackId, trackName, trackDuration))
+            showTrackCreatedMessage()
+        }
+    }
+
+    private fun showTrackCreatedMessage() {
+        val snackbar = Snackbar.make(binding.root, R.string.track_created, Snackbar.LENGTH_SHORT)
+        (activity as? PrimaryActionHost)?.let { snackbar.setAnchorView(it.snackbarAnchor) }
+        snackbar.show()
     }
 
     private fun renderRole(role: UserRole?) {

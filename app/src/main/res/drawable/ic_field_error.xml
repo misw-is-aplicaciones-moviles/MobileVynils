@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Círculo carbón de 15 dp con el signo en crema. El CSS recorta el óvalo un poco arriba y abajo. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="@dimen/track_field_error_icon"
+    android:height="@dimen/track_field_error_icon"
+    android:viewportWidth="15"
+    android:viewportHeight="15">
+    <path
+        android:fillColor="@color/vinilos_charcoal"
+        android:pathData="M7.5,1.56a6.56,5.78 0,1 0,0.01 0z" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M7.5,5.6V9.1"
+        android:strokeWidth="1.5"
+        android:strokeColor="@color/vinilos_cream"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="@color/vinilos_cream"
+        android:pathData="M7.5,11.15m-0.75,0a0.75,0.75 0,1 1,1.5 0a0.75,0.75 0,1 1,-1.5 0" />
+</vector>

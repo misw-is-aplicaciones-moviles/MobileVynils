@@ -11,6 +11,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import co.edu.uniandes.vinilos.VinilosApplication
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.repositories.AlbumRepository
 import co.edu.uniandes.vinilos.repositories.SessionRepository
 import kotlinx.coroutines.Job
@@ -38,6 +39,14 @@ class AlbumDetailViewModel(
 
     fun retry() {
         load(forceRefresh = true)
+    }
+
+    fun onTrackCreated(track: Track) {
+        update {
+            val currentAlbum = album ?: return@update this
+            if (currentAlbum.tracks.any { it.id == track.id }) return@update this
+            copy(album = currentAlbum.copy(tracks = currentAlbum.tracks + track))
+        }
     }
 
     fun onRoleChipClicked() {

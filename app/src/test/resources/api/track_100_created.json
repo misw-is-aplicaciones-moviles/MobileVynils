@@ -1,0 +1,14 @@
+{
+  "name": "Bohemian Rhapsody",
+  "duration": "5:55",
+  "album": {
+    "id": 100,
+    "name": "Buscando América",
+    "cover": "https://i.pinimg.com/564x/aa/5f/ed/aa5fed7fac61cc8f41d1e79db917a7cd.jpg",
+    "releaseDate": "1984-08-01T00:00:00.000Z",
+    "description": "Buscando América es el primer álbum de la banda de Rubén Blades y Seis del Solar lanzado en 1984.",
+    "genre": "Salsa",
+    "recordLabel": "Elektra"
+  },
+  "id": 1
+}

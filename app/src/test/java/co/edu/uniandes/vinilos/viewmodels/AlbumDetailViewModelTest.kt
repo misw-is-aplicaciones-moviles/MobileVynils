@@ -4,6 +4,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Observer
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.network.dto.AlbumDto
 import co.edu.uniandes.vinilos.network.dto.toModel
@@ -133,6 +134,25 @@ class AlbumDetailViewModelTest {
             advanceUntilIdle()
 
             assertEquals(AlbumDetailUiState(album = emptySections, isLoading = false), viewModel.uiState.value)
+        }
+
+    @Test
+    fun `created track is appended to the currently displayed album without another request`() =
+        runTest {
+            val repository = FakeAlbumRepository().apply { detailResult = DataResult.Success(album) }
+            val viewModel = AlbumDetailViewModel(album.id, repository, FakeSessionRepository(UserRole.COLLECTOR))
+            advanceUntilIdle()
+            val track = Track(999, "Bohemian Rhapsody", "5:55")
+
+            viewModel.onTrackCreated(track)
+
+            assertEquals(
+                album.tracks + track,
+                viewModel.uiState.value
+                    ?.album
+                    ?.tracks,
+            )
+            assertEquals(listOf(album.id to false), repository.detailRequests)
         }
 
     @Test

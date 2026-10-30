@@ -123,4 +123,53 @@
     <dimen name="notice_shadow_blur">26dp</dimen>
     <dimen name="notice_shadow_spread">12dp</dimen>
     <dimen name="notice_shadow_inset_bottom">28dp</dimen>
+
+    <!-- Hoja "Nueva canción". Los px del marco 390 se usan como dp. -->
+    <dimen name="track_sheet_margin">24dp</dimen>
+    <dimen name="track_sheet_shadow_space">16dp</dimen>
+    <dimen name="track_sheet_shadow_offset">8dp</dimen>
+    <dimen name="track_sheet_shadow_blur">16dp</dimen>
+    <!-- Misma corona que el botón «+». El corte queda 4 dp bajo el centro del círculo de 52. -->
+    <dimen name="track_sheet_hump_radius">35dp</dimen>
+    <dimen name="track_sheet_hump_rise">22dp</dimen>
+    <dimen name="track_sheet_hump_flare">75dp</dimen>
+    <dimen name="track_close_size">52dp</dimen>
+    <dimen name="track_close_icon">20dp</dimen>
+    <dimen name="track_close_margin_top">9dp</dimen>
+    <dimen name="track_close_content_gap">15dp</dimen>
+    <dimen name="track_title_gap">6dp</dimen>
+    <dimen name="track_section_gap">14dp</dimen>
+    <dimen name="track_label_gap">8dp</dimen>
+    <dimen name="track_field_height">52dp</dimen>
+    <dimen name="track_field_radius">26dp</dimen>
+    <dimen name="track_field_stroke">1dp</dimen>
+    <dimen name="track_field_stroke_error">2dp</dimen>
+    <dimen name="track_field_error_icon">15dp</dimen>
+    <!-- El texto del error empieza a 21 dp y el ícono mide 15. -->
+    <dimen name="track_field_error_gap">6dp</dimen>
+    <dimen name="track_duration_height">56dp</dimen>
+    <dimen name="track_duration_radius">28dp</dimen>
+    <dimen name="track_duration_stroke">1dp</dimen>
+    <dimen name="track_duration_dash">4dp</dimen>
+    <dimen name="track_duration_shadow_offset_y">14dp</dimen>
+    <dimen name="track_duration_shadow_blur">22dp</dimen>
+    <dimen name="track_duration_shadow_spread">12dp</dimen>
+    <dimen name="track_duration_shadow_inset_bottom">24dp</dimen>
+    <!-- La caja queda 14 dp sobre el teclado; el relleno de la sombra mide 24 dp. -->
+    <dimen name="track_duration_shadow_pull">-10dp</dimen>
+    <!-- El anillo de error mide 5,5 dp y el relleno deja 0,5 dp para el antialias. -->
+    <dimen name="track_duration_ring_outer">5.5dp</dimen>
+    <dimen name="track_duration_ring_inner">3dp</dimen>
+    <dimen name="track_duration_ring_space">6dp</dimen>
+    <!-- 24 dp de margen menos el relleno del anillo, para que la pastilla siga alineada. -->
+    <dimen name="track_duration_margin_horizontal">18dp</dimen>
+    <dimen name="track_duration_margin_top">2dp</dimen>
+    <!-- Con la sombra, el siguiente renglón queda a 14 dp. El error tiene que quedar a 8. -->
+    <dimen name="track_duration_error_pull">-6dp</dimen>
+    <dimen name="track_key_height">44dp</dimen>
+    <dimen name="track_key_radius">22dp</dimen>
+    <dimen name="track_key_gap">8dp</dimen>
+    <dimen name="track_key_icon">26dp</dimen>
+    <dimen name="track_actions_gap">18dp</dimen>
+    <dimen name="track_actions_button_gap">12dp</dimen>
 </resources>

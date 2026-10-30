@@ -4,9 +4,12 @@ import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.Genre
 import co.edu.uniandes.vinilos.models.NewAlbum
+import co.edu.uniandes.vinilos.models.NewTrack
 import co.edu.uniandes.vinilos.models.RecordLabel
+import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.repositories.AlbumRepositoryImpl
 import co.edu.uniandes.vinilos.testing.FakeAlbumDao
+import co.edu.uniandes.vinilos.testing.FakeTrackDao
 import co.edu.uniandes.vinilos.testing.MockWebServerRule
 import co.edu.uniandes.vinilos.testing.readResource
 import com.google.gson.JsonParser
@@ -194,7 +197,7 @@ class AlbumServiceAdapterTest {
         runTest {
             serverRule.enqueueJson("api/album_create_missing_field.json", HTTP_BAD_REQUEST)
             val dao = FakeAlbumDao()
-            val repository = AlbumRepositoryImpl(dao, newAdapter(testScheduler))
+            val repository = AlbumRepositoryImpl(dao, FakeTrackDao(), newAdapter(testScheduler))
 
             val result = repository.createAlbum(draft)
 
@@ -207,7 +210,7 @@ class AlbumServiceAdapterTest {
         runTest {
             serverRule.enqueueJson("api/album_create_invalid_genre.json", HTTP_BAD_REQUEST)
             val dao = FakeAlbumDao()
-            val repository = AlbumRepositoryImpl(dao, newAdapter(testScheduler))
+            val repository = AlbumRepositoryImpl(dao, FakeTrackDao(), newAdapter(testScheduler))
 
             val result = repository.createAlbum(draft)
 
@@ -220,7 +223,7 @@ class AlbumServiceAdapterTest {
         runTest {
             serverRule.server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AFTER_REQUEST))
             val dao = FakeAlbumDao()
-            val repository = AlbumRepositoryImpl(dao, newAdapter(testScheduler))
+            val repository = AlbumRepositoryImpl(dao, FakeTrackDao(), newAdapter(testScheduler))
 
             val result = repository.createAlbum(draft)
 
@@ -354,6 +357,65 @@ class AlbumServiceAdapterTest {
             assertEquals("/albums/101", serverRule.server.takeRequest().path)
         }
 
+    @Test
+    fun `add track posts only name and duration and maps the response`() =
+        runTest {
+            serverRule.enqueueJson("api/track_100_created.json", HTTP_CREATED)
+
+            val track = newAdapter(testScheduler).addTrack(100, NewTrack("Bohemian Rhapsody", "5:55"))
+
+            assertEquals(Track(1, "Bohemian Rhapsody", "5:55"), track)
+            val request = serverRule.server.takeRequest()
+            assertEquals("POST", request.method)
+            assertEquals("/albums/100/tracks", request.path)
+            assertEquals("application/json; charset=UTF-8", request.getHeader("Content-Type"))
+            val body = JsonParser.parseString(request.body.readUtf8()).asJsonObject
+            assertEquals(setOf("name", "duration"), body.keySet())
+            assertEquals("Bohemian Rhapsody", body.get("name").asString)
+            assertEquals("5:55", body.get("duration").asString)
+        }
+
+    @Test
+    fun `add track maps HTTP failures through network request`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setResponseCode(HTTP_BAD_REQUEST))
+            val adapter = newAdapter(testScheduler)
+
+            assertEquals(
+                DataResult.Failure(DataError.Http(HTTP_BAD_REQUEST)),
+                networkRequest { adapter.addTrack(100, NewTrack("Song", "5:55")) },
+            )
+            assertEquals("/albums/100/tracks", serverRule.server.takeRequest().path)
+        }
+
+    @Test
+    fun `add track rejects a response for a different album`() =
+        runTest {
+            serverRule.server.enqueue(
+                MockResponse()
+                    .setHeader("Content-Type", "application/json")
+                    .setBody(TRACK_RESPONSE_FOR_OTHER_ALBUM),
+            )
+            val adapter = newAdapter(testScheduler)
+
+            assertEquals(
+                DataResult.Failure(DataError.Serialization),
+                networkRequest { adapter.addTrack(100, NewTrack("Song", "5:55")) },
+            )
+        }
+
+    @Test
+    fun `add track response without duration is a serialization error`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setBody("""{"id":1,"name":"Song"}"""))
+            val adapter = newAdapter(testScheduler)
+
+            assertEquals(
+                DataResult.Failure(DataError.Serialization),
+                networkRequest { adapter.addTrack(100, NewTrack("Song", "5:55")) },
+            )
+        }
+
     private fun enqueueDetail() {
         serverRule.enqueueJson("api/album_100.json")
     }
@@ -383,9 +445,10 @@ class AlbumServiceAdapterTest {
     private companion object {
         const val MISSING_ALBUM_ID = 2147483647
         const val HTTP_NOT_FOUND = 404
+        const val HTTP_BAD_REQUEST = 400
+        const val HTTP_CREATED = 201
         const val HTTP_NO_CONTENT = 204
         const val HTTP_SERVER_ERROR = 500
-        const val HTTP_BAD_REQUEST = 400
 
         val draft =
             NewAlbum(
@@ -398,6 +461,8 @@ class AlbumServiceAdapterTest {
             )
         const val IO_THREAD_NAME = "io-test"
         const val ALBUM_WITHOUT_NAME = "[{\"id\":1,\"releaseDate\":\"1984-08-01T00:00:00.000Z\"}]"
+        const val TRACK_RESPONSE_FOR_OTHER_ALBUM =
+            """{"id":1,"name":"Song","duration":"5:55","album":{"id":101}}"""
         const val ALBUM_WITHOUT_PERFORMERS =
             "[{\"id\":104,\"name\":\"The Game\",\"cover\":\"https://example.com/the-game.jpg\"," +
                 "\"releaseDate\":\"1980-06-30T00:00:00.000Z\",\"description\":\"Noveno álbum de Queen.\"," +

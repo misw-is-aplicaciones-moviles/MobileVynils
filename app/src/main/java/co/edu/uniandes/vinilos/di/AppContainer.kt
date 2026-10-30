@@ -48,6 +48,7 @@ class AppContainer(
     val albumRepository: AlbumRepository by lazy {
         AlbumRepositoryImpl(
             albumDao,
+            trackDao,
             AlbumServiceAdapterImpl(
                 apiProvider = { networkClient.create(VinilosApiService::class.java) },
                 ioDispatcher = Dispatchers.IO,

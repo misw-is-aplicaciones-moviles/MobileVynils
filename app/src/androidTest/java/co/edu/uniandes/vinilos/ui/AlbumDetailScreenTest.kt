@@ -5,10 +5,12 @@ import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Build
 import android.view.View
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
@@ -40,7 +42,7 @@ class AlbumDetailScreenTest {
     @get:Rule val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
     @Test
-    fun catalog_card_opens_its_detail_and_returns_without_collector_actions() {
+    fun collector_can_create_track_from_album_detail_and_return_to_catalog() {
         openAlbum(roleRes = R.string.role_collector)
 
         waitForDisplayed(withId(R.id.detailList))
@@ -51,10 +53,40 @@ class AlbumDetailScreenTest {
             .check(matches(withText("Elektra")))
         onView(allOf(withId(R.id.infoValue), isDescendantOfA(withId(R.id.dateInfo))))
             .check(matches(withText(containsString("1984"))))
+        var existingTrackCount = 0
+        activityRule.scenario.onActivity { activity ->
+            existingTrackCount =
+                activity
+                    .findViewById<View>(R.id.tracksInfo)
+                    .findViewById<TextView>(R.id.infoValue)
+                    .text
+                    .toString()
+                    .toInt()
+        }
         onView(allOf(withId(R.id.infoValue), isDescendantOfA(withId(R.id.tracksInfo))))
-            .check(matches(withText("2")))
-        onView(withId(R.id.primaryAction)).check(matches(not(isDisplayed())))
+            .check(matches(withText(existingTrackCount.toString())))
+        onView(withId(R.id.primaryAction)).check(matches(isDisplayed()))
         capture("hu02-03-header.png")
+
+        onView(withId(R.id.primaryAction)).perform(click())
+        waitForDisplayed(withId(R.id.sheetTitle)).check(matches(withText(R.string.track_sheet_title)))
+        val nextTrackNumber = (existingTrackCount + 1).toString().padStart(2, '0')
+        onView(withId(R.id.sheetSubtitle))
+            .check(matches(withText("Buscando América · canción $nextTrackNumber")))
+        val createdTrackName = "OpenCode${System.currentTimeMillis()}"
+        onView(withId(R.id.trackNameField)).perform(replaceText(createdTrackName))
+        onView(withId(R.id.trackNameField)).check(matches(withText(createdTrackName)))
+        onView(withId(R.id.key0)).perform(click())
+        onView(withId(R.id.key5)).perform(click())
+        onView(withId(R.id.key5)).perform(click())
+        onView(withId(R.id.key5)).perform(click())
+        onView(withId(R.id.trackDuration)).check(matches(withText("05:55")))
+        onView(withId(R.id.saveTrack)).perform(click())
+        waitForDisplayed(withText(R.string.track_created))
+        onView(withId(R.id.detailList)).perform(
+            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText(createdTrackName))),
+        )
+        onView(withText(createdTrackName)).check(matches(isDisplayed()))
 
         onView(withId(R.id.detailList)).perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText("Decisiones"))),

@@ -18,6 +18,11 @@ internal data class TrackDto(
     val id: Int? = null,
     val name: String? = null,
     val duration: String? = null,
+    val album: TrackAlbumDto? = null,
+)
+
+internal data class TrackAlbumDto(
+    val id: Int? = null,
 )
 
 internal data class PerformerDto(
