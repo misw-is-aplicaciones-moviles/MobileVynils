@@ -54,7 +54,39 @@ class AlbumServiceAdapterTest {
             assertEquals("Rubén Blades Bellido de Luna", first.performerName)
             assertEquals(Genre.SALSA, first.genre)
             assertEquals(1984, first.releaseDate.year)
-            assertEquals("/albums", serverRule.server.takeRequest().path)
+            val request = serverRule.server.takeRequest()
+            assertEquals("GET", request.method)
+            assertEquals("/albums", request.path)
+        }
+
+    @Test
+    fun `empty backend list is an empty catalog`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setBody("[]"))
+
+            val albums = newAdapter(testScheduler).getAlbums()
+
+            assertTrue(albums.isEmpty())
+        }
+
+    @Test
+    fun `album without performers has no performer name`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setBody(ALBUM_WITHOUT_PERFORMERS))
+
+            val album = newAdapter(testScheduler).getAlbums().single()
+
+            assertEquals("The Game", album.name)
+            assertNull(album.performerName)
+        }
+
+    @Test
+    fun `catalog connection cut becomes a network data error`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AFTER_REQUEST))
+            val adapter = newAdapter(testScheduler)
+
+            assertEquals(DataResult.Failure(DataError.Network), networkRequest { adapter.getAlbums() })
         }
 
     @Test
@@ -366,5 +398,9 @@ class AlbumServiceAdapterTest {
             )
         const val IO_THREAD_NAME = "io-test"
         const val ALBUM_WITHOUT_NAME = "[{\"id\":1,\"releaseDate\":\"1984-08-01T00:00:00.000Z\"}]"
+        const val ALBUM_WITHOUT_PERFORMERS =
+            "[{\"id\":104,\"name\":\"The Game\",\"cover\":\"https://example.com/the-game.jpg\"," +
+                "\"releaseDate\":\"1980-06-30T00:00:00.000Z\",\"description\":\"Noveno álbum de Queen.\"," +
+                "\"genre\":\"Rock\",\"recordLabel\":\"EMI\",\"tracks\":[],\"performers\":[],\"comments\":[]}]"
     }
 }
