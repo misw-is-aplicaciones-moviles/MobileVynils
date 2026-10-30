@@ -9,6 +9,7 @@ import co.edu.uniandes.vinilos.models.RecordLabel
 import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.repositories.AlbumRepositoryImpl
 import co.edu.uniandes.vinilos.testing.FakeAlbumDao
+import co.edu.uniandes.vinilos.testing.FakeTrackDao
 import co.edu.uniandes.vinilos.testing.MockWebServerRule
 import co.edu.uniandes.vinilos.testing.readResource
 import com.google.gson.JsonParser
@@ -196,7 +197,7 @@ class AlbumServiceAdapterTest {
         runTest {
             serverRule.enqueueJson("api/album_create_missing_field.json", HTTP_BAD_REQUEST)
             val dao = FakeAlbumDao()
-            val repository = AlbumRepositoryImpl(dao, newAdapter(testScheduler))
+            val repository = AlbumRepositoryImpl(dao, FakeTrackDao(), newAdapter(testScheduler))
 
             val result = repository.createAlbum(draft)
 
@@ -209,7 +210,7 @@ class AlbumServiceAdapterTest {
         runTest {
             serverRule.enqueueJson("api/album_create_invalid_genre.json", HTTP_BAD_REQUEST)
             val dao = FakeAlbumDao()
-            val repository = AlbumRepositoryImpl(dao, newAdapter(testScheduler))
+            val repository = AlbumRepositoryImpl(dao, FakeTrackDao(), newAdapter(testScheduler))
 
             val result = repository.createAlbum(draft)
 
@@ -222,7 +223,7 @@ class AlbumServiceAdapterTest {
         runTest {
             serverRule.server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AFTER_REQUEST))
             val dao = FakeAlbumDao()
-            val repository = AlbumRepositoryImpl(dao, newAdapter(testScheduler))
+            val repository = AlbumRepositoryImpl(dao, FakeTrackDao(), newAdapter(testScheduler))
 
             val result = repository.createAlbum(draft)
 
@@ -448,7 +449,6 @@ class AlbumServiceAdapterTest {
         const val HTTP_CREATED = 201
         const val HTTP_NO_CONTENT = 204
         const val HTTP_SERVER_ERROR = 500
-        const val HTTP_BAD_REQUEST = 400
 
         val draft =
             NewAlbum(

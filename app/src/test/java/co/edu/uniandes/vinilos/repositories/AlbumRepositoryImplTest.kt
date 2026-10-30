@@ -175,7 +175,7 @@ class AlbumRepositoryImplTest {
         runTest {
             val dao = FakeAlbumDao(upsertFailure = SQLiteException("disk I/O error"))
             val adapter = FakeAlbumServiceAdapter(createdAlbum = album(101, "The Game"))
-            val repository = AlbumRepositoryImpl(dao, adapter)
+            val repository = AlbumRepositoryImpl(dao, FakeTrackDao(), adapter)
 
             val result = repository.createAlbum(draft)
 
@@ -190,7 +190,7 @@ class AlbumRepositoryImplTest {
             val gate = CompletableDeferred<Unit>()
             val adapter = FakeAlbumServiceAdapter(albums = network, gate = gate, createdAlbum = album(101, "The Game"))
             val dao = FakeAlbumDao()
-            val repository = AlbumRepositoryImpl(dao, adapter)
+            val repository = AlbumRepositoryImpl(dao, FakeTrackDao(), adapter)
 
             // The refresh already holds the list without the new album and waits on the gate.
             val refresh = async { repository.getAlbums(forceRefresh = true) }
