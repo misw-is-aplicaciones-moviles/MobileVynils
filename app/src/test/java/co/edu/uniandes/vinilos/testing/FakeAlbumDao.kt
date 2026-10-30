@@ -4,9 +4,10 @@ import co.edu.uniandes.vinilos.database.dao.AlbumDao
 import co.edu.uniandes.vinilos.database.entities.AlbumEntity
 import co.edu.uniandes.vinilos.database.entities.AlbumWithTracks
 
-/** In-memory [AlbumDao] that sorts by name ignoring case, like the real query. */
+/** In-memory [AlbumDao] that sorts by name ignoring case, like the real query. [upsertFailure] makes [upsert] throw. */
 internal class FakeAlbumDao(
     initial: List<AlbumEntity> = emptyList(),
+    var upsertFailure: Throwable? = null,
 ) : AlbumDao {
     private val rows = initial.associateBy { it.id }.toMutableMap()
 
@@ -23,6 +24,7 @@ internal class FakeAlbumDao(
     override suspend fun getWithTracks(id: Int): AlbumWithTracks? = null
 
     override suspend fun upsert(album: AlbumEntity) {
+        upsertFailure?.let { throw it }
         writeCount++
         rows[album.id] = album
     }
