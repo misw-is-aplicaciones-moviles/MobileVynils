@@ -1,8 +1,11 @@
 package co.edu.uniandes.vinilos.ui
 
+import android.graphics.Rect
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -25,6 +28,7 @@ import co.edu.uniandes.vinilos.testing.waitUntilGone
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.isA
 import org.hamcrest.TypeSafeMatcher
 import org.junit.Rule
 import org.junit.Test
@@ -223,7 +227,31 @@ class TrackCreateScreenTest {
         onView(withId(R.id.albumList)).perform(
             RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(hasDescendant(withText(name)), click()),
         )
-        waitForDisplayed(allOf(withId(R.id.albumName), withText(name)))
+        revealDetailView(R.id.albumName)
+        onView(allOf(withId(R.id.albumName), withText(name))).check(matches(isDisplayed()))
+    }
+
+    /** Una fila de cabecera puede superar el alto visible; se muestra el hijo que se va a comprobar. */
+    private fun revealDetailView(viewId: Int) {
+        waitForDisplayed(withId(R.id.detailList)).perform(
+            RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
+                hasDescendant(withId(viewId)),
+                object : ViewAction {
+                    override fun getConstraints() = isA(View::class.java)
+
+                    override fun getDescription() = "desplazar el detalle hasta la vista $viewId"
+
+                    override fun perform(
+                        uiController: UiController,
+                        view: View,
+                    ) {
+                        val target = view.findViewById<View>(viewId)
+                        target.requestRectangleOnScreen(Rect(0, 0, target.width, target.height), true)
+                        uiController.loopMainThreadUntilIdle()
+                    }
+                },
+            ),
+        )
     }
 
     private fun openSheet() {
@@ -260,6 +288,7 @@ class TrackCreateScreenTest {
     }
 
     private fun assertTrackCount(count: String) {
+        revealDetailView(R.id.tracksInfo)
         onView(
             allOf(
                 withId(R.id.infoValue),

@@ -23,8 +23,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
+import co.edu.uniandes.vinilos.VinilosApplication
+import co.edu.uniandes.vinilos.network.VinilosApiService
 import co.edu.uniandes.vinilos.robots.AlbumListRobot
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
@@ -43,6 +46,16 @@ class AlbumDetailScreenTest {
 
     @Test
     fun catalog_card_opens_its_detail_and_returns_without_collector_actions() {
+        val expectedTrackCount =
+            runBlocking {
+                val context = InstrumentationRegistry.getInstrumentation().targetContext
+                val application = context.applicationContext as VinilosApplication
+                val api = application.container.networkClient.create(VinilosApiService::class.java)
+                val album = api.getAlbums().single { it.name == "Buscando América" }
+                val response = api.getAlbum(checkNotNull(album.id), cacheControl = "no-cache")
+                check(response.isSuccessful) { "GET /albums/${album.id}: HTTP ${response.code()}" }
+                checkNotNull(response.body()?.tracks).size
+            }
         openAlbum(roleRes = R.string.role_collector)
 
         waitForDisplayed(withId(R.id.detailList))
@@ -54,7 +67,7 @@ class AlbumDetailScreenTest {
         onView(allOf(withId(R.id.infoValue), isDescendantOfA(withId(R.id.dateInfo))))
             .check(matches(withText(containsString("1984"))))
         onView(allOf(withId(R.id.infoValue), isDescendantOfA(withId(R.id.tracksInfo))))
-            .check(matches(withText("2")))
+            .check(matches(withText(expectedTrackCount.toString())))
         onView(withId(R.id.primaryAction)).check(
             matches(allOf(isDisplayed(), withContentDescription(R.string.track_sheet_title))),
         )
