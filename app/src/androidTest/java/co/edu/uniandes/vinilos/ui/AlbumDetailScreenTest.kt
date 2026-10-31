@@ -101,7 +101,7 @@ class AlbumDetailScreenTest {
         capture("hu02-03-comments.png")
 
         onView(withId(R.id.headerBack)).perform(click())
-        waitForDisplayed(withText("Buscando América"))
+        scrollToAlbum("Buscando América")
         onView(withId(R.id.headerTitle)).check(matches(withText(R.string.album_list_title)))
         onView(withId(R.id.primaryAction)).check(matches(isDisplayed()))
     }
@@ -114,7 +114,7 @@ class AlbumDetailScreenTest {
 
         pressBack()
 
-        waitForDisplayed(withText("Buscando América"))
+        scrollToAlbum("Buscando América")
         onView(withId(R.id.headerTitle)).check(matches(withText(R.string.album_list_title)))
         onView(withId(R.id.albumListFragment)).check(matches(isSelected()))
         onView(withId(R.id.primaryAction)).check(matches(not(isDisplayed())))
@@ -139,7 +139,7 @@ class AlbumDetailScreenTest {
             onView(withId(R.id.albumName)).check(matches(withText("Buscando América")))
             onView(withId(R.id.albumListFragment)).check(matches(isSelected()))
             onView(withId(R.id.albumListFragment)).perform(click())
-            waitForDisplayed(withText("Buscando América"))
+            scrollToAlbum("Buscando América")
             onView(withId(R.id.headerTitle)).check(matches(withText(R.string.album_list_title)))
         } finally {
             activityRule.scenario.onActivity { it.requestedOrientation = previous }
@@ -163,10 +163,18 @@ class AlbumDetailScreenTest {
         roleRes: Int = R.string.role_visitor,
     ) {
         onView(withText(roleRes)).perform(click())
-        waitForDisplayed(withText(title))
+        waitForDisplayed(withId(R.id.albumList))
         onView(withId(R.id.albumList)).perform(
             RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(hasDescendant(withText(title)), click()),
         )
+    }
+
+    private fun scrollToAlbum(title: String) {
+        waitForDisplayed(withId(R.id.albumList)).perform(
+            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText(title))),
+        )
+        onView(allOf(withText(title), isDescendantOfA(withId(R.id.albumList))))
+            .check(matches(isDisplayed()))
     }
 
     private fun scrollToMessage(textRes: Int) {
