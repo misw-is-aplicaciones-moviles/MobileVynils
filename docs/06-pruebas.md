@@ -54,8 +54,15 @@ class AlbumListViewModelTest {
 
 ## 4. Pruebas E2E con Espresso
 
-- Runner `androidx.test.runner.AndroidJUnitRunner`; regla `ActivityScenarioRule(MainActivity::class.java)`.
+- Runner `co.edu.uniandes.vinilos.testing.VinilosTestRunner`, basado en `AndroidJUnitRunner`; regla `ActivityScenarioRule(MainActivity::class.java)`. Instala el selector de proxy de pruebas antes de construir el cliente HTTP y lo restaura al finalizar.
 - Backend: BackVynils local con la semilla (`docker compose up`), alcanzable desde el emulador en `10.0.2.2:3000`. Las pruebas que crean datos (HU07, HU08) usan nombres únicos para ser repetibles.
+- La semilla de BackVynils inserta IDs explícitos sin avanzar las secuencias de PostgreSQL. `scripts/run_e2e.sh` prepara automáticamente las secuencias de álbumes y canciones a partir de los datos presentes y luego ejecuta Gradle. Usa `pg_get_serial_sequence` y el máximo ID real: no contiene IDs esperados, posiciones ni contadores propios de un equipo, no reduce secuencias y no borra registros. Las pruebas no reintentan ni ignoran HTTP 500 de preparación. Esta preparación debe repetirse después de cargar nuevamente la semilla.
+- El catálogo admite álbumes adicionales a la semilla: `AlbumListRobot` busca los títulos sin posiciones fijas, comprueba los datos y la numeración de la fila según su posición actual y verifica el orden del catálogo completo con la regla de SQLite `COLLATE NOCASE`. CP-HU01-01 crea además un álbum único anterior a la semilla para cubrir esta regresión. Las pruebas de canciones desplazan el detalle hasta el título y el contador antes de verificarlos, porque la cabecera puede superar el alto visible.
+- `AlbumListRobot.pullToRefresh()` vuelve al inicio real de la lista antes de deslizar hacia abajo: si el catálogo está desplazado, el primer gesto puede desplazar filas sin activar el refresco. CP-HU01-10 empieza desplazado hasta "Poeta del pueblo" y verifica que el álbum creado después de abrir el catálogo aparece tras el refresco.
+- En CP-HU08-03, `BackendFirewall` redirige temporalmente las conexiones del backend a un socket local que cierra sin respuesta HTTP, y descarta las conexiones ociosas del cliente para evitar su reutilización. `restore()` devuelve las rutas originales y cierra el socket. Funciona con `adb reverse` sin root, modo avión, cambios de wifi/datos, esperas fijas ni procesos externos. Es un fallo de transporte controlado; no simula la pérdida física de conectividad del dispositivo.
+- El caso de contenido del detalle HU02 contrasta el contador de canciones con una lectura previa de `GET /albums/:id` sin caché HTTP, en vez de exigir las dos canciones originales. Conserva las comprobaciones del título, artista, sello, año y la canción de la semilla.
+
+Validación de estos ajustes en tablet DBY-W09, Android 12 / API 31 (2026-10-30): `spotlessCheck`, `detekt`, `lintDebug` y `testDebugUnitTest` pasan (132 unitarias, 0 fallos, 0 omitidas). La suite completa pasa sus 48 pruebas instrumentadas, sin fallos ni omisiones: incluye las 5 del catálogo, las 4 del detalle y las 7 de canciones, incluido CP-HU08-03 con fallo de transporte controlado y reintento. Estos ajustes no se han ejecutado en API 21 ni API 37; los resultados anteriores de esas versiones corresponden al código previo. Reporte local: `app/build/reports/androidTests/connected/debug/index.html`.
 - Espera de red: `OkHttpIdlingResourceRule(client)` registra en `IdlingRegistry` un `IdlingResource` sobre el `Dispatcher` del `OkHttpClient` de la app y lo retira al terminar; nunca `Thread.sleep`. Vive en `src/androidTest`, así que la app no necesita `espresso-idling-resource`. El cliente lo expone el `AppContainer` (TR-03).
 - Selección por id de vista (`withId`) y por texto de recurso (`withText(R.string.x)`); listas con `RecyclerViewActions` de `espresso-contrib`.
 - Page Object (Robot) por pantalla: `AlbumListRobot`, `AlbumDetailRobot`; la prueba se lee como el caso del inventario.
@@ -70,7 +77,7 @@ Por sprint en la wiki, una fila por caso:
 
 | Id | HU | Nombre | Precondición | Pasos | Resultado esperado | Tipo | Automatizado (clase.método) | Estado |
 |---|---|---|---|---|---|---|---|---|
-| CP-HU01-01 | HU01 | Listar álbumes como visitante | Backend local con la semilla (A Day at the Races, A Night at the Opera, Buscando América, Poeta del pueblo) | Elegir "Visitante" | Las cuatro filas de la semilla en orden alfabético; la primera con "01", "A Day at the Races", "Queen" y "Rock · 1976"; sin botón "+" | E2E | `AlbumListScreenTest.visitor_sees_the_seed_albums_in_alphabetical_order_without_the_create_button` | Pasa en API 21 (2026-10-29); API 37 pendiente |
+| CP-HU01-01 | HU01 | Listar álbumes como visitante | Backend local con la semilla (A Day at the Races, A Night at the Opera, Buscando América, Poeta del pueblo); la prueba crea un álbum único anterior a la semilla | Elegir "Visitante" y recorrer las filas | La semilla y el álbum adicional aparecen en un catálogo ordenado alfabéticamente; la fila de "A Day at the Races" conserva "Queen", "Rock · 1976" y el número de su posición actual; sin botón "+" | E2E | `AlbumListScreenTest.visitor_sees_the_seed_albums_in_alphabetical_order_without_the_create_button` | Pasa en API 21 (2026-10-29); API 37 pendiente |
 | CP-HU01-02 | HU01 | Listar álbumes como coleccionista | Backend local con la semilla | Elegir "Coleccionista" y tocar "+" | Las cuatro filas de la semilla en orden; el botón "+" se ve y abre el formulario de nuevo álbum | E2E | `AlbumListScreenTest.collector_sees_the_create_button_and_it_opens_the_new_album_form` | Pasa en API 21 (2026-10-29); API 37 pendiente |
 | CP-HU01-03 | HU01 | Álbum sin intérpretes | La prueba crea en el backend `Sin artista <número único>` con `POST /albums` (el backend no le asocia intérpretes) | Elegir "Visitante" y desplazarse hasta ese álbum | Su fila muestra "sin artista" | E2E | `AlbumListScreenTest.album_without_performers_shows_no_artist`; en API, `AlbumServiceAdapterTest.album without performers has no performer name` | Pasa en API 21 (2026-10-29); API 37 pendiente |
 | CP-HU01-04 | HU01 | Carga sin caché | Repositorio falso sin caché que responde después | Abrir el catálogo | `isLoading` mientras llega la respuesta y después la lista | Unitaria | `AlbumListViewModelTest.without cache it shows loading and then the list` | Pasa (2026-10-29) |
@@ -158,7 +165,7 @@ Cada caso crea su propio álbum con `POST /albums` y un nombre único. No usa la
 | CP-HU08-22 | HU08 | Respuesta de otro álbum | MockWebServer con una canción de otro álbum | `addTrack` | `DataError.Serialization` | API | `AlbumServiceAdapterTest.add track rejects a response for a different album` | Pasa (2026-10-30) |
 | CP-HU08-23 | HU08 | Respuesta sin duración | MockWebServer con JSON sin `duration` | `addTrack` | `DataError.Serialization` | API | `AlbumServiceAdapterTest.add track response without duration is a serialization error` | Pasa (2026-10-30) |
 
-PE-12 corta la red del dispositivo con `BackendFirewall`: intenta iptables y, si la shell no es root, activa el modo avión y apaga wifi y datos. Al terminar enciende las radios otra vez, porque en el emulador solo desactivar el modo avión no devuelve la ruta hacia `10.0.2.2`. No se detiene el contenedor: ese corte sigue siendo el caso manual CP-HU07-07. Antes de cada prueba la regla borra un proxy HTTP pegado: OkHttp lo respeta y la sonda hacia `10.0.2.2` no. La UI espera con `waitForDisplayed`. El `Thread.sleep` de la regla solo cubre esa sonda y los 4 s de keep-alive del pool de OkHttp. `OkHttpIdlingResourceRule` no se registra porque `AppContainer` no expone el `OkHttpClient`.
+PE-12 usa el fallo de transporte controlado de `BackendFirewall`, descrito en la sección 4. La aplicación sigue usando el Repository, Room y el backend real; solo el primer intento de guardar falla por conexión. Se comprueba el mensaje de red, la conservación del nombre y duración, y el guardado tras restaurar la ruta. No se detiene el contenedor: ese corte sigue siendo el caso manual CP-HU07-07. La UI espera con `waitForDisplayed`; la regla ya no usa `Thread.sleep` ni modifica ajustes de red. `NetworkClient.httpClient` tiene visibilidad `internal` para descartar conexiones ociosas durante esta prueba; no cambia la configuración normal del cliente.
 
 El 2026-10-30 `TrackCreateScreenTest` pasó en el emulador Pixel 9 Pro (API 37, Android 17): 7 pruebas, 0 fallos, 49 s. API 21 queda pendiente, igual que el resto de la matriz E2E. Las unitarias y de API de la tabla pasaron el mismo día (`testDebugUnitTest`, 0 fallos).
 
@@ -204,8 +211,9 @@ El entorno ya está configurado (TR-05): dependencias en `app/build.gradle.kts` 
 | `getOrAwaitValue()` | `src/test` (`LiveDataExtensions.kt`) | Lee el primer valor de un `LiveData`; requiere `InstantTaskExecutorRule` |
 | `MockWebServerRule` | `src/test` | Servidor HTTP local: `baseUrl` para Retrofit y `enqueueJson("api/x.json", code)` |
 | `readResource(path)` | `src/test` (`TestResources.kt`) | Lee un archivo de `src/test/resources` |
-| `OkHttpIdlingResourceRule` | `src/androidTest` | Espresso espera las llamadas de red de la app. Hoy no se registra: `AppContainer` no expone el `OkHttpClient` |
-| `BackendFirewall` | `src/androidTest` | Corta y restaura el acceso a BackVynils en CP-HU08-03 |
+| `OkHttpIdlingResourceRule` | `src/androidTest` | Recurso de sincronización disponible; las pantallas actuales usan `waitForDisplayed` |
+| `BackendFirewall` | `src/androidTest` | Provoca y restaura un fallo de transporte de BackVynils en CP-HU08-03 |
+| `VinilosTestRunner` | `src/androidTest` | Instala y restaura el selector de proxy requerido por `BackendFirewall` |
 | `robots/` | `src/androidTest` | Page Objects por pantalla (`MainRobot`, `AlbumListRobot`, `AlbumCreateRobot`, `TrackCreateRobot`) |
 
 En las unitarias, las clases de `android.*` no lanzan error sino que devuelven valores por defecto (`unitTests.isReturnDefaultValues = true`, necesario porque OkHttp 5 llama a `android.util.Log`). Por eso la lógica que se prueba en `src/test` no usa clases de Android: `TextUtils.isEmpty` devolvería `false` en silencio y la prueba pasaría por error. En su lugar se usa Kotlin puro (`isBlank()`), como ya exige la arquitectura para ViewModels y modelos.
@@ -243,11 +251,16 @@ La respuesta se captura del backend real (`src/test/resources/api/README.md`). L
 ```bash
 ./gradlew testDebugUnitTest                 # unitarias
 ./gradlew spotlessCheck detekt lintDebug    # calidad estática
-./gradlew connectedDebugAndroidTest         # E2E en el emulador conectado
-adb shell am instrument -w co.edu.uniandes.vinilos.test/androidx.test.runner.AndroidJUnitRunner   # E2E sin Gradle
+bash scripts/run_e2e.sh                    # prepara el backend Docker y ejecuta todas las E2E
+./gradlew connectedDebugAndroidTest         # ejecuta E2E suponiendo el backend ya preparado
+adb shell am instrument -w co.edu.uniandes.vinilos.test/co.edu.uniandes.vinilos.testing.VinilosTestRunner   # E2E sin Gradle
 ```
 
 En API 21, `connectedDebugAndroidTest` puede tardar varios minutos en cerrar tras terminar las pruebas; `am instrument` devuelve el resultado en cuanto terminan.
+
+Para reproducir las E2E en otro equipo se necesita BackVynils con su semilla, Docker accesible, Bash 4+, el SDK y un dispositivo conectado, y `vinilos.baseUrl` apuntando a ese backend según la configuración local de la app. En una tablet por USB, redirigir antes el puerto con `adb -s SERIAL reverse tcp:3000 tcp:3000`. El script identifica el proyecto Compose por el backend publicado en el puerto 3000 y su servicio `db`; admite `E2E_BACKEND_PORT` o `E2E_DB_CONTAINER` para otra instalación, sin rutas personales ni credenciales en el repositorio. Los argumentos adicionales se pasan a Gradle, por ejemplo el filtro de una clase. No reinicia contenedores ni limpia los datos de trabajo. Las pruebas del catálogo todavía requieren los álbumes conocidos de la semilla; admiten álbumes adicionales. Las de canciones crean su propio álbum con nombre único.
+
+Validación del comando compartido (2026-10-30): `bash scripts/run_e2e.sh --offline --console=plain` preparó el backend y ejecutó las 48 pruebas instrumentadas en la tablet API 31, sin fallos ni omisiones. El SQL se comprobó también en una base temporal con IDs distintos de la semilla, con secuencias adelantadas y ejecutando la preparación repetidamente: las inserciones generaron IDs nuevos y los contadores adelantados se conservaron. La base temporal se eliminó al finalizar. Esto verifica datos diferentes en el mismo equipo; la ejecución en otros equipos y API 21/37 sigue pendiente.
 
 ### Capa de red (TR-02)
 

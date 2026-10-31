@@ -18,7 +18,7 @@ internal class NetworkClient(
     connectTimeoutMillis: Long = CONNECT_TIMEOUT_MILLIS,
     readTimeoutMillis: Long = READ_TIMEOUT_MILLIS,
 ) : Closeable {
-    private val httpClient =
+    internal val httpClient =
         OkHttpClient
             .Builder()
             .connectTimeout(connectTimeoutMillis, TimeUnit.MILLISECONDS)
