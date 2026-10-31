@@ -24,6 +24,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
+import co.edu.uniandes.vinilos.robots.AlbumListRobot
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Description
 import org.hamcrest.Matcher
@@ -163,16 +164,15 @@ class AlbumDetailScreenTest {
         roleRes: Int = R.string.role_visitor,
     ) {
         onView(withText(roleRes)).perform(click())
-        waitForDisplayed(withId(R.id.albumList))
+        scrollToAlbum(title)
         onView(withId(R.id.albumList)).perform(
             RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(hasDescendant(withText(title)), click()),
         )
     }
 
     private fun scrollToAlbum(title: String) {
-        waitForDisplayed(withId(R.id.albumList)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText(title))),
-        )
+        waitForDisplayed(withId(R.id.albumList))
+        AlbumListRobot().scrollTo(title)
         onView(allOf(withText(title), isDescendantOfA(withId(R.id.albumList))))
             .check(matches(isDisplayed()))
     }
