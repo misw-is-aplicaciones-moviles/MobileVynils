@@ -15,7 +15,7 @@ import org.junit.runner.RunWith
 
 /**
  * Catálogo contra BackVynils local (10.0.2.2:3000 con la semilla); un método por caso del inventario de docs/06.
- * Los álbumes que crean las pruebas empiezan por letras posteriores a "Poeta", así que la semilla conserva sus filas.
+ * Se verifica la semilla por título y el orden del catálogo completo, permitiendo álbumes adicionales.
  */
 @RunWith(AndroidJUnit4::class)
 class AlbumListScreenTest {
@@ -26,15 +26,16 @@ class AlbumListScreenTest {
 
     @Test
     fun visitor_sees_the_seed_albums_in_alphabetical_order_without_the_create_button() {
+        // Regresión: la semilla no tiene por qué ocupar las primeras cuatro posiciones.
+        val extra = "0 Catálogo ${System.currentTimeMillis()}"
+        createAlbumOnBackend(extra)
         catalog
             .enterAs(R.string.role_visitor)
             .assertRow(
-                position = 0,
-                number = "01",
                 title = "A Day at the Races",
                 artist = "Queen",
                 meta = "Rock · 1976",
-            ).assertTitles("A Day at the Races", "A Night at the Opera", "Buscando América", "Poeta del pueblo")
+            ).assertTitles(extra, "A Day at the Races", "A Night at the Opera", "Buscando América", "Poeta del pueblo")
             .assertCreateButtonHidden()
     }
 
@@ -64,7 +65,7 @@ class AlbumListScreenTest {
         val name = "Refresco ${System.currentTimeMillis()}"
         catalog
             .enterAs(R.string.role_visitor)
-            .assertTitles("A Day at the Races")
+            .scrollTo("Poeta del pueblo")
         createAlbumOnBackend(name)
 
         catalog
