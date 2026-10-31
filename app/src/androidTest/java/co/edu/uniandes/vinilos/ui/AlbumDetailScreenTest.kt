@@ -23,6 +23,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
+import co.edu.uniandes.vinilos.robots.AlbumListRobot
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Description
 import org.hamcrest.Matcher
@@ -72,7 +73,7 @@ class AlbumDetailScreenTest {
         capture("hu02-03-comments.png")
 
         onView(withId(R.id.headerBack)).perform(click())
-        waitForDisplayed(withText("Buscando América"))
+        scrollToAlbum("Buscando América")
         onView(withId(R.id.headerTitle)).check(matches(withText(R.string.album_list_title)))
         onView(withId(R.id.primaryAction)).check(
             matches(allOf(isDisplayed(), withContentDescription(R.string.action_create_album))),
@@ -87,7 +88,7 @@ class AlbumDetailScreenTest {
 
         pressBack()
 
-        waitForDisplayed(withText("Buscando América"))
+        scrollToAlbum("Buscando América")
         onView(withId(R.id.headerTitle)).check(matches(withText(R.string.album_list_title)))
         onView(withId(R.id.albumListFragment)).check(matches(isSelected()))
         onView(withId(R.id.primaryAction)).check(matches(not(isDisplayed())))
@@ -112,7 +113,7 @@ class AlbumDetailScreenTest {
             onView(withId(R.id.albumName)).check(matches(withText("Buscando América")))
             onView(withId(R.id.albumListFragment)).check(matches(isSelected()))
             onView(withId(R.id.albumListFragment)).perform(click())
-            waitForDisplayed(withText("Buscando América"))
+            scrollToAlbum("Buscando América")
             onView(withId(R.id.headerTitle)).check(matches(withText(R.string.album_list_title)))
         } finally {
             activityRule.scenario.onActivity { it.requestedOrientation = previous }
@@ -136,10 +137,17 @@ class AlbumDetailScreenTest {
         roleRes: Int = R.string.role_visitor,
     ) {
         onView(withText(roleRes)).perform(click())
-        waitForDisplayed(withText(title))
+        scrollToAlbum(title)
         onView(withId(R.id.albumList)).perform(
             RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(hasDescendant(withText(title)), click()),
         )
+    }
+
+    private fun scrollToAlbum(title: String) {
+        waitForDisplayed(withId(R.id.albumList))
+        AlbumListRobot().scrollTo(title)
+        onView(allOf(withText(title), isDescendantOfA(withId(R.id.albumList))))
+            .check(matches(isDisplayed()))
     }
 
     private fun scrollToMessage(textRes: Int) {
