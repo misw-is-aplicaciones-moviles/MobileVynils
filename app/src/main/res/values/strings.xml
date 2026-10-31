@@ -1,3 +1,96 @@
 <resources>
     <string name="app_name">Vinilos</string>
+
+    <!-- Barra inferior (TR-01) -->
+    <string name="nav_albums">Álbumes</string>
+    <string name="nav_artists">Artistas</string>
+    <string name="nav_collectors">Coleccionistas</string>
+
+    <!-- Títulos de las pestañas (docs/10, sección 8) -->
+    <string name="album_list_title">Catálogo</string>
+    <string name="album_list_error_title">No se pudo cargar el catálogo</string>
+    <string name="album_list_error_body">Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="album_list_empty">Aún no hay álbumes en el catálogo</string>
+    <string name="album_list_offline_notice">Sin conexión. Mostrando los datos guardados</string>
+    <string name="album_list_refresh_error">No se pudo actualizar el catálogo</string>
+    <string name="album_no_artist">sin artista</string>
+    <string name="album_genre_year">%1$s · %2$d</string>
+    <string name="album_item_description">%1$s, %2$s, %3$s</string>
+    <!-- Formulario de nuevo álbum (docs/10, sección 6 y textos) -->
+    <string name="create_album_title">Nuevo álbum</string>
+    <string name="create_album_all_required">Todos los campos son obligatorios.</string>
+    <string name="create_album_cover_hint">Vista previa. La portada se carga desde la URL que pegues abajo.</string>
+    <string name="create_album_cover_description">Vista previa de la portada</string>
+    <string name="create_album_error">No se pudo crear el álbum. Inténtalo de nuevo.</string>
+    <string name="field_name">Nombre</string>
+    <string name="field_cover_url">URL de la portada</string>
+    <string name="field_release_date">Fecha de lanzamiento</string>
+    <string name="field_description">Descripción</string>
+    <string name="field_genre">Género</string>
+    <string name="field_record_label">Sello discográfico</string>
+    <string name="hint_album_name">Nombre del álbum</string>
+    <string name="hint_cover_url">https://ejemplo.com/portada.jpg</string>
+    <string name="hint_release_date">dd / mm / aaaa</string>
+    <string name="hint_description">Describe el álbum</string>
+    <string name="date_picker_title">Seleccionar fecha</string>
+    <string name="action_accept">Aceptar</string>
+    <string name="error_required">Campo obligatorio</string>
+    <string name="error_select_genre">Selecciona un género</string>
+    <string name="error_select_label">Selecciona un sello</string>
+
+    <string name="artist_list_title">Artistas</string>
+    <string name="collector_list_title">Coleccionistas</string>
+
+    <!-- Contenido provisional de las pestañas hasta que llegue su historia -->
+    <string name="pending_this_sprint">El catálogo llega en este sprint.</string>
+    <string name="pending_next_sprint">Disponible en el próximo sprint</string>
+
+    <!-- Selector de rol (TR-06, docs/10 sección 8) -->
+    <string name="role_title">Vinilos</string>
+    <string name="role_question">¿Cómo quieres ingresar?</string>
+    <string name="role_visitor">Visitante</string>
+    <string name="role_visitor_description">Consulta álbumes, artistas y coleccionistas.</string>
+    <string name="role_collector">Coleccionista</string>
+    <string name="role_collector_description">Consulta y además crea álbumes, agrega canciones, comenta y administra artistas.</string>
+    <string name="role_change_hint">Puedes cambiar de rol desde el catálogo.</string>
+    <string name="role_visitor_action">Entrar como visitante. Consulta álbumes, artistas y coleccionistas.</string>
+    <string name="role_collector_action">Entrar como coleccionista. Consulta y además crea álbumes, agrega canciones, comenta y administra artistas.</string>
+
+    <!-- Cabecera compartida (TR-04) -->
+    <string name="action_back">Volver</string>
+    <string name="action_close">Cerrar</string>
+    <string name="role_chip_action">Cambiar de rol. Rol actual: %1$s</string>
+
+    <!-- Estados compartidos. El catálogo sustituye estos textos en HU01. -->
+    <string name="state_loading">Cargando</string>
+    <string name="state_error_title">No se pudo cargar</string>
+    <string name="state_error_body">Inténtalo de nuevo.</string>
+    <string name="action_retry">Reintentar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_create_album">Crear álbum</string>
+    <string name="picker_select_album">Selecciona un álbum</string>
+    <string name="snack_album_created">Álbum creado</string>
+    <string name="notice_musician_other_band">Ringo Starr ya pertenece a otra banda (The Beatles). Un músico solo puede estar en una banda.</string>
+    <string name="state_retry_later">La recarga llega con el catálogo.</string>
+    <string name="state_empty_message">Nada por aquí</string>
+    <string name="sample_album_name">Nombre del álbum</string>
+    <string name="sample_album_artist">Artista</string>
+    <string name="sample_album_meta">Género · Año</string>
+
+    <!-- Hoja de canción (HU08). El detalle proporciona el álbum y la posición de la nueva canción. -->
+    <string name="track_sheet_title">Nueva canción</string>
+    <string name="track_sheet_subtitle_sample">Buscando América · canción 03</string>
+    <string name="track_sheet_subtitle">%1$s · canción %2$02d</string>
+    <string name="field_track_name">Nombre</string>
+    <string name="field_track_name_hint">Nombre de la canción</string>
+    <string name="field_track_duration">Duración (mm:ss)</string>
+    <string name="track_duration_empty">00:00</string>
+    <string name="error_duration_format">Ingresa la duración con formato mm:ss</string>
+    <string name="action_clear">Limpiar</string>
+    <string name="action_delete_digit">Borrar último dígito</string>
+    <string name="action_save_track">Guardar canción</string>
+    <string name="track_saving">Guardando…</string>
+    <string name="track_create_network_error">No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="track_create_error">No se pudo guardar la canción. Inténtalo de nuevo.</string>
+    <string name="snack_track_added">Canción agregada al álbum</string>
 </resources>

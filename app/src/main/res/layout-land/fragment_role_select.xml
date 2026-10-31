@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Horizontal: el collage y la hoja comparten la altura. En vertical el collage no deja ver los roles. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/roleSelect"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/vinilos_charcoal"
+    android:baselineAligned="false"
+    android:orientation="horizontal">
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/roleStage"
+        android:name="co.edu.uniandes.vinilos.ui.role.RoleStageFragment"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        tools:layout="@layout/fragment_role_stage" />
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/roleSheet"
+        android:name="co.edu.uniandes.vinilos.ui.role.RoleSheetFragment"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        tools:layout="@layout/fragment_role_sheet" />
+</LinearLayout>

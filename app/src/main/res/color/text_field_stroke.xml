@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Borde de los campos del formulario: carbón siempre; el foco solo lo engrosa (boxStrokeWidthFocused). -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/vinilos_charcoal" android:state_focused="true" />
+    <item android:color="@color/vinilos_charcoal" />
+</selector>

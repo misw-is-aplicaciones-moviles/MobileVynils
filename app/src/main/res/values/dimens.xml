@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Escala de espaciado de 4 dp (docs/05, sección 1). -->
+    <dimen name="space_xs">4dp</dimen>
+    <dimen name="space_s">8dp</dimen>
+    <dimen name="space_m">12dp</dimen>
+    <dimen name="space_l">16dp</dimen>
+    <dimen name="space_xl">24dp</dimen>
+    <dimen name="space_xxl">32dp</dimen>
+
+    <!-- Cabecera y hoja del kit v2. -->
+    <dimen name="header_height">64dp</dimen>
+    <dimen name="header_horizontal_padding">22dp</dimen>
+    <dimen name="sheet_corner_radius">28dp</dimen>
+    <dimen name="paper_dot_spacing">7dp</dimen>
+    <dimen name="paper_dot_radius">0.6dp</dimen>
+
+    <!-- Barra inferior: punto bajo la pestaña activa. -->
+    <dimen name="nav_dot_size">4dp</dimen>
+    <dimen name="nav_dot_label_gap">4dp</dimen>
+
+    <!-- Mínimo de un control táctil (docs/05, sección 6). -->
+    <dimen name="min_touch_target">48dp</dimen>
+
+    <!-- Selector de rol. Los márgenes salen del marco 390 dp del mockup, no de posiciones absolutas. -->
+    <dimen name="role_card_radius">22dp</dimen>
+    <dimen name="role_card_margin_horizontal">20dp</dimen>
+    <dimen name="role_card_padding">20dp</dimen>
+    <dimen name="role_card_stroke">1dp</dimen>
+    <dimen name="role_brand_margin_start">24dp</dimen>
+    <dimen name="role_brand_icon">22dp</dimen>
+    <dimen name="role_icon_badge">58dp</dimen>
+    <dimen name="role_icon_badge_inner">29dp</dimen>
+    <dimen name="role_icon_size">16dp</dimen>
+    <dimen name="role_icon_elevation">6dp</dimen>
+    <dimen name="role_chevron">16dp</dimen>
+    <dimen name="role_cover_radius">8dp</dimen>
+    <dimen name="role_cover_elevation">16dp</dimen>
+
+    <!-- La carátula de la fila mide 56 dp. El collage es 33:20, así que el ancho es 56 * 33 / 20. -->
+    <dimen name="album_artwork_width">92dp</dimen>
+    <dimen name="album_artwork_radius">4dp</dimen>
+
+    <!-- Fila del catálogo (Figma, 1 px = 1 dp). -->
+    <dimen name="album_row_height">136dp</dimen>
+    <dimen name="album_row_padding_horizontal">18dp</dimen>
+    <dimen name="album_row_gap">10dp</dimen>
+    <dimen name="album_number_width">24dp</dimen>
+    <dimen name="album_catalog_artwork_width">142dp</dimen>
+    <dimen name="album_catalog_artwork_height">96dp</dimen>
+    <dimen name="album_catalog_artwork_radius">6dp</dimen>
+    <dimen name="album_catalog_artwork_elevation">8dp</dimen>
+    <dimen name="album_subtitle_gap">5dp</dimen>
+    <dimen name="album_meta_gap">6dp</dimen>
+    <dimen name="album_chevron_size">16dp</dimen>
+    <item name="album_disc_scale" format="float" type="dimen">0.9375</item>
+
+    <!-- Lista del catálogo: separador, degradado del pie y espacio para la joroba del botón "+". -->
+    <dimen name="list_divider_thickness">1dp</dimen>
+    <dimen name="list_divider_inset">18dp</dimen>
+    <dimen name="list_fade_height">72dp</dimen>
+    <dimen name="album_list_bottom_padding">64dp</dimen>
+
+    <!-- Botón "+" de la barra inferior: el centro queda 24 dp sobre el borde superior de la barra. -->
+    <dimen name="primary_action_icon">24dp</dimen>
+    <dimen name="primary_action_elevation">10dp</dimen>
+    <dimen name="primary_action_center_rise">24dp</dimen>
+    <dimen name="primary_action_drop">4dp</dimen>
+    <dimen name="bottom_bar_hump_radius">35dp</dimen>
+    <dimen name="bottom_bar_hump_flare">75dp</dimen>
+    <dimen name="bottom_bar_shadow_elevation">8dp</dimen>
+
+    <!-- Estado de error con ilustración de anillos. -->
+    <dimen name="state_illustration_size">132dp</dimen>
+    <dimen name="state_title_gap">22dp</dimen>
+    <dimen name="state_body_gap">8dp</dimen>
+    <dimen name="state_button_gap">24dp</dimen>
+    <dimen name="state_button_min_width">132dp</dimen>
+    <dimen name="state_padding_horizontal">32dp</dimen>
+
+    <!-- Chip de rol. La píldora mide 32 dp; el área táctil de 48 dp la pone el propio Chip. -->
+    <dimen name="role_chip_height">32dp</dimen>
+    <dimen name="role_chip_radius">16dp</dimen>
+    <dimen name="role_chip_icon">12dp</dimen>
+    <dimen name="role_chip_stroke">1dp</dimen>
+    <dimen name="role_chip_padding_start">13dp</dimen>
+    <dimen name="role_chip_icon_gap">6dp</dimen>
+    <dimen name="role_chip_padding_end">14dp</dimen>
+
+    <!-- Botones del kit. 15 sp de Outfit y 23 dp a cada lado reproducen los anchos de Figma. -->
+    <dimen name="button_height">52dp</dimen>
+    <dimen name="button_radius">26dp</dimen>
+    <dimen name="button_stroke">1dp</dimen>
+    <dimen name="button_padding_horizontal">23dp</dimen>
+    <dimen name="button_gap">10dp</dimen>
+
+    <!-- Formulario de nuevo álbum. Campos de 25 dp de radio, como los botones. -->
+    <dimen name="form_padding_horizontal">20dp</dimen>
+    <dimen name="form_section_gap">16dp</dimen>
+    <dimen name="form_label_gap">8dp</dimen>
+    <dimen name="form_preview_gap">16dp</dimen>
+    <dimen name="field_radius">25dp</dimen>
+    <dimen name="field_stroke">1dp</dimen>
+    <dimen name="field_stroke_focused">2dp</dimen>
+    <dimen name="field_error_icon">14dp</dimen>
+    <dimen name="description_min_height">112dp</dimen>
+    <dimen name="chip_height">40dp</dimen>
+    <dimen name="chip_stroke">1dp</dimen>
+    <dimen name="chip_spacing">8dp</dimen>
+    <dimen name="cover_placeholder_stroke">1dp</dimen>
+    <dimen name="cover_placeholder_dash">4dp</dimen>
+    <dimen name="cover_placeholder_dash_gap">3dp</dimen>
+
+    <!-- Avisos. El éxito es una píldora de 50 dp; el error crece con el texto y usa radio de 16 dp. -->
+    <dimen name="notice_success_height">50dp</dimen>
+    <dimen name="notice_success_radius">25dp</dimen>
+    <dimen name="notice_error_radius">16dp</dimen>
+    <dimen name="notice_error_stroke">2dp</dimen>
+    <dimen name="notice_padding_horizontal">24dp</dimen>
+    <dimen name="notice_padding_vertical">16dp</dimen>
+    <!-- box-shadow: 0 14px 26px -12px. La sombra cabe bajo la píldora. -->
+    <dimen name="notice_shadow_offset_y">14dp</dimen>
+    <dimen name="notice_shadow_blur">26dp</dimen>
+    <dimen name="notice_shadow_spread">12dp</dimen>
+    <dimen name="notice_shadow_inset_bottom">28dp</dimen>
+
+    <!-- Hoja "Nueva canción". Los px del marco 390 se usan como dp. -->
+    <dimen name="track_sheet_margin">24dp</dimen>
+    <dimen name="track_sheet_shadow_space">16dp</dimen>
+    <dimen name="track_sheet_shadow_offset">8dp</dimen>
+    <dimen name="track_sheet_shadow_blur">16dp</dimen>
+    <!-- Misma corona que el botón «+». El corte queda 4 dp bajo el centro del círculo de 52. -->
+    <dimen name="track_sheet_hump_radius">35dp</dimen>
+    <dimen name="track_sheet_hump_rise">22dp</dimen>
+    <dimen name="track_sheet_hump_flare">75dp</dimen>
+    <dimen name="track_close_size">52dp</dimen>
+    <dimen name="track_close_icon">20dp</dimen>
+    <dimen name="track_close_margin_top">9dp</dimen>
+    <dimen name="track_close_content_gap">15dp</dimen>
+    <dimen name="track_title_gap">6dp</dimen>
+    <dimen name="track_section_gap">14dp</dimen>
+    <dimen name="track_label_gap">8dp</dimen>
+    <dimen name="track_field_height">52dp</dimen>
+    <dimen name="track_field_radius">26dp</dimen>
+    <dimen name="track_field_stroke">1dp</dimen>
+    <dimen name="track_field_stroke_error">2dp</dimen>
+    <dimen name="track_field_error_icon">15dp</dimen>
+    <!-- El texto del error empieza a 21 dp y el ícono mide 15. -->
+    <dimen name="track_field_error_gap">6dp</dimen>
+    <dimen name="track_duration_height">56dp</dimen>
+    <dimen name="track_duration_radius">28dp</dimen>
+    <dimen name="track_duration_stroke">1dp</dimen>
+    <dimen name="track_duration_dash">4dp</dimen>
+    <dimen name="track_duration_shadow_offset_y">14dp</dimen>
+    <dimen name="track_duration_shadow_blur">22dp</dimen>
+    <dimen name="track_duration_shadow_spread">12dp</dimen>
+    <dimen name="track_duration_shadow_inset_bottom">24dp</dimen>
+    <!-- La caja queda 14 dp sobre el teclado; el relleno de la sombra mide 24 dp. -->
+    <dimen name="track_duration_shadow_pull">-10dp</dimen>
+    <!-- El anillo de error mide 5,5 dp y el relleno deja 0,5 dp para el antialias. -->
+    <dimen name="track_duration_ring_outer">5.5dp</dimen>
+    <dimen name="track_duration_ring_inner">3dp</dimen>
+    <dimen name="track_duration_ring_space">6dp</dimen>
+    <!-- 24 dp de margen menos el relleno del anillo, para que la pastilla siga alineada. -->
+    <dimen name="track_duration_margin_horizontal">18dp</dimen>
+    <dimen name="track_duration_margin_top">2dp</dimen>
+    <!-- Con la sombra, el siguiente renglón queda a 14 dp. El error tiene que quedar a 8. -->
+    <dimen name="track_duration_error_pull">-6dp</dimen>
+    <dimen name="track_key_height">44dp</dimen>
+    <dimen name="track_key_radius">22dp</dimen>
+    <dimen name="track_key_gap">8dp</dimen>
+    <dimen name="track_key_icon">26dp</dimen>
+    <dimen name="track_actions_gap">18dp</dimen>
+    <dimen name="track_actions_button_gap">12dp</dimen>
+</resources>

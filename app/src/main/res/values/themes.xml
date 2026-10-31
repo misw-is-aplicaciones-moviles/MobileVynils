@@ -1,5 +1,557 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Tema claro del kit v2 sobre Material Components (docs/05, sección 1). -->
+    <style name="Base.Theme.Vinilos" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/vinilos_charcoal</item>
+        <item name="colorOnPrimary">@color/vinilos_cream</item>
+        <item name="colorSecondary">@color/vinilos_graphite</item>
+        <item name="colorOnSecondary">@color/vinilos_cream</item>
+        <item name="colorSurface">@color/vinilos_cream</item>
+        <item name="colorOnSurface">@color/vinilos_charcoal</item>
+        <item name="colorOnSurfaceVariant">@color/vinilos_graphite</item>
+        <item name="colorOutline">@color/vinilos_ash</item>
+        <item name="colorOutlineVariant">@color/vinilos_line</item>
+        <item name="android:colorBackground">@color/vinilos_cream</item>
+        <!-- Detrás de la hoja crema se ve el carbón de la cabecera. -->
+        <item name="android:windowBackground">@color/vinilos_charcoal</item>
+        <!-- La fuente por defecto va en un textAppearance, no en el tema: un fontFamily del tema pisaría la de cada estilo. -->
+        <item name="android:textViewStyle">@style/Widget.Vinilos.TextView</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.Vinilos.Scale.BodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.Vinilos.Scale.BodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/TextAppearance.Vinilos.Scale.BodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.Vinilos.Scale.LabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/TextAppearance.Vinilos.Scale.LabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/TextAppearance.Vinilos.Scale.LabelSmall</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.Vinilos.Scale.TitleMedium</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.Vinilos.Scale.TitleLarge</item>
+        <item name="textAppearanceHeadlineSmall">@style/TextAppearance.Vinilos.Scale.HeadlineSmall</item>
+        <item name="materialButtonStyle">@style/Widget.Vinilos.Button.Primary</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.Vinilos.Button.Secondary</item>
+    </style>
 
-    <style name="Theme.Vinilos" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Vinilos" parent="Base.Theme.Vinilos" />
+
+    <!-- TextView por defecto: Outfit sin fijar fontFamily en el tema. Cualquier textAppearance propio lo reemplaza. -->
+    <style name="TextAppearance.Vinilos.Default" parent="TextAppearance.AppCompat">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="fontFamily">@font/outfit_regular</item>
+    </style>
+
+    <style name="Widget.Vinilos.TextView" parent="Widget.AppCompat.TextView">
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.Default</item>
+    </style>
+
+    <!-- Escala tipográfica de Material en Outfit: Snackbar, botones, chips y diálogos la leen del tema. -->
+    <style name="TextAppearance.Vinilos.Scale.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="fontFamily">@font/outfit_regular</item>
+    </style>
+    <style name="TextAppearance.Vinilos.Scale.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="fontFamily">@font/outfit_regular</item>
+    </style>
+    <style name="TextAppearance.Vinilos.Scale.BodySmall" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="fontFamily">@font/outfit_regular</item>
+    </style>
+    <style name="TextAppearance.Vinilos.Scale.LabelLarge" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="fontFamily">@font/outfit_regular</item>
+    </style>
+    <style name="TextAppearance.Vinilos.Scale.LabelMedium" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="fontFamily">@font/outfit_regular</item>
+    </style>
+    <style name="TextAppearance.Vinilos.Scale.LabelSmall" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="fontFamily">@font/outfit_regular</item>
+    </style>
+    <style name="TextAppearance.Vinilos.Scale.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="fontFamily">@font/outfit_regular</item>
+    </style>
+    <style name="TextAppearance.Vinilos.Scale.TitleLarge" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="fontFamily">@font/outfit_regular</item>
+    </style>
+    <style name="TextAppearance.Vinilos.Scale.HeadlineSmall" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="fontFamily">@font/outfit_regular</item>
+    </style>
+
+    <!-- Título de la cabecera: Outfit 400, 19/24 sp, crema sobre carbón. -->
+    <style name="TextAppearance.Vinilos.HeaderTitle" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="fontFamily">@font/outfit_regular</item>
+        <item name="android:textSize">19sp</item>
+        <item name="android:textColor">@color/vinilos_cream</item>
+    </style>
+
+    <!-- Cuerpo: Outfit 400, 15 sp, grafito. -->
+    <style name="TextAppearance.Vinilos.Body" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">@font/outfit_regular</item>
+        <item name="fontFamily">@font/outfit_regular</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/vinilos_graphite</item>
+    </style>
+
+    <!-- Etiquetas de la barra inferior: Montserrat 10 sp en mayúsculas, espaciado 1 sp. -->
+    <style name="TextAppearance.Vinilos.NavLabel" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:fontFamily">@font/montserrat_semibold</item>
+        <item name="fontFamily">@font/montserrat_semibold</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="textAllCaps">true</item>
+    </style>
+
+    <style name="TextAppearance.Vinilos.NavLabel.Active">
+        <item name="android:fontFamily">@font/montserrat_bold</item>
+        <item name="fontFamily">@font/montserrat_bold</item>
+    </style>
+
+    <!-- Barra inferior del kit v2: fondo crema, sin indicador de pastilla, etiquetas siempre visibles. -->
+    <style name="Widget.Vinilos.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+        <item name="backgroundTint">@color/vinilos_cream</item>
+        <item name="itemIconTint">@color/bottom_nav_item</item>
+        <item name="itemTextColor">@color/bottom_nav_item</item>
+        <item name="itemTextAppearanceInactive">@style/TextAppearance.Vinilos.NavLabel</item>
+        <item name="itemTextAppearanceActive">@style/TextAppearance.Vinilos.NavLabel.Active</item>
+        <item name="itemActiveIndicatorStyle">@style/Widget.Vinilos.BottomNavigationView.NoIndicator</item>
+        <item name="labelVisibilityMode">labeled</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <style name="Widget.Vinilos.BottomNavigationView.NoIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@android:color/transparent</item>
+    </style>
+
+    <!-- Marca del selector: Montserrat 800, 14 sp, tracking amplio, crema sobre carbón. -->
+    <style name="TextAppearance.Vinilos.Wordmark" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:fontFamily">@font/montserrat_extrabold</item>
+        <item name="fontFamily">@font/montserrat_extrabold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing">0.32</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="textAllCaps">true</item>
+        <item name="android:textColor">@color/vinilos_cream</item>
+    </style>
+
+    <!-- Pregunta del selector: Outfit 300, 28/35 sp. -->
+    <style name="TextAppearance.Vinilos.RoleQuestion" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:fontFamily">@font/outfit_light</item>
+        <item name="fontFamily">@font/outfit_light</item>
+        <item name="android:textSize">28sp</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+        <item name="android:lineSpacingMultiplier">1.25</item>
+    </style>
+
+    <!-- Nombre del rol: Montserrat 800, 14 sp, mayúsculas, tracking corto. -->
+    <style name="TextAppearance.Vinilos.RoleLabel" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/montserrat_extrabold</item>
+        <item name="fontFamily">@font/montserrat_extrabold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="textAllCaps">true</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Descripción de la tarjeta: Outfit 400, 14/20 sp. -->
+    <style name="TextAppearance.Vinilos.RoleDescription" parent="TextAppearance.Vinilos.Body">
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineSpacingMultiplier">1.43</item>
+    </style>
+
+    <!-- Nota al pie del selector: Outfit 400, 13 sp. -->
+    <style name="TextAppearance.Vinilos.RoleHint" parent="TextAppearance.Vinilos.Body">
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="ShapeAppearance.Vinilos.Circle" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- Título de una fila: Outfit 400, 16 sp, carbón. -->
+    <style name="TextAppearance.Vinilos.ListTitle" parent="TextAppearance.Vinilos.Body">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Tercera línea de la fila: Outfit 400, 13 sp. -->
+    <style name="TextAppearance.Vinilos.ListMeta" parent="TextAppearance.Vinilos.Body">
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <!-- Número de la fila del catálogo: Outfit 500, 15 sp, carbón. -->
+    <style name="TextAppearance.Vinilos.ListNumber" parent="TextAppearance.Vinilos.Body">
+        <item name="lineHeight">19sp</item>
+        <!-- API 28+ lee lineHeight del textAppearance en el TextView nativo; el padre de Material fija 24 sp y gana sobre el de AppCompat. -->
+        <item name="android:lineHeight" tools:targetApi="28">19sp</item>
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="fontFamily">@font/outfit_medium</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Título del álbum: Montserrat 800, 14 sp, mayúsculas, espaciado 0.05 em, carbón. -->
+    <style name="TextAppearance.Vinilos.AlbumTitle" parent="TextAppearance.Vinilos.Body">
+        <item name="lineHeight">17sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">17sp</item>
+        <item name="android:fontFamily">@font/montserrat_extrabold</item>
+        <item name="fontFamily">@font/montserrat_extrabold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="textAllCaps">true</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Sobretítulo (artista): Montserrat 600, 10.5 sp, mayúsculas, espaciado 0.1 em, grafito. -->
+    <style name="TextAppearance.Vinilos.Overline" parent="TextAppearance.Vinilos.Body">
+        <item name="lineHeight">13sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">13sp</item>
+        <item name="android:fontFamily">@font/montserrat_semibold</item>
+        <item name="fontFamily">@font/montserrat_semibold</item>
+        <item name="android:textSize">10.5sp</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="textAllCaps">true</item>
+        <item name="android:textColor">@color/vinilos_graphite</item>
+    </style>
+
+    <!-- Leyenda (género y año): Outfit 400, 12.5 sp, grafito. -->
+    <style name="TextAppearance.Vinilos.Caption" parent="TextAppearance.Vinilos.Body">
+        <item name="lineHeight">16sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">16sp</item>
+        <item name="android:textSize">12.5sp</item>
+    </style>
+
+    <!-- Título de un estado (error): Montserrat 800, 15 sp, mayúsculas, espaciado 0.05 em, carbón. -->
+    <style name="TextAppearance.Vinilos.StateTitle" parent="TextAppearance.Vinilos.AlbumTitle">
+        <item name="lineHeight">18sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">18sp</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <!-- Cuerpo de un estado (error): Outfit 400, 14.5 sp, grafito. -->
+    <style name="TextAppearance.Vinilos.StateBody" parent="TextAppearance.Vinilos.Body">
+        <item name="lineHeight">18sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">18sp</item>
+        <item name="android:textSize">14.5sp</item>
+    </style>
+
+    <!-- Botón de acción principal flotante: círculo carbón. -->
+    <style name="Widget.Vinilos.FloatingActionButton" parent="Widget.Material3.FloatingActionButton.Primary">
+        <item name="backgroundTint">@color/vinilos_charcoal</item>
+        <item name="tint">@color/vinilos_cream</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Vinilos.Circle</item>
+        <item name="shapeAppearanceOverlay">@null</item>
+        <item name="rippleColor">@color/vinilos_cream_ripple</item>
+        <item name="elevation">@dimen/primary_action_elevation</item>
+        <item name="borderWidth">0dp</item>
+        <item name="maxImageSize">@dimen/primary_action_icon</item>
+    </style>
+
+    <!-- Chip de rol: Montserrat 700, 9.5 sp, tracking 1.14 px (0.12 em), crema. -->
+    <style name="TextAppearance.Vinilos.RoleChip" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/montserrat_bold</item>
+        <item name="fontFamily">@font/montserrat_bold</item>
+        <item name="android:textSize">9.5sp</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="textAllCaps">true</item>
+        <item name="android:textColor">@color/vinilos_cream</item>
+    </style>
+
+    <!-- Píldora de 32 dp con radio completo. El toque sigue en 48 dp, fuera del trazo. -->
+    <style name="ShapeAppearance.Vinilos.RoleChip" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/role_chip_radius</item>
+    </style>
+
+    <style name="Widget.Vinilos.Chip.Role" parent="Widget.Material3.Chip.Assist">
+        <item name="android:checkable">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.RoleChip</item>
+        <item name="android:textColor">@color/vinilos_cream</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Vinilos.RoleChip</item>
+        <item name="shapeAppearanceOverlay">@null</item>
+        <!-- El fondo por defecto es colorSurface (crema) y tapa el texto crema. -->
+        <item name="chipSurfaceColor">@android:color/transparent</item>
+        <item name="chipBackgroundColor">@android:color/transparent</item>
+        <item name="chipStrokeColor">@color/vinilos_cream_border</item>
+        <item name="chipStrokeWidth">@dimen/role_chip_stroke</item>
+        <item name="chipIconTint">@color/vinilos_cream</item>
+        <item name="chipIconSize">@dimen/role_chip_icon</item>
+        <item name="chipMinHeight">@dimen/role_chip_height</item>
+        <item name="chipStartPadding">@dimen/role_chip_padding_start</item>
+        <item name="iconStartPadding">0dp</item>
+        <item name="iconEndPadding">@dimen/role_chip_icon_gap</item>
+        <item name="textStartPadding">0dp</item>
+        <item name="textEndPadding">0dp</item>
+        <item name="chipEndPadding">@dimen/role_chip_padding_end</item>
+        <item name="chipMinTouchTargetSize">@dimen/min_touch_target</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="closeIconVisible">false</item>
+        <item name="ensureMinTouchTargetSize">true</item>
+    </style>
+
+    <!-- Aviso: Outfit 400, 15 sp. El color lo pone el tipo de aviso. -->
+    <style name="TextAppearance.Vinilos.Notice" parent="TextAppearance.Vinilos.Body">
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <!-- Etiqueta de botón: Outfit 400, 15 sp. El color lo pone cada variante. -->
+    <style name="TextAppearance.Vinilos.Button" parent="TextAppearance.Vinilos.Body">
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="ShapeAppearance.Vinilos.Button" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/button_radius</item>
+    </style>
+
+    <!-- Píldora de 52 dp. El alto ya cubre el mínimo táctil, sin el inset de Material. -->
+    <style name="Widget.Vinilos.Button" parent="Widget.Material3.Button">
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minHeight">@dimen/button_height</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingLeft">@dimen/button_padding_horizontal</item>
+        <item name="android:paddingRight">@dimen/button_padding_horizontal</item>
+        <item name="android:paddingStart">@dimen/button_padding_horizontal</item>
+        <item name="android:paddingEnd">@dimen/button_padding_horizontal</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.Button</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Vinilos.Button</item>
+        <item name="shapeAppearanceOverlay">@null</item>
+        <item name="strokeWidth">@dimen/button_stroke</item>
+        <item name="elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <!-- Relleno carbón. Deshabilitado: piedra, igual que el secundario. -->
+    <style name="Widget.Vinilos.Button.Primary" parent="Widget.Vinilos.Button">
+        <item name="backgroundTint">@color/button_filled</item>
+        <item name="strokeColor">@color/button_filled</item>
+        <item name="android:textColor">@color/button_primary_text</item>
+        <item name="iconTint">@color/button_primary_text</item>
+        <item name="rippleColor">@color/vinilos_cream_ripple</item>
+    </style>
+
+    <!-- Solo borde carbón. Deshabilitado: el mismo relleno piedra. -->
+    <style name="Widget.Vinilos.Button.Secondary" parent="Widget.Vinilos.Button">
+        <item name="backgroundTint">@color/button_secondary_background</item>
+        <item name="strokeColor">@color/button_filled</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+        <item name="iconTint">@color/vinilos_charcoal</item>
+        <item name="rippleColor">@color/vinilos_charcoal_ripple</item>
+    </style>
+
+    <!-- "Guardar canción" es Outfit 500; el primario compartido queda en 400. -->
+    <style name="TextAppearance.Vinilos.Button.Medium" parent="TextAppearance.Vinilos.Button">
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="fontFamily">@font/outfit_medium</item>
+    </style>
+
+    <style name="Widget.Vinilos.Button.Primary.Medium" parent="Widget.Vinilos.Button.Primary">
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.Button.Medium</item>
+    </style>
+
+    <!-- Título de la hoja: Outfit 400, 22/28 sp, carbón. -->
+    <style name="TextAppearance.Vinilos.SheetTitle" parent="TextAppearance.Vinilos.Body">
+        <item name="lineHeight">28sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">28sp</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Placeholder y "Limpiar": Outfit 400, 15/19 sp, grafito o carbón. -->
+    <style name="TextAppearance.Vinilos.Field" parent="TextAppearance.Vinilos.Body">
+        <item name="lineHeight">19sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">19sp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/vinilos_graphite</item>
+    </style>
+
+    <style name="TextAppearance.Vinilos.Field.Charcoal">
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Formularios. Etiqueta encima del campo: Montserrat 600, mayúsculas, carbón. -->
+    <style name="TextAppearance.Vinilos.FieldLabel" parent="TextAppearance.Vinilos.Overline">
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Texto escrito en un campo: Outfit 400, 16 sp, carbón. -->
+    <style name="TextAppearance.Vinilos.FieldInput" parent="TextAppearance.Vinilos.Body">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Error bajo un campo: Outfit 500, 13 sp, carbón (los mockups no usan rojo). -->
+    <style name="TextAppearance.Vinilos.FieldError" parent="TextAppearance.Vinilos.Body">
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="fontFamily">@font/outfit_medium</item>
+        <item name="lineHeight">16sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">16sp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <!-- Duración vacía: Outfit 500, 24/30 sp, tracking 0.3 em. -->
+    <style name="TextAppearance.Vinilos.Duration" parent="TextAppearance.Vinilos.Body">
+        <item name="lineHeight">30sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">30sp</item>
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="fontFamily">@font/outfit_medium</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:letterSpacing">0.3</item>
+        <item name="android:textColor">@color/vinilos_duration_empty</item>
+    </style>
+
+    <!-- Dígito del teclado: Outfit 500, 21/26 sp, carbón. -->
+    <style name="TextAppearance.Vinilos.Key" parent="TextAppearance.Vinilos.Body">
+        <item name="lineHeight">26sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">26sp</item>
+        <item name="android:fontFamily">@font/outfit_medium</item>
+        <item name="fontFamily">@font/outfit_medium</item>
+        <item name="android:textSize">21sp</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+    </style>
+
+    <style name="ShapeAppearance.Vinilos.Key" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/track_key_radius</item>
+    </style>
+
+    <!-- Tecla sin fondo. 44 dp, como el mockup, por debajo del mínimo táctil de 48 dp. -->
+    <style name="Widget.Vinilos.Key" parent="Widget.Material3.Button.TextButton">
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:minHeight">@dimen/track_key_height</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingLeft">0dp</item>
+        <item name="android:paddingRight">0dp</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">0dp</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.Key</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="rippleColor">@color/vinilos_charcoal_ripple</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Vinilos.Key</item>
+        <item name="shapeAppearanceOverlay">@null</item>
+        <item name="elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <style name="ThemeOverlay.Vinilos.BottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.Vinilos.BottomSheet</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:statusBarColor">@color/vinilos_sheet_scrim</item>
+        <item name="android:navigationBarColor">@color/vinilos_cream</item>
+    </style>
+
+    <style name="Widget.Vinilos.BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Vinilos.BottomSheet</item>
+    </style>
+
+    <style name="ShapeAppearance.Vinilos.BottomSheet" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">0dp</item>
+    </style>
+    <!-- Etiqueta de un campo, con el espacio hasta el campo anterior y el suyo. -->
+    <style name="Widget.Vinilos.FieldLabel" parent="Widget.Vinilos.TextView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/form_section_gap</item>
+        <item name="android:layout_marginBottom">@dimen/form_label_gap</item>
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.FieldLabel</item>
+    </style>
+
+    <!-- Error bajo un grupo de chips. Oculto hasta que haya error; TalkBack lo anuncia al aparecer.
+         La sangría inicial es la misma que TextInputLayout da a sus errores, para que todos queden alineados. -->
+    <style name="Widget.Vinilos.FieldError" parent="Widget.Vinilos.TextView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">@dimen/space_xs</item>
+        <item name="android:paddingStart">@dimen/space_l</item>
+        <item name="android:paddingEnd">@dimen/space_l</item>
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.FieldError</item>
+        <item name="android:visibility">gone</item>
+        <item name="android:accessibilityLiveRegion">polite</item>
+    </style>
+
+    <style name="ShapeAppearance.Vinilos.Field" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/field_radius</item>
+    </style>
+
+    <!-- Campo de texto del kit (docs/05): píldora con borde carbón, sin etiqueta flotante. La pista va en el EditText. -->
+    <style name="Widget.Vinilos.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="hintEnabled">false</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Vinilos.Field</item>
+        <item name="shapeAppearanceOverlay">@null</item>
+        <item name="boxBackgroundColor">@color/vinilos_card_fill</item>
+        <item name="boxStrokeColor">@color/text_field_stroke</item>
+        <item name="boxStrokeWidth">@dimen/field_stroke</item>
+        <item name="boxStrokeWidthFocused">@dimen/field_stroke_focused</item>
+        <item name="boxStrokeErrorColor">@color/vinilos_charcoal</item>
+        <item name="errorTextColor">@color/vinilos_charcoal</item>
+        <item name="errorTextAppearance">@style/TextAppearance.Vinilos.FieldError</item>
+        <item name="errorIconDrawable">@null</item>
+        <item name="endIconTint">@color/vinilos_charcoal</item>
+    </style>
+
+    <style name="Widget.Vinilos.TextInputEditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.FieldInput</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+        <item name="android:textColorHint">@color/vinilos_ash</item>
+    </style>
+
+    <!-- Chip de una sola elección (género, sello; docs/05): borde carbón, relleno carbón al elegirlo. -->
+    <style name="Widget.Vinilos.Chip" parent="Widget.Material3.Chip.Filter">
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.FieldInput</item>
+        <item name="android:textColor">@color/chip_choice_text</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Vinilos.Circle</item>
+        <item name="shapeAppearanceOverlay">@null</item>
+        <item name="chipSurfaceColor">@android:color/transparent</item>
+        <item name="chipBackgroundColor">@color/chip_choice_background</item>
+        <item name="chipStrokeColor">@color/vinilos_charcoal</item>
+        <item name="chipStrokeWidth">@dimen/chip_stroke</item>
+        <item name="chipMinHeight">@dimen/chip_height</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="chipIconVisible">false</item>
+        <item name="closeIconVisible">false</item>
+        <item name="rippleColor">@color/vinilos_charcoal_ripple</item>
+        <item name="ensureMinTouchTargetSize">true</item>
+        <item name="chipMinTouchTargetSize">@dimen/min_touch_target</item>
+    </style>
+
+    <!-- Calendario de la fecha de lanzamiento con los colores del kit. -->
+    <style name="ThemeOverlay.Vinilos.DatePicker" parent="ThemeOverlay.Material3.MaterialCalendar">
+        <item name="colorPrimary">@color/vinilos_charcoal</item>
+        <item name="colorOnPrimary">@color/vinilos_cream</item>
+        <item name="colorSurface">@color/vinilos_cream</item>
+        <!-- El diálogo de Material 3 pinta su fondo con los contenedores de superficie (lila por defecto). -->
+        <item name="colorSurfaceContainer">@color/vinilos_cream</item>
+        <item name="colorSurfaceContainerHigh">@color/vinilos_cream</item>
+        <item name="colorSurfaceContainerHighest">@color/vinilos_cream</item>
+        <item name="colorOnSurface">@color/vinilos_charcoal</item>
+        <item name="colorOnSurfaceVariant">@color/vinilos_graphite</item>
+    </style>
 </resources>

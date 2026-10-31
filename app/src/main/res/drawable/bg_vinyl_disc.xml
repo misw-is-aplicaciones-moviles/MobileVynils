@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Disco de surcos. Sustituye las fotos que el CSS de Figma cita y no vinieron exportadas. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <path
+        android:fillColor="@color/vinilos_cream"
+        android:pathData="M50,50m-49,0a49,49 0,1 1,98 0a49,49 0,1 1,-98 0" />
+    <path
+        android:fillColor="@color/vinilos_disc"
+        android:pathData="M50,50m-46.5,0a46.5,46.5 0,1 1,93 0a46.5,46.5 0,1 1,-93 0" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M50,50m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0"
+        android:strokeWidth="0.7"
+        android:strokeColor="@color/vinilos_groove" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M50,50m-35,0a35,35 0,1 1,70 0a35,35 0,1 1,-70 0"
+        android:strokeWidth="0.7"
+        android:strokeColor="@color/vinilos_groove" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M50,50m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0"
+        android:strokeWidth="0.7"
+        android:strokeColor="@color/vinilos_groove" />
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M50,50m-25,0a25,25 0,1 1,50 0a25,25 0,1 1,-50 0"
+        android:strokeWidth="0.7"
+        android:strokeColor="@color/vinilos_groove" />
+    <path
+        android:fillColor="@color/vinilos_cream"
+        android:pathData="M50,50m-16,0a16,16 0,1 1,32 0a16,16 0,1 1,-32 0" />
+    <path
+        android:fillColor="@color/vinilos_disc"
+        android:pathData="M50,50m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0" />
+</vector>

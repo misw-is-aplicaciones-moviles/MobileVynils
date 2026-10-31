@@ -4,6 +4,20 @@ build/
 /captures/
 .kotlin/
 
+# Permitir versionar los APK de debug y release generados por Gradle
+!/app/build/
+/app/build/*
+!/app/build/outputs/
+/app/build/outputs/*
+!/app/build/outputs/apk/
+/app/build/outputs/apk/*
+!/app/build/outputs/apk/debug/
+/app/build/outputs/apk/debug/*
+!/app/build/outputs/apk/debug/app-debug.apk
+!/app/build/outputs/apk/release/
+/app/build/outputs/apk/release/*
+!/app/build/outputs/apk/release/app-release.apk
+
 # Android Studio / IntelliJ
 *.iml
 .idea/

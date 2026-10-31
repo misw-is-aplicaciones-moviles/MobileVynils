@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Paleta del kit v2 (Figma "Vynils V2 MockUps", frame "Kit v2 · Componentes"). -->
+    <!-- Carbón: cabeceras, texto principal, botones primarios. -->
+    <color name="vinilos_charcoal">#FF232323</color>
+    <!-- Crema: hoja de contenido, barra inferior, texto sobre carbón. -->
+    <color name="vinilos_cream">#FFF2EFE7</color>
+    <!-- Crema transparente: extremo del degradado de pie de lista. -->
+    <color name="vinilos_cream_clear">#00F2EFE7</color>
+    <!-- Piedra: botón deshabilitado y opción elegida. -->
+    <color name="vinilos_stone">#FFD9D6CE</color>
+    <!-- Línea: separadores y bordes suaves. -->
+    <color name="vinilos_line">#FFD2CFC7</color>
+    <!-- Grafito: texto secundario. -->
+    <color name="vinilos_graphite">#FF66645E</color>
+    <!-- Ceniza: íconos y etiquetas inactivos. -->
+    <color name="vinilos_ash">#FF8A8780</color>
+    <!-- Puntos de la textura de papel: carbón al 6 %. -->
+    <color name="vinilos_paper_dot">#0F232323</color>
+    <!-- Relleno de las tarjetas del selector: blanco al 30 % sobre la hoja crema. -->
+    <color name="vinilos_card_fill">#4DFFFFFF</color>
+    <!-- Cuerpo del disco, un poco más oscuro que el carbón de la cabecera para que se lea encima. -->
+    <color name="vinilos_disc">#FF141414</color>
+    <!-- Surcos del disco: crema al 25 %. -->
+    <color name="vinilos_groove">#40F2EFE7</color>
+    <!-- Borde del chip de rol: crema al 85 %. El texto y el ícono siguen en crema sólida. -->
+    <color name="vinilos_cream_border">#D9F2EFE7</color>
+    <!-- Ripple del botón primario: crema al 20 % sobre carbón. -->
+    <color name="vinilos_cream_ripple">#33F2EFE7</color>
+    <!-- Ripple del botón secundario: carbón al 12 % sobre la hoja. -->
+    <color name="vinilos_charcoal_ripple">#1F232323</color>
+    <!-- Aviso de error: blanco al 50 % sobre la hoja. -->
+    <color name="vinilos_notice_error_fill">#80FFFFFF</color>
+    <!-- Sombra del aviso de éxito: negro al 60 %. -->
+    <color name="vinilos_notice_shadow">#99000000</color>
+    <!-- Velo de la hoja de canción: carbón al 55 %. -->
+    <color name="vinilos_sheet_scrim">#8C232323</color>
+    <!-- Sombra superior de esa hoja: negro al 18 %. -->
+    <color name="vinilos_sheet_shadow">#2E000000</color>
+    <!-- Campo de nombre: blanco al 35 % sobre la hoja. Con error sube al 60 %. -->
+    <color name="vinilos_field_fill">#59FFFFFF</color>
+    <color name="vinilos_field_fill_error">#99FFFFFF</color>
+    <!-- Duración vacía: crema al 45 %. -->
+    <color name="vinilos_duration_empty">#73F2EFE7</color>
+    <!-- Sombra de la caja de duración: carbón al 70 %. -->
+    <color name="vinilos_duration_shadow">#B3232323</color>
+</resources>

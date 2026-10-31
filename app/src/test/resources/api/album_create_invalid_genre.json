@@ -1,0 +1,1 @@
+{"statusCode":400,"message":"ValidationError: \"genre\" must be one of [Classical, Salsa, Rock, Folk]"}
