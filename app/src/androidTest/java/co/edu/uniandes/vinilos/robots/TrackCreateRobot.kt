@@ -22,7 +22,10 @@ class TrackCreateRobot {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     fun assertOpen(): TrackCreateRobot {
-        waitForDisplayed(withId(R.id.sheetTitle)).check(matches(withText(R.string.track_sheet_title)))
+        // La hoja puede estar desplazada por interacciones previas, así que se lleva el título a la vista.
+        onView(withId(R.id.sheetTitle))
+            .perform(scrollTo())
+            .check(matches(allOf(isDisplayed(), withText(R.string.track_sheet_title))))
         return this
     }
 

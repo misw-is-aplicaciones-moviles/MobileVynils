@@ -2,103 +2,88 @@ package co.edu.uniandes.vinilos.testing
 
 import androidx.test.platform.app.InstrumentationRegistry
 import co.edu.uniandes.vinilos.BuildConfig
-import org.junit.Assert.fail
+import co.edu.uniandes.vinilos.VinilosApplication
 import org.junit.rules.ExternalResource
-import java.io.FileInputStream
 import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.URL
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.Proxy
+import java.net.ProxySelector
+import java.net.ServerSocket
+import java.net.SocketAddress
+import java.net.URI
 
-/**
- * Deja BackVynils inalcanzable para que guardar una canción falle por red, y vuelve a abrir el acceso.
- * En este emulador iptables exige root. El modo avión sí corta 10.0.2.2; al salir hay que encender
- * wifi y datos, porque solo desactivar el modo avión no devuelve la ruta.
- * Antes de cada prueba borra un proxy HTTP pegado: OkHttp lo usa y la sonda hacia 10.0.2.2 no.
- */
+/** Corta el transporte HTTP del backend durante la prueba, sin modificar la red del dispositivo. */
 class BackendFirewall : ExternalResource() {
-    private var blocked = false
+    private var server: ServerSocket? = null
+    private var worker: Thread? = null
 
-    override fun before() {
-        clearProxy()
-        if (canConnect()) return
-        bringNetworkBack()
-        if (!waitUntil(connected = true)) fail("BackVynils no responde en ${BuildConfig.BASE_URL}")
-    }
-
-    override fun after() {
-        if (blocked) restore()
-    }
+    override fun after() = restore()
 
     fun block() {
-        blocked = true
-        runShell("iptables -I OUTPUT -p tcp --dport $backendPort -j REJECT")
-        if (canConnect()) {
-            runShell("cmd connectivity airplane-mode enable")
-            runShell("svc wifi disable")
-            runShell("svc data disable")
-            if (!waitUntil(connected = false)) fail("No se pudo cortar el acceso a ${BuildConfig.BASE_URL}")
-        }
-        // El catálogo deja un socket en el pool de OkHttp (4 s). Hay que soltarlo antes de guardar.
-        Thread.sleep(POOL_DRAIN_MILLIS)
+        check(server == null) { "El corte de red ya está activo" }
+        val socket = ServerSocket(0, 1, InetAddress.getByName("127.0.0.1"))
+        server = socket
+        worker =
+            Thread {
+                try {
+                    while (!socket.isClosed) socket.accept().use { /* Cierre sin respuesta HTTP. */ }
+                } catch (error: IOException) {
+                    if (!socket.isClosed) throw error
+                }
+            }.apply {
+                isDaemon = true
+                start()
+            }
+        BackendProxySelector.blockedProxy = Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", socket.localPort))
+        // Una petición podría reutilizar un socket directo sin consultar de nuevo al ProxySelector.
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val application = context.applicationContext as VinilosApplication
+        application.container.networkClient.httpClient.connectionPool
+            .evictAll()
     }
 
     fun restore() {
-        bringNetworkBack()
-        blocked = false
-        if (!waitUntil(connected = true)) fail("BackVynils no responde en ${BuildConfig.BASE_URL}")
+        BackendProxySelector.blockedProxy = null
+        server?.close()
+        worker?.join()
+        server = null
+        worker = null
+    }
+}
+
+/** Se instala antes de construir OkHttp y delega todas las peticiones salvo durante el corte. */
+internal object BackendProxySelector : ProxySelector() {
+    private val backend = URI(BuildConfig.BASE_URL)
+    private var original: ProxySelector? = null
+
+    @Volatile var blockedProxy: Proxy? = null
+
+    fun install() {
+        original = getDefault()
+        setDefault(this)
     }
 
-    private fun bringNetworkBack() {
-        repeat(RULE_DELETES) { runShell("iptables -D OUTPUT -p tcp --dport $backendPort -j REJECT") }
-        runShell("cmd connectivity airplane-mode disable")
-        runShell("svc wifi enable")
-        runShell("svc data enable")
-        clearProxy()
+    fun uninstall() {
+        blockedProxy = null
+        setDefault(original)
     }
 
-    /** `:0` y el borrado sacan un proxy que `settings delete` deja vivo en ConnectivityService. */
-    private fun clearProxy() {
-        runShell("settings put global http_proxy :0")
-        runShell("settings delete global http_proxy")
-        runShell("settings delete global global_http_proxy_host")
-        runShell("settings delete global global_http_proxy_port")
-    }
-
-    private fun waitUntil(connected: Boolean): Boolean {
-        val deadline = System.currentTimeMillis() + WAIT_MILLIS
-        while (System.currentTimeMillis() < deadline) {
-            if (canConnect() == connected) return true
-            Thread.sleep(POLL_MILLIS)
-        }
-        return canConnect() == connected
-    }
-
-    private fun canConnect(): Boolean {
-        val connection = URL(BuildConfig.BASE_URL).openConnection() as HttpURLConnection
-        connection.connectTimeout = PROBE_TIMEOUT_MILLIS
-        connection.readTimeout = PROBE_TIMEOUT_MILLIS
-        return try {
-            connection.requestMethod = "GET"
-            connection.responseCode > 0
-        } catch (_: IOException) {
-            false
-        } finally {
-            connection.disconnect()
+    override fun select(uri: URI): List<Proxy> {
+        val blocked = blockedProxy
+        val isBackend = uri.scheme == backend.scheme && uri.authority == backend.authority
+        return if (blocked != null && isBackend) {
+            listOf(blocked)
+        } else {
+            original?.select(uri) ?: listOf(Proxy.NO_PROXY)
         }
     }
 
-    private fun runShell(command: String) {
-        val descriptor = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(command)
-        descriptor.use { FileInputStream(it.fileDescriptor).use { stream -> stream.readBytes() } }
-    }
-
-    private companion object {
-        const val POLL_MILLIS = 300L
-        const val WAIT_MILLIS = 12_000L
-        const val PROBE_TIMEOUT_MILLIS = 2_000
-        const val HTTP_PORT = 80
-        const val RULE_DELETES = 3
-        const val POOL_DRAIN_MILLIS = 5_000L
-        val backendPort: Int = URL(BuildConfig.BASE_URL).port.let { port -> if (port == -1) HTTP_PORT else port }
+    override fun connectFailed(
+        uri: URI,
+        address: SocketAddress,
+        error: IOException,
+    ) {
+        if (blockedProxy == null) original?.connectFailed(uri, address, error)
     }
 }

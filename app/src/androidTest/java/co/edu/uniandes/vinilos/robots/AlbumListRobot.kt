@@ -18,6 +18,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
+import co.edu.uniandes.vinilos.ui.albums.AlbumAdapter
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
@@ -37,25 +38,20 @@ class AlbumListRobot {
         return this
     }
 
-    /** Fila [position] ya enlazada: número, título, artista y "Género · Año". */
+    /** Busca por título y comprueba contenido y numeración según su posición actual. */
     fun assertRow(
-        position: Int,
-        number: String,
         title: String,
         artist: String,
         meta: String,
     ): AlbumListRobot {
-        onView(withId(R.id.albumList)).check(matches(hasRowAt(position, number, title, artist, meta)))
+        scrollTo(title)
+        onView(withId(R.id.albumList)).check(matches(hasRow(title, artist, meta)))
         return this
     }
 
     fun assertTitles(vararg titles: String): AlbumListRobot {
-        titles.forEachIndexed { position, title ->
-            // La fila debe estar enlazada para leerla: se desplaza la lista hasta ella.
-            onView(withId(R.id.albumList))
-                .perform(RecyclerViewActions.scrollToPosition<RecyclerView.ViewHolder>(position))
-                .check(matches(hasRowAt(position, title = title)))
-        }
+        titles.forEach { title -> scrollTo(title).assertShown(title) }
+        onView(withId(R.id.albumList)).check(matches(hasAlphabeticalOrder()))
         return this
     }
 
@@ -90,6 +86,8 @@ class AlbumListRobot {
     }
 
     fun pullToRefresh(): AlbumListRobot {
+        onView(withId(R.id.albumList))
+            .perform(RecyclerViewActions.scrollToPosition<RecyclerView.ViewHolder>(0))
         onView(withId(R.id.swipeRefresh)).perform(swipeDown())
         return this
     }
@@ -133,24 +131,42 @@ class AlbumListRobot {
         @IdRes id: Int,
     ): String? = root.findViewById<TextView>(id)?.text?.toString()
 
-    private fun hasRowAt(
-        position: Int,
-        number: String? = null,
+    private fun hasRow(
         title: String,
-        artist: String? = null,
-        meta: String? = null,
+        artist: String,
+        meta: String,
     ): Matcher<View> =
         object : BoundedMatcher<View, RecyclerView>(RecyclerView::class.java) {
             override fun describeTo(description: Description) {
-                description.appendText("catálogo con \"$title\" en la fila $position")
+                description.appendText("fila de \"$title\" con número, artista y género/año correctos")
             }
 
             override fun matchesSafely(list: RecyclerView): Boolean {
+                val adapter = list.adapter as? AlbumAdapter ?: return false
+                val position = adapter.currentList.indexOfFirst { it.name == title }
+                if (position < 0) return false
                 val row = list.findViewHolderForAdapterPosition(position)?.itemView ?: return false
                 return textOf(row, R.id.albumTitle) == title &&
-                    (number == null || textOf(row, R.id.albumNumber) == number) &&
-                    (artist == null || textOf(row, R.id.albumSubtitle) == artist) &&
-                    (meta == null || textOf(row, R.id.albumMeta) == meta)
+                    textOf(row, R.id.albumNumber) == (position + 1).toString().padStart(2, '0') &&
+                    textOf(row, R.id.albumSubtitle) == artist &&
+                    textOf(row, R.id.albumMeta) == meta
+            }
+        }
+
+    private fun hasAlphabeticalOrder(): Matcher<View> =
+        object : BoundedMatcher<View, RecyclerView>(RecyclerView::class.java) {
+            override fun describeTo(description: Description) {
+                description.appendText("catálogo completo en orden alfabético (SQLite COLLATE NOCASE)")
+            }
+
+            override fun matchesSafely(list: RecyclerView): Boolean {
+                val adapter = list.adapter as? AlbumAdapter ?: return false
+                val titles = adapter.currentList.map { it.name }
+                // NOCASE ignora mayúsculas ASCII; conserva las letras acentuadas.
+                return titles.isNotEmpty() && titles ==
+                    titles.sortedBy { title ->
+                        title.map { if (it in 'A'..'Z') it.lowercaseChar() else it }.joinToString("")
+                    }
             }
         }
 }

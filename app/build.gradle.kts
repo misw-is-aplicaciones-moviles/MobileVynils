@@ -59,7 +59,7 @@ android {
         versionName = "1.0"
         buildConfigField("String", "BASE_URL", "\"${backendUri.toASCIIString()}\"")
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "co.edu.uniandes.vinilos.testing.VinilosTestRunner"
         // Íconos vectoriales con AppCompat en API 21 a 23.
         vectorDrawables.useSupportLibrary = true
     }
