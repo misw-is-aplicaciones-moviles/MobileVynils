@@ -153,7 +153,7 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
     private fun renderPrimaryAction(state: AlbumListUiState) {
         val host = activity as? PrimaryActionHost ?: return
         if (state.canEdit) {
-            host.showPrimaryAction(R.string.track_sheet_title) { viewModel.onCreateAlbumClicked() }
+            host.showPrimaryAction(R.string.action_create_album) { viewModel.onCreateAlbumClicked() }
         } else {
             host.hidePrimaryAction()
         }

@@ -146,7 +146,7 @@ class AlbumDetailFragment : Fragment(R.layout.fragment_album_detail) {
     }
 
     private fun showTrackCreatedMessage() {
-        val snackbar = Snackbar.make(binding.root, R.string.track_created, Snackbar.LENGTH_SHORT)
+        val snackbar = Snackbar.make(binding.root, R.string.snack_track_added, Snackbar.LENGTH_SHORT)
         (activity as? PrimaryActionHost)?.let { snackbar.setAnchorView(it.snackbarAnchor) }
         snackbar.show()
     }
