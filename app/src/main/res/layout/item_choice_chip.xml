@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chip de una sola elección. El formulario crea uno por valor de Genre o RecordLabel. -->
+<com.google.android.material.chip.Chip xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.Vinilos.Chip"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content" />

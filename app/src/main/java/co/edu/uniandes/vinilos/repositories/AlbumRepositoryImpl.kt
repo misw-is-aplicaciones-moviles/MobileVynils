@@ -1,0 +1,94 @@
+package co.edu.uniandes.vinilos.repositories
+
+import android.database.sqlite.SQLiteException
+import co.edu.uniandes.vinilos.database.dao.AlbumDao
+import co.edu.uniandes.vinilos.database.dao.TrackDao
+import co.edu.uniandes.vinilos.database.toEntity
+import co.edu.uniandes.vinilos.database.toModel
+import co.edu.uniandes.vinilos.models.Album
+import co.edu.uniandes.vinilos.models.DataError
+import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.NewAlbum
+import co.edu.uniandes.vinilos.models.NewTrack
+import co.edu.uniandes.vinilos.models.Track
+import co.edu.uniandes.vinilos.network.AlbumServiceAdapter
+import co.edu.uniandes.vinilos.network.networkRequest
+import com.google.gson.JsonParseException
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+
+internal class AlbumRepositoryImpl(
+    private val albumDao: AlbumDao,
+    private val trackDao: TrackDao,
+    private val serviceAdapter: AlbumServiceAdapter,
+) : AlbumRepository {
+    private val mutex = Mutex()
+
+    override suspend fun hasCachedAlbums(): Boolean = albumDao.getAll().isNotEmpty()
+
+    override suspend fun getAlbum(
+        id: Int,
+        forceRefresh: Boolean,
+    ): DataResult<Album, DataError> {
+        require(id > 0) { "albumId must be positive" }
+        return networkRequest {
+            serviceAdapter.getAlbum(id, forceRefresh).also {
+                if (it.id != id) throw JsonParseException("Unexpected album id")
+            }
+        }
+    }
+
+    override suspend fun getAlbums(forceRefresh: Boolean): DataResult<List<Album>, DataError> =
+        mutex.withLock {
+            val cached = if (forceRefresh) emptyList() else albumDao.getAll()
+            if (cached.isNotEmpty()) {
+                DataResult.Success(cached.map { it.toModel() })
+            } else {
+                when (val result = networkRequest { serviceAdapter.getAlbums() }) {
+                    is DataResult.Success -> {
+                        albumDao.replaceAll(result.value.map { it.toEntity() })
+                        DataResult.Success(albumDao.getAll().map { it.toModel() })
+                    }
+
+                    is DataResult.Failure -> {
+                        result
+                    }
+                }
+            }
+        }
+
+    // Same mutex as getAlbums: a refresh that fetched the list before this POST would otherwise
+    // finish later and its replaceAll would delete the album just created.
+    override suspend fun createAlbum(draft: NewAlbum): DataResult<Album, DataError> =
+        mutex.withLock {
+            val result = networkRequest { serviceAdapter.createAlbum(draft) }
+            if (result is DataResult.Success) {
+                try {
+                    albumDao.upsert(result.value.toEntity())
+                } catch (_: SQLiteException) {
+                    // The backend already saved it: reporting a failure would make the user retry and duplicate it.
+                    // Room catches up on the next forced refresh.
+                }
+            }
+            result
+        }
+
+    // Share the catalog mutex: replaceAll removes missing albums and their tracks via CASCADE.
+    override suspend fun addTrack(
+        albumId: Int,
+        draft: NewTrack,
+    ): DataResult<Track, DataError> {
+        require(albumId > 0) { "albumId must be positive" }
+        return mutex.withLock {
+            val result = networkRequest { serviceAdapter.addTrack(albumId, draft) }
+            if (result is DataResult.Success) {
+                try {
+                    trackDao.upsert(result.value.toEntity(albumId))
+                } catch (_: SQLiteException) {
+                    // The backend already saved it. Room can catch up on a later album detail request.
+                }
+            }
+            result
+        }
+    }
+}

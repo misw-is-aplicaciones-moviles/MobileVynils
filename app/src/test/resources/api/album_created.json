@@ -1,0 +1,9 @@
+{
+  "name": "The Game",
+  "cover": "https://example.com/the-game.jpg",
+  "releaseDate": "1980-06-30T00:00:00.000Z",
+  "description": "Fixture sintético con la forma de la respuesta de POST /albums.",
+  "genre": "Rock",
+  "recordLabel": "EMI",
+  "id": 101
+}

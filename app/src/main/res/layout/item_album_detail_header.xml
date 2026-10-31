@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:orientation="vertical" android:clipChildren="false" android:clipToPadding="false">
+
+    <co.edu.uniandes.vinilos.ui.common.VinylArtworkView android:id="@+id/albumArtwork"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:clipChildren="false" app:artworkRatio="350:220"
+        app:artworkCornerRadius="@dimen/album_catalog_artwork_radius"
+        app:artworkElevation="@dimen/role_cover_elevation"
+        app:discScale="@dimen/album_disc_scale" />
+
+    <TextView android:id="@+id/albumGenreYear"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_xl"
+        android:textAppearance="@style/TextAppearance.Vinilos.Overline" />
+
+    <TextView android:id="@+id/albumName"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_s"
+        android:textAppearance="@style/TextAppearance.Vinilos.AlbumDetailTitle" />
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_l" android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <com.google.android.material.imageview.ShapeableImageView android:id="@+id/artistAvatar"
+            android:layout_width="@dimen/album_detail_avatar_size"
+            android:layout_height="@dimen/album_detail_avatar_size"
+            android:importantForAccessibility="no" android:scaleType="centerCrop"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Vinilos.Circle"
+            app:srcCompat="@drawable/bg_vinyl_disc" />
+
+        <TextView android:id="@+id/albumArtist"
+            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:layout_marginStart="@dimen/space_m"
+            android:textAppearance="@style/TextAppearance.Vinilos.Overline"
+            android:textColor="@color/vinilos_charcoal" />
+    </LinearLayout>
+
+    <View android:layout_width="match_parent" android:layout_height="@dimen/list_divider_thickness"
+        android:layout_marginTop="@dimen/space_xl" android:background="@color/vinilos_line" />
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:showDividers="middle"
+        android:divider="@drawable/album_detail_divider">
+
+        <include android:id="@+id/labelInfo" layout="@layout/view_album_detail_info"
+            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
+        <include android:id="@+id/dateInfo" layout="@layout/view_album_detail_info"
+            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
+        <include android:id="@+id/tracksInfo" layout="@layout/view_album_detail_info"
+            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
+    </LinearLayout>
+
+    <View android:layout_width="match_parent" android:layout_height="@dimen/list_divider_thickness"
+        android:background="@color/vinilos_line" />
+
+    <TextView android:id="@+id/albumDescription"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_xl"
+        android:textAppearance="@style/TextAppearance.Vinilos.AlbumDetailBody" />
+</LinearLayout>

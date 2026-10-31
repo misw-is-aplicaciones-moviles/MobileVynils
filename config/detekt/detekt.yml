@@ -12,11 +12,9 @@ config:
 complexity:
   LongMethod:
     threshold: 60
-    ignoreAnnotated: ['Composable', 'Preview']
   LongParameterList:
     functionThreshold: 8
     constructorThreshold: 8
-    ignoreAnnotated: ['Composable', 'Inject']
   TooManyFunctions:
     thresholdInFiles: 20
     thresholdInClasses: 20
@@ -30,8 +28,6 @@ complexity:
     threshold: 4
 
 naming:
-  FunctionNaming:
-    ignoreAnnotated: ['Composable', 'Preview']
   TopLevelPropertyNaming:
     constantPattern: '[A-Z][_A-Z0-9]*'
   MatchingDeclarationName:
@@ -39,7 +35,6 @@ naming:
 
 style:
   MagicNumber:
-    ignoreAnnotated: ['Composable', 'Preview']
     ignorePropertyDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
     ignoreEnums: true
@@ -50,8 +45,6 @@ style:
   ReturnCount:
     max: 3
     excludeGuardClauses: true
-  UnusedPrivateMember:
-    ignoreAnnotated: ['Preview']
   ForbiddenComment:
     comments:
       - reason: 'Registra la deuda como issue en GitHub en lugar de un comentario.'

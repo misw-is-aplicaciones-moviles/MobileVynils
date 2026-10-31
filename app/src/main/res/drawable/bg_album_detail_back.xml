@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/vinilos_cream_ripple">
+    <item>
+        <shape android:shape="oval">
+            <stroke android:width="@dimen/role_chip_stroke" android:color="@color/vinilos_cream_border" />
+        </shape>
+    </item>
+</ripple>

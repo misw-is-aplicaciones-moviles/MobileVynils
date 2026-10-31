@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fila de álbum. La carátula mide 56 dp; el collage incluye el disco que asoma. HU01 la hace clicable. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/min_touch_target"
+    android:orientation="horizontal"
+    android:paddingTop="@dimen/space_m"
+    android:paddingBottom="@dimen/space_m">
+
+    <TextView
+        android:id="@+id/albumNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/space_m"
+        android:textAppearance="@style/TextAppearance.Vinilos.ListTitle"
+        android:visibility="gone"
+        tools:text="01"
+        tools:visibility="visible" />
+
+    <co.edu.uniandes.vinilos.ui.common.VinylArtworkView
+        android:id="@+id/albumArtwork"
+        android:layout_width="@dimen/album_artwork_width"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
+        app:artworkCornerRadius="@dimen/album_artwork_radius"
+        app:artworkElevation="0dp" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_m"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/albumTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.Vinilos.ListTitle"
+            tools:text="@string/sample_album_name" />
+
+        <TextView
+            android:id="@+id/albumSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.Vinilos.Body"
+            tools:text="@string/sample_album_artist" />
+
+        <TextView
+            android:id="@+id/albumMeta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="@style/TextAppearance.Vinilos.ListMeta"
+            tools:text="@string/sample_album_meta" />
+    </LinearLayout>
+</LinearLayout>

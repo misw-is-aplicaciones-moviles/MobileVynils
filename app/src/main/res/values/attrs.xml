@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="VinylArtworkView">
+        <attr name="coverSrc" format="reference" />
+        <attr name="artworkCornerRadius" format="dimension" />
+        <attr name="artworkElevation" format="dimension" />
+        <!-- "ancho:alto" del marco con el ancho fijo. Por defecto 33:20. -->
+        <attr name="artworkRatio" format="string" />
+        <!-- Diámetro del disco respecto al alto del marco. Por defecto 1. -->
+        <attr name="discScale" format="float" />
+    </declare-styleable>
+
+    <declare-styleable name="NoticeView">
+        <attr name="noticeKind" format="enum">
+            <enum name="success" value="0" />
+            <enum name="error" value="1" />
+        </attr>
+    </declare-styleable>
+</resources>
