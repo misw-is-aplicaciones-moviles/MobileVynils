@@ -136,6 +136,7 @@ class TrackCreateScreenTest {
         sheet
             .assertNameErrorHidden()
             .assertDurationErrorHidden()
+            .typeName("")
             .enterDigits(3, 2, 0)
             .assertDuration("03:20")
             .tapSave()
