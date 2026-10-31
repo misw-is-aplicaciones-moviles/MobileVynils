@@ -92,5 +92,5 @@
     <string name="track_saving">Guardando…</string>
     <string name="track_create_network_error">No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.</string>
     <string name="track_create_error">No se pudo guardar la canción. Inténtalo de nuevo.</string>
-    <string name="track_created">Canción guardada</string>
+    <string name="snack_track_added">Canción agregada al álbum</string>
 </resources>

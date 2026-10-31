@@ -1,5 +1,6 @@
 package co.edu.uniandes.vinilos.ui
 
+import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -21,7 +22,10 @@ import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.createAlbumOnBackend
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import co.edu.uniandes.vinilos.testing.waitUntilGone
+import org.hamcrest.Description
+import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
+import org.hamcrest.TypeSafeMatcher
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -55,7 +59,7 @@ class TrackCreateScreenTest {
             .assertDuration("04:15")
             .tapSave()
 
-        waitForDisplayed(withText(R.string.track_created))
+        waitForDisplayed(withText(R.string.snack_track_added))
         assertTrack(number = "01", name = "Todos vuelven", duration = "4:15")
         assertTrackCount("1")
         onView(withText(R.string.album_detail_no_tracks)).check(doesNotExist())
@@ -115,7 +119,7 @@ class TrackCreateScreenTest {
         }
 
         sheet.tapSave()
-        waitForDisplayed(withText(R.string.track_created))
+        waitForDisplayed(withText(R.string.snack_track_added))
         assertTrack(number = "01", name = track, duration = "1:30")
         assertTrackCount("1")
     }
@@ -174,7 +178,7 @@ class TrackCreateScreenTest {
             .assertDuration("02:10")
             .tapSave()
 
-        waitForDisplayed(withText(R.string.track_created))
+        waitForDisplayed(withText(R.string.snack_track_added))
         assertSavedCampesino()
         leaveDetail()
         openAlbum(albumA)
@@ -182,7 +186,7 @@ class TrackCreateScreenTest {
         leaveDetail()
         openAlbum(albumB)
         assertEmptyAlbum()
-        onView(withText("Campesino")).check(doesNotExist())
+        onView(allOf(withText("Campesino"), isDisplayed(), hasWindowFocus())).check(doesNotExist())
     }
 
     @Test
@@ -251,17 +255,35 @@ class TrackCreateScreenTest {
     private fun assertSavedCampesino() {
         assertTrack(number = "01", name = "Campesino", duration = "2:10")
         assertTrackCount("1")
-        onView(withText(R.string.album_detail_no_tracks)).check(doesNotExist())
+        onView(allOf(withText(R.string.album_detail_no_tracks), isDisplayed(), hasWindowFocus()))
+            .check(doesNotExist())
     }
 
     private fun assertTrackCount(count: String) {
-        onView(allOf(withId(R.id.infoValue), isDescendantOfA(withId(R.id.tracksInfo))))
-            .check(matches(withText(count)))
+        onView(
+            allOf(
+                withId(R.id.infoValue),
+                isDescendantOfA(withId(R.id.tracksInfo)),
+                withText(count),
+                isDisplayed(),
+                hasWindowFocus(),
+            ),
+        ).check(matches(isDisplayed()))
     }
+
+    /** La pantalla anterior puede seguir en la jerarquía sin foco. Espresso si no la cuenta. */
+    private fun hasWindowFocus(): Matcher<View> =
+        object : TypeSafeMatcher<View>() {
+            override fun describeTo(description: Description) {
+                description.appendText("has window focus")
+            }
+
+            override fun matchesSafely(view: View): Boolean = view.hasWindowFocus()
+        }
 
     private fun assertClosedWithoutCreating(absentName: String? = null) {
         waitUntilGone(withId(R.id.sheetTitle))
-        onView(withText(R.string.track_created)).check(doesNotExist())
+        onView(withText(R.string.snack_track_added)).check(doesNotExist())
         assertTrackCount("0")
         absentName?.let { onView(withText(it)).check(doesNotExist()) }
     }
