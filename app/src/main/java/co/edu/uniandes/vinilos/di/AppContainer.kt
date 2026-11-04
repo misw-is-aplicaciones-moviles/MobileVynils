@@ -8,9 +8,12 @@ import co.edu.uniandes.vinilos.database.dao.AlbumDao
 import co.edu.uniandes.vinilos.database.dao.TrackDao
 import co.edu.uniandes.vinilos.network.AlbumServiceAdapterImpl
 import co.edu.uniandes.vinilos.network.NetworkClient
+import co.edu.uniandes.vinilos.network.PrizeServiceAdapterImpl
 import co.edu.uniandes.vinilos.network.VinilosApiService
 import co.edu.uniandes.vinilos.repositories.AlbumRepository
 import co.edu.uniandes.vinilos.repositories.AlbumRepositoryImpl
+import co.edu.uniandes.vinilos.repositories.PrizeRepository
+import co.edu.uniandes.vinilos.repositories.PrizeRepositoryImpl
 import co.edu.uniandes.vinilos.repositories.SessionRepository
 import co.edu.uniandes.vinilos.repositories.SessionRepositoryImpl
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +46,16 @@ class AppContainer(
     internal val trackDao: TrackDao by lazy { database.trackDao() }
 
     val sessionRepository: SessionRepository by lazy { SessionRepositoryImpl() }
+
+    val prizeRepository: PrizeRepository by lazy {
+        PrizeRepositoryImpl(
+            PrizeServiceAdapterImpl(
+                apiProvider = { networkClient.create(VinilosApiService::class.java) },
+                ioDispatcher = Dispatchers.IO,
+                defaultDispatcher = Dispatchers.Default,
+            ),
+        )
+    }
 
     // Construirlo no toca networkClient: el adaptador crea la API en su primera llamada.
     val albumRepository: AlbumRepository by lazy {

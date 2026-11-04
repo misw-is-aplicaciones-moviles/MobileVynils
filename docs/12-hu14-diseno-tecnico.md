@@ -127,6 +127,10 @@ data class ArtistPrize(val id: Int, val prize: Prize, val premiationDate: LocalD
 // Reutilizar PerformerType de HU03/HU04: MUSICIAN / BAND.
 interface PrizeRepository {
     suspend fun getPrizes(forceRefresh: Boolean = false): DataResult<List<Prize>, DataError>
+    suspend fun getArtistPrizes(
+        assignments: List<PrizeAssignmentRef>,
+        forceRefresh: Boolean = false,
+    ): DataResult<List<ArtistPrize>, DataError>
     suspend fun assignPrize(
         performerId: Int,
         performerType: PerformerType,
@@ -232,3 +236,17 @@ Las flechas hacia Repository representan llamadas del ViewModel; la respuesta vu
 - Decisión de fecha resuelta por el responsable: la app exige el dato y no cambia el backend. El diseño queda listo para revisión e integración; revisar el contrato compartido con HU13 al implementarlo.
 
 No cerrar #115 ni moverlo a Done antes de integrar el diseño conforme al flujo del repositorio. Los siguientes pasos de código corresponden a HU14-02 y HU14-03.
+
+## 10. Implementación de datos HU14-02
+
+La rama `feature/HU14-02-datos` implementa el catálogo y ambas rutas de asignación con fecha obligatoria, DTO validados, mapeo a dominio y clasificación de errores mediante `networkRequest`. `AppContainer.prizeRepository` comparte el cliente de red existente; no se incorporan librerías, tablas ni migraciones.
+
+`PrizeRepository.getArtistPrizes` resuelve las referencias del artista con una consulta de catálogo, sin N peticiones. Con referencias vacías no consulta la red; las referencias no resueltas, duplicadas en el catálogo o con fecha inconsistente se consideran errores de serialización, en vez de presentar falsamente una sección vacía. Las asignaciones históricas del mismo premio se conservan por su ID propio.
+
+No hay una segunda caché del catálogo de premios en memoria o Room. `forceRefresh=true` fuerza revalidación HTTP; el flujo de interfaz deberá utilizarlo al reconciliar una escritura o recargar después de HU13. `assignPrize` devuelve `ArtistPrize` para actualizar el detalle, valida los IDs solicitados y comprueba que artista, premio y día de la respuesta coincidan. No reintenta automáticamente el POST ni interpreta un 2xx sin cuerpo válido como éxito confirmado.
+
+Se añade una única definición `PerformerType` con `MUSICIAN`/`BAND`, compartida con la implementación futura de HU03/HU04. HU13 debe ampliar este mismo `PrizeRepository` y `PrizeServiceAdapter` para crear premios; no implementar otro cliente o repositorio paralelo.
+
+Esta tarea no implementa pantallas, selección, roles, revalidación de escrituras inciertas desde el ViewModel ni integración visual con HU04/HU13: corresponde a HU14-03. Sus pruebas iniciales de contrato HTTP y Repository están en `PrizeRepositoryImplTest` y usan `MockWebServerRule`, el cliente Retrofit/OkHttp real y datos sintéticos reproducibles con IDs de premio y asignación diferentes. HU14-04/06 ampliarán esa cobertura sin duplicarla.
+
+Validación del 03/11/2026: Spotless, detekt, Lint debug y `testDebugUnitTest` en verde. 16 pruebas nuevas de HU14 aprobadas, 148 JVM en total, sin fallos, errores u omisiones. No se ejecutaron pruebas de interfaz ni POST contra BackVynils en esta tarea; los POST del contrato se comprobaron en MockWebServer local.
