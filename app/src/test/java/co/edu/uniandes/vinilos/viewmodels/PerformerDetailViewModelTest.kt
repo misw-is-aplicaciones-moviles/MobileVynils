@@ -2,6 +2,7 @@ package co.edu.uniandes.vinilos.viewmodels
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelStore
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.PerformerDetail
@@ -154,6 +155,73 @@ class PerformerDetailViewModelTest {
             vm.onNavigationReturned()
             vm.onMemberClicked(member.id)
             assertEquals(PerformerDetailEvent.OpenMember(member.id), vm.events.value?.getContentIfNotHandled())
+        }
+
+    @Test
+    fun `empty sections preserve musician and band content without navigation`() =
+        runTest {
+            listOf(musician(1, "Músico"), band(1, "Banda")).forEach { performer ->
+                val detail = PerformerDetail(performer, "Biografía conservada", emptyList(), emptyList())
+                val repository = FakePerformerRepository().apply { detailResult = DataResult.Success(detail) }
+                val vm = PerformerDetailViewModel(1, performer.type, repository, FakeSessionRepository())
+                advanceUntilIdle()
+
+                assertEquals(detail, vm.uiState.value?.detail)
+                assertFalse(checkNotNull(vm.uiState.value).isLoading)
+                assertNull(vm.uiState.value?.error)
+                vm.onAlbumClicked(album.id)
+                vm.onMemberClicked(member.id)
+                assertNull(vm.events.value)
+                assertEquals(1, repository.detailRequests.size)
+            }
+        }
+
+    @Test
+    fun `loading and unknown positive identities cannot open unrelated content`() =
+        runTest {
+            val gate = CompletableDeferred<Unit>()
+            val repository =
+                FakePerformerRepository().apply {
+                    detailResult = DataResult.Success(band)
+                    detailGate = gate
+                }
+            val vm = PerformerDetailViewModel(1, PerformerType.BAND, repository, FakeSessionRepository())
+            runCurrent()
+            vm.onAlbumClicked(album.id)
+            vm.onMemberClicked(member.id)
+            assertNull(vm.events.value)
+
+            gate.complete(Unit)
+            advanceUntilIdle()
+            vm.onAlbumClicked(album.id + 1)
+            vm.onMemberClicked(member.id + 1)
+            assertNull(vm.events.value)
+            vm.onAlbumClicked(album.id)
+            assertEquals(PerformerDetailEvent.OpenAlbum(album.id), vm.events.value?.getContentIfNotHandled())
+            assertEquals(1, repository.detailRequests.size)
+        }
+
+    @Test
+    fun `clearing the ViewModel cancels a pending load without publishing its result`() =
+        runTest {
+            val gate = CompletableDeferred<Unit>()
+            val repository =
+                FakePerformerRepository().apply {
+                    detailResult = DataResult.Success(band)
+                    detailGate = gate
+                }
+            val vm = PerformerDetailViewModel(1, PerformerType.BAND, repository, FakeSessionRepository())
+            val store = ViewModelStore().apply { put("detail", vm) }
+            runCurrent()
+            assertEquals(1, repository.detailRequests.size)
+
+            store.clear()
+            gate.complete(Unit)
+            advanceUntilIdle()
+
+            assertNull(vm.uiState.value?.detail)
+            assertNull(vm.uiState.value?.error)
+            assertNull(vm.events.value)
         }
 
     @Test
