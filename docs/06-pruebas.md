@@ -235,7 +235,18 @@ Regresión ejecutada: `AlbumDetailViewModelTest` (12 pruebas, incluye entrada ti
 
 Se amplían los cinco recorridos previos y se agrega uno del selector; no son seis pruebas nuevas. Las filas siguientes conservan el inventario inicial como referencia histórica; los avances HU04-04/05 anteriores actualizan su cobertura. API 21/37, rotación real durante un recorrido y navegación con argumentos inválidos siguen pendientes; la recreación no equivale a rotación real. Reporte: `app/build/reports/androidTests/connected/debug/index.html`.
 
-Inventario inicial de HU04-01 (#37), 04/11/2026. Base inicial develop; contratos compartidos de HU03 revisados en el PR #121 e incorporados después como base local de HU04, con aceptación y correcciones pendientes. Estos IDs son propios de HU04 y no sustituyen los CP-HU03, CP-HU02 ni CP-HU14. El inventario se creó sin ejecuciones en HU04-01. HU04-02 añade la cobertura inicial de datos descrita más abajo.
+**Avance HU04-06 · 04/11/2026:** `PerformerDetailServiceAdapterTest` pasa de 11 a **12 pruebas de API aprobadas** con Repository, Retrofit y MockWebServer reales; sin BackVynils ni dispositivo. Mantiene los contratos completos, errores de transporte, respuestas inválidas, identidad y revalidación existentes. Se completan estas verificaciones:
+
+| Casos | Método | Ampliación ejecutada |
+|---|---|---|
+| CP-HU04-08 | `absent relationships become empty sections and a missing image is allowed` | Músico y banda: relaciones ausentes, null o listas vacías; contadores cero e imagen opcional |
+| CP-HU04-11/13 | `404 and 500 retain their HTTP status for both endpoints` | Tras cada error, reintento explícito recupera el mismo ID/tipo; GET al endpoint correspondiente y cabecera no-cache |
+| CP-HU04-12 | `read timeout is a network error` | Tras agotar lectura, consulta explícita recupera el detalle de la banda, sin reintento automático |
+| CP-HU04-15 | `artist and album dates retain the UTC day under Bogota timezone` | Fecha del artista y de sus álbumes conserva el día UTC con zona local America/Bogota, en ambos tipos; la zona original se restaura |
+
+Controles finales `spotlessCheck detekt lintDebug testDebugUnitTest`: **224 pruebas JVM aprobadas, 0 fallos, errores u omisiones**, incluyendo las 12 de API de HU04 y regresiones de las demás historias. No son 224 pruebas nuevas ni E2E. Reporte: `app/build/reports/tests/testDebugUnitTest/index.html`. Los pendientes de dispositivo, accesibilidad e integración HU14 indicados en HU04-05 siguen vigentes.
+
+Inventario inicial de HU04-01 (#37), 04/11/2026. Base inicial develop; contratos compartidos de HU03 revisados en el PR #121 e incorporados después como base local de HU04, con aceptación y correcciones pendientes. Estos IDs son propios de HU04 y no sustituyen los CP-HU03, CP-HU02 ni CP-HU14. El inventario se creó sin ejecuciones en HU04-01. HU04-02 añade la cobertura inicial de datos descrita más abajo; los avances HU04-04/05/06 anteriores actualizan su estado histórico.
 
 Diseño y alcance: [13-hu04-diseno-tecnico.md](13-hu04-diseno-tecnico.md). Las clases y métodos de automatización se asociarán en HU04-02 a HU04-06 según se implementen; las pruebas de datos no acreditan por sí solas recorridos de interfaz.
 

@@ -272,3 +272,18 @@ bash scripts/run_e2e.sh \
 ```
 
 Ejecución con JDK 17, BackVynils local y tablet Huawei DBY-W09, Android 12/API 31. Resultado final comprobado en XML y TestRunner: **6 pruebas aprobadas, 0 fallos y 0 omisiones**. Spotless y detekt correctos. Reporte HTML: `app/build/reports/androidTests/connected/debug/index.html`. La correspondencia y limitaciones se registran en el inventario: esta ejecución no acredita API 21/37, rotación real, accesibilidad completa ni integración HU14. No se generaron capturas nuevas en esta tarea.
+
+## 13. Pruebas de API HU04-06 · 04/11/2026
+
+Rama `feature/HU04-06-pruebas-api`, sobre la integración local de HU04-05. Reutiliza `PerformerDetailServiceAdapterTest`, los JSON de HU03, `MockWebServerRule` y el Repository/cliente HTTP reales. No modifica código productivo ni añade fixtures, utilidades o dependencias.
+
+Se amplían las pruebas existentes de relaciones vacías para ambos tipos (ausentes, null y listas vacías), recuperación explícita después de 404/500 con ruta y no-cache comprobados, y recuperación tras timeout. Una prueba nueva verifica fechas de artista y álbumes a medianoche UTC bajo America/Bogota; restaura la zona horaria al terminar. Las 11 pruebas anteriores pasan a 12, conservando los casos de respuesta completa, desconexión, revalidación, JSON/cuerpo inválido y coherencia de identidad.
+
+```bash
+./gradlew testDebugUnitTest \
+  --tests 'co.edu.uniandes.vinilos.network.PerformerDetailServiceAdapterTest' \
+  --offline --console=plain
+./gradlew spotlessCheck detekt lintDebug testDebugUnitTest --offline --console=plain
+```
+
+Con JDK 17: **12 pruebas de API aprobadas** y controles finales correctos con **224 pruebas JVM aprobadas**, sin fallos, errores u omisiones, comprobadas en XML. No se requiere backend externo, proxy ni dispositivo para estas pruebas; los pendientes de interfaz de HU04-05 permanecen explícitos en el inventario.
