@@ -51,7 +51,7 @@ class PerformerListScreenTest {
             .assertRow(seed.member, overline = "Músico · 1947", summary = "Integrante de ${seed.band}")
             .assertRow(seed.solo, overline = "Músico · 1960", summary = "1 álbum")
             // Las filas de la semilla: sus cuentas dependen de otros datos, pero no su tipo ni su año.
-            .assertRow("Rubén Blades Bellido de Luna", overline = "Músico · 1948", summary = "2 álbumes")
+            .assertOverline("Rubén Blades Bellido de Luna", overline = "Músico · 1948")
             .assertOverline("Queen", overline = "Banda · desde 1970")
             .assertSelected(R.id.filterAll)
             .assertBothTypes()
@@ -67,7 +67,7 @@ class PerformerListScreenTest {
         artists
             .assertRow(seed.band, overline = "Banda · desde 1991", summary = "2 álbumes · 1 integrante")
             .assertRow(seed.member, overline = "Músico · 1947", summary = "Integrante de ${seed.band}")
-            .assertRow("Rubén Blades Bellido de Luna", overline = "Músico · 1948", summary = "2 álbumes")
+            .assertOverline("Rubén Blades Bellido de Luna", overline = "Músico · 1948")
             .assertAlphabeticalOrder()
             .assertCreateButtonHidden()
     }
