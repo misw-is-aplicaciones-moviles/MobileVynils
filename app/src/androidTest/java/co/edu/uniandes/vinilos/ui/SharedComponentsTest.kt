@@ -60,8 +60,9 @@ class SharedComponentsTest {
 
         onView(withText(R.string.role_visitor)).perform(click())
         onView(allOf(withId(R.id.collectorListFragment), isDescendantOfA(withId(R.id.bottomNav)))).perform(click())
-        // Coleccionistas sigue siendo la pantalla provisional hasta HU05.
-        onView(allOf(withId(R.id.pendingMessage), isDisplayed())).check(matches(withText(R.string.pending_next_sprint)))
+        // Coleccionistas ya tiene su lista: usa la misma cabecera y el mismo chip de rol.
+        onView(allOf(withId(R.id.headerTitle), isDisplayed())).check(matches(withText(R.string.collector_list_title)))
+        onView(withId(R.id.roleChip)).check(matches(withText(R.string.role_visitor)))
         leaveFromCurrentTab()
 
         pressBackUnconditionally()
