@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="prize_picker_title">Elegir premio</string>
+    <string name="prize_picker_context">para %1$s</string>
+    <string name="prize_search_hint">Buscar premio</string>
+    <string name="prize_already_assigned">YA ASIGNADO</string>
+    <string name="prize_row_description">%1$s, %2$s</string>
+    <string name="prize_row_assigned_description">%1$s, %2$s, ya asignado</string>
+    <string name="prize_create_action">Crear un premio nuevo</string>
+    <string name="prize_create_help">¿No está en la lista? Regístralo y asígnalo.</string>
+    <string name="prize_select_action">Selecciona un premio</string>
+    <string name="prize_continue_action">Continuar con «%1$s»</string>
+    <string name="prize_no_results">No hay premios que coincidan con tu búsqueda.</string>
+    <string name="prize_empty">Aún no hay premios disponibles.</string>
+    <string name="prize_catalog_error">No se pudieron cargar los premios.</string>
+    <string name="prize_created_message">Premio creado</string>
+    <string name="prize_date_title">Fecha de premiación</string>
+    <string name="prize_date_context">%1$s · %2$s</string>
+    <string name="prize_date_required_label">FECHA (OBLIGATORIA)</string>
+    <string name="prize_date_hint">Selecciona la fecha</string>
+    <string name="prize_date_required_error">Selecciona la fecha de premiación.</string>
+    <string name="prize_assign_action">Asignar premio</string>
+    <string name="prize_assigning">Asignando…</string>
+    <string name="prize_assign_error">No se pudo asignar el premio. Revisa los datos e inténtalo de nuevo.</string>
+    <string name="prize_assign_missing">El premio o el artista ya no están disponibles.</string>
+    <string name="prize_assign_uncertain">No pudimos confirmar si el premio se guardó. Revisa los premios del artista antes de volver a asignarlo.</string>
+    <string name="prize_review_action">Revisar premios del artista</string>
+    <string name="prize_assigned_message">Premio asignado al artista</string>
+    <string name="prize_detail_count">Premios · %1$d</string>
+    <string name="prize_detail_loading">Cargando premios…</string>
+    <string name="prize_detail_empty">Este artista aún no tiene premios registrados.</string>
+    <string name="prize_detail_description">%1$s, %2$s, %3$s</string>
+    <dimen name="prize_row_min_height">84dp</dimen>
+    <dimen name="prize_icon_size">24dp</dimen>
+</resources>

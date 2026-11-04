@@ -40,7 +40,7 @@ No incluye crear premios, eliminar o editar asignaciones, búsquedas remotas, nu
 | `AppContainer` | Una instancia compartida de `PrizeRepository` y su Adapter para HU13/HU14. |
 | Modelos/Repository de artistas de HU03/HU04 | Reutilizar `PerformerType` e identificadores; añadir solo el contrato necesario para premios y actualizar el detalle. No crearlos por segunda vez en HU14. |
 | `SessionRepository`, `Event`, LiveData y factories | Rol, estado, eventos de navegación y dependencias por constructor. |
-| `savedStateHandle` de Navigation y Fragment Result | HU13 devuelve el premio creado como resultado de pantalla completa; la hoja de fecha devuelve la asignación al selector con Fragment Result, como HU08. |
+| `savedStateHandle` de Navigation y ViewModel del selector | HU13 devuelve el premio creado como resultado de pantalla completa. La hoja hija comparte el estado del selector y le solicita el envío; el selector devuelve el resultado al detalle. |
 | Cabecera, `PaperSheetLayout`, estados, estilos y recursos | Componer las pantallas conservando el diseño del proyecto. |
 | `MaterialDatePicker` de HU07 y `TrackCreateBottomSheet` de HU08 | Reutilizar calendario e interpretación UTC, y el patrón de hoja inferior con cierre, scrim y Fragment Result. No copiar formularios completos. |
 | Selectores existentes al iniciar HU14-03 | Reutilizar el layout/Adapter si ya existen. `PickerAdapter` y `fragment_picker.xml` están previstos, pero no implementados en esta base; evitar una infraestructura genérica antes de tener un uso real. |
@@ -163,14 +163,14 @@ Tras un POST confirmado, la respuesta proporciona el premio y la fecha: actualiz
 
 ## 6. Navegación, resultados y conservación de estado
 
-Destinos de pantalla completa propuestos: `prizePickerFragment` (HU14) y `prizeCreateFragment` (HU13). La fecha es `PrizeDateBottomSheet`, un `BottomSheetDialogFragment` hijo del selector, siguiendo el patrón HU08; no es otra pantalla completa. El artista se identifica con `performerId: Int` y `performerType` validado. La hoja recibe también `prizeId`, nombre del premio y del artista; no pasar DTO ni objetos de dominio completos.
+Destinos de pantalla completa propuestos: `prizePickerFragment` (HU14) y `prizeCreateFragment` (HU13). La fecha es `PrizeDateBottomSheet`, un `BottomSheetDialogFragment` hijo del selector, reutilizando el componente de hoja de HU08; no es otra pantalla completa. Comparte `PrizePickerViewModel` con su padre para conservar una sola selección, fecha y estado de envío. El artista se identifica con `performerId: Int` y `performerType` validado. La hoja recibe también `prizeId`, nombre del premio y del artista; no pasar DTO ni objetos de dominio completos.
 
 | Resultado | Emisor → receptor | Datos primitivos en `Bundle` de `savedStateHandle` |
 |---|---|---|
 | `prize_created` | HU13 → entrada anterior del selector | `prizeId`, `name`, `description`, `organization`. |
-| `prize_assigned` | Hoja → selector mediante Fragment Result; selector → entrada original del detalle mediante savedStateHandle | `assignmentId`, `performerId`, `performerType`, `prizeId`, `name`, `description`, `organization`, `premiationDate` ISO obligatorio. |
+| `prize_assigned` | El ViewModel compartido confirma el envío; selector → entrada original del detalle mediante savedStateHandle | `assignmentId`, `performerId`, `performerType`, `prizeId`, `name`, `description`, `organization`, `premiationDate` ISO obligatorio. |
 
-Los resultados de Navigation se eliminan al consumirse, siguiendo HU07. El selector registra un listener en `childFragmentManager`; la hoja emite su resultado en `parentFragmentManager` y se cierra, como HU08. El receptor valida IDs/tipo y evita reprocesar el mismo ID de asignación, para no repetir selección, snackbar o guardado al recrear. HU13 coloca el resultado y hace `popBackStack()`. Tras asignar, el selector entrega el resultado al detalle original y hace `popBackStack()` hasta él; no crea un segundo detalle.
+Los resultados de Navigation se eliminan al consumirse, siguiendo HU07. La hoja hija observa el ViewModel del selector y solicita la fecha/envío; solo el selector consume sus eventos de navegación, evitando dos consumidores de un mismo Event. El receptor del resultado valida IDs/tipo y evita reprocesar el mismo ID de asignación. HU13 coloca el resultado y hace `popBackStack()`. Tras asignar, el selector cierra su hoja, entrega el resultado a `previousBackStackEntry` y hace `navigateUp()`; no crea un segundo detalle. En el flujo previsto, esa entrada anterior es el detalle de HU04.
 
 Usar `SavedStateHandle` para artista, tipo, búsqueda, premio seleccionado y fecha. Cerrar la hoja conserva la selección. Filtrar no cambia el artista ni borra la selección válida; X de la pantalla abandona el selector sin POST. Cancelar HU13 no cambia la selección previa. El resultado de HU13 inserta o actualiza el premio por ID antes de seleccionarlo; un refresco posterior no debe borrar ese registro nuevo por una respuesta anterior a su creación. El premio creado debe quedar visible aunque no coincida con la búsqueda anterior: limpiar el filtro al consumir ese resultado.
 
@@ -178,7 +178,7 @@ No persistir un estado «enviando» como orden de repetir el POST tras muerte de
 
 ## 7. Estado y validación de interfaz
 
-Una pareja de ViewModel/UiState para el selector y otra para la hoja, con LiveData inmutable y eventos de una sola vez, como en HU08. Evitar un ViewModel global para todo el proyecto. Las acciones de negocio van al Repository; el Fragment solo representa estado, coordina resultados y navega.
+Una pareja `PrizePickerViewModel`/`PrizePickerUiState` compartida por el selector y su hoja hija, con LiveData inmutable y eventos de una sola vez. Esta decisión de HU14-03 evita duplicar la selección, fecha y estado de una única escritura entre dos ViewModels. Evitar un ViewModel global para todo el proyecto. Las acciones de negocio van al Repository; el Fragment solo representa estado, coordina resultados y navega.
 
 | Pantalla/estado | Comportamiento propuesto |
 |---|---|
@@ -208,20 +208,18 @@ Evitar doble toque no garantiza idempotencia del servidor. Tras timeout, descone
 flowchart LR
     Create["PrizeCreateFragment / ViewModel · HU13"] -->|"prize_created"| Picker["PrizePickerFragment · HU14"]
     Picker --> PickerVM["PrizePickerViewModel"]
-    Date["PrizeDateBottomSheet · HU14"] --> DateVM["PrizeDateViewModel"]
+    Date["PrizeDateBottomSheet · HU14"] --> PickerVM
     Picker -->|"premio elegible seleccionado"| Date
     PickerVM --> Repo["PrizeRepository / Impl · compartido HU13/HU14"]
-    DateVM --> Repo
     Repo --> Adapter["PrizeServiceAdapter / Impl"]
     Adapter --> HTTP["VinilosApiService + NetworkClient"]
     HTTP --> API["BackVynils local: GET /prizes y POST según tipo"]
-    Date -->|"Fragment Result: prize_assigned"| Picker
+    Date -->|"acción de guardar al ViewModel compartido"| PickerVM
     Picker -->|"savedStateHandle: prize_assigned"| Detail["Detalle de artista · HU04"]
     Detail --> ArtistVM["ViewModel de artista"]
     ArtistVM --> ArtistRepo["PerformerRepository · HU03/HU04"]
     ArtistVM -->|"resolver nombres de premios"| Repo
     Session["SessionRepository existente"] --> PickerVM
-    Session --> DateVM
 ```
 
 Las flechas hacia Repository representan llamadas del ViewModel; la respuesta vuelve como `DataResult`, se transforma en UiState y la Vista observa LiveData. `AppContainer` construye las instancias; no se llama Retrofit desde Fragments o ViewModels.
@@ -250,3 +248,65 @@ Se añade una única definición `PerformerType` con `MUSICIAN`/`BAND`, comparti
 Esta tarea no implementa pantallas, selección, roles, revalidación de escrituras inciertas desde el ViewModel ni integración visual con HU04/HU13: corresponde a HU14-03. Sus pruebas iniciales de contrato HTTP y Repository están en `PrizeRepositoryImplTest` y usan `MockWebServerRule`, el cliente Retrofit/OkHttp real y datos sintéticos reproducibles con IDs de premio y asignación diferentes. HU14-04/06 ampliarán esa cobertura sin duplicarla.
 
 Validación del 03/11/2026: Spotless, detekt, Lint debug y `testDebugUnitTest` en verde. 16 pruebas nuevas de HU14 aprobadas, 148 JVM en total, sin fallos, errores u omisiones. No se ejecutaron pruebas de interfaz ni POST contra BackVynils en esta tarea; los POST del contrato se comprobaron en MockWebServer local.
+
+
+## 11. Implementación de interfaz HU14-03
+
+Se implementan `PrizePickerFragment`, `PrizeAdapter`, `PrizeDateBottomSheet` y su estado compartido. El flujo utiliza premios existentes del backend local y no depende de crear premios en HU13. La fecha es obligatoria, se conserva al cerrar la hoja y no existe Omitir. La búsqueda es local por nombre; los premios ya asignados al artista se bloquean por ID de asignación, manteniendo elegibles los de otros artistas.
+
+### Entrada desde HU04
+
+HU04 debe navegar al destino registrado `R.id.prizePickerFragment` con:
+
+```kotlin
+PrizePickerFragment.argumentsFor(
+    id = performer.id,
+    type = performer.type,
+    name = performer.name,
+    assignmentIds = performerPrizeAssignmentIds.toIntArray(),
+)
+```
+
+Los elementos de assignmentIds son IDs de asociación del artista, no IDs de premios. Los nombres del ejemplo representan el modelo de HU04 que se integre; no se agrega aquí una implementación del detalle de artista. Argumentos inválidos o rol distinto de Coleccionista impiden cargar o enviar datos. El destino no tiene deep links ni se añadieron accesos de depuración.
+
+### Resultado e integración con HU04
+
+El selector deposita un Bundle bajo `PrizeFlowContract.PRIZE_ASSIGNED` en la entrada anterior del back stack y vuelve a ella. HU04 debe consumirlo una vez, validar artista/tipo, incorporar la asignación por su ID, actualizar el contador y mostrar `prize_assigned_message`. Las claves primitivas están en `PrizeFlowContract`.
+
+Una respuesta incierta conserva las entradas y bloquea otro POST, incluso al restaurar el ViewModel. La hoja y el botón inferior del selector ofrecen «Revisar premios del artista». Al volver, se deja `PrizeFlowContract.REFRESH_REQUESTED=true`; HU04 debe consumirlo, revalidar detalle y catálogo y comprobar el resultado antes de ofrecer otra asignación. No se declara reconciliación completada desde el selector ni se vuelve a enviar automáticamente. Los errores HTTP 400/404 se distinguen como rechazos conocidos, conservando los datos.
+
+### Contrato preparado para HU13
+
+Se reserva el ID `prizeCreateFragment` para que HU13 añada su destino real. Crear un premio nuevo y su ayuda se muestran únicamente si el grafo contiene ese destino; no se implementa un formulario sustituto ni un control sin acción. HU13 devuelve un Bundle en `PrizeFlowContract.PRIZE_CREATED`, con prizeId, name, description y organization, al selector. Al consumirlo, se limpia la búsqueda, se añade/actualiza el registro por ID, queda seleccionado y se muestra Premio creado. Una respuesta anterior del catálogo no elimina ese premio nuevo.
+
+### Estado de integración y verificación
+
+HU04 y HU13 no están integradas en la base revisada. Las pantallas, argumentos, resultados y reglas de estado están implementados; la entrada real desde el detalle, la actualización visual del detalle y el recorrido de creación permanecen pendientes de integrar con sus historias. HU14-03 no debe declararse validada de extremo a extremo mientras falte ese enlace.
+
+La validación inicial utiliza repositorios falsos y las reglas JUnit/LiveData/corrutinas del proyecto. El 04/11/2026 se ejecutaron cuatro comprobaciones instrumentadas aisladas en una tablet Huawei DBY-W09, Android 12/API 31, contra BackVynils local: búsqueda y bloqueo de premios ya asignados; fecha obligatoria, recreación y cancelación sin escritura; asignación a músico; asignación a banda. Pasaron en claro y se repitieron en oscuro, también sin fallos ni omisiones. Las escrituras se verificaron mediante GET y el resultado devuelto por savedStateHandle. Se tomaron y revisaron capturas reales. La navegación inicial se realizó desde el código de prueba al destino HU14, sin añadir accesos a la app. Estas comprobaciones temporales se conservaron con las evidencias como insumo de HU14-05; no sustituyen la integración pendiente con HU04/HU13 ni acreditan el inventario E2E completo.
+
+Validación del 03/11/2026: Spotless, detekt, Lint y 158 pruebas JVM en verde, incluidas 10 nuevas de `PrizePickerViewModelTest`. `assembleDebug` y `assembleDebugAndroidTest` finalizaron correctamente. Compilar el APK instrumentado no equivale a ejecutar las pruebas en Android; la validación visual y del recorrido completo permanece pendiente.
+
+Hallazgo del backend durante la validación: el DELETE de asociación usa campos prizeId/performerId que no son propiedades de relación del entity y eliminó una asociación distinta de la solicitada. Se restauró el registro original con su ID, fecha, premio y artista, y se verificaron las dos asociaciones previas. Se suspendió ese endpoint para la limpieza y los siete registros temporales restantes se eliminaron por SQL usando sus IDs y nombres verificados, dentro de una transacción. HU14 solo consulta y asigna: no se modificó BackVynils ni se añadió lógica de eliminación a la app. Para HU14-05 se requiere una limpieza segura de fixtures que no utilice ese DELETE.
+
+La configuración local ignorada por Git quedó en `vinilos.baseUrl=http://127.0.0.1:3000/`, con redirección USB del puerto 3000. La compilación falló inicialmente en KSP con Java 25 y funcionó con JDK 17 aplicado únicamente al comando; no se modificó Java en el sistema.
+
+Controles finales del 04/11/2026 con JDK 17: `spotlessCheck detekt lint testDebugUnitTest`, BUILD SUCCESSFUL; 158 pruebas JVM, 0 fallos, errores u omisiones. La verificación final del backend encontró cero fixtures de esta prueba y las asociaciones originales 100/101 con sus valores previos.
+
+## 12. Integración de HU14-03 con HU04 · 04/11/2026
+
+Se incorpora la rama local `feature/HU04-detalle-artista` en `feature/HU14-03-interfaz`; no se modifica la rama de HU04 ni la de HU03. Los conflictos de integración conservan ambos repositorios en AppContainer, una única definición de PerformerType y los enlaces de documentación de ambas historias. La base sigue pendiente de reconciliarse con la versión de HU03 aceptada en develop.
+
+- `PerformerDetail` incorpora las referencias de `performerPrizes`, reutilizando `PrizeAssignmentRef` y su DTO/mapper existentes. Se conservan los IDs de asociación y las fechas UTC; no se crea otro modelo de premio.
+- El ViewModel del detalle resuelve nombre, organización y fecha mediante `PrizeRepository.getArtistPrizes`. La sección se consulta en ambos roles. Un error conserva la biografía y las demás secciones, muestra reintento y bloquea otra asignación hasta revalidar detalle y catálogo.
+- Agregar premio queda habilitado para Coleccionista y abre el selector existente con identidad, tipo e IDs de asociación. El catálogo del selector se revalida al abrirse para comprobar los premios ya asignados después de escrituras anteriores.
+- El resultado confirmado se consume una vez desde savedStateHandle, valida artista/tipo, añade la asociación por ID, actualiza contador y resalta su fila; el evento muestra el aviso de éxito una vez. `REFRESH_REQUESTED` fuerza la consulta de detalle y premios antes de permitir otro acceso de asignación. No repite POST automáticamente.
+- Las filas del detalle reutilizan `item_prize.xml`, ocultando radio/estado de selección y mostrando la fecha. Premios vacíos, cargando y error tienen mensajes diferenciados; no se anuncia cero premios cuando falla la consulta.
+
+No se añade creación de premios (HU13), otra caché, migración, cliente HTTP ni dependencia. La fecha continúa siendo obligatoria.
+
+Pruebas de integración iniciales: tres pruebas nuevas en `PerformerDetailViewModelTest` (consulta por rol, resultado confirmado sin duplicados/otro artista y fallo con revalidación) y una en `PerformerDetailServiceAdapterTest` (referencias inválidas). Se amplían los contratos de músico/banda para comprobar sus asociaciones y el test del selector para exigir revalidación. Controles con JDK 17: `spotlessCheck detekt lintDebug testDebugUnitTest`, **254 pruebas JVM aprobadas**, sin fallos, errores u omisiones. También compila el APK instrumentado.
+
+La primera ejecución de los seis recorridos existentes de `PerformerDetailScreenTest` pasó en Huawei DBY-W09, Android 12/API 31, con BackVynils local. Ahora incluyen abrir/cancelar el selector desde músico y banda, buscar sin coincidencias y ocultar la acción a Visitante. No realizan POST de premios: el guardado completo desde la entrada real y la comprobación visual de su retorno permanecen para HU14-05, con la limpieza segura de fixtures indicada anteriormente. Las escrituras aisladas de la sección 11 se conservan como evidencia histórica y no acreditan ese nuevo recorrido integrado. HU14-04/05/06 y la entrada desde HU13 siguen pendientes.
+
+La versión final repitió los mismos seis recorridos después de desplazar explícitamente hasta Premios antes de comprobar la acción oculta: 6 aprobados, 0 fallos, errores u omisiones, verificados en el XML instrumentado.

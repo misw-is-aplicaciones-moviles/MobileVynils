@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Destinos de primer nivel (docs/10, sección 3). El selector de rol es el inicio (TR-06).
      Cada historia reemplaza su pantalla provisional:
-     HU01 ya reemplazó albumListFragment; HU03 performerListFragment y HU05 collectorListFragment siguen pendientes. -->
+     HU01 ya reemplazó albumListFragment y HU03 performerListFragment; HU04 ya implementa performerDetailFragment; HU05 (collectorListFragment) sigue pendiente. -->
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nav_graph"
@@ -45,17 +45,31 @@
         android:label="@string/create_album_title" />
 
     <fragment
+        android:id="@+id/prizePickerFragment"
+        android:name="co.edu.uniandes.vinilos.ui.artists.PrizePickerFragment"
+        android:label="@string/prize_picker_title">
+        <argument android:name="performerId" app:argType="integer" />
+        <argument android:name="performerType" app:argType="string" />
+        <argument android:name="performerName" app:argType="string" />
+        <argument android:name="assignmentIds" app:argType="integer[]" />
+    </fragment>
+
+    <fragment
         android:id="@+id/performerListFragment"
-        android:name="co.edu.uniandes.vinilos.ui.common.PendingTabFragment"
+        android:name="co.edu.uniandes.vinilos.ui.artists.PerformerListFragment"
         android:label="@string/artist_list_title">
-        <argument
-            android:name="titleRes"
-            android:defaultValue="@string/artist_list_title"
-            app:argType="reference" />
-        <argument
-            android:name="messageRes"
-            android:defaultValue="@string/pending_next_sprint"
-            app:argType="reference" />
+        <action
+            android:id="@+id/action_performerList_to_performerDetail"
+            app:destination="@id/performerDetailFragment" />
+    </fragment>
+
+    <!-- Detalle de músico o banda (HU04); conserva los argumentos compartidos con HU03. -->
+    <fragment
+        android:id="@+id/performerDetailFragment"
+        android:name="co.edu.uniandes.vinilos.ui.artists.PerformerDetailFragment"
+        android:label="@string/artist_detail_title">
+        <argument android:name="performerId" app:argType="integer" />
+        <argument android:name="type" app:argType="string" />
     </fragment>
 
     <fragment

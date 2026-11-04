@@ -99,6 +99,10 @@ android {
         error += setOf("NewApi", "HardcodedText")
         abortOnError = true
     }
+    sourceSets {
+        // MigrationTestHelper lee los esquemas exportados de Room como assets de las pruebas instrumentadas.
+        getByName("androidTest").assets.directories.add("$projectDir/schemas")
+    }
     testOptions {
         // Espresso falla de forma intermitente con animaciones activas (docs/06-pruebas.md, sección 4).
         animationsDisabled = true

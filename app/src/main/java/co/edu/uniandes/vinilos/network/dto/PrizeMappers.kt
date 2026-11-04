@@ -32,7 +32,7 @@ internal fun PrizeAssignmentDto.toModel(
     return ArtistPrize(id.validPrizeId("assignment id"), assignedPrize, date)
 }
 
-private fun PrizeAssignmentRefDto.toModel(): PrizeAssignmentRef =
+internal fun PrizeAssignmentRefDto.toModel(): PrizeAssignmentRef =
     PrizeAssignmentRef(
         id = id.validPrizeId("assignment id"),
         premiationDate = parsePremiationDate(premiationDate),

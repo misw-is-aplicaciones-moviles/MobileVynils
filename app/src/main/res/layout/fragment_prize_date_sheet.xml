@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="wrap_content" android:fillViewport="true">
+    <co.edu.uniandes.vinilos.ui.albums.TrackSheetLayout android:id="@+id/sheetBody"
+        android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical"
+        android:paddingTop="@dimen/track_sheet_shadow_space" android:paddingBottom="@dimen/space_xl">
+        <ImageButton android:id="@+id/closeSheet" android:layout_width="@dimen/track_close_size"
+            android:layout_height="@dimen/track_close_size" android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/track_close_margin_top" android:background="@drawable/bg_track_close"
+            android:contentDescription="@string/action_close" android:padding="@dimen/space_l"
+            app:srcCompat="@drawable/ic_close" app:tint="@color/vinilos_cream" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/track_close_content_gap"
+            android:paddingStart="@dimen/track_sheet_margin" android:paddingEnd="@dimen/track_sheet_margin"
+            android:orientation="vertical">
+            <TextView android:id="@+id/sheetContext" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:gravity="center" android:textAppearance="@style/TextAppearance.Vinilos.Overline" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_s" android:gravity="center"
+                android:text="@string/prize_date_title" android:textAppearance="@style/TextAppearance.Vinilos.SheetTitle" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xl" android:labelFor="@id/prizeDate"
+                android:text="@string/prize_date_required_label" android:textAppearance="@style/TextAppearance.Vinilos.Overline" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/prizeDate"
+                style="@style/Widget.Vinilos.Button.Secondary" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:minHeight="@dimen/button_height"
+                android:layout_marginTop="@dimen/space_s" android:text="@string/prize_date_hint" />
+            <TextView android:id="@+id/dateError" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="@string/prize_date_required_error" android:textAppearance="@style/TextAppearance.Vinilos.Body"
+                android:visibility="gone" />
+            <TextView android:id="@+id/submitError" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_m" android:textAppearance="@style/TextAppearance.Vinilos.Body"
+                android:visibility="gone" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/reviewArtist"
+                style="@style/Widget.Vinilos.Button.Secondary" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:minHeight="@dimen/button_height"
+                android:text="@string/prize_review_action" android:visibility="gone" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/savePrize"
+                style="@style/Widget.Vinilos.Button.Primary" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:minHeight="@dimen/button_height"
+                android:layout_marginTop="@dimen/space_xl" android:enabled="false" android:text="@string/prize_assign_action" />
+        </LinearLayout>
+    </co.edu.uniandes.vinilos.ui.albums.TrackSheetLayout>
+</androidx.core.widget.NestedScrollView>

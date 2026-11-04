@@ -11,18 +11,17 @@ import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.RecyclerView
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.FragmentAlbumListBinding
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
+import co.edu.uniandes.vinilos.ui.common.createListDivider
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailViewModel
 import co.edu.uniandes.vinilos.viewmodels.AlbumListEvent
 import co.edu.uniandes.vinilos.viewmodels.AlbumListUiState
 import co.edu.uniandes.vinilos.viewmodels.AlbumListViewModel
-import com.google.android.material.divider.MaterialDividerItemDecoration
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
 
@@ -91,24 +90,12 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
 
     private fun bindList() {
         binding.albumList.adapter = adapter
-        binding.albumList.addItemDecoration(createDivider())
+        binding.albumList.addItemDecoration(createListDivider(requireContext()))
         val indicator = ContextCompat.getColor(requireContext(), R.color.vinilos_charcoal)
         binding.swipeRefresh.setColorSchemeColors(indicator)
         binding.swipeRefresh.setOnRefreshListener { viewModel.refresh() }
         binding.emptyRefresh.setColorSchemeColors(indicator)
         binding.emptyRefresh.setOnRefreshListener { viewModel.refresh() }
-    }
-
-    private fun createDivider(): RecyclerView.ItemDecoration {
-        val context = requireContext()
-        val inset = context.resources.getDimensionPixelSize(R.dimen.list_divider_inset)
-        return MaterialDividerItemDecoration(context, MaterialDividerItemDecoration.VERTICAL).apply {
-            dividerThickness = context.resources.getDimensionPixelSize(R.dimen.list_divider_thickness)
-            dividerColor = ContextCompat.getColor(context, R.color.vinilos_line)
-            dividerInsetStart = inset
-            dividerInsetEnd = inset
-            isLastItemDecorated = false
-        }
     }
 
     private fun bindStateTexts() {
