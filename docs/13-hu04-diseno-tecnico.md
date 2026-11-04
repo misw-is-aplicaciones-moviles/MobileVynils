@@ -1,6 +1,6 @@
 # 13. HU04 · Diseño técnico del detalle de artista
 
-Estado: HU04-01 documentada; capa de datos HU04-02 implementada y verificada en JVM (sección 9). Pantalla, ViewModel e integración de premios pendientes.
+Estado: HU04-01 documentada; HU04-02 implementada (sección 9); HU04-03 con pantalla, ViewModel y navegación implementados y verificados inicialmente (sección 10). Integración de premios y ampliación de pruebas pendientes.
 Tarea: [HU04-01 · #37](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/issues/37).
 Responsable: @ManfredAriel91122. Fecha: 04/11/2026.
 Base: `develop` local, `b5152a3`. Rama principal: `feature/HU04-detalle-artista`.
@@ -221,3 +221,22 @@ JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 ./gradlew \
 Resultado: BUILD SUCCESSFUL; **212 pruebas JVM, 0 fallos, 0 errores y 0 omisiones** (194 de la base integrada más 18 nuevas). Las pruebas existentes de HU02 y HU03 conservan sus verificaciones. El APK de pruebas instrumentadas compila; no se ejecutaron instrumentadas ni se afirma validación visual de HU04, cuya pantalla no está implementada todavía. Reporte JVM local: `app/build/reports/tests/testDebugUnitTest/index.html`.
 
 HU04-04/06 ampliarán la cobertura sin repetir los casos ya implementados; HU04-03/05 verificarán los estados y recorridos reales de interfaz. La integración de premios mantiene el alcance y los pendientes de la sección 7.
+
+## 10. Implementación HU04-03 · 04/11/2026
+
+Rama `feature/HU04-03-interfaz`. Implementa la pantalla de músico/banda y la navegación desde HU03/HU02, hacia álbumes e integrantes y de regreso. Conserva los argumentos `performerId`/`type`, el rol y la selección de pestaña. Incluye carga, reintento, 404, secciones vacías y protección contra solicitudes o navegación duplicadas.
+
+Reutilización mínima:
+
+- `PerformerDetailFragment` usa directamente el layout existente `fragment_album_detail.xml`, con su cabecera, lista y estados. No se renombra ni se cambia esa estructura compartida de HU02.
+- `PerformerDetailAdapter` usa Album, PerformerSummary, VinylArtworkView, la fila de mensaje, estilos y recursos existentes. Un adaptador sencillo dibuja la lista horizontal de integrantes; el layout del disco se comparte entre cabecera e integrante. El listado de HU03 conserva su implementación original.
+- El ViewModel utiliza el mismo PerformerRepository de HU03 y la capa de datos de HU04-02, SessionRepository, Event y LiveData. La navegación de HU02 solo se habilita para un artista con ID/tipo conocidos; un álbum sin artista conserva su consulta y su fila queda sin acción.
+- Se mantuvieron 6 pruebas nuevas de PerformerDetailViewModelTest, 2 de AlbumDetailViewModelTest y 5 recorridos de PerformerDetailScreenTest. Se reutiliza BackendPerformers; su eliminación explícita solo admite IDs propios para reproducir el 404 real. La prueba de navegación de HU03 ahora espera el detalle real en vez del mensaje provisional.
+
+La revisión de simplificación retiró el renombrado del layout, la adaptación del listado HU03 y las utilidades de captura/tema que no son necesarias para entregar esta funcionalidad. Las capturas ya obtenidas se conservan fuera del repositorio.
+
+Validación anterior a esa simplificación: 220 pruebas JVM aprobadas; 5 recorridos de HU04 aprobados en claro y repetidos en oscuro, 11 regresiones de HU03 y 4 de HU02, en tablet Huawei DBY-W09, Android 12/API 31. Una instalación rechazada no ejecutó pruebas y se repitió; los resultados se comprobaron en XML. La versión simplificada también pasó Spotless, detekt, Lint de debug, las 220 pruebas JVM y los 5 recorridos de HU04 en la tablet API 31, sin fallos ni omisiones. En esta repetición se usó el tema normal del dispositivo; la evidencia previa de claro/oscuro se conserva como tal.
+
+La sección Premios se completa al integrar HU14. Las acciones de HU12/HU13/HU15 siguen en sus historias. HU04-04/05/06 amplían las pruebas sin duplicarlas; API 21/37, rotación real de este detalle y accesibilidad con fuentes grandes siguen pendientes. La evidencia local previa está en `/tmp/HU04-03-evidencias`.
+
+Decisión del responsable: el detalle muestra la cabecera Premios y el botón Agregar premio para Coleccionista como en el mockup, deshabilitado hasta integrar HU14. Esta excepción visual no añade navegación, peticiones, conteos ficticios ni escritura de premios. El visitante no muestra esa acción.

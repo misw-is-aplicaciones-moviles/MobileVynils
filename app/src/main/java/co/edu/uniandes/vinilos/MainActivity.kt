@@ -134,23 +134,45 @@ class MainActivity :
             )
             true
         }
-        binding.bottomNav.setOnItemReselectedListener { item ->
-            if (item.itemId == R.id.albumListFragment &&
-                navController.currentDestination?.id == R.id.albumDetailFragment
-            ) {
-                navController.popBackStack(R.id.albumListFragment, false)
-            }
-        }
+        binding.bottomNav.setOnItemReselectedListener { item -> reselectTab(navController, item.itemId) }
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val showBottomBar = destination.id !in DESTINATIONS_WITHOUT_BOTTOM_BAR
             binding.bottomBar.isVisible = showBottomBar
             if (showBottomBar) {
-                val tabId = if (destination.id == R.id.albumDetailFragment) R.id.albumListFragment else destination.id
+                val tabId =
+                    when (destination.id) {
+                        R.id.albumDetailFragment -> R.id.albumListFragment
+                        R.id.performerDetailFragment -> R.id.performerListFragment
+                        else -> destination.id
+                    }
                 binding.bottomNav.menu
                     .findItem(tabId)
                     ?.isChecked = true
                 binding.bottomNav.post { moveNavDot(tabId) }
             }
+        }
+    }
+
+    private fun reselectTab(
+        navController: NavController,
+        tabId: Int,
+    ) {
+        val detailId =
+            when (tabId) {
+                R.id.albumListFragment -> R.id.albumDetailFragment
+                R.id.performerListFragment -> R.id.performerDetailFragment
+                else -> return
+            }
+        if (navController.currentDestination?.id != detailId) return
+        if (!navController.popBackStack(tabId, false)) {
+            navController.navigate(
+                tabId,
+                null,
+                navOptions {
+                    launchSingleTop = true
+                    popUpTo(R.id.albumListFragment) { saveState = true }
+                },
+            )
         }
     }
 

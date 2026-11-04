@@ -2,6 +2,7 @@ package co.edu.uniandes.vinilos.ui
 
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.fragment.NavHostFragment
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -15,6 +16,7 @@ import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.BackendPerformers
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.Matchers.allOf
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -193,7 +195,7 @@ class PerformerListScreenTest {
         val seed = createCast()
         artists.enterAs(R.string.role_visitor).tapRow(seed.band)
 
-        waitForDisplayed(withText(R.string.pending_next_sprint))
+        waitForDisplayed(allOf(withId(R.id.performerName), withText(seed.band)))
         activityRule.scenario.onActivity { activity ->
             val navController = navController(activity)
             val arguments = checkNotNull(navController.currentBackStackEntry?.arguments)
