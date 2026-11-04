@@ -1,8 +1,13 @@
 package co.edu.uniandes.vinilos.ui
 
+import android.graphics.Rect
+import android.view.View
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -27,14 +32,16 @@ import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.anyOf
 import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.isA
 import org.hamcrest.Matchers.not
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 
-/** Initial HU04 UI coverage using only real app entries and owned backend fixtures. */
+/** HU04: recorridos reales con datos propios, sin depender de posiciones o conteos de la semilla. */
 @RunWith(AndroidJUnit4::class)
 class PerformerDetailScreenTest {
     private val data = BackendPerformers()
@@ -47,27 +54,34 @@ class PerformerDetailScreenTest {
 
     @Test
     fun musician_album_return_recreation_and_artists_tab_keep_the_expected_content() {
-        data.createMusician(name, albumCount = 1)
+        data.createMusician(name, albumCount = 8)
+        val albumName = "$name álbum 8"
         artists.enterAs(R.string.role_visitor).tapRow(name)
         waitForDisplayed(allOf(withId(R.id.performerName), withText(name)))
         onView(withId(R.id.performerDescription)).check(matches(withText("Artista creado por una prueba E2E.")))
         onView(withId(R.id.performerDate)).check(matches(withText(containsString("1947"))))
         onView(withId(R.id.primaryAction)).check(matches(not(isDisplayed())))
-        scrollToText(context.getString(R.string.artist_detail_albums, 1))
-        scrollToText("$name álbum 1")
+        scrollToText(context.getString(R.string.artist_detail_albums, 8))
+        scrollToText(albumName)
+        onView(withId(R.id.addPrizeButton)).check(doesNotExist())
+        onView(allOf(withId(R.id.albumTitle), withText(albumName))).perform(click())
+        scrollToText(albumName)
+        onView(withId(R.id.headerBack)).perform(click())
+        waitForDisplayed(allOf(withId(R.id.albumTitle), withText(albumName)))
+        var firstVisible = RecyclerView.NO_POSITION
         activityRule.scenario.onActivity { activity ->
             val list = activity.findViewById<RecyclerView>(R.id.detailList)
-            list.scrollToPosition(checkNotNull(list.adapter).itemCount - 1)
+            firstVisible = (list.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
         }
-        onView(withId(R.id.addPrizeButton)).check(doesNotExist())
-        onView(withId(R.id.albumTitle)).perform(click())
-        waitForDisplayed(allOf(withId(R.id.albumName), withText("$name álbum 1")))
-        onView(withId(R.id.headerBack)).perform(click())
-        waitForDisplayed(allOf(withId(R.id.albumTitle), withText("$name álbum 1")))
 
         activityRule.scenario.recreate()
 
-        waitForDisplayed(allOf(withId(R.id.albumTitle), withText("$name álbum 1")))
+        waitForDisplayed(allOf(withId(R.id.albumTitle), withText(albumName)))
+        activityRule.scenario.onActivity { activity ->
+            val list = activity.findViewById<RecyclerView>(R.id.detailList)
+            assertEquals(firstVisible, (list.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition())
+        }
+        onView(withId(R.id.roleChip)).check(matches(withText(R.string.role_visitor)))
         onView(withId(R.id.performerListFragment)).check(matches(isSelected())).perform(click())
         artists.scrollTo(name)
         onView(withId(R.id.headerTitle)).check(matches(withText(R.string.artist_list_title)))
@@ -75,14 +89,15 @@ class PerformerDetailScreenTest {
 
     @Test
     fun band_opens_its_member_and_returns_as_collector() {
-        val memberName = "$name integrante"
-        val member = data.createMusician(memberName)
-        data.createBand(name, albumCount = 1, members = listOf(member))
+        val memberNames = (1..6).map { "$name integrante $it" }
+        val members = memberNames.map { data.createMusician(it) }
+        val memberName = memberNames.last()
+        data.createBand(name, albumCount = 1, members = members)
         artists.enterAs(R.string.role_collector).tapRow(name)
         waitForDisplayed(allOf(withId(R.id.performerName), withText(name)))
         onView(withId(R.id.headerTitle)).check(matches(withText(R.string.artist_band)))
         onView(withId(R.id.performerDate)).check(matches(withText(containsString("1970"))))
-        scrollToText(context.getString(R.string.artist_detail_members, 1))
+        scrollToText(context.getString(R.string.artist_detail_members, members.size))
         onView(withId(R.id.detailList)).perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(withId(R.id.performerMembers)),
         )
@@ -90,7 +105,7 @@ class PerformerDetailScreenTest {
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText(memberName))),
         )
         waitForDisplayed(allOf(withId(R.id.memberName), withText(memberName)))
-        onView(withId(R.id.memberName)).perform(click())
+        onView(allOf(withId(R.id.memberName), withText(memberName))).perform(click())
         waitForDisplayed(allOf(withId(R.id.performerName), withText(memberName)))
         onView(withId(R.id.headerTitle)).check(matches(withText(R.string.artist_musician)))
         pressBack()
@@ -130,13 +145,14 @@ class PerformerDetailScreenTest {
                 click(),
             ),
         )
-        waitForDisplayed(allOf(withId(R.id.albumName), withText("$name álbum 1")))
+        scrollToText("$name álbum 1")
+        scrollToText(name)
         onView(withId(R.id.artistLink)).perform(click())
         waitForDisplayed(allOf(withId(R.id.performerName), withText(name)))
         onView(withId(R.id.headerTitle)).check(matches(withText(R.string.artist_musician)))
         onView(withId(R.id.performerListFragment)).check(matches(isSelected()))
         pressBack()
-        waitForDisplayed(allOf(withId(R.id.albumName), withText("$name álbum 1")))
+        scrollToText("$name álbum 1")
         onView(withId(R.id.albumListFragment)).check(matches(isSelected()))
         onView(withId(R.id.headerBack)).perform(click())
         data.deleteMusician(artistId)
@@ -147,8 +163,27 @@ class PerformerDetailScreenTest {
                 click(),
             ),
         )
-        waitForDisplayed(allOf(withId(R.id.albumArtist), withText(R.string.album_no_artist)))
+        scrollToText(context.getString(R.string.album_no_artist))
         onView(withId(R.id.artistLink)).check(matches(not(isClickable())))
+    }
+
+    @Test
+    fun role_selector_clears_detail_and_reopening_preserves_the_new_role() {
+        data.createMusician(name)
+        artists.enterAs(R.string.role_collector).tapRow(name)
+        waitForDisplayed(allOf(withId(R.id.performerName), withText(name)))
+        onView(withId(R.id.roleChip)).perform(click())
+        waitForDisplayed(withText(R.string.role_question))
+        onView(withId(R.id.bottomNav)).check(matches(not(isDisplayed())))
+
+        artists.enterAs(R.string.role_visitor).tapRow(name)
+        waitForDisplayed(allOf(withId(R.id.performerName), withText(name)))
+        onView(withId(R.id.roleChip)).check(matches(withText(R.string.role_visitor)))
+        scrollToText(context.getString(R.string.artist_detail_no_albums))
+        onView(withId(R.id.addPrizeButton)).check(doesNotExist())
+        pressBack()
+        waitForDisplayed(allOf(withId(R.id.headerTitle), withText(R.string.artist_list_title)))
+        onView(withId(R.id.roleChip)).check(matches(withText(R.string.role_visitor)))
     }
 
     @Test
@@ -166,10 +201,26 @@ class PerformerDetailScreenTest {
     }
 
     private fun scrollToText(text: String) {
-        onView(withId(R.id.detailList)).perform(
+        waitForDisplayed(withId(R.id.detailList)).perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
                 anyOf(withText(text), hasDescendant(withText(text))),
             ),
+        )
+        // Una cabecera puede ser más alta que la pantalla en horizontal: desplazar también su texto hijo.
+        onView(allOf(withText(text), isDescendantOfA(withId(R.id.detailList)))).perform(
+            object : ViewAction {
+                override fun getConstraints() = isA(View::class.java)
+
+                override fun getDescription() = "Desplazar hasta el texto dentro de la fila"
+
+                override fun perform(
+                    uiController: UiController,
+                    view: View,
+                ) {
+                    view.requestRectangleOnScreen(Rect(0, 0, view.width, view.height), true)
+                    uiController.loopMainThreadUntilIdle()
+                }
+            },
         )
         waitForDisplayed(allOf(withText(text), isDescendantOfA(withId(R.id.detailList))))
     }

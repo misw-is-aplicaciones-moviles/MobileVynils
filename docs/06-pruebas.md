@@ -221,7 +221,21 @@ El inventario de pruebas exploratorias usa la plantilla del curso (identificador
 
 Regresión ejecutada: `AlbumDetailViewModelTest` (12 pruebas, incluye entrada tipada desde álbum de CP-HU04-03) y `PerformerRepositoryImplTest` (15 pruebas, incluye caché, identidad y cancelación del detalle de CP-HU04-10/14/16). **36 pruebas aprobadas, 0 fallos, errores u omisiones**. Incluye pruebas existentes de HU02/HU03; no son 36 casos nuevos de HU04. Reporte local: `app/build/reports/tests/testDebugUnitTest/index.html`.
 
-Inventario inicial de HU04-01 (#37), 04/11/2026. Base inicial develop; contratos compartidos de HU03 revisados en el PR #121 e incorporados después como base local de HU04, con aceptación y correcciones pendientes. Estos IDs son propios de HU04 y no sustituyen los CP-HU03, CP-HU02 ni CP-HU14. El inventario se creó sin ejecuciones en HU04-01. HU04-02 añade la cobertura inicial de datos descrita más abajo; los recorridos de interfaz continúan pendientes.
+**Avance HU04-05 · 04/11/2026:** 6 recorridos de `PerformerDetailScreenTest` aprobados en tablet Huawei DBY-W09, Android 12/API 31, con BackVynils local; 0 fallos, errores u omisiones. Esta correspondencia actualiza los pendientes de interfaz del inventario inicial:
+
+| Casos | Método E2E | Comprobación ejecutada |
+|---|---|---|
+| CP-HU04-01/04/06/07 | `musician_album_return_recreation_and_artists_tab_keep_the_expected_content` | Músico con 8 álbumes propios; contenido, contador, apertura del último álbum y regreso; recreación conserva fila visible, posición y rol; pestaña Artistas vuelve al listado |
+| CP-HU04-02/05/06 | `band_opens_its_member_and_returns_as_collector` | Banda con 6 integrantes propios; desplazamiento al último por nombre, apertura y regreso; fecha, contador y rol; Agregar premio visible y deshabilitado |
+| CP-HU04-08 | `empty_sections_keep_the_musician_and_band_visible` | Mensajes específicos de álbumes/integrantes vacíos sin ocultar al artista |
+| CP-HU04-03 | `album_artist_opens_typed_detail_and_back_returns_to_the_same_album` | Entrada tipada de músico desde HU02 y regreso al mismo álbum; sin artista no hay enlace activo. Variante de banda desde HU02 pendiente en E2E |
+| CP-HU04-09 | `role_selector_clears_detail_and_reopening_preserves_the_new_role` | Chip abre selector sin barra inferior; al entrar como Visitante se conserva el nuevo rol y no aparece Agregar premio |
+| CP-HU04-11 | `removed_musician_shows_404_allows_retry_and_returns_to_artists` | 404 real de un músico propio eliminado; reintento conserva error y salida segura. Recuperación tras restablecer un artista no se simula aquí |
+| CP-HU04-17 (parcial) | Recorridos de músico y banda anteriores | Listas extensas, búsqueda por identidad y desplazamiento en horizontal; fuentes grandes, lector de pantalla y verificación visual completa pendientes |
+
+Se amplían los cinco recorridos previos y se agrega uno del selector; no son seis pruebas nuevas. Las filas siguientes conservan el inventario inicial como referencia histórica; los avances HU04-04/05 anteriores actualizan su cobertura. API 21/37, rotación real durante un recorrido y navegación con argumentos inválidos siguen pendientes; la recreación no equivale a rotación real. Reporte: `app/build/reports/androidTests/connected/debug/index.html`.
+
+Inventario inicial de HU04-01 (#37), 04/11/2026. Base inicial develop; contratos compartidos de HU03 revisados en el PR #121 e incorporados después como base local de HU04, con aceptación y correcciones pendientes. Estos IDs son propios de HU04 y no sustituyen los CP-HU03, CP-HU02 ni CP-HU14. El inventario se creó sin ejecuciones en HU04-01. HU04-02 añade la cobertura inicial de datos descrita más abajo.
 
 Diseño y alcance: [13-hu04-diseno-tecnico.md](13-hu04-diseno-tecnico.md). Las clases y métodos de automatización se asociarán en HU04-02 a HU04-06 según se implementen; las pruebas de datos no acreditan por sí solas recorridos de interfaz.
 

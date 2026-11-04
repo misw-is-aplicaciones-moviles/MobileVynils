@@ -256,3 +256,19 @@ Ejecución con JDK 17:
 ```
 
 Resultado verificado en XML: 9 + 12 + 15 = **36 pruebas aprobadas**, sin fallos, errores ni omisiones. La correspondencia unitaria con CP-HU04 se registra en [el inventario](06-pruebas.md#hu04--detalle-de-artista). HU04-05/06 conservan las comprobaciones de interfaz y API; esta ejecución no sustituye orientación, accesibilidad ni dispositivos pendientes.
+
+## 12. Pruebas E2E HU04-05 · 04/11/2026
+
+Rama `feature/HU04-05-pruebas-e2e`. Amplía la clase existente `PerformerDetailScreenTest`: músico con 8 álbumes, banda con 6 integrantes, selección por nombre y conservación de posición/rol tras recrear. Agrega un recorrido del chip de rol y entrada posterior como Visitante. Mantiene los casos de vacíos, entrada desde HU02 y 404 real, reutilizando Robots y fixtures propios de `BackendPerformers` con limpieza al terminar.
+
+Las ejecuciones detectaron dos supuestos de la prueba: clic por ID compartido entre varios integrantes y título del álbum fuera de pantalla en horizontal por la altura de su portada. Se corrigieron buscando al integrante por nombre y desplazando hasta el texto hijo de una fila alta antes de verificar o tocar el contenido. No se modificó código productivo ni se debilitaron verificaciones.
+
+```bash
+bash scripts/run_e2e.sh \
+  '-Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.ui.PerformerDetailScreenTest' \
+  '-Pandroid.testInstrumentationRunnerArguments.package=co.edu.uniandes.vinilos.ui' \
+  -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true \
+  --offline --console=plain
+```
+
+Ejecución con JDK 17, BackVynils local y tablet Huawei DBY-W09, Android 12/API 31. Resultado final comprobado en XML y TestRunner: **6 pruebas aprobadas, 0 fallos y 0 omisiones**. Spotless y detekt correctos. Reporte HTML: `app/build/reports/androidTests/connected/debug/index.html`. La correspondencia y limitaciones se registran en el inventario: esta ejecución no acredita API 21/37, rotación real, accesibilidad completa ni integración HU14. No se generaron capturas nuevas en esta tarea.
