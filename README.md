@@ -20,13 +20,13 @@ Versión móvil de Vinilos: catálogo de álbumes, artistas y coleccionistas de 
 
 Sprint 1 incluye HU01 (catálogo de álbumes), HU02 (detalle de álbum), HU07 (crear álbum) y HU08 (asociar canciones a un álbum). La app funciona desde Android 5.0 Lollipop (API 21).
 
-> **Importante:** la app solo funciona en un emulador de Android que corra en el mismo computador donde está encendido el backend local (`localhost:3000`). No se admiten dispositivos físicos ni emuladores en otros equipos, ni backends remotos.
+> **APK del Sprint 1:** descarga [`vinilos-1.0.0.apk`](vinilos-1.0.0.apk), ubicado en la raíz del repositorio. Este APK consume el backend desplegado en **https://backvynils-0c3a5834efca.herokuapp.com/** y necesita conexión a Internet. Puede instalarse en un dispositivo Android físico o en un emulador; no requiere levantar el backend local.
 
 ## Contenido
 
 - [Equipo](#equipo)
 - [Requisitos](#requisitos)
-- [1. Levantar el backend local](#1-levantar-el-backend-local) (necesario en todos los casos)
+- [1. Levantar el backend local](#1-levantar-el-backend-local) (solo para desarrollo y pruebas locales)
 - [2. Opción A: instalar el APK publicado](#2-opción-a-instalar-el-apk-publicado)
 - [3. Opción B: construir la app desde el código](#3-opción-b-construir-la-app-desde-el-código)
 - [4. Ejecutar las pruebas](#4-ejecutar-las-pruebas)
@@ -47,13 +47,13 @@ Nombre del equipo: por definir.
 
 ## Requisitos
 
-La app se desarrolló y se probó en un emulador **API 37** (Android 17, perfil Medium Phone) con Android Studio 2026.2. Su versión mínima es API 21 (Android 5.0 Lollipop).
+Para instalar y probar el APK publicado, se recomienda un dispositivo o emulador con **Android 17 (API 37)** y conexión a Internet. Para compilar y ejecutar pruebas locales, utiliza las herramientas de la siguiente tabla.
 
 | Herramienta | Versión | Para qué |
 |---|---|---|
-| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Reciente, encendido | Backend local (opciones A y B) |
-| [Android Studio](https://developer.android.com/studio) | 2026.2 (Quail) o superior | Emulador (A y B) y compilación (B) |
-| Emulador de Android (AVD) | API 37 recomendado; API 21 o superior | Ejecutar la app (A y B) |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Reciente, encendido | Backend y pruebas locales |
+| [Android Studio](https://developer.android.com/studio) | 2026.2 (Quail) o superior | Emulador y compilación desde el código |
+| Emulador de Android (AVD) | API 37 recomendado; API 21 o superior | Ejecutar la app si no usas un dispositivo físico |
 | Android SDK | Platform 37 y Build-Tools 36 | Compilar (B). Se instalan desde `Tools > SDK Manager` |
 | JDK | 17 o superior (Android Studio incluye uno) | Compilar desde terminal (B) |
 | Git | Cualquiera reciente | Clonar los repositorios |
@@ -62,7 +62,7 @@ Para crear el emulador recomendado: `Tools > Device Manager > Create Virtual Dev
 
 ## 1. Levantar el backend local
 
-La app consume la API REST de [BackVynils](https://github.com/TheSoftwareDesignLab/BackVynils), que debe correr en tu computador con Docker Desktop encendido.
+Para desarrollar o ejecutar las pruebas contra un backend local, levanta [BackVynils](https://github.com/TheSoftwareDesignLab/BackVynils) en tu computador con Docker y Docker Compose. Este paso no es necesario para instalar el APK publicado, que utiliza Heroku.
 
 ```bash
 git clone https://github.com/TheSoftwareDesignLab/BackVynils.git
@@ -74,36 +74,89 @@ La API queda en `http://localhost:3000` con los datos de ejemplo de BackVynils. 
 
 ### Cómo llega la app al backend
 
-La URL del backend queda fija dentro de la app al compilarla: `http://10.0.2.2:3000/`. Para el emulador de Android, `10.0.2.2` es el `localhost` del computador que lo ejecuta. Por eso:
+La URL se incorpora al APK durante la compilación mediante `vinilos.baseUrl` en `local.properties`. Modificar ese archivo no cambia un APK ya generado: hay que compilarlo e instalarlo de nuevo.
 
-- **Sí funciona:** un emulador de Android Studio en el mismo computador donde corre BackVynils en `localhost:3000`.
-- **No funciona:** un dispositivo físico, un emulador en otro computador o un backend desplegado en otro servidor. En esos casos la app no encuentra el backend y muestra "No se pudo cargar el catálogo".
+| Entorno | `vinilos.baseUrl` | Conexión necesaria |
+|---|---|---|
+| APK publicado / Heroku | `https://backvynils-0c3a5834efca.herokuapp.com/` | Internet; sin Docker ni redirección USB |
+| Backend local y emulador de Android Studio | `http://10.0.2.2:3000/` | BackVynils en `localhost:3000` del computador que ejecuta el emulador |
+| Backend local y dispositivo físico por USB | `http://127.0.0.1:3000/` | BackVynils en el computador y `adb -d reverse tcp:3000 tcp:3000` |
 
-Esto aplica al APK publicado y al que compiles con la opción B. La app usa HTTP sin cifrar a propósito, para consumir el backend local del curso.
+`localhost` en Android se refiere al propio dispositivo. En el emulador, `10.0.2.2` permite acceder al computador; en el dispositivo físico, la redirección USB conecta su puerto 3000 con el del computador. La app admite HTTP para el backend local y HTTPS para Heroku.
 
 ## 2. Opción A: instalar el APK publicado
 
-Cada entrega trae un APK listo para instalar, en dos lugares:
-
-- La carpeta [`apk/`](apk/) del repositorio, en la rama `main`: `apk/vinilos-1.0.0.apk` (versión actual de la app).
-- La página [Releases](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/releases) de GitHub, en el release [`1.0.0`](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/releases/tag/1.0.0).
-
-El APK solo se puede usar en un emulador del mismo computador donde corre el backend en `localhost:3000` (ver [sección 1](#cómo-llega-la-app-al-backend)). No lo instales en un dispositivo físico: la app abre, pero no carga datos.
+El APK de esta entrega está en la **raíz del repositorio**: [`vinilos-1.0.0.apk`](vinilos-1.0.0.apk). Es una compilación **debug** y tiene configurado el backend `https://backvynils-0c3a5834efca.herokuapp.com/`.
 
 Pasos:
 
-1. Levanta el backend ([sección 1](#1-levantar-el-backend-local)) y comprueba que `http://localhost:3000/albums` responda.
-2. Inicia un emulador en ese mismo computador (API 37 recomendado; API 21 o superior).
-3. Instala el APK de una de estas dos formas:
-   - Arrastra el archivo `.apk` sobre la ventana del emulador.
-   - Desde terminal: `adb install -r apk/vinilos-1.0.0.apk`.
-4. Abre **Vinilos**, elige el rol **Visitante** o **Coleccionista** y navega el catálogo.
+1. Descarga el APK desde el enlace anterior; en GitHub utiliza la opción de descargar el archivo.
+2. En un dispositivo Android con Internet, permite la instalación desde la aplicación con la que abriste el APK y completa la instalación. También puedes instalarlo por USB:
 
-Si ya había una versión instalada con otra firma (por ejemplo, una compilación `debug` desde Android Studio), desinstálala antes: `adb uninstall co.edu.uniandes.vinilos`.
+   ```bash
+   adb -d install -r vinilos-1.0.0.apk
+   ```
+
+   En un emulador, arrastra el APK a su ventana o utiliza `adb -e install -r vinilos-1.0.0.apk`.
+
+3. Abre **Vinilos**, elige **Visitante** o **Coleccionista** y comprueba el catálogo y el detalle de un álbum.
+
+**Backend de la versión publicada:** `vinilos-1.0.0.apk` se conecta a `https://backvynils-0c3a5834efca.herokuapp.com/`. No necesita Docker, un backend local ni `adb reverse`. Cambiar `local.properties` no cambia este APK descargado. Para conectarse a un backend local hay que generar e instalar un APK propio, como se explica a continuación.
 
 ## 3. Opción B: construir la app desde el código
 
-Necesitas las herramientas de la sección [Requisitos](#requisitos) y el backend local encendido ([sección 1](#1-levantar-el-backend-local)). Desde terminal, `JAVA_HOME` debe apuntar a un JDK 17 o superior.
+Necesitas las herramientas de la sección [Requisitos](#requisitos). Para ejecutar la app, elige Heroku o levanta el backend local de la [sección 1](#1-levantar-el-backend-local). Desde terminal, `JAVA_HOME` debe apuntar a un JDK 17 o superior.
+
+Abre o crea `local.properties` en la raíz del repositorio, junto a `gradlew`. Conserva la línea `sdk.dir` si ya existe y agrega o reemplaza una única línea `vinilos.baseUrl`, con `/` final. Por ejemplo, para el emulador con backend local:
+
+```properties
+vinilos.baseUrl=http://10.0.2.2:3000/
+```
+
+Para un dispositivo físico por USB, usa `vinilos.baseUrl=http://127.0.0.1:3000/` y ejecuta `adb -d reverse tcp:3000 tcp:3000`. Para generar un APK conectado a Heroku, usa `vinilos.baseUrl=https://backvynils-0c3a5834efca.herokuapp.com/`. Si no defines esta propiedad, el código utiliza `http://10.0.2.2:3000/`. No versiones `local.properties`.
+
+### Paso a paso: generar y probar tu APK con backend local
+
+1. Clona este repositorio y entra en su raíz:
+
+   ```bash
+   git clone https://github.com/misw-is-aplicaciones-moviles/MobileVynils.git
+   cd MobileVynils
+   ```
+
+2. Levanta BackVynils siguiendo la [sección 1](#1-levantar-el-backend-local). Déjalo ejecutándose y comprueba que `http://localhost:3000/albums` devuelve los álbumes en el navegador del computador.
+3. Configura el SDK como se indica en [Desde terminal](#desde-terminal). En el mismo `local.properties`, agrega **solo una** de estas opciones según dónde probarás:
+
+   | Dónde ejecutarás tu APK | Línea que debes guardar en `local.properties` |
+   |---|---|
+   | Emulador de Android Studio en el computador del backend | `vinilos.baseUrl=http://10.0.2.2:3000/` |
+   | Dispositivo físico conectado por USB al computador del backend | `vinilos.baseUrl=http://127.0.0.1:3000/` |
+
+4. Inicia el emulador o conecta el dispositivo físico con depuración USB habilitada. Comprueba la conexión con `adb devices`. Si usas el dispositivo físico, ejecuta también:
+
+   ```bash
+   adb -d reverse tcp:3000 tcp:3000
+   ```
+
+5. Desde la raíz del repositorio, genera tu APK:
+
+   ```bash
+   ./gradlew assembleDebug
+   ```
+
+6. Cuando termine con `BUILD SUCCESSFUL`, tu APK estará en `app/build/outputs/apk/debug/app-debug.apk`. Instálalo según tu dispositivo:
+
+   ```bash
+   # Dispositivo físico por USB:
+   adb -d install -r app/build/outputs/apk/debug/app-debug.apk
+
+   # O emulador:
+   adb -e install -r app/build/outputs/apk/debug/app-debug.apk
+   ```
+
+7. Abre **Vinilos**, selecciona un rol, comprueba que carga el catálogo y abre el detalle de un álbum. Como coleccionista también puedes crear un álbum y asociarle una canción; los cambios se guardarán en tu backend local. Mantén el backend encendido y, si usas USB, el dispositivo conectado.
+
+Si vuelves a instalar `vinilos-1.0.0.apk` de la raíz, la aplicación volverá a utilizar Heroku. Si Android informa que las firmas son incompatibles, consulta [Solución de problemas](#solución-de-problemas).
 
 ### Desde Android Studio
 
@@ -114,7 +167,7 @@ Necesitas las herramientas de la sección [Requisitos](#requisitos) y el backend
    ```
 
 2. Abre la carpeta en Android Studio (`File > Open`). Gradle sincroniza y descarga las dependencias declaradas en `gradle/libs.versions.toml`; la primera vez tarda varios minutos. Android Studio crea `local.properties` con la ruta del SDK.
-3. Selecciona la configuración `app` y el emulador, y pulsa `Run`.
+3. Configura `vinilos.baseUrl` en `local.properties`, selecciona la configuración `app` y el dispositivo o emulador, y pulsa `Run`.
 
 ### Desde terminal
 
@@ -124,12 +177,14 @@ Si no abriste el proyecto en Android Studio, crea `local.properties` con la ruta
 sdk.dir=C\:/Users/<usuario>/AppData/Local/Android/Sdk
 ```
 
-En macOS o Linux, por ejemplo, `sdk.dir=/Users/<usuario>/Library/Android/sdk`. Luego, desde la raíz del repositorio:
+En Linux suele ser `sdk.dir=/home/<usuario>/Android/Sdk`; en macOS, `sdk.dir=/Users/<usuario>/Library/Android/sdk`. Utiliza la ruta real de tu instalación y configura `vinilos.baseUrl` como se indicó arriba. Luego, desde la raíz del repositorio:
 
 ```bash
 ./gradlew assembleDebug   # genera app/build/outputs/apk/debug/app-debug.apk
-./gradlew installDebug    # compila e instala en el emulador encendido
+./gradlew installDebug    # compila e instala en el dispositivo o emulador conectado
 ```
+
+Para generar tu APK basta con `./gradlew assembleDebug`; instalarlo es opcional. El archivo resultante es `app/build/outputs/apk/debug/app-debug.apk`. Cada vez que cambies `vinilos.baseUrl`, ejecuta de nuevo la compilación e instala el nuevo APK para que use esa dirección. Esto no modifica el APK de entrega `vinilos-1.0.0.apk` guardado en la raíz.
 
 En Windows con PowerShell o CMD, usa `gradlew.bat` (o `.\gradlew`) en lugar de `./gradlew`.
 
@@ -151,7 +206,7 @@ Los reportes quedan en `app/build/reports/`.
 
 ### Pruebas instrumentadas y E2E (Espresso)
 
-Necesitan un emulador encendido (API 37 recomendado) y BackVynils en `localhost:3000` del mismo computador. Las pruebas que crean álbumes y canciones requieren que las secuencias de IDs de la base estén alineadas con la semilla. `scripts/run_e2e.sh` las prepara (sin borrar datos) y luego ejecuta `connectedDebugAndroidTest`:
+Necesitan un dispositivo o emulador conectado y BackVynils local con la semilla. Compila con `vinilos.baseUrl=http://10.0.2.2:3000/` para el emulador, o `vinilos.baseUrl=http://127.0.0.1:3000/` para la tablet por USB y ejecuta antes `adb -d reverse tcp:3000 tcp:3000`. Las pruebas E2E se ejecutan contra el backend local; el APK de entrega conectado a Heroku se conserva por separado en la raíz del repositorio. Las pruebas que crean álbumes y canciones requieren que las secuencias de IDs de la base estén alineadas con la semilla. `scripts/run_e2e.sh` las prepara (sin borrar datos) y luego ejecuta `connectedDebugAndroidTest`:
 
 ```bash
 ./scripts/run_e2e.sh
@@ -189,13 +244,23 @@ El APK de release se firma con la keystore de depuración del proyecto (`keystor
 
 Sin esos valores, `assembleRelease` falla indicando cuál falta.
 
-Cada release se etiqueta con la versión de la app (`versionName`, formato `X.Y.Z`, sin prefijo); la versión actual es `1.0.0`. Flujo de cada entrega ([docs/08-flujo-de-trabajo-git.md](docs/08-flujo-de-trabajo-git.md), sección 5):
+El workflow actual genera y publica el APK de release al subir un tag `sprint-*` (por ejemplo, `sprint-1`), después de pasar las verificaciones de calidad y pruebas unitarias. Un push a `develop` o `main` compila debug, pero no publica ese APK.
 
-1. Crear `release/sprint-N` desde `develop`.
-2. En esa rama, poner la versión en `versionName` de `app/build.gradle.kts`, revisar este README y versionar el APK de release como `apk/vinilos-X.Y.Z.apk` (se copia a mano desde `app/build/outputs/apk/release/app-release.apk`; la CI no lo sube al repositorio).
-3. PR de `release/sprint-N` a `main` y merge.
-4. Sobre `main`, crear y subir el tag con la versión. Por ejemplo: `git tag -a 1.0.0 -m "Versión 1.0.0: HU01, HU02, HU07, HU08"` y `git push origin 1.0.0`.
-5. El job "APK de release" del workflow corre al empujar un tag `X.Y.Z`, después de que "Calidad y pruebas unitarias" pase, y adjunta `vinilos-X.Y.Z.apk` al GitHub Release.
+Flujo de cada entrega:
+
+1. Crear `release/sprint-N` desde `develop` y revisar versión, documentación y backend de destino.
+2. Configurar `vinilos.baseUrl` antes de compilar. El APK actual `vinilos-1.0.0.apk` se compiló para Heroku. Para reemplazarlo por otra compilación debug de entrega, después de `./gradlew assembleDebug` copiar el resultado a la raíz:
+
+   ```bash
+   cp app/build/outputs/apk/debug/app-debug.apk vinilos-1.0.0.apk
+   ```
+
+   Verificar la instalación y el backend antes de agregar el archivo a Git. Los directorios `build/` permanecen ignorados; el APK de entrega se versiona en la raíz. Si se entrega un APK release, generarlo con `./gradlew assembleRelease`, identificarlo como `vinilos-sprint-N-release.apk` en la raíz y actualizar el enlace de descarga.
+3. Abrir el PR de la rama de release hacia `main` y hacer merge después de las revisiones.
+4. Crear y subir el tag correspondiente sobre el commit de entrega en `main`.
+5. El job "APK de release" adjunta `vinilos-sprint-N.apk` a [GitHub Releases](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/releases). Este job no agrega archivos al repositorio.
+
+**Backend del APK generado en CI:** el workflow actual no configura `vinilos.baseUrl` y `local.properties` no se versiona; por tanto, el APK generado por Actions utiliza el valor predeterminado `http://10.0.2.2:3000/`. No es equivalente al APK de Heroku guardado en la raíz. Antes de distribuir un release de CI para Heroku, el equipo debe configurar ese destino en el proceso de compilación.
 
 ## Documentación
 
@@ -204,9 +269,9 @@ Cada release se etiqueta con la versión de la app (`versionName`, formato `X.Y.
 
 ## Solución de problemas
 
-- **La app muestra "No se pudo cargar el catálogo".** El backend no está encendido o la app no lo alcanza. Revisa que `http://localhost:3000/albums` responda en el computador y que la app corra en un emulador de ese mismo computador, no en un dispositivo físico ([sección 1](#cómo-llega-la-app-al-backend)).
+- **La app muestra "No se pudo cargar el catálogo".** Con el APK de la raíz, comprueba Internet y que `https://backvynils-0c3a5834efca.herokuapp.com/albums` responda. Con una compilación local, comprueba `http://localhost:3000/albums` en el computador y la URL compilada: `10.0.2.2` en emulador o `127.0.0.1` más `adb -d reverse tcp:3000 tcp:3000` en dispositivo físico. Si cambias `vinilos.baseUrl`, vuelve a compilar e instalar.
 
-- **`INSTALL_FAILED_UPDATE_INCOMPATIBLE` al instalar el APK.** Hay otra versión instalada con distinta firma. Desinstálala con `adb uninstall co.edu.uniandes.vinilos`.
+- **`INSTALL_FAILED_UPDATE_INCOMPATIBLE` al instalar el APK.** Hay otra versión instalada con distinta firma. Para reemplazarla se requiere la misma firma o desinstalar la anterior con `adb uninstall co.edu.uniandes.vinilos`; la desinstalación elimina sus datos locales.
 
 - **`SDK location not found`.** Falta `sdk.dir` en `local.properties` o la variable `ANDROID_HOME` ([sección 3](#desde-terminal)).
 
