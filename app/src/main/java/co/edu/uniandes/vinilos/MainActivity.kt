@@ -172,6 +172,7 @@ class MainActivity :
 
     private companion object {
         /** El selector de rol y las pantallas completas (formulario de nuevo álbum) se dibujan sin la barra inferior. */
-        val DESTINATIONS_WITHOUT_BOTTOM_BAR = setOf(R.id.roleSelectFragment, R.id.albumCreateFragment)
+        val DESTINATIONS_WITHOUT_BOTTOM_BAR =
+            setOf(R.id.roleSelectFragment, R.id.albumCreateFragment, R.id.prizePickerFragment, R.id.prizeCreateFragment)
     }
 }
