@@ -1,6 +1,6 @@
 # 13. HU04 · Diseño técnico del detalle de artista
 
-Estado: propuesta de diseño de HU04-01; implementación y pruebas pendientes.
+Estado: HU04-01 documentada; capa de datos HU04-02 implementada y verificada en JVM (sección 9). Pantalla, ViewModel e integración de premios pendientes.
 Tarea: [HU04-01 · #37](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/issues/37).
 Responsable: @ManfredAriel91122. Fecha: 04/11/2026.
 Base: `develop` local, `b5152a3`. Rama principal: `feature/HU04-detalle-artista`.
@@ -185,3 +185,39 @@ El [inventario](06-pruebas.md#hu04--detalle-de-artista) define CP-HU04-01 a CP-H
 Reutilizar `MockWebServerRule`, `MainDispatcherRule`, fakes de sesión y repositorios, `TestResources`, `ViewWaits` y Robots. La preparación de artistas de HU03 se ampliará solo si hace falta. Usar datos propios identificables y valores contrastados con el backend; no posiciones fijas, nombres de semilla con conteos supuestos, limpieza indiscriminada ni esperas fijas. No usar el DELETE de asociaciones de premios del backend para limpiar fixtures.
 
 HU04-01 entrega diseño, diagramas, contratos, reutilización, límites e inventario propuesto. No entrega Kotlin/XML ni requiere ejecutar Gradle por cambios exclusivos de documentación. HU04-02/03 implementan y hacen comprobaciones iniciales; HU04-04/05/06 amplían las pruebas sin duplicarlas. Los resultados se registrarán solo tras ejecutarse en JVM/tablet; API 21/37 y el flujo integrado de premios permanecerán pendientes mientras no haya evidencia.
+
+## 9. Implementación HU04-02 · 04/11/2026
+
+Implementado en `feature/HU04-02-datos`, sobre la integración local de HU03:
+
+- `PerformerDetail` compone el `Performer` de HU03 con descripción, álbumes completos e integrantes. No se duplicaron los campos del artista ni se crearon otros repositorios o clientes.
+- `MusicianDto` y `BandDto` se ampliaron en su archivo existente. `albums` reutiliza `AlbumDto`; los integrantes usan `MusicianDto`. `RelatedIdDto` dejó de ser necesario y se retiró; las pruebas de lista conservaron sus expectativas usando esos mismos DTO con solo ID cuando corresponde.
+- Se agregaron `getMusician(id, cacheControl)` y `getBand(id, cacheControl)` a `VinilosApiService`, y `getPerformer(id, type, forceRefresh)` al Service Adapter y Repository existentes. La API se resuelve en IO; el mapeo se ejecuta en Default. La respuesta HTTP nula o inválida se trata como serialización y los HTTP fallidos conservan su código.
+- El Repository valida ID positivo y coherencia de ID/tipo de respuesta. No lee ni escribe la caché de listas al consultar un detalle. `AppContainer` ya entrega el mismo repositorio/adaptador: no hizo falta registrar otra dependencia.
+- `PerformerSummary` añade `type` opcional para la futura entrada desde HU02. Su DTO de álbum conserva birthDate/creationDate y el mapper devuelve MUSICIAN/BAND cuando solo está presente la señal correspondiente. Sin señal o con ambas, el tipo queda nulo, conservando compatibilidad con respuestas anteriores. La navegación se conecta en HU04-03.
+- No se modificaron pantallas, ViewModels, Room, configuración de red, dependencias ni lógica de escritura de premios.
+
+Se consultaron por GET los detalles de músico y banda existentes en BackVynils local para contrastar los campos; no se modificaron datos del backend. Las pruebas HTTP controladas reutilizan los objetos de los JSON de HU03 (`musicians.json` y `bands_with_members.json`), contrastados con la estructura real de ambos detalles. No se agregaron fixtures equivalentes ni se requiere Heroku o un proxy externo.
+
+### Evidencia y alcance de las pruebas iniciales
+
+18 pruebas nuevas, todas aprobadas:
+
+| Clase | Pruebas nuevas | Cobertura inicial |
+|---|---|---|
+| `PerformerDetailServiceAdapterTest` | 11 | Ambos GET y contenido completo; fecha de nacimiento/creación; miembros tipados; relaciones vacías e imagen opcional; revalidación de caché HTTP fresca; 404/500; desconexión y recuperación explícita; timeout; JSON/cuerpo inválido o 204; elementos nulos; campos faltantes; ID o endpoint incoherentes. |
+| `PerformerRepositoryImplTest` | 4 adicionales a HU03 | `detail bypasses list cache forwards refresh and leaves saved artists intact`; `detail rejects a mismatched id or type without touching Room`; `non positive detail ids are rejected before invoking the adapter`; `cancelling a detail propagates cancellation and never modifies the list cache`. |
+| `PerformerSummaryMappersTest` | 3 | Tipos derivados de los campos reales del álbum, compatibilidad con respuesta anterior y señales contradictorias sin adivinar endpoint. |
+
+Primero se ejecutó `testDebugUnitTest --tests '*Performer*'`; después los controles completos con JDK 17:
+
+```bash
+JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 ./gradlew \
+  spotlessCheck detekt lintDebug testDebugUnitTest assembleDebugAndroidTest \
+  -Dorg.gradle.java.home=/usr/lib/jvm/java-17-openjdk-amd64 \
+  --offline --console=plain
+```
+
+Resultado: BUILD SUCCESSFUL; **212 pruebas JVM, 0 fallos, 0 errores y 0 omisiones** (194 de la base integrada más 18 nuevas). Las pruebas existentes de HU02 y HU03 conservan sus verificaciones. El APK de pruebas instrumentadas compila; no se ejecutaron instrumentadas ni se afirma validación visual de HU04, cuya pantalla no está implementada todavía. Reporte JVM local: `app/build/reports/tests/testDebugUnitTest/index.html`.
+
+HU04-04/06 ampliarán la cobertura sin repetir los casos ya implementados; HU04-03/05 verificarán los estados y recorridos reales de interfaz. La integración de premios mantiene el alcance y los pendientes de la sección 7.

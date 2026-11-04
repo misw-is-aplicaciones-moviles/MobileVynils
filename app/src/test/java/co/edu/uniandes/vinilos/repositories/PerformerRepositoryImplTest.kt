@@ -4,11 +4,14 @@ import co.edu.uniandes.vinilos.database.toEntity
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.Performer
+import co.edu.uniandes.vinilos.models.PerformerDetail
+import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.testing.FakePerformerDao
 import co.edu.uniandes.vinilos.testing.FakePerformerServiceAdapter
 import co.edu.uniandes.vinilos.testing.band
 import co.edu.uniandes.vinilos.testing.musician
 import com.google.gson.JsonParseException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -183,5 +186,78 @@ class PerformerRepositoryImplTest {
 
             assertEquals(1, adapter.callCount)
             assertEquals(results[0], results[1])
+        }
+
+    @Test
+    fun `detail bypasses list cache forwards refresh and leaves saved artists intact`() =
+        runTest {
+            val cached = listOf(ruben.toEntity(), queen.toEntity())
+            val dao = FakePerformerDao(cached)
+            val adapter =
+                FakePerformerServiceAdapter().apply {
+                    detail =
+                        PerformerDetail(
+                            musician(100, "Información actualizada"),
+                            "Descripción",
+                            emptyList(),
+                            emptyList(),
+                        )
+                }
+
+            val result = repository(dao, adapter).getPerformer(100, PerformerType.MUSICIAN, forceRefresh = true)
+
+            assertEquals(DataResult.Success(adapter.detail), result)
+            assertEquals(listOf(Triple(100, PerformerType.MUSICIAN, true)), adapter.detailRequests)
+            assertEquals(0, adapter.callCount)
+            assertEquals(cached.sortedBy { it.name }, dao.getAll())
+            assertEquals(0, dao.writeCount)
+        }
+
+    @Test
+    fun `detail rejects a mismatched id or type without touching Room`() =
+        runTest {
+            val dao = FakePerformerDao(listOf(ruben.toEntity()))
+            val adapter = FakePerformerServiceAdapter()
+            val repository = repository(dao, adapter)
+            listOf(musician(999, "Otro"), band(100, "Otro tipo")).forEach { wrong ->
+                adapter.detail = PerformerDetail(wrong, "D", emptyList(), emptyList())
+
+                assertEquals(
+                    DataResult.Failure(DataError.Serialization),
+                    repository.getPerformer(100, PerformerType.MUSICIAN),
+                )
+            }
+            assertEquals(listOf(ruben.toEntity()), dao.getAll())
+            assertEquals(0, dao.writeCount)
+        }
+
+    @Test
+    fun `non positive detail ids are rejected before invoking the adapter`() =
+        runTest {
+            val dao = FakePerformerDao()
+            val adapter = FakePerformerServiceAdapter()
+            val repository = repository(dao, adapter)
+            listOf(0, -1).forEach { id ->
+                val error = runCatching { repository.getPerformer(id, PerformerType.MUSICIAN) }.exceptionOrNull()
+                assertTrue(error is IllegalArgumentException)
+            }
+            assertTrue(adapter.detailRequests.isEmpty())
+            assertEquals(0, dao.writeCount)
+        }
+
+    @Test
+    fun `cancelling a detail propagates cancellation and never modifies the list cache`() =
+        runTest {
+            val dao = FakePerformerDao(listOf(ruben.toEntity()))
+            val adapter = FakePerformerServiceAdapter(failure = CancellationException("cancelled"))
+
+            val error =
+                runCatching {
+                    repository(dao, adapter).getPerformer(100, PerformerType.MUSICIAN)
+                }.exceptionOrNull()
+
+            assertTrue(error is CancellationException)
+            assertEquals(listOf(ruben.toEntity()), dao.getAll())
+            assertEquals(0, dao.writeCount)
         }
 }
