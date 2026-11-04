@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fila de coleccionista: número, disco con iniciales, nombre, correo, conteos y chevron.
+     Toda la fila es un solo nodo accesible: la descripción la pone el adaptador. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/collectorRow"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:clipChildren="false"
+    android:focusable="true"
+    android:paddingStart="@dimen/album_row_padding_horizontal"
+    android:paddingTop="@dimen/collector_row_padding_vertical"
+    android:paddingEnd="@dimen/collector_row_padding_end"
+    android:paddingBottom="@dimen/collector_row_padding_vertical">
+
+    <TextView
+        android:id="@+id/collectorNumber"
+        android:layout_width="@dimen/album_number_width"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
+        android:includeFontPadding="false"
+        android:textAppearance="@style/TextAppearance.Vinilos.ListNumber"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="01" />
+
+    <!-- La sombra la da la elevación del disco; su fondo ovalado le da el contorno redondo. -->
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/collectorDisc"
+        android:layout_width="@dimen/performer_disc_size"
+        android:layout_height="@dimen/performer_disc_size"
+        android:layout_marginStart="@dimen/collector_row_gap"
+        android:background="@drawable/bg_performer_disc"
+        android:contentDescription="@null"
+        android:elevation="@dimen/performer_disc_elevation"
+        android:importantForAccessibility="no"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/collectorNumber"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/img_vinyl_disc" />
+
+    <!-- Misma elevación que el disco para dibujarse encima de él. -->
+    <TextView
+        android:id="@+id/collectorInitials"
+        android:layout_width="@dimen/performer_image_size"
+        android:layout_height="@dimen/performer_image_size"
+        android:background="@drawable/bg_collector_initials"
+        android:elevation="@dimen/performer_disc_elevation"
+        android:gravity="center"
+        android:importantForAccessibility="no"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.Vinilos.Initials"
+        app:layout_constraintBottom_toBottomOf="@id/collectorDisc"
+        app:layout_constraintEnd_toEndOf="@id/collectorDisc"
+        app:layout_constraintStart_toStartOf="@id/collectorDisc"
+        app:layout_constraintTop_toTopOf="@id/collectorDisc"
+        tools:text="MB" />
+
+    <TextView
+        android:id="@+id/collectorName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/collector_row_gap"
+        android:layout_marginEnd="@dimen/collector_row_gap"
+        android:ellipsize="end"
+        android:importantForAccessibility="no"
+        android:includeFontPadding="false"
+        android:maxLines="2"
+        android:textAppearance="@style/TextAppearance.Vinilos.AlbumTitle"
+        app:layout_constraintBottom_toTopOf="@id/collectorEmail"
+        app:layout_constraintEnd_toStartOf="@id/collectorChevron"
+        app:layout_constraintStart_toEndOf="@id/collectorDisc"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Manolo Bellon" />
+
+    <TextView
+        android:id="@+id/collectorEmail"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/collector_email_gap"
+        android:ellipsize="end"
+        android:importantForAccessibility="no"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.Vinilos.Caption"
+        app:layout_constraintBottom_toTopOf="@id/collectorSummary"
+        app:layout_constraintEnd_toEndOf="@id/collectorName"
+        app:layout_constraintStart_toStartOf="@id/collectorName"
+        app:layout_constraintTop_toBottomOf="@id/collectorName"
+        tools:text="manollo@caracol.com.co" />
+
+    <TextView
+        android:id="@+id/collectorSummary"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/collector_summary_gap"
+        android:ellipsize="end"
+        android:importantForAccessibility="no"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.Vinilos.Overline"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/collectorName"
+        app:layout_constraintStart_toStartOf="@id/collectorName"
+        app:layout_constraintTop_toBottomOf="@id/collectorEmail"
+        tools:text="3 álbumes · 2 favoritos" />
+
+    <ImageView
+        android:id="@+id/collectorChevron"
+        android:layout_width="@dimen/album_chevron_size"
+        android:layout_height="@dimen/album_chevron_size"
+        android:importantForAccessibility="no"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_chevron_end"
+        app:tint="@color/vinilos_ash" />
+</androidx.constraintlayout.widget.ConstraintLayout>

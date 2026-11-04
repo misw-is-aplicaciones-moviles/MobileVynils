@@ -16,7 +16,7 @@ import co.edu.uniandes.vinilos.repositories.SessionRepository
 import com.google.android.material.transition.MaterialFadeThrough
 
 /**
- * Pantalla provisional mientras llega su historia (HU04, detalle de artista; HU05, lista de coleccionistas).
+ * Pantalla provisional mientras llega su historia (hoy, el detalle de coleccionista).
  * Título y mensaje llegan como argumentos desde nav_graph.xml.
  * El chip vuelve al selector. Álbumes ya no la usa: tiene AlbumListFragment (HU01).
  */

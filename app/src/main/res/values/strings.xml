@@ -65,7 +65,26 @@
     <string name="artist_list_empty_bands">Aún no hay bandas</string>
     <string name="artist_list_offline_notice">Sin conexión. Mostrando los datos guardados</string>
     <string name="artist_list_refresh_error">No se pudieron actualizar los artistas</string>
+
+    <!-- Lista de coleccionistas (docs/10 sección 6) -->
     <string name="collector_list_title">Coleccionistas</string>
+    <string name="collector_detail_title">Coleccionista</string>
+    <string name="collector_summary">%1$s · %2$s</string>
+    <string name="collector_no_albums">Sin álbumes aún</string>
+    <plurals name="collector_albums_count">
+        <item quantity="one">%1$d álbum</item>
+        <item quantity="other">%1$d álbumes</item>
+    </plurals>
+    <plurals name="collector_favorites_count">
+        <item quantity="one">%1$d favorito</item>
+        <item quantity="other">%1$d favoritos</item>
+    </plurals>
+    <string name="collector_item_description">%1$s, %2$s, %3$s</string>
+    <string name="collector_list_error_title">No se pudieron cargar los coleccionistas</string>
+    <string name="collector_list_error_body">Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="collector_list_empty">Aún no hay coleccionistas</string>
+    <string name="collector_list_offline_notice">Sin conexión. Mostrando los datos guardados</string>
+    <string name="collector_list_refresh_error">No se pudieron actualizar los coleccionistas</string>
 
     <!-- Contenido provisional de las pestañas hasta que llegue su historia -->
     <string name="pending_this_sprint">El catálogo llega en este sprint.</string>

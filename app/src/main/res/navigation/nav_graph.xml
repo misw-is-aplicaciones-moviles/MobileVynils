@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Destinos de primer nivel (docs/10, sección 3). El selector de rol es el inicio (TR-06).
      Cada historia reemplaza su pantalla provisional:
-     HU01 ya reemplazó albumListFragment y HU03 performerListFragment; HU04 ya implementa performerDetailFragment; HU05 (collectorListFragment) sigue pendiente. -->
+     HU01 ya reemplazó albumListFragment y HU03 performerListFragment; HU04 ya implementa performerDetailFragment; collectorListFragment ya tiene su lista y collectorDetailFragment sigue pendiente. -->
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nav_graph"
@@ -64,11 +64,25 @@
 
     <fragment
         android:id="@+id/collectorListFragment"
-        android:name="co.edu.uniandes.vinilos.ui.common.PendingTabFragment"
+        android:name="co.edu.uniandes.vinilos.ui.collectors.CollectorListFragment"
         android:label="@string/collector_list_title">
+        <action
+            android:id="@+id/action_collectorList_to_collectorDetail"
+            app:destination="@id/collectorDetailFragment" />
+    </fragment>
+
+    <!-- Detalle de coleccionista. Hasta que llegue su historia es la pantalla provisional: esa historia solo cambia la clase.
+         El argumento es el de docs/10 (sección 3); la provisional solo lee titleRes y messageRes. -->
+    <fragment
+        android:id="@+id/collectorDetailFragment"
+        android:name="co.edu.uniandes.vinilos.ui.common.PendingTabFragment"
+        android:label="@string/collector_detail_title">
+        <argument
+            android:name="collectorId"
+            app:argType="integer" />
         <argument
             android:name="titleRes"
-            android:defaultValue="@string/collector_list_title"
+            android:defaultValue="@string/collector_detail_title"
             app:argType="reference" />
         <argument
             android:name="messageRes"
