@@ -36,8 +36,8 @@ co.edu.uniandes.vinilos
 ├── MainActivity.kt                 # NavHostFragment + BottomNavigationView
 ├── di/
 │   └── AppContainer.kt             # Room, Retrofit, OkHttp, service adapters, repositorios, sesión
-├── database/                       # VinilosDatabase, Converters, dao/ (AlbumDao, TrackDao),
-│                                   # entities/ (AlbumEntity, TrackEntity, AlbumWithTracks)
+├── database/                       # VinilosDatabase, Converters, Migrations, dao/ (AlbumDao, TrackDao, PerformerDao),
+│                                   # entities/ (AlbumEntity, TrackEntity, AlbumWithTracks, PerformerEntity)
 ├── models/                         # Album, Track, Comment, Performer, Collector, Genre, RecordLabel, UserRole,
 │                                   # borradores de escritura (NewAlbum, NewTrack),
 │                                   # DataError y DataResult (errores de datos)
@@ -293,3 +293,4 @@ class AppContainer(context: Context) {
 | 2026-10-27 | TR-03: Room 2.7.2 como caché del Repository (`AlbumEntity`, `TrackEntity`), paquete `database/` con clases `internal`, `AppContainer(context)` dueño de la única `VinilosDatabase`, StrictMode en debug. |
 | 2026-10-28 | HU01-01: política "mostrar lo guardado y revalidar" en `AlbumRepository` (`hasCachedAlbums()`); los Service Adapters reciben un proveedor del servicio Retrofit y los dispatchers por constructor, para que el primer acceso a `networkClient` no ocurra en el hilo principal; el botón "+" de la barra lo muestra el Fragment a través de `PrimaryActionHost` según `canEdit` de su `UiState`. |
 | 2026-10-28 | HU07-01: formularios con validador puro y errores tipados en `viewmodels/`; borradores de escritura en `models/` (`NewAlbum`) y cuerpos de petición en `network/dto/` (`NewAlbumRequest`); `createAlbum` guarda en Room el álbum que responde el backend; resultado de una pantalla completa a la anterior por `savedStateHandle` de la pila de navegación. |
+| 2026-11-03 | HU03-01: un Service Adapter puede unir varios endpoints (`PerformerServiceAdapter` llama a `GET /musicians` y `GET /bands` en paralelo con `async` dentro de `coroutineScope`; si falla una, falla la carga completa y el Repository no escribe en Room). La versión 3 de la base se migra con una `Migration(2, 3)` explícita (`database/Migrations.kt`) que solo agrega la tabla, para no recrear el catálogo guardado; la recreación destructiva queda como red de seguridad. |

@@ -542,6 +542,22 @@
         <item name="chipMinTouchTargetSize">@dimen/min_touch_target</item>
     </style>
 
+    <!-- Texto de un chip de filtro de lista (mockups HU03): Outfit 400, 14 sp. -->
+    <style name="TextAppearance.Vinilos.FilterChip" parent="TextAppearance.Vinilos.Body">
+        <item name="lineHeight">18sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">18sp</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <!-- Chip de filtro de una lista: el de una sola elección con el texto y el relleno de los mockups. -->
+    <style name="Widget.Vinilos.Chip.Filter" parent="Widget.Vinilos.Chip">
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.FilterChip</item>
+        <item name="chipStartPadding">0dp</item>
+        <item name="chipEndPadding">0dp</item>
+        <item name="textStartPadding">@dimen/performer_filter_text_padding</item>
+        <item name="textEndPadding">@dimen/performer_filter_text_padding</item>
+    </style>
+
     <!-- Calendario de la fecha de lanzamiento con los colores del kit. -->
     <style name="ThemeOverlay.Vinilos.DatePicker" parent="ThemeOverlay.Material3.MaterialCalendar">
         <item name="colorPrimary">@color/vinilos_charcoal</item>
