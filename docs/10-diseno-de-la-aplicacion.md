@@ -14,6 +14,8 @@ Documento de diseño que desarrolla la planeación del Inception: convierte el b
 
 Alcance: las 12 historias comprometidas (HU01 a HU08 del MVP y HU09, HU15, HU12 y HU10 como extras) y las 6 tareas transversales del Sprint 1. HU13, HU14 y HU11 forman el backlog alterno; se mencionan solo donde el diseño debe dejarles sitio.
 
+**Actualización del Sprint 2 (03/11/2026):** la planeación vigente de la Wiki incorporó HU13, HU14 y HU11 a este sprint. El texto y las tablas originales de este documento conservan la distribución inicial como referencia histórica. Para premios prevalecen [HU14 en la Wiki](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/wiki/HU14) y el [diseño técnico HU14](12-hu14-diseno-tecnico.md): consulta de premios en el detalle de HU04, creación en HU13 y selección/asignación en HU14. Los frames exportados de HU14 ya se contrastaron. Por decisión del responsable, la fecha será obligatoria y no habrá Omitir, respetando el NOT NULL del backend local.
+
 Los tableros del prototipo:
 
 | Tablero en Figma | Contenido |
@@ -272,11 +274,13 @@ Flujo:
 
 **HU03 · Lista de artistas.** `ChipGroup` con selección única: "Todos", "Músicos", "Bandas". Tarjeta con imagen, nombre, "Músico · 1947" o "Banda · desde 1970" y tercera línea: "2 álbumes · 4 integrantes" para banda, "Integrante de Queen" o "N álbumes" para músico. La unión de `GET /musicians` y `GET /bands` se hace en `PerformerServiceAdapter`; la pertenencia a banda se deriva de `bands[].musicians`. Orden: por nombre, con el filtro aplicado en el ViewModel sobre la lista cargada.
 
-**HU04 · Detalle de artista.** Título "Músico" o "Banda" según el tipo. Cabecera con imagen, "Músico · nació el 16 jul 1948" o "Banda · desde 1970", nombre y descripción. Banda: sección "Integrantes · N" (lista de músicos) y "Álbumes · N". Músico: solo "Álbumes · N". Para coleccionista, cada sección lleva a la derecha un `MaterialButton` con estilo de contorno: "Agregar integrante" (solo banda) y "Agregar álbum". Los premios (`performerPrizes`) no se muestran en el alcance comprometido.
+**HU04 · Detalle de artista.** Título "Músico" o "Banda" según el tipo. Cabecera con imagen, "Músico · nació el 16 jul 1948" o "Banda · desde 1970", nombre y descripción. Banda: sección "Integrantes · N" (lista de músicos) y "Álbumes · N". Músico: solo "Álbumes · N". Las acciones de agregar integrantes o álbumes se implementan con HU12/HU15. Con la incorporación de HU13/HU14 al Sprint 2, el detalle también integra la consulta de premios y el acceso "Agregar premio" para Coleccionista según el contrato de [HU14](12-hu14-diseno-tecnico.md); sin controles de escritura para Visitante.
 
 **HU05 · Lista de coleccionistas.** Tarjeta con avatar de iniciales, nombre, correo y "N álbumes · M favoritos" ("Sin álbumes aún" cuando no tiene), a partir de los arreglos de `GET /collectors`.
 
 **HU06 · Detalle de coleccionista.** Cabecera con avatar, sobretítulo "Coleccionista" y nombre; fichas Teléfono y Correo; sección "Artistas favoritos · N" (imagen, nombre, tipo); sección "Sus álbumes · N" con precio a la derecha ("$ 35") y chip de estado "DISPONIBLE" / "NO DISPONIBLE". Requiere dos llamadas: `GET /collectors/:id` y `GET /collectors/:id/albums`. Para coleccionista, botón "Agregar favorito" en la sección de favoritos.
+
+**HU14 · Asignar premio (incorporada al Sprint 2).** Desde el detalle de músico o banda, el coleccionista abre "Elegir premio" (`GET /prizes`), busca localmente por nombre y selecciona un registro elegible. Los premios ya asignados al artista llevan "YA ASIGNADO" sin selección activa. "Continuar con «premio»" abre la hoja inferior "Fecha de premiación", con calendario, fecha obligatoria y acción "Asignar premio" deshabilitada hasta elegir día. Se retiran Omitir y la indicación de fecha opcional del mockup por decisión del responsable, respetando el backend local y sin inventar una fecha. Con día elegido, envía `premiationDate` con `POST /prizes/:prizeId/musicians/:musicianId` o `POST /prizes/:prizeId/bands/:bandId`. En éxito regresa al detalle con contador, fila actualizada y "Premio asignado al artista". "Crear un premio nuevo" abre HU13 y devuelve el premio creado al selector, seleccionado y visible. El [diseño técnico](12-hu14-diseno-tecnico.md) define estados, resultados, conservación de fecha, tratamiento de escrituras inciertas e integración temprana del selector para HU13.
 
 ### Sprint 3 · Funcionalidades adicionales
 
