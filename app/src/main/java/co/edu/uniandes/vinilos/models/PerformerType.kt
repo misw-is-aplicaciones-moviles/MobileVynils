@@ -1,6 +1,6 @@
 package co.edu.uniandes.vinilos.models
 
-/** Shared discriminator for artist navigation and artist-specific endpoints. */
+/** Un artista es un músico o una banda; el backend los sirve en endpoints distintos. */
 enum class PerformerType {
     MUSICIAN,
     BAND,

@@ -16,6 +16,7 @@ Convenciones de ingeniería de la app Android Vinilos. Se acordaron antes de esc
 | [10-diseno-de-la-aplicacion.md](10-diseno-de-la-aplicacion.md) | Roles, mapa de navegación, pantallas, modelo de datos, especificación por historia, textos, hallazgos | Antes de construir cualquier pantalla |
 | [11-hu02-diseno-tecnico.md](11-hu02-diseno-tecnico.md) | Alcance mínimo, reutilización, componentes y flujo de datos del detalle de álbum | Antes de implementar HU02 |
 | [12-hu14-diseno-tecnico.md](12-hu14-diseno-tecnico.md) | Contratos compartidos con HU04/HU13, selector de premios, fecha, asignación y estados | Antes de implementar HU14 |
+| [13-hu04-diseno-tecnico.md](13-hu04-diseno-tecnico.md) | Diseño propuesto del detalle de músico/banda, reutilización de HU03, navegación e integración posterior con premios | Antes de implementar HU04 |
 
 ## Principios
 

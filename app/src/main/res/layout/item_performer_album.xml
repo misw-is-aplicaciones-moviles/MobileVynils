@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:orientation="vertical" android:minHeight="@dimen/performer_detail_album_height"
+    android:paddingTop="@dimen/space_s" android:paddingBottom="@dimen/space_s"
+    android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true"
+    android:clipChildren="false" android:clipToPadding="false">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:clipChildren="false">
+        <co.edu.uniandes.vinilos.ui.common.VinylArtworkView android:id="@+id/albumArtwork"
+            android:layout_width="@dimen/performer_detail_album_artwork_width"
+            android:layout_height="@dimen/performer_detail_album_artwork_height"
+            app:artworkRatio="71:48" app:artworkCornerRadius="@dimen/album_catalog_artwork_radius"
+            app:artworkElevation="@dimen/album_catalog_artwork_elevation" app:discScale="@dimen/album_disc_scale" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:layout_marginStart="@dimen/space_m" android:layout_marginEnd="@dimen/space_s" android:orientation="vertical"
+            android:importantForAccessibility="noHideDescendants">
+            <TextView android:id="@+id/albumTitle" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Vinilos.AlbumTitle" />
+            <TextView android:id="@+id/albumYear" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_s" android:textAppearance="@style/TextAppearance.Vinilos.Caption" />
+        </LinearLayout>
+        <ImageView android:layout_width="@dimen/album_chevron_size" android:layout_height="@dimen/album_chevron_size"
+            android:importantForAccessibility="no" app:srcCompat="@drawable/ic_chevron_end" app:tint="@color/vinilos_ash" />
+    </LinearLayout>
+    <View android:layout_width="match_parent" android:layout_height="@dimen/list_divider_thickness"
+        android:layout_marginTop="@dimen/space_s" android:background="@color/vinilos_line" />
+</LinearLayout>

@@ -38,7 +38,33 @@
     <string name="error_select_genre">Selecciona un género</string>
     <string name="error_select_label">Selecciona un sello</string>
 
+    <!-- Lista de artistas (HU03, docs/10 sección 6) -->
     <string name="artist_list_title">Artistas</string>
+    <string name="filter_all">Todos</string>
+    <string name="filter_musicians">Músicos</string>
+    <string name="filter_bands">Bandas</string>
+    <string name="artist_musician">Músico</string>
+    <string name="artist_band">Banda</string>
+    <string name="artist_since">desde %1$d</string>
+    <string name="artist_overline">%1$s · %2$s</string>
+    <string name="artist_member_of">Integrante de %1$s</string>
+    <string name="artist_band_summary">%1$s · %2$s</string>
+    <plurals name="artist_albums_count">
+        <item quantity="one">%1$d álbum</item>
+        <item quantity="other">%1$d álbumes</item>
+    </plurals>
+    <plurals name="artist_members_count">
+        <item quantity="one">%1$d integrante</item>
+        <item quantity="other">%1$d integrantes</item>
+    </plurals>
+    <string name="artist_item_description">%1$s, %2$s, %3$s</string>
+    <string name="artist_list_error_title">No se pudieron cargar los artistas</string>
+    <string name="artist_list_error_body">Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="artist_list_empty">Aún no hay artistas</string>
+    <string name="artist_list_empty_musicians">Aún no hay músicos</string>
+    <string name="artist_list_empty_bands">Aún no hay bandas</string>
+    <string name="artist_list_offline_notice">Sin conexión. Mostrando los datos guardados</string>
+    <string name="artist_list_refresh_error">No se pudieron actualizar los artistas</string>
     <string name="collector_list_title">Coleccionistas</string>
 
     <!-- Contenido provisional de las pestañas hasta que llegue su historia -->

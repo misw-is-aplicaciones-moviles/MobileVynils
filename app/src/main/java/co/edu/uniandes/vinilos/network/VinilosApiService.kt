@@ -1,6 +1,8 @@
 package co.edu.uniandes.vinilos.network
 
 import co.edu.uniandes.vinilos.network.dto.AlbumDto
+import co.edu.uniandes.vinilos.network.dto.BandDto
+import co.edu.uniandes.vinilos.network.dto.MusicianDto
 import co.edu.uniandes.vinilos.network.dto.NewAlbumRequest
 import co.edu.uniandes.vinilos.network.dto.NewTrackRequest
 import co.edu.uniandes.vinilos.network.dto.PrizeAssignmentDto
@@ -53,4 +55,22 @@ internal interface VinilosApiService {
         @Path("id") albumId: Int,
         @Body body: NewTrackRequest,
     ): TrackDto
+
+    @GET("musicians")
+    suspend fun getMusicians(): List<MusicianDto>
+
+    @GET("bands")
+    suspend fun getBands(): List<BandDto>
+
+    @GET("musicians/{id}")
+    suspend fun getMusician(
+        @Path("id") id: Int,
+        @Header("Cache-Control") cacheControl: String? = null,
+    ): Response<MusicianDto>
+
+    @GET("bands/{id}")
+    suspend fun getBand(
+        @Path("id") id: Int,
+        @Header("Cache-Control") cacheControl: String? = null,
+    ): Response<BandDto>
 }
