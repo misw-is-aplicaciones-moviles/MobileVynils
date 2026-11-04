@@ -324,3 +324,29 @@ Se integra HU14-03 en `feature/HU14-premios-artista` y se crea `feature/HU14-04-
 ```
 
 Ejecutado con JDK 17: **41 pruebas JVM aprobadas**, sin fallos, errores u omisiones (13 del selector, 12 del detalle y 16 de Repository/API), verificadas en XML; Spotless y detekt correctos. Se conserva y amplía la cobertura existente, sin duplicarla. La correspondencia con CP-HU14 está en el inventario. El guardado completo desde la entrada real del detalle y sus evidencias siguen para HU14-05; los contratos HTTP restantes para HU14-06.
+
+## 14. Pruebas E2E HU14-05 · 04/11/2026
+
+Rama `feature/HU14-05-pruebas-e2e`, creada después de integrar HU14-04 en la rama principal de la historia. Cinco métodos de `PrizePickerScreenTest` reutilizan los recorridos temporales de HU14-03 con entrada real desde HU04. Cubren asignar a músico/banda, retorno actualizado, premio ya asignado y premio de otro artista, búsqueda sin coincidencias, fecha obligatoria, recreación/cancelación y fallo de red con revisión antes de permitir otro envío explícito. No se implementa HU13 ni se añaden dependencias, accesos de depuración o cambios productivos.
+
+Se reutilizan PerformerListRobot, BackendFirewall y las esperas existentes. El desplazamiento de HU04 se extrae a PerformerDetailRobot y se reutiliza sin cambiar sus verificaciones. Se contrastan el contador, nombre, organización, fecha, resaltado y aviso con el GET real del artista. Las capturas separan el aviso del detalle estable después de recrear la pantalla, conservando una sola asociación.
+
+### Preparación y limpieza
+
+BackendPrizes crea premios y artistas exclusivos con una marca generada por el runner compartido. No reutiliza ni altera la semilla. `scripts/run_e2e.sh` prepara las cinco secuencias necesarias, pasa `hu14FixtureRun` y ejecuta la limpieza al terminar Gradle. La transacción de `limpiar_premios_e2e.sql` selecciona los IDs por marca y campos propios, elimina primero sus asociaciones y aborta si encuentra una relación con datos ajenos. Conserva el resultado de Gradle y devuelve error si falla la limpieza.
+
+La limpieza se comprobó en tablas temporales: conserva semilla y otra ejecución y rechaza una asociación ajena. Las ejecuciones reales se contrastan con una lectura de las asignaciones anterior a las pruebas. No se usa el DELETE defectuoso ni se modifica BackVynils. Para esta suite se utiliza el runner compartido; la preparación falla antes de escribir si se invoca directamente sin su marca.
+
+```bash
+bash scripts/run_e2e.sh \
+  '-Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.ui.PrizePickerScreenTest' \
+  '-Pandroid.testInstrumentationRunnerArguments.package=co.edu.uniandes.vinilos.ui' \
+  '-Pandroid.testInstrumentationRunnerArguments.captureScreenshots=true' \
+  '-Pandroid.testInstrumentationRunnerArguments.darkMode=false' \
+  -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true \
+  --offline --console=plain
+```
+
+Se ejecuta con JDK 17, BackVynils local y tablet Huawei DBY-W09, Android 12/API 31. `darkMode=true` permite repetir en oscuro. Las capturas se guardan en filesDir de la app; reportes y copias de las evidencias locales se conservan fuera de Git en `/tmp/HU14-05-evidencias`. La correspondencia por método está en el inventario. API 21/37, HU13 y accesibilidad completa permanecen pendientes.
+
+Resultado final: **5 E2E aprobadas en claro y las mismas 5 en oscuro**, sin fallos, errores ni omisiones; 6 regresiones de HU04 aprobadas. Spotless, detekt, lintDebug y **257 pruebas JVM** correctos. Se revisaron capturas reales del detalle estable y de la hoja restaurada. No quedaron premios ni artistas temporales de HU14. Las asignaciones originales 100/101 conservaron todos sus valores; se observaron dos nuevas asignaciones sobre la semilla (120/131), ajenas a las marcas de fixtures, que se conservaron sin modificarlas.

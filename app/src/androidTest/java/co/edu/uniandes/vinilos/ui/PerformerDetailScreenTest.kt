@@ -1,13 +1,9 @@
 package co.edu.uniandes.vinilos.ui
 
-import android.graphics.Rect
-import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
-import androidx.test.espresso.UiController
-import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.replaceText
@@ -15,7 +11,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isClickable
-import androidx.test.espresso.matcher.ViewMatchers.isDescendantOfA
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.isSelected
@@ -27,13 +22,12 @@ import androidx.test.platform.app.InstrumentationRegistry
 import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.robots.AlbumListRobot
+import co.edu.uniandes.vinilos.robots.PerformerDetailRobot
 import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.testing.BackendPerformers
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.anyOf
 import org.hamcrest.Matchers.containsString
-import org.hamcrest.Matchers.isA
 import org.hamcrest.Matchers.not
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -214,28 +208,5 @@ class PerformerDetailScreenTest {
         onView(withId(R.id.primaryAction)).check(matches(not(isDisplayed())))
     }
 
-    private fun scrollToText(text: String) {
-        waitForDisplayed(withId(R.id.detailList)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                anyOf(withText(text), hasDescendant(withText(text))),
-            ),
-        )
-        // Una cabecera puede ser más alta que la pantalla en horizontal: desplazar también su texto hijo.
-        onView(allOf(withText(text), isDescendantOfA(withId(R.id.detailList)))).perform(
-            object : ViewAction {
-                override fun getConstraints() = isA(View::class.java)
-
-                override fun getDescription() = "Desplazar hasta el texto dentro de la fila"
-
-                override fun perform(
-                    uiController: UiController,
-                    view: View,
-                ) {
-                    view.requestRectangleOnScreen(Rect(0, 0, view.width, view.height), true)
-                    uiController.loopMainThreadUntilIdle()
-                }
-            },
-        )
-        waitForDisplayed(allOf(withText(text), isDescendantOfA(withId(R.id.detailList))))
-    }
+    private fun scrollToText(text: String) = PerformerDetailRobot().scrollToText(text)
 }

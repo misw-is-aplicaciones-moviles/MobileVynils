@@ -7,7 +7,7 @@ DECLARE
     maximum_id bigint;
     sequence_value bigint;
 BEGIN
-    FOREACH table_name IN ARRAY ARRAY['album', 'track', 'performer'] LOOP
+    FOREACH table_name IN ARRAY ARRAY['album', 'track', 'performer', 'prize', 'performer_prize'] LOOP
         EXECUTE format('LOCK TABLE public.%I IN SHARE ROW EXCLUSIVE MODE', table_name);
         sequence_name := pg_get_serial_sequence(format('public.%I', table_name), 'id');
         IF sequence_name IS NULL THEN
