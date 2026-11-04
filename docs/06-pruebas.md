@@ -161,6 +161,10 @@ Diseño de referencia: [HU14-01](12-hu14-diseno-tecnico.md). Estos casos no est�
 
 Datos: preparar artista y premio propios cuando la prueba escriba; usar IDs devueltos por el backend, nunca números fijos de la semilla. No alterar datos ajenos. Reutilizar JUnit, `MockWebServerRule`, fakes, utilidades de LiveData/corrutinas y Robots existentes. Las fallas de transporte/servidor se controlan principalmente en JVM/API; no requieren detener contenedores ni instalar un proxy externo. No presentar estas propuestas como resultados reales de la matriz Android.
 
+**Cobertura inicial HU14-02 (03/11/2026):** `PrizeRepositoryImplTest` ejecutó 16 pruebas JVM de Repository y contrato HTTP con Retrofit/OkHttp y MockWebServer local, sin fallos ni omisiones. Cubren catálogo, catálogo vacío, revalidación, ambos endpoints de asignación, fecha UTC obligatoria, IDs inválidos, HTTP 400/404/500, respuesta perdida sin reintento automático, respuestas nulas o incoherentes y resolución por ID de asignación con una sola consulta. Complementan CP-HU14-01/02/07/08/10/11/12/14, pero no acreditan sus recorridos de interfaz ni completan HU14-04/05/06. Las respuestas JSON de `api/prizes.json` y `api/prize_assignment.json` son sintéticas, con estructura contrastada con BackVynils; sus IDs difieren deliberadamente entre premio y asignación.
+
+Validación de esta tarea: `./gradlew spotlessCheck detekt lintDebug testDebugUnitTest --offline --console=plain`, BUILD SUCCESSFUL; 148 pruebas JVM en total, 0 fallidas, 0 errores y 0 omitidas. No se ejecutaron E2E ni se hicieron escrituras en BackVynils para esta validación de datos.
+
 ### Casos de HU08
 
 Cada caso crea su propio álbum con `POST /albums` y un nombre único. No usa la semilla ni un conteo fijo de canciones. La duración se ve con minutos de dos dígitos en la hoja (`04:15`) y sin el cero a la izquierda en la fila (`4:15`).
