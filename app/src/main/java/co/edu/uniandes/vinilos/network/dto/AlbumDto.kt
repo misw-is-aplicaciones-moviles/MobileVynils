@@ -29,6 +29,8 @@ internal data class PerformerDto(
     val id: Int? = null,
     val name: String? = null,
     val image: String? = null,
+    val birthDate: String? = null,
+    val creationDate: String? = null,
 )
 
 internal data class CommentDto(

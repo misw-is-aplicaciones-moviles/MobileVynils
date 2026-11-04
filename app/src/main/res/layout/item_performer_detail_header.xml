@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical"
+    android:clipChildren="false" android:clipToPadding="false">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:clipChildren="false">
+        <include android:id="@+id/artistArtwork" layout="@layout/view_performer_artwork"
+            android:layout_width="@dimen/performer_detail_artwork_size"
+            android:layout_height="@dimen/performer_detail_artwork_size" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:layout_marginStart="@dimen/space_l" android:orientation="vertical">
+            <TextView android:id="@+id/performerDate" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Vinilos.Overline" />
+            <TextView android:id="@+id/performerName" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_s" android:textAppearance="@style/TextAppearance.Vinilos.AlbumDetailTitle" />
+        </LinearLayout>
+    </LinearLayout>
+    <TextView android:id="@+id/performerDescription" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_xl" android:textAppearance="@style/TextAppearance.Vinilos.AlbumDetailBody" />
+</LinearLayout>

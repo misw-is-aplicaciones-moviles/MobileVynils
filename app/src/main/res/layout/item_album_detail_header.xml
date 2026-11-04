@@ -21,7 +21,8 @@
         android:layout_marginTop="@dimen/space_s"
         android:textAppearance="@style/TextAppearance.Vinilos.AlbumDetailTitle" />
 
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+    <LinearLayout android:id="@+id/artistLink" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:minHeight="@dimen/min_touch_target" android:background="?attr/selectableItemBackground"
         android:layout_marginTop="@dimen/space_l" android:gravity="center_vertical"
         android:orientation="horizontal">
 

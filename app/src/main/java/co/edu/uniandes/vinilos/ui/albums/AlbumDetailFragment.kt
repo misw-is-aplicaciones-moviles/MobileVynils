@@ -3,6 +3,7 @@ package co.edu.uniandes.vinilos.ui.albums
 import android.os.Bundle
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -23,6 +24,7 @@ import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailEvent
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailUiState
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailViewModel
+import co.edu.uniandes.vinilos.viewmodels.PerformerListViewModel
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
 
@@ -44,18 +46,38 @@ class AlbumDetailFragment : Fragment(R.layout.fragment_album_detail) {
         bindingOrNull = FragmentAlbumDetailBinding.bind(view)
         (activity as? PrimaryActionHost)?.hidePrimaryAction()
         bindHeader()
-        val adapter = AlbumDetailAdapter()
+        val adapter = AlbumDetailAdapter(viewModel::onPerformerClicked)
         binding.detailList.layoutManager = LinearLayoutManager(requireContext())
         binding.detailList.adapter = adapter
         binding.errorState.retryButton.setOnClickListener { viewModel.retry() }
         bindTrackCreatedResult()
         viewModel.uiState.observe(viewLifecycleOwner) { render(it, adapter) }
         viewModel.events.observe(viewLifecycleOwner) { event ->
-            when (event.getContentIfNotHandled()) {
-                AlbumDetailEvent.OpenRoleSelector -> findNavController().navigateToRoleSelector()
-                null -> Unit
+            when (val action = event.getContentIfNotHandled()) {
+                is AlbumDetailEvent.OpenPerformer -> {
+                    findNavController().navigate(
+                        R.id.performerDetailFragment,
+                        bundleOf(
+                            PerformerListViewModel.ARG_PERFORMER_ID to action.performerId,
+                            PerformerListViewModel.ARG_PERFORMER_TYPE to action.type.name,
+                        ),
+                    )
+                }
+
+                AlbumDetailEvent.OpenRoleSelector -> {
+                    findNavController().navigateToRoleSelector()
+                }
+
+                null -> {
+                    Unit
+                }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.onNavigationReturned()
     }
 
     override fun onDestroyView() {

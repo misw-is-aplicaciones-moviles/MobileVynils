@@ -4,6 +4,7 @@ import co.edu.uniandes.vinilos.models.Album
 import co.edu.uniandes.vinilos.models.Comment
 import co.edu.uniandes.vinilos.models.Genre
 import co.edu.uniandes.vinilos.models.PerformerSummary
+import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.models.Track
 
 internal fun AlbumDto.toModel(): Album {
@@ -42,6 +43,12 @@ internal fun PerformerDto.toModel(): PerformerSummary =
         id = id ?: missing("performer id"),
         name = name ?: missing("performer name"),
         imageUrl = image,
+        type =
+            when {
+                birthDate != null && creationDate == null -> PerformerType.MUSICIAN
+                creationDate != null && birthDate == null -> PerformerType.BAND
+                else -> null
+            },
     )
 
 internal fun CommentDto.toModel(): Comment =

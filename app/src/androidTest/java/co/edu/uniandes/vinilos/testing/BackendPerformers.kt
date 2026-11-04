@@ -54,6 +54,14 @@ class BackendPerformers : ExternalResource() {
         return id
     }
 
+    /** Removes an owned fixture to exercise the real 404 when its cached row is opened. */
+    fun deleteMusician(id: Int) {
+        require(id in musicians) { "Only owned test musicians can be deleted" }
+        send("DELETE", "musicians/$id", null, HTTP_NO_CONTENT)
+        musicians.remove(id)
+        memberships.removeAll { it.second == id }
+    }
+
     override fun after() {
         memberships.forEach { (bandId, musicianId) ->
             send("DELETE", "bands/$bandId/musicians/$musicianId", null, HTTP_NO_CONTENT)

@@ -47,3 +47,5 @@ curl -X POST http://localhost:3000/albums -H "Content-Type: application/json" \
 ```
 
 La respuesta 200 de `POST /albums` es sintética para no crear álbumes en la base local al capturarla.
+
+HU04-02 reutiliza el primer objeto de `musicians.json` y `bands_with_members.json` como respuesta del detalle en `PerformerDetailServiceAdapterTest`: sus campos se contrastaron con `GET /musicians/:id` y `GET /bands/:id` del backend local. Las variantes inválidas y vacías se preparan en memoria sobre esos objetos, sin duplicar los archivos ni depender del estado del backend durante las pruebas JVM.
