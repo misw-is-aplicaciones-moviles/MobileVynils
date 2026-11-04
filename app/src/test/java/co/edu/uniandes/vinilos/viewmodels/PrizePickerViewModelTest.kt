@@ -1,6 +1,7 @@
 package co.edu.uniandes.vinilos.viewmodels
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.lifecycle.Observer
 import androidx.lifecycle.SavedStateHandle
 import co.edu.uniandes.vinilos.models.ArtistPrize
 import co.edu.uniandes.vinilos.models.DataError
@@ -33,7 +34,9 @@ class PrizePickerViewModelTest {
     @get:Rule val mainDispatcherRule = MainDispatcherRule()
 
     private val date = LocalDate.of(1985, 9, 18)
-    private val prize = Prize(71, "Premio nuevo", "Descripción", "Organización")
+
+    // Esta asignación pertenece a otro artista: no debe bloquear el premio para el actual.
+    private val prize = Prize(71, "Premio nuevo", "Descripción", "Organización", listOf(PrizeAssignmentRef(902, date)))
     private val oldPrize = Prize(72, "Premio anterior", "Descripción", "Otra", listOf(PrizeAssignmentRef(901, date)))
 
     @Test
@@ -73,65 +76,173 @@ class PrizePickerViewModelTest {
     @Test
     fun `success sends the correct type and date only once while saving`() =
         runTest {
-            val repository = repository()
-            val gate = CompletableDeferred<Unit>().also { repository.saveGate = it }
-            repository.assigned = DataResult.Success(ArtistPrize(903, prize, date))
-            val vm = viewModel(repository)
-            advanceUntilIdle()
-            vm.onPrizeSelected(71)
-            vm.onDateSelected(date)
+            PerformerType.entries.forEach { type ->
+                val repository = repository()
+                val gate = CompletableDeferred<Unit>().also { repository.saveGate = it }
+                repository.assigned = DataResult.Success(ArtistPrize(903, prize, date))
+                val vm = viewModel(repository, args().also { it[PrizeFlowContract.PERFORMER_TYPE] = type.name })
+                advanceUntilIdle()
+                vm.onPrizeSelected(71)
+                vm.onDateSelected(date)
 
-            vm.onSave()
-            vm.onSave()
-            runCurrent()
-            assertEquals(1, repository.saveCalls)
-            assertTrue(checkNotNull(vm.uiState.value).isSubmitting)
-            gate.complete(Unit)
-            advanceUntilIdle()
+                vm.onSave()
+                vm.onSave()
+                runCurrent()
+                assertEquals(1, repository.saveCalls)
+                assertTrue(checkNotNull(vm.uiState.value).isSubmitting)
+                gate.complete(Unit)
+                advanceUntilIdle()
 
-            assertEquals(PerformerType.BAND, repository.lastType)
-            assertEquals(date, repository.lastDate)
-            assertEquals(
-                PrizePickerEvent.Assigned(ArtistPrize(903, prize, date)),
-                vm.events.value?.getContentIfNotHandled(),
-            )
-            assertNull(vm.events.value?.getContentIfNotHandled())
+                assertEquals(type, repository.lastType)
+                assertEquals(date, repository.lastDate)
+                assertEquals(
+                    PrizePickerEvent.Assigned(ArtistPrize(903, prize, date)),
+                    vm.events.value?.getContentIfNotHandled(),
+                )
+                assertNull(vm.events.value?.getContentIfNotHandled())
+            }
         }
 
     @Test
     fun `uncertain write preserves entries and cannot repeat the POST`() =
         runTest {
-            val repository = repository()
-            val vm = viewModel(repository)
-            advanceUntilIdle()
-            vm.onPrizeSelected(71)
-            vm.onDateSelected(date)
-            vm.onSave()
-            advanceUntilIdle()
+            listOf(DataError.Network, DataError.Http(500), DataError.Serialization).forEach { error ->
+                val repository = repository().also { it.assigned = DataResult.Failure(error) }
+                val vm = viewModel(repository)
+                advanceUntilIdle()
+                vm.onPrizeSelected(71)
+                vm.onDateSelected(date)
+                vm.onSave()
+                advanceUntilIdle()
 
-            vm.onSave()
+                vm.onSave()
 
-            assertEquals(1, repository.saveCalls)
-            assertTrue(checkNotNull(vm.uiState.value).isUncertain)
-            assertEquals(date, vm.uiState.value?.date)
-            vm.onReviewArtist()
-            assertEquals(PrizePickerEvent.ReviewArtist, vm.events.value?.getContentIfNotHandled())
+                assertEquals(1, repository.saveCalls)
+                assertEquals(error, vm.uiState.value?.submitError)
+                assertTrue(checkNotNull(vm.uiState.value).isUncertain)
+                assertEquals(71, vm.uiState.value?.selectedId)
+                assertEquals(date, vm.uiState.value?.date)
+                vm.onReviewArtist()
+                assertEquals(PrizePickerEvent.ReviewArtist, vm.events.value?.getContentIfNotHandled())
+            }
         }
 
     @Test
     fun `definite validation failure preserves the date and permits retry`() =
         runTest {
-            val repository = repository().also { it.assigned = DataResult.Failure(DataError.Http(400)) }
-            val vm = viewModel(repository)
-            advanceUntilIdle()
-            vm.onPrizeSelected(71)
-            vm.onDateSelected(date)
-            vm.onSave()
-            advanceUntilIdle()
+            listOf(400, 404).forEach { code ->
+                val repository = repository().also { it.assigned = DataResult.Failure(DataError.Http(code)) }
+                val vm = viewModel(repository)
+                advanceUntilIdle()
+                vm.onPrizeSelected(71)
+                vm.onDateSelected(date)
+                vm.onSave()
+                advanceUntilIdle()
 
-            assertFalse(checkNotNull(vm.uiState.value).isUncertain)
-            assertTrue(checkNotNull(vm.uiState.value).canSubmit)
+                assertFalse(checkNotNull(vm.uiState.value).isUncertain)
+                assertTrue(checkNotNull(vm.uiState.value).canSubmit)
+                assertEquals(date, vm.uiState.value?.date)
+                assertEquals(DataError.Http(code), vm.uiState.value?.submitError)
+                assertNull(vm.events.value)
+                val assignment = ArtistPrize(903, prize, date)
+                repository.assigned = DataResult.Success(assignment)
+                vm.onSave()
+                advanceUntilIdle()
+
+                assertEquals(2, repository.saveCalls)
+                assertEquals(PrizePickerEvent.Assigned(assignment), vm.events.value?.getContentIfNotHandled())
+                assertNull(vm.uiState.value?.submitError)
+            }
+        }
+
+    @Test
+    fun `empty catalog and failed loads recover without duplicating or losing valid entries`() =
+        runTest {
+            val repository = FakePrizeRepository()
+            val gate = CompletableDeferred<Unit>().also { repository.loadGate = it }
+            val vm = viewModel(repository)
+            runCurrent()
+            vm.load(forceRefresh = true)
+            assertTrue(checkNotNull(vm.uiState.value).isLoading)
+            assertEquals(1, repository.loadCalls)
+            gate.complete(Unit)
+            advanceUntilIdle()
+            assertTrue(checkNotNull(vm.uiState.value).prizes.isEmpty())
+            assertNull(vm.uiState.value?.loadError)
+            assertFalse(checkNotNull(vm.uiState.value).isLoading)
+            assertFalse(checkNotNull(vm.uiState.value).canContinue)
+
+            repository.catalog = DataResult.Failure(DataError.Network)
+            vm.load(forceRefresh = true)
+            advanceUntilIdle()
+            assertEquals(DataError.Network, vm.uiState.value?.loadError)
+            assertFalse(checkNotNull(vm.uiState.value).isLoading)
+            repository.catalog = DataResult.Success(listOf(prize))
+            vm.load(forceRefresh = true)
+            advanceUntilIdle()
+            assertEquals(listOf(prize), vm.uiState.value?.prizes)
+            assertNull(vm.uiState.value?.loadError)
+            assertTrue(repository.lastForceRefresh)
+            vm.onPrizeSelected(prize.id)
+            vm.onDateSelected(date)
+            repository.catalog = DataResult.Failure(DataError.Network)
+            vm.load(forceRefresh = true)
+            advanceUntilIdle()
+            assertEquals(listOf(prize), vm.uiState.value?.prizes)
+            assertEquals(prize.id, vm.uiState.value?.selectedId)
             assertEquals(date, vm.uiState.value?.date)
+            assertEquals(DataError.Network, vm.uiState.value?.loadError)
+            assertEquals(0, repository.saveCalls)
+        }
+
+    @Test
+    fun `changing the selected prize clears its date and rejects an unknown prize`() =
+        runTest {
+            val second = prize.copy(id = 73, name = "Otro premio")
+            val repository = repository().also { it.catalog = DataResult.Success(listOf(prize, second)) }
+            val handle = args()
+            val vm = viewModel(repository, handle)
+            advanceUntilIdle()
+            vm.onPrizeSelected(prize.id)
+            vm.onDateSelected(date)
+            vm.onPrizeSelected(999)
+            assertEquals(prize.id, vm.uiState.value?.selectedId)
+            assertEquals(date, vm.uiState.value?.date)
+            vm.onPrizeSelected(second.id)
+            assertEquals(second, vm.uiState.value?.selectedPrize)
+            assertNull(vm.uiState.value?.date)
+            assertFalse(checkNotNull(vm.uiState.value).canSubmit)
+            vm.onSave()
+            assertTrue(checkNotNull(vm.uiState.value).dateRequired)
+            assertEquals(0, repository.saveCalls)
+            val restored = viewModel(repository, handle)
+            advanceUntilIdle()
+            assertEquals(second, restored.uiState.value?.selectedPrize)
+            assertNull(restored.uiState.value?.date)
+        }
+
+    @Test
+    fun `changing role before saving returns to the selector and never writes`() =
+        runTest {
+            val repository = repository()
+            val session = FakeSessionRepository(UserRole.COLLECTOR)
+            val vm = viewModel(repository, session = session)
+            val observer = Observer<PrizePickerUiState> {}
+            vm.uiState.observeForever(observer)
+            try {
+                advanceUntilIdle()
+                vm.onPrizeSelected(prize.id)
+                vm.onDateSelected(date)
+                session.selectRole(UserRole.VISITOR)
+                vm.onSave()
+                advanceUntilIdle()
+                assertFalse(checkNotNull(vm.uiState.value).canEdit)
+                assertFalse(checkNotNull(vm.uiState.value).canSubmit)
+                assertEquals(0, repository.saveCalls)
+                assertEquals(PrizePickerEvent.OpenRoleSelector, vm.events.value?.getContentIfNotHandled())
+            } finally {
+                vm.uiState.removeObserver(observer)
+            }
         }
 
     @Test
@@ -163,10 +274,17 @@ class PrizePickerViewModelTest {
         runTest {
             val repository = repository()
             viewModel(repository, session = FakeSessionRepository(UserRole.VISITOR))
-            viewModel(repository, handle = args().also { it[PrizeFlowContract.PERFORMER_ID] = 0 })
+            listOf(
+                args().also { it[PrizeFlowContract.PERFORMER_ID] = 0 },
+                args().also { it[PrizeFlowContract.PERFORMER_ID] = -1 },
+                args().also { it[PrizeFlowContract.PERFORMER_TYPE] = "UNKNOWN" },
+                args().also { it[PrizeFlowContract.PERFORMER_NAME] = " " },
+                SavedStateHandle(),
+            ).forEach { viewModel(repository, handle = it).onSave() }
             advanceUntilIdle()
 
             assertEquals(0, repository.loadCalls)
+            assertEquals(0, repository.saveCalls)
         }
 
     @Test

@@ -185,6 +185,20 @@ Los fixtures de esa validación eran exclusivos y se limpiaron por IDs y nombres
 
 Controles finales: 254 pruebas JVM aprobadas, sin fallos, errores u omisiones; Spotless, detekt y Lint debug correctos. Primera ejecución instrumentada integrada: 6 recorridos aprobados de `PerformerDetailScreenTest`, 0 fallos y omisiones, con BackVynils local y tablet Huawei DBY-W09. Se reutilizan pruebas de HU04; no son seis pruebas nuevas de asignación. El POST completo y retorno visual desde la entrada real, errores controlados de escritura, HU13, API 21/37 y evidencias visuales nuevas siguen pendientes de HU14-04/05/06. Ver [integración HU14-03](12-hu14-diseno-tecnico.md#12-integración-de-hu14-03-con-hu04--04112026).
 
+**HU14-04 · 04/11/2026:** `PrizePickerViewModelTest` pasa de 10 a 13 pruebas. Se amplían las existentes y se agregan tres, reutilizando los mismos fakes y reglas. Esta tabla actualiza únicamente la cobertura JVM; no acredita los recorridos E2E pendientes.
+
+| Casos | Método de `PrizePickerViewModelTest` | Resultado comprobado |
+|---|---|---|
+| CP-HU14-02/03 | `empty catalog and failed loads recover without duplicating or losing valid entries` | Vacío sin selección; carga concurrente única; error y recuperación; refresco fallido conserva lista, selección y fecha |
+| CP-HU14-05/13 | `changing the selected prize clears its date and rejects an unknown prize` | Otro premio exige otra fecha; ID ajeno no cambia selección; restauración conserva el nuevo premio sin fecha; no POST inválido |
+| CP-HU14-09 | `changing role before saving returns to the selector and never writes` | Cambio a Visitante deshabilita el envío y emite regreso al selector sin escritura |
+| CP-HU14-07/08/15 | `success sends the correct type and date only once while saving` | Ampliada a músico y banda; un envío en curso, fecha correcta y resultado consumido una vez |
+| CP-HU14-11 | `definite validation failure preserves the date and permits retry` | Ampliada a 400/404; conserva entradas y recupera tras reintento explícito |
+| CP-HU14-12 | `uncertain write preserves entries and cannot repeat the POST` | Ampliada a Network, 500 y Serialization; mantiene entradas, bloquea otro POST y permite revisar el artista |
+| CP-HU14-10/17 | `visitor and invalid artist do not load prizes`; `search is local and already assigned prizes cannot be selected` | Argumentos ausentes/ID/tipo/nombre inválidos sin consultas ni envíos; asociación de otro artista no bloquea el premio actual |
+
+Ejecución dirigida: **41 pruebas JVM aprobadas**, sin fallos, errores u omisiones: 13 del selector, 12 de `PerformerDetailViewModelTest` y 16 de `PrizeRepositoryImplTest` (incluye contrato HTTP). No son 41 pruebas nuevas de HU14. Spotless y detekt correctos. No hubo cambios productivos ni ejecuciones en Android en esta tarea. Reporte: `app/build/reports/tests/testDebugUnitTest/index.html`.
+
 ### Casos de HU08
 
 Cada caso crea su propio álbum con `POST /albums` y un nombre único. No usa la semilla ni un conteo fijo de canciones. La duración se ve con minutos de dos dígitos en la hoja (`04:15`) y sin el cero a la izquierda en la fila (`4:15`).
