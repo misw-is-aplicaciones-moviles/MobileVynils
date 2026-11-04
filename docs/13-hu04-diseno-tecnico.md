@@ -240,3 +240,19 @@ Validación anterior a esa simplificación: 220 pruebas JVM aprobadas; 5 recorri
 La sección Premios se completa al integrar HU14. Las acciones de HU12/HU13/HU15 siguen en sus historias. HU04-04/05/06 amplían las pruebas sin duplicarlas; API 21/37, rotación real de este detalle y accesibilidad con fuentes grandes siguen pendientes. La evidencia local previa está en `/tmp/HU04-03-evidencias`.
 
 Decisión del responsable: el detalle muestra la cabecera Premios y el botón Agregar premio para Coleccionista como en el mockup, deshabilitado hasta integrar HU14. Esta excepción visual no añade navegación, peticiones, conteos ficticios ni escritura de premios. El visitante no muestra esa acción.
+
+## 11. Pruebas unitarias HU04-04 · 04/11/2026
+
+Rama `feature/HU04-04-pruebas-unitarias`, creada después de integrar HU04-03 en la rama principal de HU04. Se amplía `PerformerDetailViewModelTest` de 6 a 9 pruebas, sin modificar código productivo ni crear utilidades: relaciones vacías de ambos tipos, bloqueo de navegación durante carga o hacia IDs ajenos y cancelación de la solicitud al liberar el ViewModel. Se mantienen las verificaciones existentes de contenido, errores, reintento, rol y concurrencia.
+
+Ejecución con JDK 17:
+
+```bash
+./gradlew testDebugUnitTest \
+  --tests 'co.edu.uniandes.vinilos.viewmodels.PerformerDetailViewModelTest' \
+  --tests 'co.edu.uniandes.vinilos.viewmodels.AlbumDetailViewModelTest' \
+  --tests 'co.edu.uniandes.vinilos.repositories.PerformerRepositoryImplTest' \
+  --offline --console=plain
+```
+
+Resultado verificado en XML: 9 + 12 + 15 = **36 pruebas aprobadas**, sin fallos, errores ni omisiones. La correspondencia unitaria con CP-HU04 se registra en [el inventario](06-pruebas.md#hu04--detalle-de-artista). HU04-05/06 conservan las comprobaciones de interfaz y API; esta ejecución no sustituye orientación, accesibilidad ni dispositivos pendientes.

@@ -207,6 +207,20 @@ El inventario de pruebas exploratorias usa la plantilla del curso (identificador
 
 ### HU04 — Detalle de artista
 
+**Avance HU04-04 · 04/11/2026:** la siguiente correspondencia actualiza la cobertura unitaria pendiente de la tabla inicial. `PerformerDetailViewModelTest` tiene 9 pruebas aprobadas, reutiliza los fakes y reglas existentes y no necesita backend ni dispositivo. Esta ejecución no acredita pruebas E2E nuevas ni rotación real.
+
+| Casos | Métodos de `PerformerDetailViewModelTest` | Resultado unitario |
+|---|---|---|
+| CP-HU04-01/02 | `initial load preserves the requested type content and role` | Aprobado: contenido, tipo solicitado, rol y fin de carga |
+| CP-HU04-04/05 | `only visible album and member identities navigate and double taps are ignored`; `loading and unknown positive identities cannot open unrelated content` | Aprobado: destinos del detalle, bloqueo durante carga y toques duplicados |
+| CP-HU04-06/09 | `role changes update the header without reloading and the chip clears the session` | Aprobado: sesión, cambio de rol y evento del selector; regreso/pila se verifica en E2E |
+| CP-HU04-07/16 | `retries while loading and new observers do not duplicate the request`; `clearing the ViewModel cancels a pending load without publishing its result` | Aprobado: concurrencia, observadores y cancelación; posición/orientación quedan en interfaz |
+| CP-HU04-08 | `empty sections preserve musician and band content without navigation` | Aprobado para ambos tipos con relaciones vacías |
+| CP-HU04-10 | `invalid identity shows a safe state without querying or retrying` | Aprobado: ID no positivo o tipo ausente sin consulta |
+| CP-HU04-11/12/13/14 | `errors finish loading and explicit retry revalidates the same artist` | Aprobado: 404, Network, 500 y Serialization; recuperación con revalidación |
+
+Regresión ejecutada: `AlbumDetailViewModelTest` (12 pruebas, incluye entrada tipada desde álbum de CP-HU04-03) y `PerformerRepositoryImplTest` (15 pruebas, incluye caché, identidad y cancelación del detalle de CP-HU04-10/14/16). **36 pruebas aprobadas, 0 fallos, errores u omisiones**. Incluye pruebas existentes de HU02/HU03; no son 36 casos nuevos de HU04. Reporte local: `app/build/reports/tests/testDebugUnitTest/index.html`.
+
 Inventario inicial de HU04-01 (#37), 04/11/2026. Base inicial develop; contratos compartidos de HU03 revisados en el PR #121 e incorporados después como base local de HU04, con aceptación y correcciones pendientes. Estos IDs son propios de HU04 y no sustituyen los CP-HU03, CP-HU02 ni CP-HU14. El inventario se creó sin ejecuciones en HU04-01. HU04-02 añade la cobertura inicial de datos descrita más abajo; los recorridos de interfaz continúan pendientes.
 
 Diseño y alcance: [13-hu04-diseno-tecnico.md](13-hu04-diseno-tecnico.md). Las clases y métodos de automatización se asociarán en HU04-02 a HU04-06 según se implementen; las pruebas de datos no acreditan por sí solas recorridos de interfaz.
