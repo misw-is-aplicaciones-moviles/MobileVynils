@@ -310,3 +310,17 @@ Pruebas de integración iniciales: tres pruebas nuevas en `PerformerDetailViewMo
 La primera ejecución de los seis recorridos existentes de `PerformerDetailScreenTest` pasó en Huawei DBY-W09, Android 12/API 31, con BackVynils local. Ahora incluyen abrir/cancelar el selector desde músico y banda, buscar sin coincidencias y ocultar la acción a Visitante. No realizan POST de premios: el guardado completo desde la entrada real y la comprobación visual de su retorno permanecen para HU14-05, con la limpieza segura de fixtures indicada anteriormente. Las escrituras aisladas de la sección 11 se conservan como evidencia histórica y no acreditan ese nuevo recorrido integrado. HU14-04/05/06 y la entrada desde HU13 siguen pendientes.
 
 La versión final repitió los mismos seis recorridos después de desplazar explícitamente hasta Premios antes de comprobar la acción oculta: 6 aprobados, 0 fallos, errores u omisiones, verificados en el XML instrumentado.
+
+## 13. Pruebas unitarias HU14-04 · 04/11/2026
+
+Se integra HU14-03 en `feature/HU14-premios-artista` y se crea `feature/HU14-04-pruebas-unitarias`. Se modifica únicamente `PrizePickerViewModelTest` y documentación: tres pruebas nuevas para vacío/error/reintento de catálogo, cambio de premio con fecha y cambio de rol antes de guardar. Se amplían pruebas existentes para ambos tipos de artista, recuperación explícita tras 400/404, resultado incierto por Network/500/Serialization, argumentos inválidos y premios asignados solo a otro artista. No fue necesario corregir código productivo, añadir dependencias ni crear utilidades.
+
+```bash
+./gradlew spotlessCheck detekt testDebugUnitTest \
+  --tests 'co.edu.uniandes.vinilos.viewmodels.PrizePickerViewModelTest' \
+  --tests 'co.edu.uniandes.vinilos.viewmodels.PerformerDetailViewModelTest' \
+  --tests 'co.edu.uniandes.vinilos.repositories.PrizeRepositoryImplTest' \
+  --offline --console=plain
+```
+
+Ejecutado con JDK 17: **41 pruebas JVM aprobadas**, sin fallos, errores u omisiones (13 del selector, 12 del detalle y 16 de Repository/API), verificadas en XML; Spotless y detekt correctos. Se conserva y amplía la cobertura existente, sin duplicarla. La correspondencia con CP-HU14 está en el inventario. El guardado completo desde la entrada real del detalle y sus evidencias siguen para HU14-05; los contratos HTTP restantes para HU14-06.
