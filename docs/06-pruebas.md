@@ -173,6 +173,18 @@ Validación posterior de HU14-03 (04/11/2026): cuatro comprobaciones instrumenta
 
 Los fixtures de esa validación eran exclusivos y se limpiaron por IDs y nombres verificados en SQL. El DELETE de asociación de BackVynils eliminó una asociación incorrecta durante la primera limpieza; se restauró exactamente el registro original y se verificaron las asociaciones previas. Ese endpoint no debe usarse para limpiar fixtures. HU14-05 debe preparar las secuencias de prize, performer y performer_prize y resolver una limpieza segura en el backend local de pruebas; no se considera cerrado por estas comprobaciones.
 
+**Integración HU14-03 con HU04 · 04/11/2026:** se amplía la cobertura inicial, sin dar por completados los escenarios mixtos del inventario:
+
+| Casos asociados | Prueba ampliada o nueva | Resultado y límite |
+|---|---|---|
+| CP-HU14-01/09/14/17 | `PerformerDetailViewModelTest.prizes are visible to visitors but only collectors can open assignment` | Aprobada en JVM: premios consultables en ambos roles y apertura solo de Coleccionista con referencias de asociación |
+| CP-HU14-07/08/13/15 | `PerformerDetailViewModelTest.confirmed assignment updates detail once and rejects another artist result` | Aprobada en JVM: resultado del mismo artista/tipo, contador, referencia, resaltado y aviso sin duplicación; no acredita POST desde la interfaz |
+| CP-HU14-03/12 | `PerformerDetailViewModelTest.prize failure preserves biography and blocks assignment until forced revalidation succeeds` | Aprobada en JVM: error de premios conserva el detalle; reintento fuerza detalle y catálogo antes de otra asignación |
+| CP-HU14-14 | Contratos de músico/banda e `invalid prize references fail instead of silently showing an empty section` en `PerformerDetailServiceAdapterTest` | Aprobados: IDs/fechas de asociación mapeados; referencias nulas o inválidas fallan sin falsa sección vacía |
+| CP-HU14-06/09/16 | Recorridos de banda y selector de rol de `PerformerDetailScreenTest` | Aprobados en tablet API 31: entrada real a HU14 desde ambos tipos, búsqueda sin coincidencias, cancelación y acción oculta a Visitante; no guardado de premios |
+
+Controles finales: 254 pruebas JVM aprobadas, sin fallos, errores u omisiones; Spotless, detekt y Lint debug correctos. Primera ejecución instrumentada integrada: 6 recorridos aprobados de `PerformerDetailScreenTest`, 0 fallos y omisiones, con BackVynils local y tablet Huawei DBY-W09. Se reutilizan pruebas de HU04; no son seis pruebas nuevas de asignación. El POST completo y retorno visual desde la entrada real, errores controlados de escritura, HU13, API 21/37 y evidencias visuales nuevas siguen pendientes de HU14-04/05/06. Ver [integración HU14-03](12-hu14-diseno-tecnico.md#12-integración-de-hu14-03-con-hu04--04112026).
+
 ### Casos de HU08
 
 Cada caso crea su propio álbum con `POST /albums` y un nombre único. No usa la semilla ni un conteo fijo de canciones. La duración se ve con minutos de dos dígitos en la hoja (`04:15`) y sin el cero a la izquierda en la fila (`4:15`).

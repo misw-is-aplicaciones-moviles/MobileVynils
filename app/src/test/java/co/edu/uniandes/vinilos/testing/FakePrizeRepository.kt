@@ -13,6 +13,8 @@ import java.time.LocalDate
 internal class FakePrizeRepository : PrizeRepository {
     var catalog: DataResult<List<Prize>, DataError> = DataResult.Success(emptyList())
     var assigned: DataResult<ArtistPrize, DataError> = DataResult.Failure(DataError.Network)
+    var artistPrizes: DataResult<List<ArtistPrize>, DataError> = DataResult.Success(emptyList())
+    val artistRequests = mutableListOf<Pair<List<PrizeAssignmentRef>, Boolean>>()
     var loadGate: CompletableDeferred<Unit>? = null
     var saveGate: CompletableDeferred<Unit>? = null
     var loadCalls = 0
@@ -31,7 +33,10 @@ internal class FakePrizeRepository : PrizeRepository {
     override suspend fun getArtistPrizes(
         assignments: List<PrizeAssignmentRef>,
         forceRefresh: Boolean,
-    ): DataResult<List<ArtistPrize>, DataError> = DataResult.Success(emptyList())
+    ): DataResult<List<ArtistPrize>, DataError> {
+        artistRequests += assignments to forceRefresh
+        return artistPrizes
+    }
 
     override suspend fun assignPrize(
         performerId: Int,

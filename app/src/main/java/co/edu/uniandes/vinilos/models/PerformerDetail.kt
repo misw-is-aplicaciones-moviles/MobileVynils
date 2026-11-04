@@ -6,4 +6,5 @@ data class PerformerDetail(
     val description: String,
     val albums: List<Album>,
     val members: List<PerformerSummary>,
+    val prizeAssignments: List<PrizeAssignmentRef> = emptyList(),
 )

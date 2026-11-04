@@ -292,3 +292,21 @@ Hallazgo del backend durante la validación: el DELETE de asociación usa campos
 La configuración local ignorada por Git quedó en `vinilos.baseUrl=http://127.0.0.1:3000/`, con redirección USB del puerto 3000. La compilación falló inicialmente en KSP con Java 25 y funcionó con JDK 17 aplicado únicamente al comando; no se modificó Java en el sistema.
 
 Controles finales del 04/11/2026 con JDK 17: `spotlessCheck detekt lint testDebugUnitTest`, BUILD SUCCESSFUL; 158 pruebas JVM, 0 fallos, errores u omisiones. La verificación final del backend encontró cero fixtures de esta prueba y las asociaciones originales 100/101 con sus valores previos.
+
+## 12. Integración de HU14-03 con HU04 · 04/11/2026
+
+Se incorpora la rama local `feature/HU04-detalle-artista` en `feature/HU14-03-interfaz`; no se modifica la rama de HU04 ni la de HU03. Los conflictos de integración conservan ambos repositorios en AppContainer, una única definición de PerformerType y los enlaces de documentación de ambas historias. La base sigue pendiente de reconciliarse con la versión de HU03 aceptada en develop.
+
+- `PerformerDetail` incorpora las referencias de `performerPrizes`, reutilizando `PrizeAssignmentRef` y su DTO/mapper existentes. Se conservan los IDs de asociación y las fechas UTC; no se crea otro modelo de premio.
+- El ViewModel del detalle resuelve nombre, organización y fecha mediante `PrizeRepository.getArtistPrizes`. La sección se consulta en ambos roles. Un error conserva la biografía y las demás secciones, muestra reintento y bloquea otra asignación hasta revalidar detalle y catálogo.
+- Agregar premio queda habilitado para Coleccionista y abre el selector existente con identidad, tipo e IDs de asociación. El catálogo del selector se revalida al abrirse para comprobar los premios ya asignados después de escrituras anteriores.
+- El resultado confirmado se consume una vez desde savedStateHandle, valida artista/tipo, añade la asociación por ID, actualiza contador y resalta su fila; el evento muestra el aviso de éxito una vez. `REFRESH_REQUESTED` fuerza la consulta de detalle y premios antes de permitir otro acceso de asignación. No repite POST automáticamente.
+- Las filas del detalle reutilizan `item_prize.xml`, ocultando radio/estado de selección y mostrando la fecha. Premios vacíos, cargando y error tienen mensajes diferenciados; no se anuncia cero premios cuando falla la consulta.
+
+No se añade creación de premios (HU13), otra caché, migración, cliente HTTP ni dependencia. La fecha continúa siendo obligatoria.
+
+Pruebas de integración iniciales: tres pruebas nuevas en `PerformerDetailViewModelTest` (consulta por rol, resultado confirmado sin duplicados/otro artista y fallo con revalidación) y una en `PerformerDetailServiceAdapterTest` (referencias inválidas). Se amplían los contratos de músico/banda para comprobar sus asociaciones y el test del selector para exigir revalidación. Controles con JDK 17: `spotlessCheck detekt lintDebug testDebugUnitTest`, **254 pruebas JVM aprobadas**, sin fallos, errores u omisiones. También compila el APK instrumentado.
+
+La primera ejecución de los seis recorridos existentes de `PerformerDetailScreenTest` pasó en Huawei DBY-W09, Android 12/API 31, con BackVynils local. Ahora incluyen abrir/cancelar el selector desde músico y banda, buscar sin coincidencias y ocultar la acción a Visitante. No realizan POST de premios: el guardado completo desde la entrada real y la comprobación visual de su retorno permanecen para HU14-05, con la limpieza segura de fixtures indicada anteriormente. Las escrituras aisladas de la sección 11 se conservan como evidencia histórica y no acreditan ese nuevo recorrido integrado. HU14-04/05/06 y la entrada desde HU13 siguen pendientes.
+
+La versión final repitió los mismos seis recorridos después de desplazar explícitamente hasta Premios antes de comprobar la acción oculta: 6 aprobados, 0 fallos, errores u omisiones, verificados en el XML instrumentado.

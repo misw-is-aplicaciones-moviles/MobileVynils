@@ -16,8 +16,10 @@ import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.FragmentAlbumDetailBinding
+import co.edu.uniandes.vinilos.models.ArtistPrize
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.PerformerType
+import co.edu.uniandes.vinilos.models.Prize
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
@@ -26,7 +28,11 @@ import co.edu.uniandes.vinilos.viewmodels.PerformerDetailEvent
 import co.edu.uniandes.vinilos.viewmodels.PerformerDetailUiState
 import co.edu.uniandes.vinilos.viewmodels.PerformerDetailViewModel
 import co.edu.uniandes.vinilos.viewmodels.PerformerListViewModel
+import co.edu.uniandes.vinilos.viewmodels.PrizeFlowContract
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
 
 class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
     private var bindingOrNull: FragmentAlbumDetailBinding? = null
@@ -46,12 +52,19 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
         bindingOrNull = FragmentAlbumDetailBinding.bind(view)
         (activity as? PrimaryActionHost)?.hidePrimaryAction()
         bindHeader()
-        val adapter = PerformerDetailAdapter(viewModel::onAlbumClicked, viewModel::onMemberClicked)
+        val adapter =
+            PerformerDetailAdapter(
+                viewModel::onAlbumClicked,
+                viewModel::onMemberClicked,
+                viewModel::onAddPrizeClicked,
+                viewModel::retry,
+            )
         binding.detailList.layoutManager = LinearLayoutManager(requireContext())
         binding.detailList.adapter = adapter
         binding.errorState.retryButton.setOnClickListener { viewModel.retry() }
         viewModel.uiState.observe(viewLifecycleOwner) { render(it, adapter) }
         viewModel.events.observe(viewLifecycleOwner) { it.getContentIfNotHandled()?.let(::handle) }
+        observePrizeResults()
     }
 
     override fun onResume() {
@@ -97,7 +110,7 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
         binding.loadingState.root.isVisible = state.isLoading
         binding.errorScroll.isVisible = state.error != null
         binding.detailList.isVisible = state.detail != null
-        state.detail?.let { adapter.submitDetail(it, state.role == UserRole.COLLECTOR) }
+        state.detail?.let { adapter.submitDetail(state) }
         renderRole(state.role)
         val notFound = state.error == DataError.Http(NOT_FOUND)
         binding.errorState.errorTitle.setText(
@@ -127,6 +140,35 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
         chip.contentDescription = getString(R.string.role_chip_action, getString(label))
     }
 
+    private fun observePrizeResults() {
+        val handle = findNavController().currentBackStackEntry?.savedStateHandle ?: return
+        handle.getLiveData<Boolean>(PrizeFlowContract.REFRESH_REQUESTED).observe(viewLifecycleOwner) { refresh ->
+            handle.remove<Boolean>(PrizeFlowContract.REFRESH_REQUESTED)
+            if (refresh == true) viewModel.retry()
+        }
+        handle.getLiveData<Bundle>(PrizeFlowContract.PRIZE_ASSIGNED).observe(viewLifecycleOwner) { result ->
+            handle.remove<Bundle>(PrizeFlowContract.PRIZE_ASSIGNED)
+            val date =
+                try {
+                    LocalDate.parse(result.getString(PrizeFlowContract.PREMIATION_DATE) ?: return@observe)
+                } catch (_: DateTimeParseException) {
+                    return@observe
+                }
+            val prize =
+                Prize(
+                    result.getInt(PrizeFlowContract.PRIZE_ID),
+                    result.getString(PrizeFlowContract.NAME) ?: return@observe,
+                    result.getString(PrizeFlowContract.DESCRIPTION) ?: return@observe,
+                    result.getString(PrizeFlowContract.ORGANIZATION) ?: return@observe,
+                )
+            viewModel.onPrizeAssigned(
+                result.getInt(PrizeFlowContract.PERFORMER_ID),
+                PerformerType.entries.firstOrNull { it.name == result.getString(PrizeFlowContract.PERFORMER_TYPE) },
+                ArtistPrize(result.getInt(PrizeFlowContract.ASSIGNMENT_ID), prize, date),
+            )
+        }
+    }
+
     private fun handle(event: PerformerDetailEvent) {
         when (event) {
             is PerformerDetailEvent.OpenAlbum -> {
@@ -145,6 +187,23 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
                         PerformerListViewModel.ARG_PERFORMER_TYPE to PerformerType.MUSICIAN.name,
                     ),
                 )
+            }
+
+            is PerformerDetailEvent.OpenPrizes -> {
+                val detail = event.detail
+                findNavController().navigate(
+                    R.id.prizePickerFragment,
+                    PrizePickerFragment.argumentsFor(
+                        detail.performer.id,
+                        detail.performer.type,
+                        detail.performer.name,
+                        detail.prizeAssignments.map { it.id }.toIntArray(),
+                    ),
+                )
+            }
+
+            PerformerDetailEvent.PrizeAssigned -> {
+                Snackbar.make(binding.root, R.string.prize_assigned_message, Snackbar.LENGTH_LONG).show()
             }
 
             PerformerDetailEvent.OpenRoleSelector -> {

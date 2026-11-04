@@ -26,6 +26,10 @@
     <string name="prize_assign_uncertain">No pudimos confirmar si el premio se guardó. Revisa los premios del artista antes de volver a asignarlo.</string>
     <string name="prize_review_action">Revisar premios del artista</string>
     <string name="prize_assigned_message">Premio asignado al artista</string>
+    <string name="prize_detail_count">Premios · %1$d</string>
+    <string name="prize_detail_loading">Cargando premios…</string>
+    <string name="prize_detail_empty">Este artista aún no tiene premios registrados.</string>
+    <string name="prize_detail_description">%1$s, %2$s, %3$s</string>
     <dimen name="prize_row_min_height">84dp</dimen>
     <dimen name="prize_icon_size">24dp</dimen>
 </resources>

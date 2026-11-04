@@ -9,6 +9,7 @@ internal data class MusicianDto(
     val birthDate: String? = null,
     val description: String? = null,
     val albums: List<AlbumDto?>? = null,
+    val performerPrizes: List<PrizeAssignmentRefDto?>? = null,
 )
 
 internal data class BandDto(
@@ -18,5 +19,6 @@ internal data class BandDto(
     val creationDate: String? = null,
     val description: String? = null,
     val albums: List<AlbumDto?>? = null,
+    val performerPrizes: List<PrizeAssignmentRefDto?>? = null,
     val musicians: List<MusicianDto?>? = null,
 )

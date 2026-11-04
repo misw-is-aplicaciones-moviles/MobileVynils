@@ -9,7 +9,8 @@ import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
+import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
@@ -62,8 +63,9 @@ class PerformerDetailScreenTest {
         onView(withId(R.id.performerDate)).check(matches(withText(containsString("1947"))))
         onView(withId(R.id.primaryAction)).check(matches(not(isDisplayed())))
         scrollToText(context.getString(R.string.artist_detail_albums, 8))
+        scrollToText(context.getString(R.string.prize_detail_count, 0))
+        onView(withId(R.id.addPrizeButton)).check(matches(not(isDisplayed())))
         scrollToText(albumName)
-        onView(withId(R.id.addPrizeButton)).check(doesNotExist())
         onView(allOf(withId(R.id.albumTitle), withText(albumName))).perform(click())
         scrollToText(albumName)
         onView(withId(R.id.headerBack)).perform(click())
@@ -115,7 +117,14 @@ class PerformerDetailScreenTest {
         onView(withId(R.id.detailList)).perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withId(R.id.addPrizeButton))),
         )
-        onView(withId(R.id.addPrizeButton)).check(matches(allOf(isDisplayed(), not(isEnabled()))))
+        onView(withId(R.id.addPrizeButton)).check(matches(allOf(isDisplayed(), isEnabled()))).perform(click())
+        waitForDisplayed(withText(R.string.prize_picker_title))
+        onView(withId(R.id.bottomNav)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.prizeSearch)).perform(replaceText(name), closeSoftKeyboard())
+        waitForDisplayed(withText(R.string.prize_no_results))
+        onView(withId(R.id.headerClose)).perform(click())
+        waitForDisplayed(allOf(withId(R.id.headerTitle), withText(R.string.artist_band)))
+        scrollToText(context.getString(R.string.prize_detail_count, 0))
         onView(withId(R.id.primaryAction)).check(matches(not(isDisplayed())))
     }
 
@@ -172,6 +181,11 @@ class PerformerDetailScreenTest {
         data.createMusician(name)
         artists.enterAs(R.string.role_collector).tapRow(name)
         waitForDisplayed(allOf(withId(R.id.performerName), withText(name)))
+        scrollToText(context.getString(R.string.prize_detail_count, 0))
+        onView(withId(R.id.addPrizeButton)).perform(click())
+        waitForDisplayed(withText(R.string.prize_picker_title))
+        pressBack()
+        waitForDisplayed(allOf(withId(R.id.headerTitle), withText(R.string.artist_musician)))
         onView(withId(R.id.roleChip)).perform(click())
         waitForDisplayed(withText(R.string.role_question))
         onView(withId(R.id.bottomNav)).check(matches(not(isDisplayed())))
@@ -179,8 +193,8 @@ class PerformerDetailScreenTest {
         artists.enterAs(R.string.role_visitor).tapRow(name)
         waitForDisplayed(allOf(withId(R.id.performerName), withText(name)))
         onView(withId(R.id.roleChip)).check(matches(withText(R.string.role_visitor)))
-        scrollToText(context.getString(R.string.artist_detail_no_albums))
-        onView(withId(R.id.addPrizeButton)).check(doesNotExist())
+        scrollToText(context.getString(R.string.prize_detail_count, 0))
+        onView(withId(R.id.addPrizeButton)).check(matches(not(isDisplayed())))
         pressBack()
         waitForDisplayed(allOf(withId(R.id.headerTitle), withText(R.string.artist_list_title)))
         onView(withId(R.id.roleChip)).check(matches(withText(R.string.role_visitor)))

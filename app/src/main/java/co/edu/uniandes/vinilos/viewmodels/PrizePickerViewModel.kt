@@ -59,7 +59,7 @@ class PrizePickerViewModel(
                 emit(PrizePickerEvent.OpenRoleSelector)
             }
         }
-        if (current().canEdit) load() else emit(PrizePickerEvent.Close)
+        if (current().canEdit) load(forceRefresh = true) else emit(PrizePickerEvent.Close)
     }
 
     fun load(forceRefresh: Boolean = false) {

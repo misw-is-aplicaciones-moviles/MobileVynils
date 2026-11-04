@@ -48,6 +48,7 @@ class PrizePickerViewModelTest {
             vm.onQueryChanged("NUEVO")
             assertEquals(listOf(prize), vm.uiState.value?.visiblePrizes)
             assertEquals(1, repository.loadCalls)
+            assertTrue(repository.lastForceRefresh)
             vm.onPrizeSelected(71)
             assertTrue(checkNotNull(vm.uiState.value).canContinue)
         }

@@ -10,10 +10,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import co.edu.uniandes.vinilos.VinilosApplication
+import co.edu.uniandes.vinilos.models.ArtistPrize
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.PerformerType
+import co.edu.uniandes.vinilos.models.PrizeAssignmentRef
+import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.repositories.PerformerRepository
+import co.edu.uniandes.vinilos.repositories.PrizeRepository
 import co.edu.uniandes.vinilos.repositories.SessionRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -23,6 +27,7 @@ class PerformerDetailViewModel(
     private val performerType: PerformerType?,
     private val repository: PerformerRepository,
     private val session: SessionRepository,
+    private val prizeRepository: PrizeRepository,
 ) : ViewModel() {
     private val validIdentity = performerId > 0 && performerType != null
     private val _uiState =
@@ -58,6 +63,35 @@ class PerformerDetailViewModel(
         _events.value = Event(PerformerDetailEvent.OpenMember(memberId))
     }
 
+    fun onAddPrizeClicked() {
+        val state = current()
+        val detail = state.detail ?: return
+        if (navigationPending || state.role != UserRole.COLLECTOR) return
+        if (state.isLoadingPrizes || state.prizeError != null) return
+        navigationPending = true
+        _events.value = Event(PerformerDetailEvent.OpenPrizes(detail))
+    }
+
+    fun onPrizeAssigned(
+        id: Int,
+        type: PerformerType?,
+        assignment: ArtistPrize,
+    ) {
+        val detail = current().detail ?: return
+        if (id != performerId || type != performerType) return
+        if (assignment.id <= 0 || assignment.prize.id <= 0) return
+        if (detail.prizeAssignments.any { it.id == assignment.id }) return
+        val reference = PrizeAssignmentRef(assignment.id, assignment.premiationDate)
+        update {
+            copy(
+                detail = detail.copy(prizeAssignments = detail.prizeAssignments + reference),
+                prizes = prizes + assignment,
+                highlightedAssignmentId = assignment.id,
+            )
+        }
+        _events.value = Event(PerformerDetailEvent.PrizeAssigned)
+    }
+
     fun onNavigationReturned() {
         navigationPending = false
     }
@@ -70,12 +104,37 @@ class PerformerDetailViewModel(
     private fun load(forceRefresh: Boolean) {
         val type = performerType ?: return
         if (!validIdentity || loadJob?.isActive == true) return
-        update { copy(detail = null, isLoading = true, error = null) }
+        update {
+            copy(
+                detail = null,
+                isLoading = true,
+                error = null,
+                prizes = emptyList(),
+                isLoadingPrizes = true,
+                prizeError = null,
+                highlightedAssignmentId = null,
+            )
+        }
         loadJob =
             viewModelScope.launch {
                 when (val result = repository.getPerformer(performerId, type, forceRefresh)) {
-                    is DataResult.Success -> update { copy(detail = result.value, isLoading = false) }
-                    is DataResult.Failure -> update { copy(error = result.error, isLoading = false) }
+                    is DataResult.Success -> {
+                        update { copy(detail = result.value, isLoading = false) }
+                        when (
+                            val prizes =
+                                prizeRepository.getArtistPrizes(
+                                    result.value.prizeAssignments,
+                                    forceRefresh,
+                                )
+                        ) {
+                            is DataResult.Success -> update { copy(prizes = prizes.value, isLoadingPrizes = false) }
+                            is DataResult.Failure -> update { copy(prizeError = prizes.error, isLoadingPrizes = false) }
+                        }
+                    }
+
+                    is DataResult.Failure -> {
+                        update { copy(error = result.error, isLoading = false, isLoadingPrizes = false) }
+                    }
                 }
             }
     }
@@ -98,6 +157,7 @@ class PerformerDetailViewModel(
                         PerformerType.entries.firstOrNull { it.name == rawType },
                         app.container.performerRepository,
                         app.container.sessionRepository,
+                        app.container.prizeRepository,
                     )
                 }
             }

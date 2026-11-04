@@ -54,6 +54,8 @@ class PerformerDetailServiceAdapterTest {
             assertEquals(2, detail.performer.albumCount)
             assertTrue(detail.albums.all { it.coverUrl.isNotBlank() && it.releaseDate.year == 1984 })
             assertTrue(detail.members.isEmpty())
+            assertEquals(listOf(100), detail.prizeAssignments.map { it.id })
+            assertEquals(LocalDate.of(1978, 12, 10), detail.prizeAssignments.single().premiationDate)
             assertRequest("/musicians/100")
             assertEquals(1, serverRule.server.requestCount)
         }
@@ -71,6 +73,8 @@ class PerformerDetailServiceAdapterTest {
             assertEquals(band().get("description").asString, detail.description)
             assertEquals(2, detail.performer.albumCount)
             assertEquals(4, detail.performer.memberCount)
+            assertEquals(listOf(101), detail.prizeAssignments.map { it.id })
+            assertEquals(LocalDate.of(1980, 12, 10), detail.prizeAssignments.single().premiationDate)
             assertEquals(setOf(102, 103, 104, 105), detail.members.map { it.id }.toSet())
             assertTrue(detail.members.all { it.name.isNotBlank() && it.type == PerformerType.MUSICIAN })
             assertEquals(setOf("A Night at the Opera", "A Day at the Races"), detail.albums.map { it.name }.toSet())
@@ -296,6 +300,32 @@ class PerformerDetailServiceAdapterTest {
                 assertEquals(2, serverRule.server.requestCount)
             } finally {
                 TimeZone.setDefault(original)
+            }
+        }
+
+    @Test
+    fun `invalid prize references fail instead of silently showing an empty section`() =
+        runTest {
+            val repository = repository(testScheduler)
+            val invalid =
+                listOf(
+                    JsonNull.INSTANCE,
+                    JsonObject().apply {
+                        addProperty("id", 0)
+                        addProperty("premiationDate", "1980-12-10T00:00:00.000Z")
+                    },
+                    JsonObject().apply {
+                        addProperty("id", 901)
+                        addProperty("premiationDate", "invalid")
+                    },
+                )
+            invalid.forEach { reference ->
+                val body = band().apply { add("performerPrizes", JsonArray().apply { add(reference) }) }
+                serverRule.server.enqueue(json(body))
+                assertEquals(
+                    DataResult.Failure(DataError.Serialization),
+                    repository.getPerformer(101, PerformerType.BAND),
+                )
             }
         }
 
