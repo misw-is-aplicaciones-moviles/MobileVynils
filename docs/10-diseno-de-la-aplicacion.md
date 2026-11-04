@@ -147,7 +147,7 @@ Cada repositorio guarda en Room (2.7.2, la última versión que admite API 21) l
 | `AlbumEntity` (Sprint 1) | `id` | — |
 | `TrackEntity` (Sprint 1) | `id` | `albumId` → `AlbumEntity`, `CASCADE` al borrar |
 | `CommentEntity` | `id` | `albumId` → `AlbumEntity`; `collectorId`, `collectorName` opcionales |
-| `PerformerEntity` | `id` | `type`, `bandId` opcional (músico que pertenece a una banda) |
+| `PerformerEntity` (HU03, versión 3) | `id` | `type`, `name`, `image`, `date`, `albumCount`, `memberCount`, `bandId` opcional (músico que pertenece a una banda; su nombre se resuelve al leer). Sin relaciones: las de álbumes e integrantes llegan con HU04 |
 | `AlbumPerformerCrossRef` | (`albumId`, `performerId`) | álbumes de un artista y artistas de un álbum |
 | `CollectorEntity` | `id` | — |
 | `CollectorFavoriteCrossRef` | (`collectorId`, `performerId`) | favoritos |
@@ -270,7 +270,15 @@ Flujo:
 
 ### Sprint 2 · Artistas y coleccionistas
 
-**HU03 · Lista de artistas.** `ChipGroup` con selección única: "Todos", "Músicos", "Bandas". Tarjeta con imagen, nombre, "Músico · 1947" o "Banda · desde 1970" y tercera línea: "2 álbumes · 4 integrantes" para banda, "Integrante de Queen" o "N álbumes" para músico. La unión de `GET /musicians` y `GET /bands` se hace en `PerformerServiceAdapter`; la pertenencia a banda se deriva de `bands[].musicians`. Orden: por nombre, con el filtro aplicado en el ViewModel sobre la lista cargada.
+**HU03 · Lista de artistas.** `ChipGroup` con selección única: "Todos", "Músicos", "Bandas". Tarjeta con imagen, nombre, "Músico · 1947" o "Banda · desde 1970" y tercera línea: "2 álbumes · 4 integrantes" para banda, "Integrante de Queen" o "N álbumes" para músico. La unión de `GET /musicians` y `GET /bands` se hace en `PerformerServiceAdapter`; la pertenencia a banda se deriva de `bands[].musicians`. Orden: por nombre, con el filtro aplicado en el ViewModel sobre la lista cargada. Sin botón "+" para ningún rol. Diseño técnico completo en la wiki (`HU03-Diseno-tecnico`).
+
+*Diseño técnico de HU03 (HU03-01).*
+
+- **Datos.** `PerformerServiceAdapter` llama a `GET /musicians` y `GET /bands` en paralelo y devuelve `Performer` con tipo. `GET /musicians` no trae la banda del músico (el backend no carga esa relación): se deriva de `bands[].musicians[].id`. Si falla cualquiera de las dos llamadas falla toda la carga y Room no se toca: nunca se muestra ni se guarda una lista a medias. Músicos y bandas comparten secuencia de ids; una respuesta con un id repetido se rechaza como `DataError.Serialization`.
+- **Modelo.** `Performer(id, type, name, imageUrl, date, albumCount, memberCount, bandId, bandName)` contiene solo lo que dibuja la lista; HU04 lo amplía con descripción, álbumes e integrantes. `PerformerEntity` guarda lo mismo con `bandId` (el nombre de la banda se resuelve al leer) y la base pasa a la versión 3 con una `Migration(2, 3)` que solo crea la tabla `performers`: el catálogo guardado se conserva.
+- **Presentación.** `PerformerFilter` (`ALL`, `MUSICIANS`, `BANDS`) vive en el `UiState` y filtra la lista ya cargada sin llamar al repositorio; sobrevive a la rotación. La tercera línea la decide el ViewModel como dato (`PerformerSummaryLine`) y el adaptador la escribe con `plurals`. Año en UTC, como en HU01.
+- **Navegación.** Tocar una fila abre `performerDetailFragment` con `performerId: Int` y `type: String` (`MUSICIAN` o `BAND`); hasta HU04 es `PendingTabFragment`.
+- **Orden.** Por nombre sin distinguir mayúsculas ASCII (`COLLATE NOCASE`, desempate por id), la regla del catálogo; el mockup de "Todos" es un ejemplo y no sigue ese orden.
 
 **HU04 · Detalle de artista.** Título "Músico" o "Banda" según el tipo. Cabecera con imagen, "Músico · nació el 16 jul 1948" o "Banda · desde 1970", nombre y descripción. Banda: sección "Integrantes · N" (lista de músicos) y "Álbumes · N". Músico: "Álbumes · N". Los valores y contadores se obtienen del backend, sin exigir los ejemplos del prototipo. Agregar integrantes o álbumes pertenece a HU12/HU15; sus botones solo se conectan cuando existe una acción real. Los wireframes actuales también incluyen Premios: esa sección y el acceso de Coleccionista a la asignación se completan al integrar HU14 sobre el detalle de HU04, reutilizando su implementación de premios. El [diseño técnico HU04](13-hu04-diseno-tecnico.md) propone componer el `Performer` de HU03 con los datos del detalle, conservar sus contratos de navegación y consultar el detalle remotamente sin modificar la caché de lista de HU03. HU04-01 documenta la propuesta; no declara esas pantallas implementadas. La navegación desde HU02 requiere conservar el tipo de su artista, sin inferirlo por ID o nombre.
 
@@ -349,7 +357,13 @@ Claves para `res/values/strings.xml` según el prototipo. El código usa los nom
 | `action_save_track` / `snack_track_added` | Guardar canción / Canción agregada al álbum |
 | `artist_list_title` / `filter_all` / `filter_musicians` / `filter_bands` | Artistas / Todos / Músicos / Bandas |
 | `artist_musician` / `artist_band` / `artist_born` / `artist_since` | Músico / Banda / nació el %1$s / desde %1$d |
-| `artist_member_of` / `artist_albums_count` / `artist_members_count` | Integrante de %1$s / %1$d álbumes / %1$d integrantes |
+| `artist_overline` / `artist_band_summary` | %1$s · %2$s (sobrelínea "Banda · desde 1970" y tercera línea "2 álbumes · 4 integrantes") |
+| `artist_member_of` | Integrante de %1$s |
+| `artist_albums_count` / `artist_members_count` (`plurals`) | 1 álbum, %1$d álbumes / 1 integrante, %1$d integrantes |
+| `artist_item_description` | %1$s, %2$s, %3$s (descripción de la fila para TalkBack) |
+| `artist_list_error_title` / `artist_list_error_body` | No se pudieron cargar los artistas / Revisa tu conexión e inténtalo de nuevo. |
+| `artist_list_empty` / `artist_list_empty_musicians` / `artist_list_empty_bands` | Aún no hay artistas / músicos / bandas |
+| `artist_list_offline_notice` / `artist_list_refresh_error` | Sin conexión. Mostrando los datos guardados / No se pudieron actualizar los artistas |
 | `artist_section_members` / `artist_section_albums` | Integrantes · %1$d / Álbumes · %1$d |
 | `action_add_member` / `action_add_album` | Agregar integrante / Agregar álbum |
 | `collector_list_title` / `collector_detail_title` | Coleccionistas / Coleccionista |
@@ -410,7 +424,8 @@ Resultado de contrastar wiki, prototipo, documento del curso y código del backe
 | 2026-10-27 | TR-03: Room deja de ser opcional; `AlbumEntity` y `TrackEntity` en Sprint 1, el resto de entidades en Sprint 2. |
 | 2026-10-28 | HU01-01: el catálogo se guarda en Room (`AlbumEntity` con `performerName`, base de datos versión 2), orden alfabético, fila propia `item_album_catalog.xml` con las medidas del mockup (carátula de 96 dp, ya no 56 dp), estado de error con ilustración, botón "+" en la joroba de la barra para el coleccionista (lo muestra el Fragment según `canEdit` de su `UiState`) y cinco textos nuevos del catálogo (`album_list_empty`, `album_list_offline_notice`, `album_list_refresh_error`, `album_genre_year`, `album_create_pending`). |
 | 2026-10-28 | HU07-01: diseño técnico del formulario "Nuevo álbum" (sección 6): siete estados, validación de campos obligatorios en `AlbumFormValidator` con errores como tipos, contrato de `POST /albums` con fecha en medianoche UTC, `RecordLabel` con `apiName` (antes decía `apiValue`), `NewAlbumRequest` como cuerpo del POST, resultado al catálogo por `savedStateHandle`. El álbum nuevo aparece en su posición alfabética (antes decía "al final"); `album_create_pending` se retira y se suman los textos de pista, selector de fecha y error al crear. |
+| 2026-11-03 | HU03-01: diseño técnico de la lista de artistas (wiki `HU03-Diseno-tecnico`). `Performer` mínimo para la lista y `PerformerEntity` sin tablas de relación (HU04 las agrega); base versión 3 con migración explícita 2 → 3 en lugar de la recreación destructiva; unión de `GET /musicians` y `GET /bands` en paralelo con fallo total ante cualquier fallo parcial; pertenencia a banda derivada de `bands[].musicians`; filtro en el ViewModel; sin botón "+"; destino `performerDetailFragment` provisional con `performerId` y `type`. Orden por nombre decidido: el mockup de "Todos" no es alfabético. |
 
 ### Propuesta HU04-01 · 04/11/2026
 
-El detalle de artista se especifica en [13-hu04-diseno-tecnico.md](13-hu04-diseno-tecnico.md). El modelo y las capas de artistas revisados en HU03 se reutilizan al integrar su versión aceptada. La propuesta acota para HU04 la política general de caché de la sección 5.2: detalle remoto como HU02, sin nuevas tablas o relaciones Room ni promesa offline; la lista conserva la caché de HU03. El alcance de premios se conecta posteriormente en HU14, respetando los frames exportados. Esta entrada es una propuesta de diseño de la tarea #37, no evidencia de implementación ni de pruebas.
+El detalle de artista se especifica en [13-hu04-diseno-tecnico.md](13-hu04-diseno-tecnico.md). El modelo y las capas de artistas se reutilizan desde la copia local incorporada de HU03, cuya aprobación y correcciones siguen pendientes; se reconciliará la versión aceptada cuando esté disponible en develop. La propuesta acota para HU04 la política general de caché de la sección 5.2: detalle remoto como HU02, sin nuevas tablas o relaciones Room ni promesa offline; la lista conserva la caché de HU03. El alcance de premios se conecta posteriormente en HU14, respetando los frames exportados. Esta entrada es una propuesta de diseño de la tarea #37, no evidencia de implementación ni de pruebas.

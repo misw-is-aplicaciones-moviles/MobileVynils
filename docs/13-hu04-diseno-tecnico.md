@@ -4,7 +4,7 @@ Estado: propuesta de diseño de HU04-01; implementación y pruebas pendientes.
 Tarea: [HU04-01 · #37](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/issues/37).
 Responsable: @ManfredAriel91122. Fecha: 04/11/2026.
 Base: `develop` local, `b5152a3`. Rama principal: `feature/HU04-detalle-artista`.
-Referencia compartida: HU03, PR #121, revisado en `abc41bd`; todavía no integrado en esta base.
+Referencia compartida: HU03, PR #121, revisado en `abc41bd`; incorporado a nuestra principal como base local de trabajo, con su revisión y correcciones pendientes.
 Referencia de premios: ramas locales HU14-02 (`b0592c8`) y HU14-03 (`20004fb`).
 
 ## 1. Alcance
@@ -48,7 +48,7 @@ La fotografía de artista usa el disco circular del listado HU03 y Glide. Las fi
 | `view_header`, `PaperSheetLayout`, estados, Glide y recursos de disco | Existentes; disco de artista en HU03 | Componer el detalle sin alterar el tema global ni el comportamiento de HU02. |
 | Reglas JVM, fakes, MockWebServer, ViewWaits y Robots | Existentes; apoyos de artistas en HU03 | Ampliar lo necesario, sin duplicar utilidades. |
 
-HU04-01 puede completarse con estas referencias. Antes de escribir HU04-02 se incorporará a nuestra principal la versión aceptada de HU03 disponible en develop local; esta propuesta no incorpora ni modifica la rama de Yoimar. Si HU03 sigue pendiente, se mantiene identificado ese bloqueo de implementación, sin copiar sus clases a esta tarea.
+Por decisión del responsable del 04/11/2026, se incorpora la copia local de HU03 (`abc41bd`) a `feature/HU04-detalle-artista` para continuar HU04-02, conservando intacta la rama de Yoimar. El PR #121 sigue pendiente de aprobación y de las correcciones solicitadas sobre pruebas dependientes de conteos de semilla y descripción/título del PR. Cuando su versión corregida se integre en develop, se reconciliarán esos cambios con nuestra principal y se repetirán los controles; la integración local no declara aceptado el PR ni resueltas sus observaciones. No se duplican las clases compartidas.
 
 ## 4. Componentes y flujo
 

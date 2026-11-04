@@ -61,6 +61,24 @@
     <dimen name="list_fade_height">72dp</dimen>
     <dimen name="album_list_bottom_padding">64dp</dimen>
 
+    <!-- Fila de artista (mockups HU03, 1 px = 1 dp): disco de 76 dp con la imagen de 38 dp al centro. -->
+    <dimen name="performer_row_min_height">100dp</dimen>
+    <dimen name="performer_row_padding_vertical">12dp</dimen>
+    <dimen name="performer_row_padding_end">20dp</dimen>
+    <dimen name="performer_row_gap">14dp</dimen>
+    <dimen name="performer_disc_size">76dp</dimen>
+    <dimen name="performer_disc_elevation">8dp</dimen>
+    <dimen name="performer_image_size">38dp</dimen>
+    <dimen name="performer_overline_gap">6dp</dimen>
+    <dimen name="performer_summary_gap">7dp</dimen>
+    <dimen name="performer_list_bottom_padding">64dp</dimen>
+    <dimen name="performer_divider_inset_end">20dp</dimen>
+    <!-- Filtros: 20 dp a la izquierda y bajo la hoja, 6 dp hasta la primera fila. El Chip mide 48 dp (zona táctil) alrededor de sus 40 dp visibles, así que se restan 4 dp arriba y se suman 2 dp abajo. -->
+    <dimen name="performer_filters_padding_start">20dp</dimen>
+    <dimen name="performer_filters_padding_top">16dp</dimen>
+    <dimen name="performer_filters_padding_bottom">8dp</dimen>
+    <dimen name="performer_filter_text_padding">17dp</dimen>
+
     <!-- Botón "+" de la barra inferior: el centro queda 24 dp sobre el borde superior de la barra. -->
     <dimen name="primary_action_icon">24dp</dimen>
     <dimen name="primary_action_elevation">10dp</dimen>
