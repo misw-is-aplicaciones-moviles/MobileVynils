@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Destinos de primer nivel (docs/10, sección 3). El selector de rol es el inicio (TR-06).
      Cada historia reemplaza su pantalla provisional:
-     HU01 ya reemplazó albumListFragment; HU03 performerListFragment y HU05 collectorListFragment siguen pendientes. -->
+     HU01 ya reemplazó albumListFragment y HU03 performerListFragment; HU04 (performerDetailFragment) y HU05 (collectorListFragment) siguen pendientes. -->
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/nav_graph"
@@ -46,8 +46,25 @@
 
     <fragment
         android:id="@+id/performerListFragment"
+        android:name="co.edu.uniandes.vinilos.ui.artists.PerformerListFragment"
+        android:label="@string/artist_list_title">
+        <action
+            android:id="@+id/action_performerList_to_performerDetail"
+            app:destination="@id/performerDetailFragment" />
+    </fragment>
+
+    <!-- Detalle de artista (HU04). Hasta que llegue esa historia es la pantalla provisional: HU04 solo cambia la clase.
+         Los argumentos son los de docs/10 (sección 3); la provisional solo lee titleRes y messageRes. -->
+    <fragment
+        android:id="@+id/performerDetailFragment"
         android:name="co.edu.uniandes.vinilos.ui.common.PendingTabFragment"
         android:label="@string/artist_list_title">
+        <argument
+            android:name="performerId"
+            app:argType="integer" />
+        <argument
+            android:name="type"
+            app:argType="string" />
         <argument
             android:name="titleRes"
             android:defaultValue="@string/artist_list_title"
