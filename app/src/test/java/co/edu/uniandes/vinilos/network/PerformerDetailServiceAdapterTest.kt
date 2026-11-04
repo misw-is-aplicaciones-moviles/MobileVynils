@@ -24,6 +24,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.time.LocalDate
+import java.util.TimeZone
 
 /** HU04 contracts through the real Repository, Retrofit client and existing HU03 response fixtures. */
 @Suppress("MagicNumber") // Fixture identities, dates and HTTP status codes.
@@ -102,21 +103,27 @@ class PerformerDetailServiceAdapterTest {
     @Test
     fun `absent relationships become empty sections and a missing image is allowed`() =
         runTest {
-            val body =
-                band().apply {
-                    remove("albums")
-                    remove("musicians")
-                    remove("image")
+            val repository = repository(testScheduler)
+            listOf(PerformerType.MUSICIAN, PerformerType.BAND).forEach { type ->
+                // Los tres contratos admitidos: campo ausente, null y lista vacía.
+                listOf(null, JsonNull.INSTANCE, JsonArray()).forEach { relationship ->
+                    val body = if (type == PerformerType.MUSICIAN) musician() else band()
+                    listOf("albums", "musicians").forEach { field ->
+                        if (relationship == null) body.remove(field) else body.add(field, relationship)
+                    }
+                    body.remove("image")
+                    serverRule.server.enqueue(json(body))
+
+                    val detail = success(repository.getPerformer(body.get("id").asInt, type))
+
+                    assertTrue(detail.albums.isEmpty())
+                    assertTrue(detail.members.isEmpty())
+                    assertEquals(0, detail.performer.albumCount)
+                    assertEquals(0, detail.performer.memberCount)
+                    assertEquals("", detail.performer.imageUrl)
                 }
-            serverRule.server.enqueue(json(body))
-
-            val detail = success(repository(testScheduler).getPerformer(101, PerformerType.BAND))
-
-            assertTrue(detail.albums.isEmpty())
-            assertTrue(detail.members.isEmpty())
-            assertEquals(0, detail.performer.albumCount)
-            assertEquals(0, detail.performer.memberCount)
-            assertEquals("", detail.performer.imageUrl)
+            }
+            assertEquals(6, serverRule.server.requestCount)
         }
 
     @Test
@@ -131,6 +138,22 @@ class PerformerDetailServiceAdapterTest {
                         DataResult.Failure(DataError.Http(code)),
                         repository.getPerformer(700, type),
                     )
+                    val path = if (type == PerformerType.MUSICIAN) "/musicians/700" else "/bands/700"
+                    assertRequest(path)
+                    val body =
+                        (if (type == PerformerType.MUSICIAN) musician() else band()).apply {
+                            addProperty("id", 700)
+                        }
+                    serverRule.server.enqueue(json(body))
+
+                    val recovered = success(repository.getPerformer(700, type, forceRefresh = true))
+
+                    assertEquals(700, recovered.performer.id)
+                    assertEquals(type, recovered.performer.type)
+                    val request = serverRule.server.takeRequest()
+                    assertEquals("GET", request.method)
+                    assertEquals(path, request.path)
+                    assertEquals("no-cache", request.getHeader("Cache-Control"))
                 }
             }
         }
@@ -155,9 +178,19 @@ class PerformerDetailServiceAdapterTest {
         runTest {
             serverRule.server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE))
 
-            val result = repository(testScheduler, readTimeoutMillis = 100).getPerformer(101, PerformerType.BAND)
+            val repository = repository(testScheduler, readTimeoutMillis = 100)
+            val result = repository.getPerformer(101, PerformerType.BAND)
 
             assertEquals(DataResult.Failure(DataError.Network), result)
+            assertRequest("/bands/101")
+            serverRule.server.enqueue(json(band()))
+
+            val recovered = success(repository.getPerformer(101, PerformerType.BAND, forceRefresh = true))
+
+            assertEquals(101, recovered.performer.id)
+            assertEquals("Queen", recovered.performer.name)
+            assertRequest("/bands/101")
+            assertEquals(2, serverRule.server.requestCount)
         }
 
     @Test
@@ -236,6 +269,34 @@ class PerformerDetailServiceAdapterTest {
                 DataResult.Failure(DataError.Serialization),
                 repository.getPerformer(101, PerformerType.MUSICIAN),
             )
+        }
+
+    @Test
+    fun `artist and album dates retain the UTC day under Bogota timezone`() =
+        runTest {
+            val original = TimeZone.getDefault()
+            try {
+                TimeZone.setDefault(TimeZone.getTimeZone("America/Bogota"))
+                val repository = repository(testScheduler)
+                listOf(PerformerType.MUSICIAN, PerformerType.BAND).forEach { type ->
+                    val body = if (type == PerformerType.MUSICIAN) musician() else band()
+                    val dateField = if (type == PerformerType.MUSICIAN) "birthDate" else "creationDate"
+                    body.addProperty(dateField, "1984-01-01T00:00:00.000Z")
+                    body.getAsJsonArray("albums").forEach {
+                        it.asJsonObject.addProperty("releaseDate", "1984-01-01T00:00:00.000Z")
+                    }
+                    serverRule.server.enqueue(json(body))
+
+                    val detail = success(repository.getPerformer(body.get("id").asInt, type))
+
+                    assertEquals(LocalDate.of(1984, 1, 1), detail.performer.date)
+                    assertEquals(2, detail.albums.size)
+                    detail.albums.forEach { assertEquals(LocalDate.of(1984, 1, 1), it.releaseDate) }
+                }
+                assertEquals(2, serverRule.server.requestCount)
+            } finally {
+                TimeZone.setDefault(original)
+            }
         }
 
     private fun musician(): JsonObject = firstObject("api/musicians.json")
