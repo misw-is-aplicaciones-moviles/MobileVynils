@@ -152,7 +152,7 @@ Diseño de referencia: [HU14-01](12-hu14-diseno-tecnico.md). La tabla registra e
 | CP-HU14-09 | Rol Visitante o cambio de rol durante el flujo | Sin acceso de asignación; rechazar envío si dejó de ser Coleccionista; no crear escritura | E2E y ViewModel | ViewModel y acceso Visitante en HU04 aprobados; cambio de rol en UI del selector pendiente |
 | CP-HU14-10 | Artista, tipo o premio inválido en argumentos | Salida segura o error de contrato; no invocar la red con IDs no positivos ni adivinar el tipo | ViewModel y Repository | ViewModel y Repository aprobados; salida con argumentos inválidos en UI pendiente |
 | CP-HU14-11 | 400 por fecha inválida o 404 por recurso inexistente | Clasificar error y conservar entradas; no afirmar que la asignación fue exitosa; no asumir 400 para fecha omitida | ViewModel, Repository y API | ViewModel y API aprobados; HTTP 400/404 de escritura en UI pendientes |
-| CP-HU14-12 | Timeout, desconexión, 500 o 2xx no interpretable al asignar | Conservar entradas; no repetir POST automáticamente; revalidar el resultado antes de habilitar otra escritura, informar si sigue incierto | ViewModel, Repository y API controlada | JVM/API y E2E de red API 31 aprobados; controles adicionales de HU14-06 pendientes |
+| CP-HU14-12 | Timeout, desconexión, 500 o 2xx no interpretable al asignar | Conservar entradas; no repetir POST automáticamente; revalidar el resultado antes de habilitar otra escritura, informar si sigue incierto | ViewModel, Repository y API controlada | JVM/API de errores y timeout, y E2E de red API 31 aprobados; API 21/37 pendientes |
 | CP-HU14-13 | Pantalla con artista, selección y fecha | Recrear/restaurar; mantener valores sin reenviar POST ni repetir resultados/snackbars consumidos | ViewModel y E2E | ViewModel y recreación E2E API 31 aprobados; API 21/37 pendientes |
 | CP-HU14-14 | Asignaciones cuyos IDs difieren de prize.id y un mismo premio con distintas fechas | Resolver el nombre por ID de asignación mediante el catálogo; mantener fechas, sin N peticiones ni falsa sección vacía si falla la unión | Mapper, Repository y ViewModel | Repository/API aprobados; resolución visual API 31 comprobada con asignaciones propias |
 | CP-HU14-15 | Guardado suspendido y dos pulsaciones | Una petición en curso; tras éxito volver al detalle una sola vez y conservarlo aunque falle el refresco posterior | ViewModel y E2E cuando sea controlable | Doble envío en ViewModel y retorno E2E API 31 aprobados |
@@ -194,7 +194,7 @@ Controles finales: 254 pruebas JVM aprobadas, sin fallos, errores u omisiones; S
 | CP-HU14-09 | `changing role before saving returns to the selector and never writes` | ViewModel y acceso Visitante en HU04 aprobados; cambio de rol en UI del selector pendiente |
 | CP-HU14-07/08/15 | `success sends the correct type and date only once while saving` | Ampliada a músico y banda; un envío en curso, fecha correcta y resultado consumido una vez |
 | CP-HU14-11 | `definite validation failure preserves the date and permits retry` | ViewModel y API aprobados; HTTP 400/404 de escritura en UI pendientes |
-| CP-HU14-12 | `uncertain write preserves entries and cannot repeat the POST` | JVM/API y E2E de red API 31 aprobados; controles adicionales de HU14-06 pendientes |
+| CP-HU14-12 | `uncertain write preserves entries and cannot repeat the POST` | JVM/API de errores y timeout, y E2E de red API 31 aprobados; API 21/37 pendientes |
 | CP-HU14-10/17 | `visitor and invalid artist do not load prizes`; `search is local and already assigned prizes cannot be selected` | Argumentos ausentes/ID/tipo/nombre inválidos sin consultas ni envíos; asociación de otro artista no bloquea el premio actual |
 
 Ejecución dirigida: **41 pruebas JVM aprobadas**, sin fallos, errores u omisiones: 13 del selector, 12 de `PerformerDetailViewModelTest` y 16 de `PrizeRepositoryImplTest` (incluye contrato HTTP). No son 41 pruebas nuevas de HU14. Spotless y detekt correctos. No hubo cambios productivos ni ejecuciones en Android en esta tarea. Reporte: `app/build/reports/tests/testDebugUnitTest/index.html`.
@@ -212,6 +212,19 @@ Ejecución dirigida: **41 pruebas JVM aprobadas**, sin fallos, errores u omision
 Validación del 04/11/2026: **5 E2E aprobadas en claro y las mismas 5 repetidas en oscuro**, sin fallos, errores ni omisiones, en Huawei DBY-W09, Android 12/API 31 y BackVynils local. Regresión: 6 recorridos de HU04 aprobados. Controles: Spotless, detekt, lintDebug y 257 pruebas JVM en verde. Los XML se conservaron por ejecución en `/tmp/HU14-05-evidencias`, junto con capturas reales.
 
 Las capturas del aviso de éxito y del detalle estable se guardan por separado. Las pruebas esperan contenido visible y opacidad completa de la fila; no añaden pausas fijas. `PerformerDetailRobot` comparte con HU04 el desplazamiento por contenido, incluida una fila o cabecera mayor que la pantalla. HU13, errores HTTP de escritura controlados desde UI, API 21/37 y accesibilidad completa permanecen pendientes; los casos mixtos no se consideran totalmente aprobados solo por estas E2E.
+
+**HU14-06 · API · 04/11/2026:** `PrizeRepositoryImplTest` conserva la cobertura previa y pasa de 16 a **20 pruebas aprobadas**: cuatro nuevas y ampliaciones de las existentes. Se prueban Repository, Adapter, Retrofit y OkHttp reales con MockWebServer; no se consulta ni modifica BackVynils.
+
+| Casos asociados | Método | Resultado verificado |
+|---|---|---|
+| CP-HU14-01/03 | `forced catalog refresh revalidates HTTP` | Caché HTTP fresca con max-age; revalidación no-cache devuelve el nombre actualizado, con dos GET |
+| CP-HU14-03/12 | `catalog HTTP and transport failures recover only after an explicit refresh` | 404/500, desconexión y timeout se clasifican; una consulta explícita recupera el catálogo; cliente nuevo por escenario para no reutilizar conexiones al simular DISCONNECT_AT_START |
+| CP-HU14-07/08/12/15 | `assignment timeout is a network error and never resends the POST` | Timeout controlado en ambas rutas; una única petición POST por envío y DataError.Network |
+| CP-HU14-07/08/14 | `assignment and catalog preserve the UTC day under Bogota timezone` | Fecha obligatoria de solicitud, respuesta y catálogo conserva el día UTC bajo America/Bogota; se restaura la zona original |
+| CP-HU14-14 | `a repeated association ID across different prizes is rejected as ambiguous` | No se devuelve un premio arbitrario cuando dos premios contienen el mismo ID de asociación |
+| CP-HU14-10/11/12 | Casos ampliados de IDs, errores HTTP y respuestas inválidas de la misma clase | IDs no positivos sin inicializar HTTP; 400/404/500 conservados en ambos endpoints; cuerpo vacío/nulo/JSON inválido/204 o identidad/fecha ausente no confirman la escritura |
+
+Controles `spotlessCheck detekt lintDebug testDebugUnitTest` con JDK 17: **261 pruebas JVM aprobadas**, sin fallos, errores ni omisiones, verificadas en XML. No se añadieron dependencias, utilidades, fixtures ni código productivo. Las E2E no se repitieron en esta tarea; sus resultados y pendientes corresponden a HU14-05. Reporte local: `app/build/reports/tests/testDebugUnitTest/index.html`.
 
 ### Casos de HU08
 

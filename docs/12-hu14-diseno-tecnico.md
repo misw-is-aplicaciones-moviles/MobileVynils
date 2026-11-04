@@ -350,3 +350,20 @@ bash scripts/run_e2e.sh \
 Se ejecuta con JDK 17, BackVynils local y tablet Huawei DBY-W09, Android 12/API 31. `darkMode=true` permite repetir en oscuro. Las capturas se guardan en filesDir de la app; reportes y copias de las evidencias locales se conservan fuera de Git en `/tmp/HU14-05-evidencias`. La correspondencia por método está en el inventario. API 21/37, HU13 y accesibilidad completa permanecen pendientes.
 
 Resultado final: **5 E2E aprobadas en claro y las mismas 5 en oscuro**, sin fallos, errores ni omisiones; 6 regresiones de HU04 aprobadas. Spotless, detekt, lintDebug y **257 pruebas JVM** correctos. Se revisaron capturas reales del detalle estable y de la hoja restaurada. No quedaron premios ni artistas temporales de HU14. Las asignaciones originales 100/101 conservaron todos sus valores; se observaron dos nuevas asignaciones sobre la semilla (120/131), ajenas a las marcas de fixtures, que se conservaron sin modificarlas.
+
+## 15. Pruebas de API HU14-06 · 04/11/2026
+
+Rama `feature/HU14-06-pruebas-api`, sobre HU14-05 integrada en la principal de HU14. Amplía únicamente `PrizeRepositoryImplTest` y documentación. Reutiliza MockWebServerRule, NetworkClient, JSON y Repository/Adapter reales; no necesita BackVynils, tablet, dependencias ni fixtures nuevos.
+
+Cuatro pruebas nuevas verifican recuperación explícita del catálogo tras HTTP/transporte, timeout de POST sin reenvío para ambos tipos, conservación de fechas UTC bajo America/Bogota y rechazo de asociaciones ambiguas. Las existentes comprueban ahora revalidación contra una caché fresca, IDs negativos, errores HTTP de ambos endpoints y más variantes de respuesta inválida. No se debilitan verificaciones ni se modifica código productivo.
+
+La primera ejecución detectó una limitación de la simulación: DISCONNECT_AT_START estaba usando una conexión abierta por el escenario anterior. Se aisló el cliente por escenario, conservando la expectativa DataError.Network y verificando la recuperación con una solicitud explícita.
+
+```bash
+./gradlew testDebugUnitTest \
+  --tests 'co.edu.uniandes.vinilos.repositories.PrizeRepositoryImplTest' \
+  --offline --console=plain
+./gradlew spotlessCheck detekt lintDebug testDebugUnitTest --offline --console=plain
+```
+
+Con JDK 17: **20 pruebas de Repository/API aprobadas**, y controles finales correctos con **261 pruebas JVM aprobadas**, sin fallos, errores u omisiones, comprobadas en XML. La correspondencia por método se registra en el inventario. No se repitieron E2E por este cambio exclusivo de pruebas JVM; continúan pendientes HU13, API 21/37 y accesibilidad completa. Antes del PR se debe reconciliar la base con la versión de HU04 aceptada en develop.
