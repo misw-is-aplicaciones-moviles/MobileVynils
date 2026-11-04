@@ -71,7 +71,7 @@ class PerformerServiceAdapterTest {
             assertEquals("Queen", queen.name)
             assertEquals("1970-01-01T00:00:00.000Z", queen.creationDate)
             assertEquals(2, queen.albums?.size)
-            val memberIds = queen.musicians.orEmpty().map { it.id }
+            val memberIds = queen.musicians.orEmpty().map { checkNotNull(it).id }
             assertEquals(setOf(102, 103, 104, 105), memberIds.toSet())
             assertEquals(listOf("/bands"), requests.toList())
         }

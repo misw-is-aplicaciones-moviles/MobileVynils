@@ -18,7 +18,7 @@ internal fun mergePerformers(
     val bandByMusicianId = mutableMapOf<Int, Performer>()
     bands.zip(bandModels).forEach { (dto, band) ->
         dto.musicians.orEmpty().forEach { member ->
-            bandByMusicianId.putIfAbsent(member.id ?: missing("band musician id"), band)
+            bandByMusicianId.putIfAbsent(member?.id ?: missing("band musician id"), band)
         }
     }
     val musicianModels =

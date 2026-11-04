@@ -3,6 +3,8 @@ package co.edu.uniandes.vinilos.testing
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.Performer
+import co.edu.uniandes.vinilos.models.PerformerDetail
+import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.repositories.PerformerRepository
 import kotlinx.coroutines.CompletableDeferred
 
@@ -20,6 +22,20 @@ internal class FakePerformerRepository(
         private set
     var remoteCalls = 0
         private set
+
+    var detailResult: DataResult<PerformerDetail, DataError> = DataResult.Failure(DataError.Http(404))
+    var detailGate: CompletableDeferred<Unit>? = null
+    val detailRequests = mutableListOf<Triple<Int, PerformerType, Boolean>>()
+
+    override suspend fun getPerformer(
+        id: Int,
+        type: PerformerType,
+        forceRefresh: Boolean,
+    ): DataResult<PerformerDetail, DataError> {
+        detailRequests += Triple(id, type, forceRefresh)
+        detailGate?.await()
+        return detailResult
+    }
 
     override suspend fun getPerformers(forceRefresh: Boolean): DataResult<List<Performer>, DataError> {
         if (!forceRefresh) {

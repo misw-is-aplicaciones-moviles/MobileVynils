@@ -156,7 +156,7 @@ class PerformerMappersTest {
 
     @Test
     fun `a band member without an id is a serialization error`() {
-        val band = band(id = 1).copy(musicians = listOf(RelatedIdDto()))
+        val band = band(id = 1).copy(musicians = listOf(MusicianDto()))
 
         assertThrows(JsonParseException::class.java) { mergePerformers(emptyList(), listOf(band)) }
     }
@@ -196,6 +196,6 @@ class PerformerMappersTest {
         image = "https://example.com/$id.jpg",
         creationDate = creationDate,
         albums = emptyList(),
-        musicians = members.map { RelatedIdDto(it) },
+        musicians = members.map { MusicianDto(id = it) },
     )
 }

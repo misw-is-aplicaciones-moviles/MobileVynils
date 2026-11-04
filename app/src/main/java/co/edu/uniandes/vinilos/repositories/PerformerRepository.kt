@@ -3,6 +3,8 @@ package co.edu.uniandes.vinilos.repositories
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.Performer
+import co.edu.uniandes.vinilos.models.PerformerDetail
+import co.edu.uniandes.vinilos.models.PerformerType
 
 /** Source of artist data; the list is cached in Room and expected remote failures are returned as values. */
 interface PerformerRepository {
@@ -14,4 +16,11 @@ interface PerformerRepository {
 
     /** Tells whether Room already holds artists, so the screen can show them before the network answers. */
     suspend fun hasCachedPerformers(): Boolean
+
+    /** Reads one remote detail, without replacing the cached list; retries revalidate HTTP. */
+    suspend fun getPerformer(
+        id: Int,
+        type: PerformerType,
+        forceRefresh: Boolean = false,
+    ): DataResult<PerformerDetail, DataError>
 }

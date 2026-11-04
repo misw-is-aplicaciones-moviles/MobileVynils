@@ -39,4 +39,16 @@ internal interface VinilosApiService {
 
     @GET("bands")
     suspend fun getBands(): List<BandDto>
+
+    @GET("musicians/{id}")
+    suspend fun getMusician(
+        @Path("id") id: Int,
+        @Header("Cache-Control") cacheControl: String? = null,
+    ): Response<MusicianDto>
+
+    @GET("bands/{id}")
+    suspend fun getBand(
+        @Path("id") id: Int,
+        @Header("Cache-Control") cacheControl: String? = null,
+    ): Response<BandDto>
 }
