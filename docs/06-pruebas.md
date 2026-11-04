@@ -135,6 +135,32 @@ La clase contiene cuatro recorridos con datos reales del backend. Los estados
 del ViewModel, Repository y Service Adapter. No se requieren proxy ni argumentos
 especiales para la ejecución instrumentada general.
 
+### Casos propuestos de HU14
+
+Diseño de referencia: [HU14-01](12-hu14-diseno-tecnico.md). Estos casos no están implementados ni ejecutados todavía. Los nombres de prueba se concretarán en HU14-04/05/06. La correspondencia con los escenarios PE de la Wiki se asignará por comportamiento cuando su inventario se complete; no reutilizar números PE de otras historias.
+
+| ID | Escenario y precondición | Acción y resultado esperado | Nivel previsto | Estado |
+|---|---|---|---|---|
+| CP-HU14-01 | Coleccionista, artista válido y catálogo con premios | Abrir Elegir premio; mostrar nombre/organización y seleccionar un premio elegible por ID; pasar de Selecciona un premio a Continuar con «nombre», sin posiciones fijas | E2E, ViewModel y API GET | Propuesto; no ejecutado |
+| CP-HU14-02 | GET /prizes devuelve [] | Mostrar vacío y acceso a HU13; no permitir continuar sin premio | ViewModel, API y UI si hay datos controlables | Propuesto; no ejecutado |
+| CP-HU14-03 | Consulta falla y luego responde correctamente | Mostrar error; reintentar la consulta y recuperar la lista sin duplicarla | ViewModel y API | Propuesto; no ejecutado |
+| CP-HU14-04 | Selector abierto y HU13 integrada | Crear premio en HU13; recibirlo seleccionado con el aviso una vez; al cancelar HU13 conservar la selección anterior | E2E y ViewModel | Propuesto; no ejecutado |
+| CP-HU14-05 | Premio elegido y fecha todavía vacía | Mostrar FECHA (OBLIGATORIA), sin Omitir; Asignar premio deshabilitado. Solicitar envío sin fecha no llama al Repository; elegir día habilita el envío sin sustituirlo por hoy | ViewModel, mapper y E2E | Propuesto; no ejecutado |
+| CP-HU14-06 | Selección o fecha ya introducidas | X/Atrás de la hoja la cierra y conserva el selector; X del selector vuelve al detalle sin POST. No existe acción Omitir | E2E y ViewModel | Propuesto; no ejecutado |
+| CP-HU14-07 | Músico y premio existentes de pruebas | Elegir premio y fecha en la hoja; POST a musicians con premiationDate; conservar día UTC/GMT-5, actualizar contador y fila y mostrar Premio asignado al artista una vez | E2E, Repository, mapper y API | Propuesto; no ejecutado |
+| CP-HU14-08 | Banda y premio existentes de pruebas | Mismo recorrido; POST a bands, sin alterar otro artista ni confundir IDs de premio y asignación | E2E, Repository y API | Propuesto; no ejecutado |
+| CP-HU14-09 | Rol Visitante o cambio de rol durante el flujo | Sin acceso de asignación; rechazar envío si dejó de ser Coleccionista; no crear escritura | E2E y ViewModel | Propuesto; no ejecutado |
+| CP-HU14-10 | Artista, tipo o premio inválido en argumentos | Salida segura o error de contrato; no invocar la red con IDs no positivos ni adivinar el tipo | ViewModel y Repository | Propuesto; no ejecutado |
+| CP-HU14-11 | 400 por fecha inválida o 404 por recurso inexistente | Clasificar error y conservar entradas; no afirmar que la asignación fue exitosa; no asumir 400 para fecha omitida | ViewModel, Repository y API | Propuesto; no ejecutado |
+| CP-HU14-12 | Timeout, desconexión, 500 o 2xx no interpretable al asignar | Conservar entradas; no repetir POST automáticamente; revalidar el resultado antes de habilitar otra escritura, informar si sigue incierto | ViewModel, Repository y API controlada | Propuesto; no ejecutado |
+| CP-HU14-13 | Pantalla con artista, selección y fecha | Recrear/restaurar; mantener valores sin reenviar POST ni repetir resultados/snackbars consumidos | ViewModel y E2E | Propuesto; no ejecutado |
+| CP-HU14-14 | Asignaciones cuyos IDs difieren de prize.id y un mismo premio con distintas fechas | Resolver el nombre por ID de asignación mediante el catálogo; mantener fechas, sin N peticiones ni falsa sección vacía si falla la unión | Mapper, Repository y ViewModel | Propuesto; no ejecutado |
+| CP-HU14-15 | Guardado suspendido y dos pulsaciones | Una petición en curso; tras éxito volver al detalle una sola vez y conservarlo aunque falle el refresco posterior | ViewModel y E2E cuando sea controlable | Propuesto; no ejecutado |
+| CP-HU14-16 | Catálogo cargado y búsqueda Buscar premio | Filtrar localmente por nombre sin nuevos GET; mostrar sin coincidencias y permitir limpiar; recibir premio de HU13 visible y seleccionado aunque no coincida con la búsqueda anterior | ViewModel y E2E | Propuesto; no ejecutado |
+| CP-HU14-17 | Premio ya asignado al artista y otro asignado solo a un tercero | Mostrar YA ASIGNADO sin selección activa solo para el del artista actual; rechazar asignación repetida desde la UI, sin bloquear por asignaciones ajenas ni eliminar duplicados históricos | ViewModel, mapper y E2E | Propuesto; no ejecutado |
+
+Datos: preparar artista y premio propios cuando la prueba escriba; usar IDs devueltos por el backend, nunca números fijos de la semilla. No alterar datos ajenos. Reutilizar JUnit, `MockWebServerRule`, fakes, utilidades de LiveData/corrutinas y Robots existentes. Las fallas de transporte/servidor se controlan principalmente en JVM/API; no requieren detener contenedores ni instalar un proxy externo. No presentar estas propuestas como resultados reales de la matriz Android.
+
 ### Casos de HU08
 
 Cada caso crea su propio álbum con `POST /albums` y un nombre único. No usa la semilla ni un conteo fijo de canciones. La duración se ve con minutos de dos dígitos en la hoja (`04:15`) y sin el cero a la izquierda en la fila (`4:15`).
