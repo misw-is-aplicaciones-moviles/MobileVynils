@@ -151,7 +151,7 @@ Cada repositorio guarda en Room (2.7.2, la última versión que admite API 21) l
 | `CommentEntity` | `id` | `albumId` → `AlbumEntity`; `collectorId`, `collectorName` opcionales |
 | `PerformerEntity` (HU03, versión 3) | `id` | `type`, `name`, `image`, `date`, `albumCount`, `memberCount`, `bandId` opcional (músico que pertenece a una banda; su nombre se resuelve al leer). Sin relaciones: las de álbumes e integrantes llegan con HU04 |
 | `AlbumPerformerCrossRef` | (`albumId`, `performerId`) | álbumes de un artista y artistas de un álbum |
-| `CollectorEntity` | `id` | — |
+| `CollectorEntity` (HU05, versión 4) | `id` | `name`, `email`, `albumCount`, `favoriteCount`. Sin teléfono ni relaciones: llegan con HU06 |
 | `CollectorFavoriteCrossRef` | (`collectorId`, `performerId`) | favoritos |
 | `CollectorAlbumEntity` | (`collectorId`, `albumId`) | `price`, `status` |
 
@@ -286,6 +286,14 @@ Flujo:
 
 **HU05 · Lista de coleccionistas.** Tarjeta con avatar de iniciales, nombre, correo y "N álbumes · M favoritos" ("Sin álbumes aún" cuando no tiene), a partir de los arreglos de `GET /collectors`.
 
+*Diseño técnico de HU05 (HU05-01).*
+
+- **Datos.** `CollectorServiceAdapter` llama a `GET /collectors` y devuelve `Collector`. Crea la API dentro de `withContext(ioDispatcher)`, porque el primer acceso prepara la caché HTTP en disco, y mapea en `defaultDispatcher`. Una respuesta sin `id`, `name` o `email` se rechaza como `DataError.Serialization`. Si la llamada falla, Room no se toca.
+- **Modelo.** `Collector(id, name, email, albumCount, favoriteCount)` contiene solo lo que dibuja la lista; HU06 lo amplía con teléfono, favoritos y álbumes. Los conteos salen del tamaño de `collectorAlbums` y `favoritePerformers`, leídos con `RelatedIdDto`. La base pasa a la versión 4 con una `Migration(3, 4)` que solo crea la tabla `collectors`.
+- **Presentación.** El ViewModel calcula en `Dispatchers.Default` la posición ("01"), las iniciales (primera letra de la primera y de la última palabra: "Ana Lucía Pardo" es "AP") y la tercera línea como dato (`CollectorSummaryLine`); el adaptador la escribe con `plurals`. Con 0 álbumes se muestra "Sin álbumes aún", aunque tenga favoritos. El Repository también mapea entidades en ese dispatcher: el backend no pagina, así que el tamaño de la lista no tiene límite (`07-desempeno.md`).
+- **Navegación.** Tocar una fila abre `collectorDetailFragment` con `collectorId: Int`; hasta HU06 es `PendingTabFragment`.
+- **Orden.** Por nombre sin distinguir mayúsculas ASCII (`COLLATE NOCASE`, desempate por id), la regla del catálogo y de los artistas; el mockup es un ejemplo y no sigue ese orden.
+
 **HU06 · Detalle de coleccionista.** Cabecera con avatar, sobretítulo "Coleccionista" y nombre; fichas Teléfono y Correo; sección "Artistas favoritos · N" (imagen, nombre, tipo); sección "Sus álbumes · N" con precio a la derecha ("$ 35") y chip de estado "DISPONIBLE" / "NO DISPONIBLE". Requiere dos llamadas: `GET /collectors/:id` y `GET /collectors/:id/albums`. Para coleccionista, botón "Agregar favorito" en la sección de favoritos.
 
 **HU14 · Asignar premio (incorporada al Sprint 2).** Desde el detalle de músico o banda, el coleccionista abre "Elegir premio" (`GET /prizes`), busca localmente por nombre y selecciona un registro elegible. Los premios ya asignados al artista llevan "YA ASIGNADO" sin selección activa. "Continuar con «premio»" abre la hoja inferior "Fecha de premiación", con calendario, fecha obligatoria y acción "Asignar premio" deshabilitada hasta elegir día. Se retiran Omitir y la indicación de fecha opcional del mockup por decisión del responsable, respetando el backend local y sin inventar una fecha. Con día elegido, envía `premiationDate` con `POST /prizes/:prizeId/musicians/:musicianId` o `POST /prizes/:prizeId/bands/:bandId`. En éxito regresa al detalle con contador, fila actualizada y "Premio asignado al artista". "Crear un premio nuevo" abre HU13 y devuelve el premio creado al selector, seleccionado y visible. El [diseño técnico](12-hu14-diseno-tecnico.md) define estados, resultados, conservación de fecha, tratamiento de escrituras inciertas e integración temprana del selector para HU13.
@@ -371,7 +379,7 @@ Claves para `res/values/strings.xml` según el prototipo. El código usa los nom
 | `artist_section_members` / `artist_section_albums` | Integrantes · %1$d / Álbumes · %1$d |
 | `action_add_member` / `action_add_album` | Agregar integrante / Agregar álbum |
 | `collector_list_title` / `collector_detail_title` | Coleccionistas / Coleccionista |
-| `collector_summary` / `collector_no_albums` | %1$d álbumes · %2$d favoritos / Sin álbumes aún |
+| `collector_summary` / `collector_no_albums` | %1$s · %2$s (con los plurales `collector_albums_count` y `collector_favorites_count`) / Sin álbumes aún |
 | `collector_phone` / `collector_email` | Teléfono / Correo |
 | `collector_section_favorites` / `collector_section_albums` | Artistas favoritos · %1$d / Sus álbumes · %1$d |
 | `album_status_available` / `album_status_unavailable` | Disponible / No disponible |
@@ -418,6 +426,7 @@ Resultado de contrastar wiki, prototipo, documento del curso y código del backe
 14. **Botón para agregar una canción (HU08).** El prototipo v1 dibuja un FAB extendido "+ Canción"; los mockups v2, un "+" en la joroba de la barra inferior. Equipo: decidir uno y alinear el Gherkin de HU08 y los casos CP.
 15. **Duración de la canción (HU08).** Los mockups v2 usan un teclado propio "00:00" con "Limpiar" y borrar; la expresión `^\d{1,2}:[0-5]\d$` de la sección 6 acepta `60:00` y `00:00`, que el Gherkin rechaza. Equipo: fijar la regla (mínimo `00:01`, máximo `59:59`) antes de implementar HU08.
 16. **Datos de los mockups frente a la semilla.** El mockup del catálogo muestra "Poeta del pueblo · SIN ARTISTA · 1974"; la semilla de BackVynils lo trae con Rubén Blades y 1984. Las pruebas usan los datos de la semilla.
+17. **Rutas de BackVynils para quitar relaciones de un coleccionista (HU05).** `DELETE /collectors/:id/albums/:albumId` busca por `collectorId` y `albumId`, que no son columnas de `CollectorAlbum`: ignora el filtro, responde 204 y borra el vínculo de id más bajo, aunque sea de otro coleccionista. `DELETE /collectors/:id/musicians/:id` responde 204 sin quitar el favorito. Como `collector_album` no borra en cascada, un coleccionista con álbumes no se puede eliminar sin la primera ruta. La app no usa ninguna de las dos; quien las necesite (HU10, HU11 o sus pruebas) debe tenerlo en cuenta. Equipo.
 
 ## 11. Bitácora de decisiones
 
@@ -429,6 +438,7 @@ Resultado de contrastar wiki, prototipo, documento del curso y código del backe
 | 2026-10-28 | HU01-01: el catálogo se guarda en Room (`AlbumEntity` con `performerName`, base de datos versión 2), orden alfabético, fila propia `item_album_catalog.xml` con las medidas del mockup (carátula de 96 dp, ya no 56 dp), estado de error con ilustración, botón "+" en la joroba de la barra para el coleccionista (lo muestra el Fragment según `canEdit` de su `UiState`) y cinco textos nuevos del catálogo (`album_list_empty`, `album_list_offline_notice`, `album_list_refresh_error`, `album_genre_year`, `album_create_pending`). |
 | 2026-10-28 | HU07-01: diseño técnico del formulario "Nuevo álbum" (sección 6): siete estados, validación de campos obligatorios en `AlbumFormValidator` con errores como tipos, contrato de `POST /albums` con fecha en medianoche UTC, `RecordLabel` con `apiName` (antes decía `apiValue`), `NewAlbumRequest` como cuerpo del POST, resultado al catálogo por `savedStateHandle`. El álbum nuevo aparece en su posición alfabética (antes decía "al final"); `album_create_pending` se retira y se suman los textos de pista, selector de fecha y error al crear. |
 | 2026-11-03 | HU03-01: diseño técnico de la lista de artistas (wiki `HU03-Diseno-tecnico`). `Performer` mínimo para la lista y `PerformerEntity` sin tablas de relación (HU04 las agrega); base versión 3 con migración explícita 2 → 3 en lugar de la recreación destructiva; unión de `GET /musicians` y `GET /bands` en paralelo con fallo total ante cualquier fallo parcial; pertenencia a banda derivada de `bands[].musicians`; filtro en el ViewModel; sin botón "+"; destino `performerDetailFragment` provisional con `performerId` y `type`. Orden por nombre decidido: el mockup de "Todos" no es alfabético. |
+| 2026-11-04 | HU05-01: diseño técnico de la lista de coleccionistas. `Collector` y `CollectorEntity` mínimos para la lista; base versión 4 con migración explícita 3 → 4; mapeo fuera del hilo principal también en el Repository y el ViewModel; destino `collectorDetailFragment` provisional con `collectorId`; textos con plurales. Hallazgo 17 sobre las rutas `DELETE` de BackVynils. |
 
 ### Propuesta HU04-01 · 04/11/2026
 

@@ -4,17 +4,22 @@ import android.content.Context
 import androidx.room.Room
 import co.edu.uniandes.vinilos.BuildConfig
 import co.edu.uniandes.vinilos.database.MIGRATION_2_3
+import co.edu.uniandes.vinilos.database.MIGRATION_3_4
 import co.edu.uniandes.vinilos.database.VinilosDatabase
 import co.edu.uniandes.vinilos.database.dao.AlbumDao
+import co.edu.uniandes.vinilos.database.dao.CollectorDao
 import co.edu.uniandes.vinilos.database.dao.PerformerDao
 import co.edu.uniandes.vinilos.database.dao.TrackDao
 import co.edu.uniandes.vinilos.network.AlbumServiceAdapterImpl
+import co.edu.uniandes.vinilos.network.CollectorServiceAdapterImpl
 import co.edu.uniandes.vinilos.network.NetworkClient
 import co.edu.uniandes.vinilos.network.PerformerServiceAdapterImpl
 import co.edu.uniandes.vinilos.network.PrizeServiceAdapterImpl
 import co.edu.uniandes.vinilos.network.VinilosApiService
 import co.edu.uniandes.vinilos.repositories.AlbumRepository
 import co.edu.uniandes.vinilos.repositories.AlbumRepositoryImpl
+import co.edu.uniandes.vinilos.repositories.CollectorRepository
+import co.edu.uniandes.vinilos.repositories.CollectorRepositoryImpl
 import co.edu.uniandes.vinilos.repositories.PerformerRepository
 import co.edu.uniandes.vinilos.repositories.PerformerRepositoryImpl
 import co.edu.uniandes.vinilos.repositories.PrizeRepository
@@ -42,8 +47,8 @@ class AppContainer(
     private val database: VinilosDatabase by lazy {
         Room
             .databaseBuilder(appContext, VinilosDatabase::class.java, VinilosDatabase.NAME)
-            // La versión 3 solo agrega la tabla de artistas: se migra para conservar el catálogo guardado.
-            .addMigrations(MIGRATION_2_3)
+            // Las versiones 3 y 4 solo agregan tablas (artistas y coleccionistas): se migra para conservar lo guardado.
+            .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
             // Es una caché del backend: ante un cambio de esquema sin migración se recrea en vez de cerrar la app.
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
@@ -52,6 +57,7 @@ class AppContainer(
     private val albumDao: AlbumDao by lazy { database.albumDao() }
     internal val trackDao: TrackDao by lazy { database.trackDao() }
     internal val performerDao: PerformerDao by lazy { database.performerDao() }
+    internal val collectorDao: CollectorDao by lazy { database.collectorDao() }
 
     val sessionRepository: SessionRepository by lazy { SessionRepositoryImpl() }
 
@@ -87,6 +93,19 @@ class AppContainer(
                 ioDispatcher = Dispatchers.IO,
                 defaultDispatcher = Dispatchers.Default,
             ),
+        )
+    }
+
+    // Igual que albumRepository: el adaptador crea la API en su primera llamada, fuera del hilo principal.
+    val collectorRepository: CollectorRepository by lazy {
+        CollectorRepositoryImpl(
+            collectorDao,
+            CollectorServiceAdapterImpl(
+                apiProvider = { networkClient.create(VinilosApiService::class.java) },
+                ioDispatcher = Dispatchers.IO,
+                defaultDispatcher = Dispatchers.Default,
+            ),
+            defaultDispatcher = Dispatchers.Default,
         )
     }
 }

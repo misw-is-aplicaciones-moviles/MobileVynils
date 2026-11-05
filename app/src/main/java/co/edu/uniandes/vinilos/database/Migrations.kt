@@ -18,3 +18,15 @@ internal val MIGRATION_2_3: Migration =
             )
         }
     }
+
+/** Versión 4: agrega la tabla de coleccionistas. No toca las demás, así que lo guardado sobrevive. */
+internal val MIGRATION_3_4: Migration =
+    object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `collectors` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, " +
+                    "`email` TEXT NOT NULL, `albumCount` INTEGER NOT NULL, `favoriteCount` INTEGER NOT NULL, " +
+                    "PRIMARY KEY(`id`))",
+            )
+        }
+    }
