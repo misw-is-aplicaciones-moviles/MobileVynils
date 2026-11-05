@@ -56,7 +56,7 @@ class AlbumListViewModelTest {
 
 - Runner `co.edu.uniandes.vinilos.testing.VinilosTestRunner`, basado en `AndroidJUnitRunner`; regla `ActivityScenarioRule(MainActivity::class.java)`. Instala el selector de proxy de pruebas antes de construir el cliente HTTP y lo restaura al finalizar.
 - Backend: BackVynils local con la semilla (`docker compose up`), alcanzable desde el emulador en `10.0.2.2:3000`. Las pruebas que crean datos (HU07, HU08) usan nombres únicos para ser repetibles.
-- La semilla de BackVynils inserta IDs explícitos sin avanzar las secuencias de PostgreSQL. `scripts/run_e2e.sh` prepara automáticamente las secuencias de álbumes y canciones a partir de los datos presentes y luego ejecuta Gradle. Usa `pg_get_serial_sequence` y el máximo ID real: no contiene IDs esperados, posiciones ni contadores propios de un equipo, no reduce secuencias y no borra registros. Las pruebas no reintentan ni ignoran HTTP 500 de preparación. Esta preparación debe repetirse después de cargar nuevamente la semilla.
+- La semilla de BackVynils inserta IDs explícitos sin avanzar las secuencias de PostgreSQL. `scripts/run_e2e.sh` prepara automáticamente las secuencias de álbumes, canciones, artistas, premios y asignaciones a partir de los datos presentes y luego ejecuta Gradle. Usa `pg_get_serial_sequence` y el máximo ID real: no contiene IDs esperados, posiciones ni contadores propios de un equipo, no reduce secuencias y no borra registros. Las pruebas no reintentan ni ignoran HTTP 500 de preparación. Esta preparación debe repetirse después de cargar nuevamente la semilla.
 - El catálogo admite álbumes adicionales a la semilla: `AlbumListRobot` busca los títulos sin posiciones fijas, comprueba los datos y la numeración de la fila según su posición actual y verifica el orden del catálogo completo con la regla de SQLite `COLLATE NOCASE`. CP-HU01-01 crea además un álbum único anterior a la semilla para cubrir esta regresión. Las pruebas de canciones desplazan el detalle hasta el título y el contador antes de verificarlos, porque la cabecera puede superar el alto visible.
 - `AlbumListRobot.pullToRefresh()` vuelve al inicio real de la lista antes de deslizar hacia abajo: si el catálogo está desplazado, el primer gesto puede desplazar filas sin activar el refresco. CP-HU01-10 empieza desplazado hasta "Poeta del pueblo" y verifica que el álbum creado después de abrir el catálogo aparece tras el refresco.
 - En CP-HU08-03, `BackendFirewall` redirige temporalmente las conexiones del backend a un socket local que cierra sin respuesta HTTP, y descarta las conexiones ociosas del cliente para evitar su reutilización. `restore()` devuelve las rutas originales y cierra el socket. Funciona con `adb reverse` sin root, modo avión, cambios de wifi/datos, esperas fijas ni procesos externos. Es un fallo de transporte controlado; no simula la pérdida física de conectividad del dispositivo.
@@ -134,6 +134,97 @@ La clase contiene cuatro recorridos con datos reales del backend. Los estados
 404, error de servidor y desconexión siguen cubiertos por las pruebas unitarias
 del ViewModel, Repository y Service Adapter. No se requieren proxy ni argumentos
 especiales para la ejecución instrumentada general.
+
+### Casos propuestos de HU14
+
+Diseño de referencia: [HU14-01](12-hu14-diseno-tecnico.md). La tabla registra el avance por nivel; los métodos y evidencias se detallan en las secciones de HU14-02 a HU14-05 que siguen. La correspondencia con los escenarios PE de la Wiki se asignará por comportamiento cuando su inventario se complete; no reutilizar números PE de otras historias.
+
+| ID | Escenario y precondición | Acción y resultado esperado | Nivel previsto | Estado |
+|---|---|---|---|---|
+| CP-HU14-01 | Coleccionista, artista válido y catálogo con premios | Abrir Elegir premio; mostrar nombre/organización y seleccionar un premio elegible por ID; pasar de Selecciona un premio a Continuar con «nombre», sin posiciones fijas | E2E, ViewModel y API GET | JVM/API y E2E API 31 aprobados; API 21/37 pendientes |
+| CP-HU14-02 | GET /prizes devuelve [] | Mostrar vacío y acceso a HU13; no permitir continuar sin premio | ViewModel, API y UI si hay datos controlables | JVM/API aprobadas; UI vacía e integración HU13 pendientes |
+| CP-HU14-03 | Consulta falla y luego responde correctamente | Mostrar error; reintentar la consulta y recuperar la lista sin duplicarla | ViewModel y API | JVM/API aprobadas; error y reintento del catálogo en UI pendientes |
+| CP-HU14-04 | Selector abierto y HU13 integrada | Crear premio en HU13; recibirlo seleccionado con el aviso una vez; al cancelar HU13 conservar la selección anterior | E2E y ViewModel | Contrato ViewModel aprobado; integración real HU13 pendiente |
+| CP-HU14-05 | Premio elegido y fecha todavía vacía | Mostrar FECHA (OBLIGATORIA), sin Omitir; Asignar premio deshabilitado. Solicitar envío sin fecha no llama al Repository; elegir día habilita el envío sin sustituirlo por hoy | ViewModel, mapper y E2E | JVM/API y E2E API 31 aprobados; API 21/37 pendientes |
+| CP-HU14-06 | Selección o fecha ya introducidas | X/Atrás de la hoja la cierra y conserva el selector; X del selector vuelve al detalle sin POST. No existe acción Omitir | E2E y ViewModel | X y conservación de entradas aprobados en API 31; Atrás de la hoja pendiente |
+| CP-HU14-07 | Músico y premio existentes de pruebas | Elegir premio y fecha en la hoja; POST a musicians con premiationDate; conservar día UTC/GMT-5, actualizar contador y fila y mostrar Premio asignado al artista una vez | E2E, Repository, mapper y API | JVM/API y E2E API 31 aprobados; API 21/37 pendientes |
+| CP-HU14-08 | Banda y premio existentes de pruebas | Mismo recorrido; POST a bands, sin alterar otro artista ni confundir IDs de premio y asignación | E2E, Repository y API | JVM/API y E2E API 31 aprobados; API 21/37 pendientes |
+| CP-HU14-09 | Rol Visitante o cambio de rol durante el flujo | Sin acceso de asignación; rechazar envío si dejó de ser Coleccionista; no crear escritura | E2E y ViewModel | ViewModel y acceso Visitante en HU04 aprobados; cambio de rol en UI del selector pendiente |
+| CP-HU14-10 | Artista, tipo o premio inválido en argumentos | Salida segura o error de contrato; no invocar la red con IDs no positivos ni adivinar el tipo | ViewModel y Repository | ViewModel y Repository aprobados; salida con argumentos inválidos en UI pendiente |
+| CP-HU14-11 | 400 por fecha inválida o 404 por recurso inexistente | Clasificar error y conservar entradas; no afirmar que la asignación fue exitosa; no asumir 400 para fecha omitida | ViewModel, Repository y API | ViewModel y API aprobados; HTTP 400/404 de escritura en UI pendientes |
+| CP-HU14-12 | Timeout, desconexión, 500 o 2xx no interpretable al asignar | Conservar entradas; no repetir POST automáticamente; revalidar el resultado antes de habilitar otra escritura, informar si sigue incierto | ViewModel, Repository y API controlada | JVM/API de errores y timeout, y E2E de red API 31 aprobados; API 21/37 pendientes |
+| CP-HU14-13 | Pantalla con artista, selección y fecha | Recrear/restaurar; mantener valores sin reenviar POST ni repetir resultados/snackbars consumidos | ViewModel y E2E | ViewModel y recreación E2E API 31 aprobados; API 21/37 pendientes |
+| CP-HU14-14 | Asignaciones cuyos IDs difieren de prize.id y un mismo premio con distintas fechas | Resolver el nombre por ID de asignación mediante el catálogo; mantener fechas, sin N peticiones ni falsa sección vacía si falla la unión | Mapper, Repository y ViewModel | Repository/API aprobados; resolución visual API 31 comprobada con asignaciones propias |
+| CP-HU14-15 | Guardado suspendido y dos pulsaciones | Una petición en curso; tras éxito volver al detalle una sola vez y conservarlo aunque falle el refresco posterior | ViewModel y E2E cuando sea controlable | Doble envío en ViewModel y retorno E2E API 31 aprobados |
+| CP-HU14-16 | Catálogo cargado y búsqueda Buscar premio | Filtrar localmente por nombre sin nuevos GET; mostrar sin coincidencias y permitir limpiar; recibir premio de HU13 visible y seleccionado aunque no coincida con la búsqueda anterior | ViewModel y E2E | Búsqueda E2E API 31 y contrato HU13 en ViewModel aprobados; retorno real HU13 pendiente |
+| CP-HU14-17 | Premio ya asignado al artista y otro asignado solo a un tercero | Mostrar YA ASIGNADO sin selección activa solo para el del artista actual; rechazar asignación repetida desde la UI, sin bloquear por asignaciones ajenas ni eliminar duplicados históricos | ViewModel, mapper y E2E | ViewModel y E2E API 31 aprobados; API 21/37 pendientes |
+
+Datos: preparar artista y premio propios cuando la prueba escriba; usar IDs devueltos por el backend, nunca números fijos de la semilla. No alterar datos ajenos. Reutilizar JUnit, `MockWebServerRule`, fakes, utilidades de LiveData/corrutinas y Robots existentes. Las fallas de transporte/servidor se controlan principalmente en JVM/API; no requieren detener contenedores ni instalar un proxy externo. No presentar estas propuestas como resultados reales de la matriz Android.
+
+**Cobertura inicial HU14-02 (03/11/2026):** `PrizeRepositoryImplTest` ejecutó 16 pruebas JVM de Repository y contrato HTTP con Retrofit/OkHttp y MockWebServer local, sin fallos ni omisiones. Cubren catálogo, catálogo vacío, revalidación, ambos endpoints de asignación, fecha UTC obligatoria, IDs inválidos, HTTP 400/404/500, respuesta perdida sin reintento automático, respuestas nulas o incoherentes y resolución por ID de asignación con una sola consulta. Complementan CP-HU14-01/02/07/08/10/11/12/14, pero no acreditan sus recorridos de interfaz ni completan HU14-04/05/06. Las respuestas JSON de `api/prizes.json` y `api/prize_assignment.json` son sintéticas, con estructura contrastada con BackVynils; sus IDs difieren deliberadamente entre premio y asignación.
+
+Validación de esta tarea: `./gradlew spotlessCheck detekt lintDebug testDebugUnitTest --offline --console=plain`, BUILD SUCCESSFUL; 148 pruebas JVM en total, 0 fallidas, 0 errores y 0 omitidas. No se ejecutaron E2E ni se hicieron escrituras en BackVynils para esta validación de datos.
+
+**Cobertura inicial HU14-03 (03/11/2026):** `PrizePickerViewModelTest` ejecutó 10 pruebas JVM aprobadas: búsqueda local, bloqueo de premios asignados, fecha obligatoria, tipo y fecha enviados, doble envío, errores definitivos/inciertos, retorno del premio creado, argumentos/rol inválidos y restauración de selección/fecha o escritura incierta. Complementan la lógica de CP-HU14-01/04/05/09/10/12/13/15/16/17; no acreditan los recorridos E2E ni la integración real con HU04/HU13.
+
+Controles de HU14-03: `./gradlew spotlessCheck detekt lint testDebugUnitTest assembleDebug assembleDebugAndroidTest --offline --console=plain`, BUILD SUCCESSFUL, 158 pruebas JVM sin fallos ni omisiones. El APK de la app y el de pruebas instrumentadas compilan. En esa ejecución inicial ADB no detectó dispositivos; la validación posterior se detalla a continuación. El enlace desde el detalle de artista y su actualización quedan pendientes de HU04; HU13 solo es necesario para el recorrido de creación de un premio nuevo.
+
+Validación posterior de HU14-03 (04/11/2026): cuatro comprobaciones instrumentadas aisladas en Huawei DBY-W09, Android 12/API 31, contra BackVynils local; 4 aprobadas en claro y los mismos 4 casos aprobados en oscuro, sin fallos ni omisiones. Cubren búsqueda/sin coincidencias y premio ya asignado; fecha obligatoria, recreación y cancelación sin escritura; POST a músico; POST a banda. Se contrastaron la fecha UTC, IDs y tipo devueltos con GET del artista, y se revisaron capturas reales. Aportan cobertura parcial de CP-HU14-01/04/05/07/08/13/15/16/17. La entrada se invocó desde el código temporal de prueba porque falta HU04: no valida contador, fila ni snackbar del detalle del artista, ni el retorno de HU13. El código de estas comprobaciones se archivó con sus evidencias para reutilizarlo en HU14-05. Los casos del inventario siguen propuestos hasta completar sus recorridos y resultados esperados.
+
+Los fixtures de esa validación eran exclusivos y se limpiaron por IDs y nombres verificados en SQL. El DELETE de asociación de BackVynils eliminó una asociación incorrecta durante la primera limpieza; se restauró exactamente el registro original y se verificaron las asociaciones previas. Ese endpoint no debe usarse para limpiar fixtures. HU14-05 debe preparar las secuencias de prize, performer y performer_prize y resolver una limpieza segura en el backend local de pruebas; no se considera cerrado por estas comprobaciones.
+
+**Integración HU14-03 con HU04 · 04/11/2026:** se amplía la cobertura inicial, sin dar por completados los escenarios mixtos del inventario:
+
+| Casos asociados | Prueba ampliada o nueva | Resultado y límite |
+|---|---|---|
+| CP-HU14-01/09/14/17 | `PerformerDetailViewModelTest.prizes are visible to visitors but only collectors can open assignment` | Aprobada en JVM: premios consultables en ambos roles y apertura solo de Coleccionista con referencias de asociación |
+| CP-HU14-07/08/13/15 | `PerformerDetailViewModelTest.confirmed assignment updates detail once and rejects another artist result` | Aprobada en JVM: resultado del mismo artista/tipo, contador, referencia, resaltado y aviso sin duplicación; no acredita POST desde la interfaz |
+| CP-HU14-03/12 | `PerformerDetailViewModelTest.prize failure preserves biography and blocks assignment until forced revalidation succeeds` | Aprobada en JVM: error de premios conserva el detalle; reintento fuerza detalle y catálogo antes de otra asignación |
+| CP-HU14-14 | Contratos de músico/banda e `invalid prize references fail instead of silently showing an empty section` en `PerformerDetailServiceAdapterTest` | Repository/API aprobados; resolución visual API 31 comprobada con asignaciones propias |
+| CP-HU14-06/09/16 | Recorridos de banda y selector de rol de `PerformerDetailScreenTest` | Aprobados en tablet API 31: entrada real a HU14 desde ambos tipos, búsqueda sin coincidencias, cancelación y acción oculta a Visitante; no guardado de premios |
+
+Controles finales: 254 pruebas JVM aprobadas, sin fallos, errores u omisiones; Spotless, detekt y Lint debug correctos. Primera ejecución instrumentada integrada: 6 recorridos aprobados de `PerformerDetailScreenTest`, 0 fallos y omisiones, con BackVynils local y tablet Huawei DBY-W09. Se reutilizan pruebas de HU04; no son seis pruebas nuevas de asignación. El POST completo y retorno visual desde la entrada real, errores controlados de escritura, HU13, API 21/37 y evidencias visuales nuevas siguen pendientes de HU14-04/05/06. Ver [integración HU14-03](12-hu14-diseno-tecnico.md#12-integración-de-hu14-03-con-hu04--04112026).
+
+**HU14-04 · 04/11/2026:** `PrizePickerViewModelTest` pasa de 10 a 13 pruebas. Se amplían las existentes y se agregan tres, reutilizando los mismos fakes y reglas. Esta tabla actualiza únicamente la cobertura JVM; no acredita los recorridos E2E pendientes.
+
+| Casos | Método de `PrizePickerViewModelTest` | Resultado comprobado |
+|---|---|---|
+| CP-HU14-02/03 | `empty catalog and failed loads recover without duplicating or losing valid entries` | Vacío sin selección; carga concurrente única; error y recuperación; refresco fallido conserva lista, selección y fecha |
+| CP-HU14-05/13 | `changing the selected prize clears its date and rejects an unknown prize` | Otro premio exige otra fecha; ID ajeno no cambia selección; restauración conserva el nuevo premio sin fecha; no POST inválido |
+| CP-HU14-09 | `changing role before saving returns to the selector and never writes` | ViewModel y acceso Visitante en HU04 aprobados; cambio de rol en UI del selector pendiente |
+| CP-HU14-07/08/15 | `success sends the correct type and date only once while saving` | Ampliada a músico y banda; un envío en curso, fecha correcta y resultado consumido una vez |
+| CP-HU14-11 | `definite validation failure preserves the date and permits retry` | ViewModel y API aprobados; HTTP 400/404 de escritura en UI pendientes |
+| CP-HU14-12 | `uncertain write preserves entries and cannot repeat the POST` | JVM/API de errores y timeout, y E2E de red API 31 aprobados; API 21/37 pendientes |
+| CP-HU14-10/17 | `visitor and invalid artist do not load prizes`; `search is local and already assigned prizes cannot be selected` | Argumentos ausentes/ID/tipo/nombre inválidos sin consultas ni envíos; asociación de otro artista no bloquea el premio actual |
+
+Ejecución dirigida: **41 pruebas JVM aprobadas**, sin fallos, errores u omisiones: 13 del selector, 12 de `PerformerDetailViewModelTest` y 16 de `PrizeRepositoryImplTest` (incluye contrato HTTP). No son 41 pruebas nuevas de HU14. Spotless y detekt correctos. No hubo cambios productivos ni ejecuciones en Android en esta tarea. Reporte: `app/build/reports/tests/testDebugUnitTest/index.html`.
+
+**HU14-05 · E2E integradas con HU04:** `PrizePickerScreenTest` reutiliza los recorridos temporales de HU14-03, ahora entrando por Artistas → detalle → Agregar premio. Los IDs y nombres son propios de cada ejecución; no se usan posiciones ni conteos globales.
+
+| Casos asociados | Método | Comprobación |
+|---|---|---|
+| CP-HU14-01/07/15 | `assigns_prize_to_musician_and_updates_its_detail` | Selección y fecha obligatoria; POST real; retorno con contador, nombre, organización, fecha y resaltado; aviso de éxito; recrear no duplica la asociación |
+| CP-HU14-01/08/15 | `assigns_prize_to_band_and_updates_its_detail` | Mismo recorrido para banda; fecha y única asociación contrastadas con GET del artista |
+| CP-HU14-16/17 | `search_blocks_own_assignments_but_allows_a_prize_assigned_to_another_artist` | Busca por nombre, muestra sin coincidencias y YA ASIGNADO; bloquea el premio propio y permite seleccionar otro asignado solo a un tercero; cancelar no escribe |
+| CP-HU14-05/06/13 | `required_date_and_selection_survive_recreation_and_cancel_does_not_write` | Guardar deshabilitado sin fecha; recreación conserva premio/fecha; cerrar y reabrir la hoja conserva entradas; cancelar vuelve al detalle sin POST |
+| CP-HU14-12 (red) | `network_failure_requires_review_before_a_new_assignment_and_then_recovers` | BackendFirewall interrumpe el envío; estado incierto sin otro POST; revisar vuelve al detalle revalidado; nueva asignación explícita recupera el flujo y guarda una sola asociación |
+
+Validación del 04/11/2026: **5 E2E aprobadas en claro y las mismas 5 repetidas en oscuro**, sin fallos, errores ni omisiones, en Huawei DBY-W09, Android 12/API 31 y BackVynils local. Regresión: 6 recorridos de HU04 aprobados. Controles: Spotless, detekt, lintDebug y 257 pruebas JVM en verde. Los XML se conservaron por ejecución en `/tmp/HU14-05-evidencias`, junto con capturas reales.
+
+Las capturas del aviso de éxito y del detalle estable se guardan por separado. Las pruebas esperan contenido visible y opacidad completa de la fila; no añaden pausas fijas. `PerformerDetailRobot` comparte con HU04 el desplazamiento por contenido, incluida una fila o cabecera mayor que la pantalla. HU13, errores HTTP de escritura controlados desde UI, API 21/37 y accesibilidad completa permanecen pendientes; los casos mixtos no se consideran totalmente aprobados solo por estas E2E.
+
+**HU14-06 · API · 04/11/2026:** `PrizeRepositoryImplTest` conserva la cobertura previa y pasa de 16 a **20 pruebas aprobadas**: cuatro nuevas y ampliaciones de las existentes. Se prueban Repository, Adapter, Retrofit y OkHttp reales con MockWebServer; no se consulta ni modifica BackVynils.
+
+| Casos asociados | Método | Resultado verificado |
+|---|---|---|
+| CP-HU14-01/03 | `forced catalog refresh revalidates HTTP` | Caché HTTP fresca con max-age; revalidación no-cache devuelve el nombre actualizado, con dos GET |
+| CP-HU14-03/12 | `catalog HTTP and transport failures recover only after an explicit refresh` | 404/500, desconexión y timeout se clasifican; una consulta explícita recupera el catálogo; cliente nuevo por escenario para no reutilizar conexiones al simular DISCONNECT_AT_START |
+| CP-HU14-07/08/12/15 | `assignment timeout is a network error and never resends the POST` | Timeout controlado en ambas rutas; una única petición POST por envío y DataError.Network |
+| CP-HU14-07/08/14 | `assignment and catalog preserve the UTC day under Bogota timezone` | Fecha obligatoria de solicitud, respuesta y catálogo conserva el día UTC bajo America/Bogota; se restaura la zona original |
+| CP-HU14-14 | `a repeated association ID across different prizes is rejected as ambiguous` | No se devuelve un premio arbitrario cuando dos premios contienen el mismo ID de asociación |
+| CP-HU14-10/11/12 | Casos ampliados de IDs, errores HTTP y respuestas inválidas de la misma clase | IDs no positivos sin inicializar HTTP; 400/404/500 conservados en ambos endpoints; cuerpo vacío/nulo/JSON inválido/204 o identidad/fecha ausente no confirman la escritura |
+
+Controles `spotlessCheck detekt lintDebug testDebugUnitTest` con JDK 17: **261 pruebas JVM aprobadas**, sin fallos, errores ni omisiones, verificadas en XML. No se añadieron dependencias, utilidades, fixtures ni código productivo. Las E2E no se repitieron en esta tarea; sus resultados y pendientes corresponden a HU14-05. Reporte local: `app/build/reports/tests/testDebugUnitTest/index.html`.
 
 ### Casos de HU08
 
@@ -412,10 +503,12 @@ La respuesta se captura del backend real (`src/test/resources/api/README.md`). L
 ```bash
 ./gradlew testDebugUnitTest                 # unitarias
 ./gradlew spotlessCheck detekt lintDebug    # calidad estática
-bash scripts/run_e2e.sh                    # prepara el backend Docker y ejecuta todas las E2E
-./gradlew connectedDebugAndroidTest         # ejecuta E2E suponiendo el backend ya preparado
+bash scripts/run_e2e.sh                    # prepara el backend Docker, ejecuta instrumentadas y limpia sus fixtures HU14
+./gradlew connectedDebugAndroidTest         # instrumentadas; para incluir HU14 usar el runner compartido anterior
 adb shell am instrument -w co.edu.uniandes.vinilos.test/co.edu.uniandes.vinilos.testing.VinilosTestRunner   # E2E sin Gradle
 ```
+
+HU14 requiere `bash scripts/run_e2e.sh`: el script añade `hu14FixtureRun` a los argumentos de instrumentación y prepara también las secuencias de `prize` y `performer_prize`. Al finalizar Gradle, incluso si falla, `limpiar_premios_e2e.sql` elimina solo los premios, artistas y asociaciones marcados por esa ejecución; si detecta relaciones ajenas, aborta la transacción. Un fallo de limpieza hace fallar el comando. `BackendPrizes` rechaza la preparación sin esa marca antes del primer POST. No usa el DELETE defectuoso del backend ni se debe pasar una marca manual para omitir la limpieza. Las clases ajenas a HU14 pueden seguir ejecutándose directamente con Gradle.
 
 En API 21, `connectedDebugAndroidTest` puede tardar varios minutos en cerrar tras terminar las pruebas; `am instrument` devuelve el resultado en cuanto terminan.
 

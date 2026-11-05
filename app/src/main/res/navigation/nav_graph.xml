@@ -45,6 +45,16 @@
         android:label="@string/create_album_title" />
 
     <fragment
+        android:id="@+id/prizePickerFragment"
+        android:name="co.edu.uniandes.vinilos.ui.artists.PrizePickerFragment"
+        android:label="@string/prize_picker_title">
+        <argument android:name="performerId" app:argType="integer" />
+        <argument android:name="performerType" app:argType="string" />
+        <argument android:name="performerName" app:argType="string" />
+        <argument android:name="assignmentIds" app:argType="integer[]" />
+    </fragment>
+
+    <fragment
         android:id="@+id/performerListFragment"
         android:name="co.edu.uniandes.vinilos.ui.artists.PerformerListFragment"
         android:label="@string/artist_list_title">

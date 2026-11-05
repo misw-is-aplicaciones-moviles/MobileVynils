@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.annotation.StringRes
 import androidx.core.view.ViewCompat
+import androidx.core.view.isVisible
 import androidx.core.widget.TextViewCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,16 +17,29 @@ import co.edu.uniandes.vinilos.databinding.ItemPerformerAlbumBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerDetailHeaderBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerMemberBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerPrizeActionBinding
+import co.edu.uniandes.vinilos.databinding.ItemPrizeBinding
 import co.edu.uniandes.vinilos.models.Album
+import co.edu.uniandes.vinilos.models.ArtistPrize
 import co.edu.uniandes.vinilos.models.PerformerDetail
 import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
+import co.edu.uniandes.vinilos.viewmodels.PerformerDetailUiState
 import com.bumptech.glide.Glide
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 internal sealed interface PerformerDetailRow {
-    data object PrizeAction : PerformerDetailRow
+    data class PrizeAction(
+        val count: Int?,
+        val canEdit: Boolean,
+        val canRetry: Boolean,
+        val loading: Boolean,
+    ) : PerformerDetailRow
+
+    data class Award(
+        val assignment: ArtistPrize,
+        val highlighted: Boolean,
+    ) : PerformerDetailRow
 
     data class Header(
         val detail: PerformerDetail,
@@ -49,15 +63,15 @@ internal sealed interface PerformerDetailRow {
 internal class PerformerDetailAdapter(
     private val onAlbumClick: (Int) -> Unit,
     private val onMemberClick: (Int) -> Unit,
+    private val onAddPrize: () -> Unit,
+    private val onRetryPrizes: () -> Unit,
 ) : ListAdapter<PerformerDetailRow, RecyclerView.ViewHolder>(Rows) {
     init {
         stateRestorationPolicy = StateRestorationPolicy.PREVENT_WHEN_EMPTY
     }
 
-    fun submitDetail(
-        detail: PerformerDetail,
-        showPrizeAction: Boolean,
-    ) {
+    fun submitDetail(state: PerformerDetailUiState) {
+        val detail = state.detail ?: return
         submitList(
             buildList {
                 add(PerformerDetailRow.Header(detail))
@@ -72,14 +86,41 @@ internal class PerformerDetailAdapter(
                 add(PerformerDetailRow.Text(R.string.artist_detail_albums, detail.albums.size))
                 detail.albums.forEach { add(PerformerDetailRow.Record(it)) }
                 if (detail.albums.isEmpty()) add(PerformerDetailRow.Text(R.string.artist_detail_no_albums))
-                if (showPrizeAction) add(PerformerDetailRow.PrizeAction)
+                add(
+                    PerformerDetailRow.PrizeAction(
+                        count = if (state.isLoadingPrizes || state.prizeError != null) null else state.prizes.size,
+                        canEdit = state.role == co.edu.uniandes.vinilos.models.UserRole.COLLECTOR,
+                        canRetry = state.prizeError != null,
+                        loading = state.isLoadingPrizes,
+                    ),
+                )
+                when {
+                    state.isLoadingPrizes -> {
+                        add(PerformerDetailRow.Text(R.string.prize_detail_loading))
+                    }
+
+                    state.prizeError != null -> {
+                        add(PerformerDetailRow.Text(R.string.prize_catalog_error))
+                    }
+
+                    state.prizes.isEmpty() -> {
+                        add(PerformerDetailRow.Text(R.string.prize_detail_empty))
+                    }
+
+                    else -> {
+                        state.prizes.forEach {
+                            add(PerformerDetailRow.Award(it, it.id == state.highlightedAssignmentId))
+                        }
+                    }
+                }
             },
         )
     }
 
     override fun getItemViewType(position: Int): Int =
         when (getItem(position)) {
-            PerformerDetailRow.PrizeAction -> PRIZE_ACTION
+            is PerformerDetailRow.PrizeAction -> PRIZE_ACTION
+            is PerformerDetailRow.Award -> AWARD
             is PerformerDetailRow.Header -> HEADER
             is PerformerDetailRow.Text -> TEXT
             is PerformerDetailRow.Record -> ALBUM
@@ -93,9 +134,11 @@ internal class PerformerDetailAdapter(
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
             PRIZE_ACTION -> {
-                val binding = ItemPerformerPrizeActionBinding.inflate(inflater, parent, false)
-                ViewCompat.setAccessibilityHeading(binding.prizeLabel, true)
-                object : RecyclerView.ViewHolder(binding.root) {}
+                PrizeActionHolder(ItemPerformerPrizeActionBinding.inflate(inflater, parent, false))
+            }
+
+            AWARD -> {
+                AwardHolder(ItemPrizeBinding.inflate(inflater, parent, false))
             }
 
             HEADER -> {
@@ -138,11 +181,55 @@ internal class PerformerDetailAdapter(
         position: Int,
     ) {
         when (val row = getItem(position)) {
-            PerformerDetailRow.PrizeAction -> Unit
+            is PerformerDetailRow.PrizeAction -> (holder as PrizeActionHolder).bind(row)
+            is PerformerDetailRow.Award -> (holder as AwardHolder).bind(row)
             is PerformerDetailRow.Header -> (holder as HeaderHolder).bind(row.detail)
             is PerformerDetailRow.Text -> (holder as TextHolder).bind(row)
             is PerformerDetailRow.Record -> (holder as AlbumHolder).bind(row.album)
             is PerformerDetailRow.Members -> (holder as MembersHolder).bind(row.members)
+        }
+    }
+
+    private inner class PrizeActionHolder(
+        private val binding: ItemPerformerPrizeActionBinding,
+    ) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(row: PerformerDetailRow.PrizeAction) {
+            ViewCompat.setAccessibilityHeading(binding.prizeLabel, true)
+            binding.prizeLabel.text =
+                if (row.count == null) {
+                    binding.root.context.getString(R.string.artist_detail_prizes)
+                } else {
+                    binding.root.context.getString(R.string.prize_detail_count, row.count)
+                }
+            binding.addPrizeButton.isVisible = row.canEdit || row.canRetry
+            binding.addPrizeButton.isEnabled = !row.loading
+            binding.addPrizeButton.setText(if (row.canRetry) R.string.action_retry else R.string.artist_add_prize)
+            binding.addPrizeButton.setIconResource(if (row.canRetry) 0 else R.drawable.ic_add)
+            binding.addPrizeButton.setOnClickListener { if (row.canRetry) onRetryPrizes() else onAddPrize() }
+        }
+    }
+
+    private class AwardHolder(
+        private val binding: ItemPrizeBinding,
+    ) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(row: PerformerDetailRow.Award) {
+            val assignment = row.assignment
+            val date = assignment.premiationDate.format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
+            binding.prizeName.text = assignment.prize.name
+            binding.prizeName.isAllCaps = false
+            binding.prizeOrganization.text = assignment.prize.organization
+            binding.alreadyAssigned.isVisible = true
+            binding.alreadyAssigned.text = date
+            binding.prizeRadio.isVisible = false
+            binding.root.isClickable = false
+            binding.root.isSelected = row.highlighted
+            binding.root.contentDescription =
+                binding.root.context.getString(
+                    R.string.prize_detail_description,
+                    assignment.prize.name,
+                    assignment.prize.organization,
+                    date,
+                )
         }
     }
 
@@ -259,7 +346,8 @@ internal class PerformerDetailAdapter(
     private object Rows : DiffUtil.ItemCallback<PerformerDetailRow>() {
         private fun key(row: PerformerDetailRow): String =
             when (row) {
-                PerformerDetailRow.PrizeAction -> "prize-action"
+                is PerformerDetailRow.PrizeAction -> "prize-action"
+                is PerformerDetailRow.Award -> "award-${row.assignment.id}"
                 is PerformerDetailRow.Header -> "header"
                 is PerformerDetailRow.Text -> "text-${row.label}"
                 is PerformerDetailRow.Record -> "album-${row.album.id}"
@@ -283,6 +371,7 @@ internal class PerformerDetailAdapter(
         const val ALBUM = 2
         const val MEMBERS = 3
         const val PRIZE_ACTION = 4
+        const val AWARD = 5
     }
 }
 

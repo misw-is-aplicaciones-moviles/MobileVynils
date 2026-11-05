@@ -12,6 +12,7 @@ internal fun MusicianDto.toDetailModel(): PerformerDetail =
         performer = toModel().validatedDetail(),
         description = description.orEmpty(),
         albums = albums.toDetailAlbums(),
+        prizeAssignments = performerPrizes.orEmpty().map { it?.toModel() ?: missing("artist prize assignment") },
         members = emptyList(),
     )
 
@@ -20,6 +21,7 @@ internal fun BandDto.toDetailModel(): PerformerDetail =
         performer = toModel().validatedDetail(),
         description = description.orEmpty(),
         albums = albums.toDetailAlbums(),
+        prizeAssignments = performerPrizes.orEmpty().map { it?.toModel() ?: missing("artist prize assignment") },
         members =
             musicians.orEmpty().map { member ->
                 val dto = member ?: missing("band musician")

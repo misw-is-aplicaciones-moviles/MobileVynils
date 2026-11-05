@@ -1,0 +1,8 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true">
+        <shape><solid android:color="@color/vinilos_stone" /><corners android:radius="@dimen/role_cover_radius" /></shape>
+    </item>
+    <item>
+        <shape><solid android:color="@color/vinilos_card_fill" /><corners android:radius="@dimen/role_cover_radius" /></shape>
+    </item>
+</selector>

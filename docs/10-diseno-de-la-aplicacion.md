@@ -14,6 +14,8 @@ Documento de diseño que desarrolla la planeación del Inception: convierte el b
 
 Alcance: las 12 historias comprometidas (HU01 a HU08 del MVP y HU09, HU15, HU12 y HU10 como extras) y las 6 tareas transversales del Sprint 1. HU13, HU14 y HU11 forman el backlog alterno; se mencionan solo donde el diseño debe dejarles sitio.
 
+**Actualización del Sprint 2 (03/11/2026):** la planeación vigente de la Wiki incorporó HU13, HU14 y HU11 a este sprint. El texto y las tablas originales de este documento conservan la distribución inicial como referencia histórica. Para premios prevalecen [HU14 en la Wiki](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/wiki/HU14) y el [diseño técnico HU14](12-hu14-diseno-tecnico.md): consulta de premios en el detalle de HU04, creación en HU13 y selección/asignación en HU14. Los frames exportados de HU14 ya se contrastaron. Por decisión del responsable, la fecha será obligatoria y no habrá Omitir, respetando el NOT NULL del backend local.
+
 Los tableros del prototipo:
 
 | Tablero en Figma | Contenido |
@@ -293,6 +295,8 @@ Flujo:
 - **Orden.** Por nombre sin distinguir mayúsculas ASCII (`COLLATE NOCASE`, desempate por id), la regla del catálogo y de los artistas; el mockup es un ejemplo y no sigue ese orden.
 
 **HU06 · Detalle de coleccionista.** Cabecera con avatar, sobretítulo "Coleccionista" y nombre; fichas Teléfono y Correo; sección "Artistas favoritos · N" (imagen, nombre, tipo); sección "Sus álbumes · N" con precio a la derecha ("$ 35") y chip de estado "DISPONIBLE" / "NO DISPONIBLE". Requiere dos llamadas: `GET /collectors/:id` y `GET /collectors/:id/albums`. Para coleccionista, botón "Agregar favorito" en la sección de favoritos.
+
+**HU14 · Asignar premio (incorporada al Sprint 2).** Desde el detalle de músico o banda, el coleccionista abre "Elegir premio" (`GET /prizes`), busca localmente por nombre y selecciona un registro elegible. Los premios ya asignados al artista llevan "YA ASIGNADO" sin selección activa. "Continuar con «premio»" abre la hoja inferior "Fecha de premiación", con calendario, fecha obligatoria y acción "Asignar premio" deshabilitada hasta elegir día. Se retiran Omitir y la indicación de fecha opcional del mockup por decisión del responsable, respetando el backend local y sin inventar una fecha. Con día elegido, envía `premiationDate` con `POST /prizes/:prizeId/musicians/:musicianId` o `POST /prizes/:prizeId/bands/:bandId`. En éxito regresa al detalle con contador, fila actualizada y "Premio asignado al artista". "Crear un premio nuevo" abre HU13 y devuelve el premio creado al selector, seleccionado y visible. El [diseño técnico](12-hu14-diseno-tecnico.md) define estados, resultados, conservación de fecha, tratamiento de escrituras inciertas e integración temprana del selector para HU13.
 
 ### Sprint 3 · Funcionalidades adicionales
 
