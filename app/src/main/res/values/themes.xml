@@ -361,6 +361,38 @@
         <item name="rippleColor">@color/vinilos_charcoal_ripple</item>
     </style>
 
+    <!-- "Agregar álbum": Outfit 400, 14/18 sp. El secundario de formulario queda en 15 sp. -->
+    <style name="TextAppearance.Vinilos.Button.Compact" parent="TextAppearance.Vinilos.Button">
+        <item name="android:textSize">14sp</item>
+        <item name="lineHeight">18sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">18sp</item>
+    </style>
+
+    <style name="ShapeAppearance.Vinilos.Button.Compact" parent="ShapeAppearance.Vinilos.Button">
+        <item name="cornerSize">@dimen/button_compact_radius</item>
+    </style>
+
+    <!--
+        Píldora de sección, 44 dp. Conserva el borde carbón del mockup aunque la acción
+        siga deshabilitada: el secundario de formulario se rellena de piedra en ese estado.
+    -->
+    <style name="Widget.Vinilos.Button.Secondary.Compact" parent="Widget.Vinilos.Button.Secondary">
+        <item name="android:minHeight">@dimen/button_compact_height</item>
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.Button.Compact</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Vinilos.Button.Compact</item>
+        <item name="android:paddingStart">@dimen/button_compact_padding_start</item>
+        <item name="android:paddingEnd">@dimen/button_compact_padding_end</item>
+        <item name="android:paddingLeft">@dimen/button_compact_padding_start</item>
+        <item name="android:paddingRight">@dimen/button_compact_padding_end</item>
+        <item name="iconSize">@dimen/button_compact_icon</item>
+        <item name="iconPadding">@dimen/button_compact_icon_gap</item>
+        <item name="iconGravity">textStart</item>
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="strokeColor">@color/vinilos_charcoal</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+        <item name="iconTint">@color/vinilos_charcoal</item>
+    </style>
+
     <!-- "Guardar canción" es Outfit 500; el primario compartido queda en 400. -->
     <style name="TextAppearance.Vinilos.Button.Medium" parent="TextAppearance.Vinilos.Button">
         <item name="android:fontFamily">@font/outfit_medium</item>

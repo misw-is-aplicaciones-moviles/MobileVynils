@@ -7,10 +7,13 @@ import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.testing.FakeCollectorDao
 import co.edu.uniandes.vinilos.testing.FakeCollectorServiceAdapter
 import co.edu.uniandes.vinilos.testing.collector
+import co.edu.uniandes.vinilos.testing.collectorDetail
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
 
@@ -74,5 +77,75 @@ class CollectorRepositoryImplTest {
             assertEquals(DataResult.Failure(DataError.Network), result)
             assertEquals(listOf("Guardado"), dao.getAll().map { it.name })
             assertEquals(0, dao.writeCount)
+        }
+
+    @Test
+    fun `detail does not read or write the list cache`() =
+        runTest {
+            val dao = FakeCollectorDao(listOf(cached.toEntity()))
+            val detail = collectorDetail()
+            val adapter = FakeCollectorServiceAdapter(detail = detail)
+
+            val result = repository(dao, adapter).getCollector(100, forceRefresh = true)
+
+            assertEquals(DataResult.Success(detail), result)
+            assertEquals(1, adapter.detailCalls)
+            assertEquals(100, adapter.lastDetailId)
+            assertEquals(true, adapter.lastDetailRefresh)
+            assertEquals(0, adapter.callCount)
+            assertEquals(0, dao.writeCount)
+            assertEquals(listOf("Guardado"), dao.getAll().map { it.name })
+        }
+
+    @Test
+    fun `a mismatched collector id is a serialization error and leaves Room intact`() =
+        runTest {
+            val dao = FakeCollectorDao(listOf(cached.toEntity()))
+            val adapter = FakeCollectorServiceAdapter(detail = collectorDetail(id = 999))
+
+            val result = repository(dao, adapter).getCollector(100)
+
+            assertEquals(DataResult.Failure(DataError.Serialization), result)
+            assertEquals(0, dao.writeCount)
+            assertEquals(listOf("Guardado"), dao.getAll().map { it.name })
+        }
+
+    @Test
+    fun `a detail IO failure is a network error and leaves Room intact`() =
+        runTest {
+            val dao = FakeCollectorDao(listOf(cached.toEntity()))
+            val adapter = FakeCollectorServiceAdapter(detailFailure = IOException("offline"))
+
+            val result = repository(dao, adapter).getCollector(100, forceRefresh = true)
+
+            assertEquals(DataResult.Failure(DataError.Network), result)
+            assertEquals(0, dao.writeCount)
+            assertEquals(listOf("Guardado"), dao.getAll().map { it.name })
+        }
+
+    @Test
+    fun `a non positive detail id is rejected before the adapter`() =
+        runTest {
+            val dao = FakeCollectorDao(listOf(cached.toEntity()))
+            val adapter = FakeCollectorServiceAdapter()
+            listOf(0, -1).forEach { id ->
+                val error = runCatching { repository(dao, adapter).getCollector(id) }.exceptionOrNull()
+                assertTrue(error is IllegalArgumentException)
+            }
+            assertEquals(0, adapter.detailCalls)
+            assertEquals(0, dao.writeCount)
+        }
+
+    @Test
+    fun `cancelling a detail propagates and does not touch Room`() =
+        runTest {
+            val dao = FakeCollectorDao(listOf(cached.toEntity()))
+            val adapter = FakeCollectorServiceAdapter(detailFailure = CancellationException("cancelled"))
+
+            val error = runCatching { repository(dao, adapter).getCollector(100) }.exceptionOrNull()
+
+            assertTrue(error is CancellationException)
+            assertEquals(0, dao.writeCount)
+            assertEquals(listOf("Guardado"), dao.getAll().map { it.name })
         }
 }

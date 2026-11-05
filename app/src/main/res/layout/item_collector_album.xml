@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:orientation="vertical" android:minHeight="@dimen/performer_detail_album_height"
+    android:paddingTop="@dimen/space_s" android:paddingBottom="@dimen/space_s"
+    android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true"
+    android:clipChildren="false" android:clipToPadding="false">
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical" android:clipChildren="false">
+        <co.edu.uniandes.vinilos.ui.common.VinylArtworkView android:id="@+id/albumArtwork"
+            android:layout_width="@dimen/performer_detail_album_artwork_width"
+            android:layout_height="@dimen/performer_detail_album_artwork_height"
+            app:artworkRatio="71:48" app:artworkCornerRadius="@dimen/album_catalog_artwork_radius"
+            app:artworkElevation="@dimen/album_catalog_artwork_elevation" app:discScale="@dimen/album_disc_scale" />
+        <TextView android:id="@+id/albumTitle" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:layout_marginStart="@dimen/space_m" android:layout_marginEnd="@dimen/space_s"
+            android:importantForAccessibility="no" android:textAppearance="@style/TextAppearance.Vinilos.AlbumTitle" />
+        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:orientation="vertical" android:gravity="end" android:importantForAccessibility="noHideDescendants">
+            <TextView android:id="@+id/albumPrice" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Vinilos.AlbumDetailValue" />
+            <TextView android:id="@+id/albumStatus" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs" android:paddingStart="@dimen/space_s"
+                android:paddingEnd="@dimen/space_s" android:paddingTop="@dimen/space_xs" android:paddingBottom="@dimen/space_xs"
+                android:textAppearance="@style/TextAppearance.Vinilos.Overline" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

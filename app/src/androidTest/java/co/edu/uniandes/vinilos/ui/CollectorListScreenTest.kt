@@ -106,7 +106,7 @@ class CollectorListScreenTest {
         val id = data.createCollector(name, EMAIL)
         collectors.enterAs(R.string.role_visitor).tapRow(name)
 
-        waitForDisplayed(withText(R.string.pending_next_sprint))
+        waitForDisplayed(withText(R.string.collector_phone))
         activityRule.scenario.onActivity { activity ->
             val navHost = activity.supportFragmentManager.findFragmentById(R.id.navHost) as NavHostFragment
             val navController = navHost.navController
