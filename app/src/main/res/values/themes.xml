@@ -208,6 +208,11 @@
         <item name="android:textColor">@color/vinilos_charcoal</item>
     </style>
 
+    <!-- Iniciales de un coleccionista: como el título del álbum, a 12 sp para caber en el centro del disco. -->
+    <style name="TextAppearance.Vinilos.Initials" parent="TextAppearance.Vinilos.AlbumTitle">
+        <item name="android:textSize">12sp</item>
+    </style>
+
     <!-- Sobretítulo (artista): Montserrat 600, 10.5 sp, mayúsculas, espaciado 0.1 em, grafito. -->
     <style name="TextAppearance.Vinilos.Overline" parent="TextAppearance.Vinilos.Body">
         <item name="lineHeight">13sp</item>

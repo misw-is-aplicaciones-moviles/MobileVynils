@@ -79,6 +79,15 @@
     <dimen name="performer_filters_padding_bottom">8dp</dimen>
     <dimen name="performer_filter_text_padding">17dp</dimen>
 
+    <!-- Fila de coleccionista (mockup, 1 px = 1 dp): 112 dp de alto; el disco y su centro miden lo mismo que en artistas. -->
+    <dimen name="collector_row_padding_vertical">18dp</dimen>
+    <dimen name="collector_row_padding_end">20dp</dimen>
+    <dimen name="collector_row_gap">12dp</dimen>
+    <dimen name="collector_email_gap">6dp</dimen>
+    <dimen name="collector_summary_gap">5dp</dimen>
+    <dimen name="collector_list_padding_top">10dp</dimen>
+    <dimen name="collector_list_bottom_padding">64dp</dimen>
+
     <!-- Botón "+" de la barra inferior: el centro queda 24 dp sobre el borde superior de la barra. -->
     <dimen name="primary_action_icon">24dp</dimen>
     <dimen name="primary_action_elevation">10dp</dimen>
