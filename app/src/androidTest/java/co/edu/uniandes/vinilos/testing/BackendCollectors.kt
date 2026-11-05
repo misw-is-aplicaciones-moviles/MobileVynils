@@ -1,6 +1,7 @@
 package co.edu.uniandes.vinilos.testing
 
 import co.edu.uniandes.vinilos.BuildConfig
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.rules.ExternalResource
@@ -10,6 +11,14 @@ import java.net.URL
 private const val HTTP_OK = 200
 private const val HTTP_NO_CONTENT = 204
 private const val TIMEOUT_MILLIS = 10_000
+
+/** Un coleccionista tal como lo responde el backend en este momento. */
+data class BackendCollector(
+    val name: String,
+    val email: String,
+    val albumCount: Int,
+    val favoriteCount: Int,
+)
 
 /**
  * Datos de una prueba E2E del listado de coleccionistas: los crea en BackVynils y, al terminar la prueba, los borra.
@@ -32,14 +41,21 @@ class BackendCollectors : ExternalResource() {
                 .put("name", name)
                 .put("telephone", "3000000000")
                 .put("email", email)
-        return send("POST", "collectors", body, HTTP_OK).getInt("id").also { collectors += it }
+        return JSONObject(send("POST", "collectors", body, HTTP_OK)).getInt("id").also { collectors += it }
     }
 
-    /** Lee del backend cuántos álbumes y favoritos tiene ahora un coleccionista, sin escribir nada. */
-    fun countsOf(collectorId: Int): Pair<Int, Int> {
-        val collector = send("GET", "collectors/$collectorId", null, HTTP_OK)
-        return collector.getJSONArray("collectorAlbums").length() to
-            collector.getJSONArray("favoritePerformers").length()
+    /** Lee los coleccionistas que tiene ahora el backend, sean quienes sean, sin escribir nada. */
+    fun allCollectors(): List<BackendCollector> {
+        val response = JSONArray(send("GET", "collectors", null, HTTP_OK))
+        return List(response.length()) { index ->
+            val collector = response.getJSONObject(index)
+            BackendCollector(
+                name = collector.getString("name"),
+                email = collector.getString("email"),
+                albumCount = collector.getJSONArray("collectorAlbums").length(),
+                favoriteCount = collector.getJSONArray("favoritePerformers").length(),
+            )
+        }
     }
 
     override fun after() {
@@ -51,7 +67,7 @@ class BackendCollectors : ExternalResource() {
         path: String,
         body: JSONObject?,
         expectedCode: Int,
-    ): JSONObject {
+    ): String {
         val connection = URL("${BuildConfig.BASE_URL}$path").openConnection() as HttpURLConnection
         try {
             connection.requestMethod = method
@@ -63,8 +79,8 @@ class BackendCollectors : ExternalResource() {
                 connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
             }
             assertEquals("$method /$path", expectedCode, connection.responseCode)
-            if (expectedCode == HTTP_NO_CONTENT) return JSONObject()
-            return JSONObject(connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() })
+            if (expectedCode == HTTP_NO_CONTENT) return ""
+            return connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
         } finally {
             connection.disconnect()
         }

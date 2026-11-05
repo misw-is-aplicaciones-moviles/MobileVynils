@@ -9,6 +9,7 @@ import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.VinilosApplication
 import co.edu.uniandes.vinilos.robots.CollectorListRobot
+import co.edu.uniandes.vinilos.testing.BackendCollector
 import co.edu.uniandes.vinilos.testing.BackendCollectors
 import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
@@ -21,10 +22,10 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 
 /**
- * Lista de coleccionistas contra BackVynils local (10.0.2.2:3000 con la semilla); un método por caso E2E del inventario
- * de docs/06. Cada caso crea sus propios coleccionistas, sin álbumes y con nombres únicos, y los borra al terminar. Las
- * cuentas de la semilla se contrastan con una lectura del backend en vez de fijarlas. El número único va en medio del
- * nombre para que las iniciales sean fijas.
+ * Lista de coleccionistas contra BackVynils local (10.0.2.2:3000); un método por caso E2E del inventario de docs/06.
+ * No se basa en datos concretos: cada caso crea sus propios coleccionistas, sin álbumes y con nombres únicos, y los borra
+ * al terminar; los demás se contrastan con lo que responde `GET /collectors` en ese momento. El número único va en medio
+ * del nombre para que las iniciales sean fijas.
  */
 @RunWith(AndroidJUnit4::class)
 class CollectorListScreenTest {
@@ -41,30 +42,24 @@ class CollectorListScreenTest {
     @Test
     fun visitor_sees_collectors_by_name_without_the_create_button() {
         val name = createCollector()
-        val manolo = summaryOf(MANOLO_ID)
-        val jaime = summaryOf(JAIME_ID)
+        val onBackend = data.allCollectors()
         collectors.enterAs(R.string.role_visitor)
 
-        collectors
-            .assertRow(name, initials = "AP", email = EMAIL, summary = NO_ALBUMS)
-            .assertRow("Manolo Bellon", initials = "MB", email = "manollo@caracol.com.co", summary = manolo)
-            .assertRow("Jaime Monsalve", initials = "JM", email = "jmonsalve@rtvc.com.co", summary = jaime)
-            .assertAlphabeticalOrder()
-            .assertCreateButtonHidden()
+        collectors.assertRow(name, initials = "AP", email = EMAIL, summary = NO_ALBUMS)
+        assertRowsOf(onBackend)
+        collectors.assertAlphabeticalOrder().assertCreateButtonHidden()
     }
 
     // El catálogo le muestra el "+" a este rol: aquí se comprueba que no sigue visible al llegar a la pestaña.
     @Test
     fun collector_sees_the_same_list_and_no_create_button() {
         val name = createCollector()
-        val manolo = summaryOf(MANOLO_ID)
+        val onBackend = data.allCollectors()
         collectors.enterAs(R.string.role_collector)
 
-        collectors
-            .assertRow(name, initials = "AP", email = EMAIL, summary = NO_ALBUMS)
-            .assertRow("Manolo Bellon", initials = "MB", email = "manollo@caracol.com.co", summary = manolo)
-            .assertAlphabeticalOrder()
-            .assertCreateButtonHidden()
+        collectors.assertRow(name, initials = "AP", email = EMAIL, summary = NO_ALBUMS)
+        assertRowsOf(onBackend)
+        collectors.assertAlphabeticalOrder().assertCreateButtonHidden()
     }
 
     @Test
@@ -127,10 +122,15 @@ class CollectorListScreenTest {
         return name
     }
 
-    /** La tercera línea que debe tener un coleccionista según lo que responde ahora el backend. */
-    private fun summaryOf(collectorId: Int): String {
-        val (albums, favorites) = data.countsOf(collectorId)
-        if (albums == 0) return NO_ALBUMS
+    /** Cada coleccionista del backend tiene su fila, con su correo y la tercera línea que le corresponde. */
+    private fun assertRowsOf(onBackend: List<BackendCollector>) {
+        onBackend.forEach { collectors.assertRow(it.name, email = it.email, summary = summaryOf(it)) }
+    }
+
+    private fun summaryOf(collector: BackendCollector): String {
+        if (collector.albumCount == 0) return NO_ALBUMS
+        val albums = collector.albumCount
+        val favorites = collector.favoriteCount
         val albumText = if (albums == 1) "1 álbum" else "$albums álbumes"
         val favoriteText = if (favorites == 1) "1 favorito" else "$favorites favoritos"
         return "$albumText · $favoriteText"
@@ -146,7 +146,5 @@ class CollectorListScreenTest {
     private companion object {
         const val EMAIL = "ana.pardo@example.com"
         const val NO_ALBUMS = "Sin álbumes aún"
-        const val MANOLO_ID = 100
-        const val JAIME_ID = 101
     }
 }

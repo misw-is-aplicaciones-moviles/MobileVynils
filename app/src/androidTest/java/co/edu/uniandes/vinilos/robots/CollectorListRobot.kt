@@ -62,11 +62,11 @@ class CollectorListRobot {
         @StringRes roleRes: Int,
     ): CollectorListRobot = chooseRole(roleRes).openCollectorsTab().waitForList()
 
-    /** Busca la fila por nombre y comprueba número, iniciales y correo; [summary] nulo no se comprueba. */
+    /** Busca la fila por nombre y comprueba su número y correo; [initials] o [summary] nulos no se comprueban. */
     fun assertRow(
         name: String,
-        initials: String,
         email: String,
+        initials: String? = null,
         summary: String? = null,
     ): CollectorListRobot {
         scrollTo(name)
@@ -151,7 +151,7 @@ class CollectorListRobot {
     /** La fila de [name] con sus textos visibles y el número de su posición actual en la lista. */
     private fun hasRow(
         name: String,
-        initials: String,
+        initials: String?,
         email: String,
         summary: String?,
     ): Matcher<View> =
@@ -166,7 +166,7 @@ class CollectorListRobot {
                 if (position < 0) return false
                 val row = list.findViewHolderForAdapterPosition(position)?.itemView ?: return false
                 return textOf(row, R.id.collectorNumber) == String.format(Locale.ROOT, "%02d", position + 1) &&
-                    textOf(row, R.id.collectorInitials) == initials &&
+                    (initials == null || textOf(row, R.id.collectorInitials) == initials) &&
                     textOf(row, R.id.collectorName) == name &&
                     textOf(row, R.id.collectorEmail) == email &&
                     (summary == null || textOf(row, R.id.collectorSummary) == summary)
