@@ -1,6 +1,7 @@
 package co.edu.uniandes.vinilos.ui
 
 import android.graphics.Bitmap
+import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.closeSoftKeyboard
@@ -30,9 +31,11 @@ import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.BackendPrizes
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import co.edu.uniandes.vinilos.testing.waitUntilGone
+import org.hamcrest.Description
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
+import org.hamcrest.TypeSafeMatcher
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -90,7 +93,7 @@ class PrizePickerScreenTest {
         other.assign()
         open(fixture, assigned = 1)
         filter(fixture.name)
-        waitForDisplayed(withText(R.string.prize_already_assigned))
+        waitForDisplayed(allOf(withText(R.string.prize_already_assigned), isDisplayed()))
         select(fixture.name)
         onView(withId(R.id.continuePrize)).check(matches(not(isEnabled())))
         filter("Sin coincidencias ${fixture.name}")
@@ -133,10 +136,11 @@ class PrizePickerScreenTest {
         capture("hu14-fecha-restaurada.png")
         onView(withId(R.id.closeSheet)).perform(click())
         waitUntilGone(withId(R.id.savePrize))
-        onView(withId(R.id.continuePrize)).check(matches(isEnabled())).perform(click())
+        waitForPickerFocus().perform(click())
         waitForDisplayed(withId(R.id.savePrize)).check(matches(isEnabled()))
         onView(withId(R.id.closeSheet)).perform(click())
         waitUntilGone(withId(R.id.savePrize))
+        waitForPickerFocus()
         onView(withId(R.id.headerClose)).perform(click())
         detail.scrollToText(context.getString(R.string.prize_detail_count, 0))
         assertEquals(0, fixture.artist().getJSONArray("performerPrizes").length())
@@ -218,6 +222,21 @@ class PrizePickerScreenTest {
         assertEquals(1, saved.length())
         assertEquals("${date}T00:00:00.000Z", saved.getJSONObject(0).getString("premiationDate"))
     }
+
+    private fun waitForPickerFocus() =
+        waitForDisplayed(
+            allOf(
+                withId(R.id.continuePrize),
+                isEnabled(),
+                object : TypeSafeMatcher<View>() {
+                    override fun describeTo(description: Description) {
+                        description.appendText("ventana del selector con foco después de cerrar la hoja")
+                    }
+
+                    override fun matchesSafely(view: View) = view.hasWindowFocus()
+                },
+            ),
+        )
 
     private fun fixture(type: PerformerType) = BackendPrizes(type).apply { prepare() }
 
