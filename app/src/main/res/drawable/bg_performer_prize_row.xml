@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fila de premio del detalle del artista (mockup HU14-6): resaltada la recién asignada. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/vinilos_prize_selected" />
+            <corners android:radius="@dimen/prize_row_radius" />
+        </shape>
+    </item>
+    <item android:drawable="@android:color/transparent" />
+</selector>

@@ -17,7 +17,7 @@ import co.edu.uniandes.vinilos.databinding.ItemPerformerAlbumBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerDetailHeaderBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerMemberBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerPrizeActionBinding
-import co.edu.uniandes.vinilos.databinding.ItemPrizeBinding
+import co.edu.uniandes.vinilos.databinding.ItemPerformerPrizeBinding
 import co.edu.uniandes.vinilos.models.Album
 import co.edu.uniandes.vinilos.models.ArtistPrize
 import co.edu.uniandes.vinilos.models.PerformerDetail
@@ -70,7 +70,10 @@ internal class PerformerDetailAdapter(
         stateRestorationPolicy = StateRestorationPolicy.PREVENT_WHEN_EMPTY
     }
 
-    fun submitDetail(state: PerformerDetailUiState) {
+    fun submitDetail(
+        state: PerformerDetailUiState,
+        onCommitted: Runnable,
+    ) {
         val detail = state.detail ?: return
         submitList(
             buildList {
@@ -114,8 +117,12 @@ internal class PerformerDetailAdapter(
                     }
                 }
             },
+            onCommitted,
         )
     }
+
+    /** Position of the prize that was just assigned, or -1. */
+    fun highlightedPosition(): Int = currentList.indexOfFirst { it is PerformerDetailRow.Award && it.highlighted }
 
     override fun getItemViewType(position: Int): Int =
         when (getItem(position)) {
@@ -138,7 +145,7 @@ internal class PerformerDetailAdapter(
             }
 
             AWARD -> {
-                AwardHolder(ItemPrizeBinding.inflate(inflater, parent, false))
+                AwardHolder(ItemPerformerPrizeBinding.inflate(inflater, parent, false))
             }
 
             HEADER -> {
@@ -210,18 +217,14 @@ internal class PerformerDetailAdapter(
     }
 
     private class AwardHolder(
-        private val binding: ItemPrizeBinding,
+        private val binding: ItemPerformerPrizeBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(row: PerformerDetailRow.Award) {
             val assignment = row.assignment
             val date = assignment.premiationDate.format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
             binding.prizeName.text = assignment.prize.name
-            binding.prizeName.isAllCaps = false
             binding.prizeOrganization.text = assignment.prize.organization
-            binding.alreadyAssigned.isVisible = true
-            binding.alreadyAssigned.text = date
-            binding.prizeRadio.isVisible = false
-            binding.root.isClickable = false
+            binding.prizeAwardDate.text = date
             binding.root.isSelected = row.highlighted
             binding.root.contentDescription =
                 binding.root.context.getString(

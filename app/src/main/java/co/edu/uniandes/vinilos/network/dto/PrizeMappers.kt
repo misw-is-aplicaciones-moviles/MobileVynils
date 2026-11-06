@@ -1,6 +1,7 @@
 package co.edu.uniandes.vinilos.network.dto
 
 import co.edu.uniandes.vinilos.models.ArtistPrize
+import co.edu.uniandes.vinilos.models.NewPrize
 import co.edu.uniandes.vinilos.models.Prize
 import co.edu.uniandes.vinilos.models.PrizeAssignmentRef
 import com.google.gson.JsonParseException
@@ -17,6 +18,18 @@ internal fun PrizeDto.toModel(): Prize =
         organization = organization ?: missingPrizeField("organization"),
         assignments = performerPrizes.orEmpty().map { it?.toModel() ?: missingPrizeField("assignment") },
     )
+
+/** A 2xx only confirms the creation when it carries a valid prize with exactly the data that was sent. */
+internal fun PrizeDto.toCreatedModel(expected: NewPrize): Prize {
+    val created = toModel()
+    if (created.name != expected.name ||
+        created.description != expected.description ||
+        created.organization != expected.organization
+    ) {
+        throw JsonParseException("Created prize does not match the request")
+    }
+    return created
+}
 
 internal fun PrizeAssignmentDto.toModel(
     expectedPrizeId: Int,

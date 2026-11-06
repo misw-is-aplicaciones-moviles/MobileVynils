@@ -2,16 +2,23 @@ package co.edu.uniandes.vinilos.ui.artists
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import androidx.activity.OnBackPressedCallback
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.os.bundleOf
+import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.FragmentPrizePickerBinding
@@ -20,6 +27,7 @@ import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.models.Prize
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
+import co.edu.uniandes.vinilos.ui.common.showConfirmationSnackbar
 import co.edu.uniandes.vinilos.viewmodels.PrizeFlowContract
 import co.edu.uniandes.vinilos.viewmodels.PrizePickerEvent
 import co.edu.uniandes.vinilos.viewmodels.PrizePickerUiState
@@ -32,6 +40,7 @@ class PrizePickerFragment : Fragment(R.layout.fragment_prize_picker) {
     private val binding get() = checkNotNull(bindingOrNull)
     private val viewModel: PrizePickerViewModel by viewModels { PrizePickerViewModel.Factory }
     private val adapter = PrizeAdapter { viewModel.onPrizeSelected(it) }
+    private var revealCreatedPrizeOnNextList = false
 
     override fun onViewCreated(
         view: View,
@@ -46,6 +55,19 @@ class PrizePickerFragment : Fragment(R.layout.fragment_prize_picker) {
         binding.prizeSearch.doAfterTextChanged { viewModel.onQueryChanged(it?.toString().orEmpty()) }
         binding.continuePrize.setOnClickListener { viewModel.onContinue() }
         binding.createPrize.setOnClickListener { viewModel.onCreatePrize() }
+        // A clickable LinearLayout is announced as a plain view; the card is a button.
+        ViewCompat.setAccessibilityDelegate(
+            binding.createPrize,
+            object : AccessibilityDelegateCompat() {
+                override fun onInitializeAccessibilityNodeInfo(
+                    host: View,
+                    info: AccessibilityNodeInfoCompat,
+                ) {
+                    super.onInitializeAccessibilityNodeInfo(host, info)
+                    info.className = Button::class.java.name
+                }
+            },
+        )
         binding.errorState.retryButton.setOnClickListener { viewModel.load(forceRefresh = true) }
         viewModel.uiState.observe(viewLifecycleOwner, ::render)
         viewModel.events.observe(viewLifecycleOwner) { it.getContentIfNotHandled()?.let(::handle) }
@@ -70,6 +92,10 @@ class PrizePickerFragment : Fragment(R.layout.fragment_prize_picker) {
         ViewCompat.setAccessibilityHeading(header.headerTitle, true)
         header.headerNav.isVisible = true
         header.headerClose.isVisible = true
+        header.headerClose.setBackgroundResource(R.drawable.bg_album_detail_back)
+        header.headerNav.updateLayoutParams<ConstraintLayout.LayoutParams> {
+            marginStart = resources.getDimensionPixelSize(R.dimen.album_detail_margin)
+        }
         header.headerClose.setOnClickListener { close() }
         header.roleChip.isVisible = true
         header.roleChip.setText(R.string.role_collector)
@@ -101,9 +127,11 @@ class PrizePickerFragment : Fragment(R.layout.fragment_prize_picker) {
         val empty = !state.isLoading && state.loadError == null && state.visiblePrizes.isEmpty()
         binding.emptyMessage.isVisible = empty
         binding.emptyMessage.setText(if (state.prizes.isEmpty()) R.string.prize_empty else R.string.prize_no_results)
-        binding.prizeList.isVisible = state.prizes.isNotEmpty()
+        // Invisible, not gone: it heads the chain that keeps the card right below the rows.
+        binding.prizeList.isInvisible = state.prizes.isEmpty()
         adapter.submitList(
             state.visiblePrizes.map { PrizeRow(it, it.id in state.assignedIds, it.id == state.selectedId) },
+            ::revealCreatedPrize,
         )
         binding.continuePrize.isEnabled = state.canContinue || (state.isUncertain && !state.isSubmitting)
         binding.continuePrize.text = state.selectedPrize?.let { getString(R.string.prize_continue_action, it.name) }
@@ -111,11 +139,22 @@ class PrizePickerFragment : Fragment(R.layout.fragment_prize_picker) {
         if (state.isUncertain) binding.continuePrize.setText(R.string.prize_review_action)
         binding.headerBar.headerClose.isEnabled = !state.isSubmitting
         binding.headerBar.roleChip.isEnabled = !state.isSubmitting
-        // HU13 supplies the real destination; never render a creation control without an action.
-        val canCreate = findNavController().graph.findNode(R.id.prizeCreateFragment) != null
-        binding.createPrize.isVisible = canCreate
-        binding.createHelp.isVisible = canCreate
-        binding.createPrize.isEnabled = state.canEdit && !state.isSubmitting && !state.isUncertain
+        renderCreateCard(state)
+    }
+
+    // The new prize is inserted at position 0; a list that was scrolled would keep showing the rows below it.
+    private fun revealCreatedPrize() {
+        if (!revealCreatedPrizeOnNextList) return
+        revealCreatedPrizeOnNextList = false
+        bindingOrNull?.prizeList?.scrollToPosition(0)
+    }
+
+    private fun renderCreateCard(state: PrizePickerUiState) {
+        // While the catalog loads or fails there is no list to complete: the loading and retry states take its place.
+        binding.createPrize.isVisible = state.prizes.isNotEmpty() || (!state.isLoading && state.loadError == null)
+        val canCreate = state.canEdit && !state.isSubmitting && !state.isUncertain
+        binding.createPrize.isEnabled = canCreate
+        binding.createPrize.alpha = if (canCreate) 1f else DISABLED_ALPHA
     }
 
     private fun handle(event: PrizePickerEvent) {
@@ -127,14 +166,23 @@ class PrizePickerFragment : Fragment(R.layout.fragment_prize_picker) {
             }
 
             PrizePickerEvent.OpenCreate -> {
-                findNavController().navigate(R.id.prizeCreateFragment, arguments)
+                // Two taps before the first transition ends must not stack two forms.
+                findNavController().navigate(
+                    R.id.prizeCreateFragment,
+                    null,
+                    navOptions { launchSingleTop = true },
+                )
             }
 
             PrizePickerEvent.PrizeCreated -> {
-                Snackbar
-                    .make(binding.root, R.string.prize_created_message, Snackbar.LENGTH_SHORT)
-                    .setAnchorView(binding.continuePrize)
-                    .show()
+                revealCreatedPrizeOnNextList = true
+                // Right above the strip of the button, below the card when the rows leave room (mockup HU13-4).
+                showConfirmationSnackbar(
+                    binding.root,
+                    binding.actions,
+                    R.string.prize_created_message,
+                    Snackbar.LENGTH_SHORT,
+                )
             }
 
             is PrizePickerEvent.Assigned -> {
@@ -158,6 +206,11 @@ class PrizePickerFragment : Fragment(R.layout.fragment_prize_picker) {
 
     private fun observeCreatedPrize() {
         val handle = findNavController().currentBackStackEntry?.savedStateHandle ?: return
+        // HU13 left a request with an unknown result: the catalog may already have the new prize.
+        handle.getLiveData<Boolean>(PrizeFlowContract.REFRESH_REQUESTED).observe(viewLifecycleOwner) {
+            handle.remove<Boolean>(PrizeFlowContract.REFRESH_REQUESTED)
+            viewModel.load(forceRefresh = true)
+        }
         handle.getLiveData<Bundle>(PrizeFlowContract.PRIZE_CREATED).observe(viewLifecycleOwner) { result ->
             handle.remove<Bundle>(PrizeFlowContract.PRIZE_CREATED)
             val name = result.getString(PrizeFlowContract.NAME) ?: return@observe
@@ -198,6 +251,8 @@ class PrizePickerFragment : Fragment(R.layout.fragment_prize_picker) {
     }
 
     companion object {
+        private const val DISABLED_ALPHA = 0.5f
+
         fun argumentsFor(
             id: Int,
             type: PerformerType,

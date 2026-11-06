@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Círculo del trofeo en el detalle del artista: igual en todas las filas, también en la resaltada. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <stroke android:width="@dimen/list_divider_thickness" android:color="@color/vinilos_charcoal" />
+</shape>

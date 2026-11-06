@@ -1,26 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Fila de "Elegir premio" (mockups HU14-1 y HU13-4). Sobresale 8 dp de la columna para el fondo de la fila elegida. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent" android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/space_s" android:background="@drawable/bg_prize_row"
-    android:orientation="horizontal" android:gravity="center_vertical"
-    android:minHeight="@dimen/prize_row_min_height" android:padding="@dimen/space_m"
+    android:background="@drawable/bg_prize_row" android:orientation="vertical"
     android:clickable="true" android:focusable="true">
-    <ImageView android:layout_width="@dimen/min_touch_target" android:layout_height="@dimen/min_touch_target"
-        android:padding="@dimen/space_m" android:importantForAccessibility="no"
-        app:srcCompat="@drawable/ic_prize" />
-    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
-        android:layout_weight="1" android:orientation="vertical" android:paddingEnd="@dimen/space_s"
-        android:importantForAccessibility="noHideDescendants">
-        <TextView android:id="@+id/prizeName" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:textAllCaps="true" android:textAppearance="@style/TextAppearance.Vinilos.ListTitle" />
-        <TextView android:id="@+id/prizeOrganization" android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_xs" android:textAppearance="@style/TextAppearance.Vinilos.Caption" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center_vertical" android:minHeight="@dimen/prize_row_min_height"
+        android:orientation="horizontal" android:paddingStart="@dimen/space_s" android:paddingTop="@dimen/space_s"
+        android:paddingEnd="@dimen/space_s">
+        <ImageView android:layout_width="@dimen/prize_icon_circle" android:layout_height="@dimen/prize_icon_circle"
+            android:background="@drawable/bg_prize_icon" android:importantForAccessibility="no"
+            android:padding="@dimen/prize_icon_padding" app:srcCompat="@drawable/ic_prize" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_l" android:layout_marginEnd="@dimen/space_s"
+            android:layout_weight="1" android:importantForAccessibility="noHideDescendants"
+            android:orientation="vertical">
+            <TextView android:id="@+id/prizeName" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:textAppearance="@style/TextAppearance.Vinilos.AlbumTitle" />
+            <TextView android:id="@+id/prizeOrganization" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_s"
+                android:textAppearance="@style/TextAppearance.Vinilos.Overline" />
+        </LinearLayout>
+        <TextView android:id="@+id/alreadyAssigned" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:background="@drawable/bg_prize_assigned"
+            android:importantForAccessibility="no" android:paddingStart="@dimen/space_s"
+            android:paddingTop="@dimen/space_xs" android:paddingEnd="@dimen/space_s"
+            android:paddingBottom="@dimen/space_xs" android:text="@string/prize_already_assigned"
+            android:textAppearance="@style/TextAppearance.Vinilos.Overline" android:textColor="@color/vinilos_charcoal" />
+        <ImageView android:id="@+id/prizeCheck" android:layout_width="@dimen/prize_check_size"
+            android:layout_height="@dimen/prize_check_size" android:background="@drawable/bg_prize_check"
+            android:importantForAccessibility="no" android:scaleType="center"
+            app:srcCompat="@drawable/ic_prize_check_state" />
     </LinearLayout>
-    <TextView android:id="@+id/alreadyAssigned" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="@string/prize_already_assigned" android:textAppearance="@style/TextAppearance.Vinilos.Caption"
-        android:importantForAccessibility="no" />
-    <com.google.android.material.radiobutton.MaterialRadioButton android:id="@+id/prizeRadio"
-        android:layout_width="@dimen/min_touch_target" android:layout_height="@dimen/min_touch_target"
-        android:clickable="false" android:focusable="false" android:importantForAccessibility="no" />
+    <View android:layout_width="match_parent" android:layout_height="@dimen/space_s"
+        android:background="@drawable/bg_prize_row_line" android:importantForAccessibility="no" />
 </LinearLayout>

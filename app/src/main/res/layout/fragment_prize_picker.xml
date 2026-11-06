@@ -11,37 +11,78 @@
         app:layout_constraintTop_toBottomOf="@id/headerBar" app:layout_constraintBottom_toTopOf="@id/actions"
         app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent">
         <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent"
-            android:orientation="vertical" android:padding="@dimen/form_padding_horizontal">
+            android:orientation="vertical" android:clipToPadding="false" android:padding="@dimen/form_padding_horizontal">
             <EditText android:id="@+id/prizeSearch" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:minHeight="@dimen/button_height" android:background="@drawable/bg_track_field"
-                android:padding="@dimen/space_l" android:drawableStart="@drawable/ic_prize_search"
+                android:minHeight="@dimen/min_touch_target" android:background="@drawable/bg_track_field"
+                android:paddingStart="@dimen/space_l" android:paddingTop="@dimen/prize_search_vertical_padding"
+                android:paddingEnd="@dimen/space_l" android:paddingBottom="@dimen/prize_search_vertical_padding"
+                android:drawableStart="@drawable/ic_prize_search"
                 android:drawablePadding="@dimen/space_m" android:hint="@string/prize_search_hint"
                 android:inputType="text" android:imeOptions="actionSearch" android:maxLines="1"
-                android:textAppearance="@style/TextAppearance.Vinilos.Body" />
+                android:textAppearance="@style/TextAppearance.Vinilos.Body"
+                android:textColorHint="@color/vinilos_graphite" />
             <TextView android:id="@+id/artistContext" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_m" android:layout_marginBottom="@dimen/space_m"
+                android:layout_marginTop="@dimen/space_m" android:layout_marginBottom="@dimen/space_s"
                 android:textAppearance="@style/TextAppearance.Vinilos.Caption" />
-            <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+            <!-- La tarjeta va justo debajo de las filas, como en los mockups; con muchos premios la lista se encoge
+                 (constrainedHeight) y la tarjeta sigue visible. El bloque sobresale 8 dp para el fondo de la fila elegida. -->
+            <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent"
+                android:layout_height="0dp" android:layout_marginStart="@dimen/prize_list_overhang"
+                android:layout_marginEnd="@dimen/prize_list_overhang" android:layout_weight="1">
                 <androidx.recyclerview.widget.RecyclerView android:id="@+id/prizeList"
-                    android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" />
+                    android:layout_width="0dp" android:layout_height="wrap_content" android:clipToPadding="false"
+                    app:layout_constrainedHeight="true" app:layout_constraintBottom_toTopOf="@id/emptyMessage"
+                    app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" app:layout_constraintVertical_bias="0"
+                    app:layout_constraintVertical_chainStyle="packed" />
+                <TextView android:id="@+id/emptyMessage" android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:gravity="center" android:padding="@dimen/space_l"
+                    android:textAppearance="@style/TextAppearance.Vinilos.Body" android:visibility="gone"
+                    app:layout_constraintBottom_toTopOf="@id/createPrize" app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/prizeList" />
+                <!-- Tarjeta punteada del mockup HU14-1. Un solo elemento accesible: el lector de pantalla lee su
+                     contentDescription y no sus hijos. -->
+                <LinearLayout android:id="@+id/createPrize" android:layout_width="0dp"
+                    android:layout_height="wrap_content" android:layout_marginStart="@dimen/space_s"
+                    android:layout_marginTop="@dimen/space_m" android:layout_marginEnd="@dimen/space_s"
+                    android:background="@drawable/bg_prize_create_card" android:clickable="true"
+                    android:contentDescription="@string/create_prize_card_description" android:focusable="true"
+                    android:gravity="center_vertical" android:minHeight="@dimen/prize_create_card_min_height"
+                    android:orientation="horizontal" android:padding="@dimen/prize_create_card_padding"
+                    android:visibility="gone" app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/emptyMessage">
+                    <ImageView android:layout_width="@dimen/prize_create_card_icon_circle"
+                        android:layout_height="@dimen/prize_create_card_icon_circle"
+                        android:background="@drawable/bg_prize_create_icon" android:importantForAccessibility="no"
+                        android:scaleType="center" app:srcCompat="@drawable/ic_add" />
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/prize_create_card_gap" android:layout_weight="1"
+                        android:importantForAccessibility="noHideDescendants" android:orientation="vertical">
+                        <TextView android:id="@+id/createPrizeTitle" android:layout_width="match_parent"
+                            android:layout_height="wrap_content" android:text="@string/prize_create_action"
+                            android:textAppearance="@style/TextAppearance.Vinilos.ListTitle" />
+                        <TextView android:id="@+id/createHelp" android:layout_width="match_parent"
+                            android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xs"
+                            android:text="@string/prize_create_help"
+                            android:textAppearance="@style/TextAppearance.Vinilos.Caption" />
+                    </LinearLayout>
+                </LinearLayout>
                 <include android:id="@+id/loadingState" layout="@layout/view_state_loading"
-                    android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_gravity="center" />
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
                 <include android:id="@+id/errorState" layout="@layout/view_state_error"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:layout_gravity="center" android:visibility="gone" />
-                <TextView android:id="@+id/emptyMessage" android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:layout_gravity="center" android:gravity="center" android:padding="@dimen/space_l"
-                    android:textAppearance="@style/TextAppearance.Vinilos.Body" android:visibility="gone" />
-            </FrameLayout>
-            <com.google.android.material.button.MaterialButton android:id="@+id/createPrize"
-                style="@style/Widget.Vinilos.Button.Secondary" android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:minHeight="@dimen/button_height"
-                android:text="@string/prize_create_action" android:visibility="gone" />
-            <TextView android:id="@+id/createHelp" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:text="@string/prize_create_help" android:textAppearance="@style/TextAppearance.Vinilos.Caption"
-                android:gravity="center" android:visibility="gone" />
+                    android:layout_width="0dp" android:layout_height="wrap_content" android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </LinearLayout>
     </co.edu.uniandes.vinilos.ui.common.PaperSheetLayout>
+    <View android:layout_width="0dp" android:layout_height="@dimen/prize_shadow_height"
+        android:background="@drawable/bg_actions_shadow" android:importantForAccessibility="no"
+        app:layout_constraintBottom_toTopOf="@id/actions" app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
     <LinearLayout android:id="@+id/actions" android:layout_width="0dp" android:layout_height="wrap_content"
         android:orientation="vertical" android:background="@color/vinilos_cream" android:padding="@dimen/form_padding_horizontal"
         app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"

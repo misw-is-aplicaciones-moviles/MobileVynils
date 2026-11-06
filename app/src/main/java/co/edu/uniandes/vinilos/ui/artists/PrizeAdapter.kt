@@ -40,8 +40,8 @@ internal class PrizeAdapter(
             binding.prizeName.text = row.prize.name
             binding.prizeOrganization.text = row.prize.organization
             binding.alreadyAssigned.isVisible = row.assigned
-            binding.prizeRadio.isVisible = !row.assigned
-            binding.prizeRadio.isChecked = row.selected
+            binding.prizeCheck.isVisible = !row.assigned
+            // Selected state reaches the trophy circle and the check mark through the row.
             binding.root.isSelected = row.selected
             binding.root.isEnabled = !row.assigned
             binding.root.contentDescription =

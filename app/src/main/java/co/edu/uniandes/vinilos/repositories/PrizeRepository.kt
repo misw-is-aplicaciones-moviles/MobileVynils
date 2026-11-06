@@ -3,6 +3,7 @@ package co.edu.uniandes.vinilos.repositories
 import co.edu.uniandes.vinilos.models.ArtistPrize
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.NewPrize
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.models.Prize
 import co.edu.uniandes.vinilos.models.PrizeAssignmentRef
@@ -17,6 +18,12 @@ interface PrizeRepository {
         assignments: List<PrizeAssignmentRef>,
         forceRefresh: Boolean = false,
     ): DataResult<List<ArtistPrize>, DataError>
+
+    /**
+     * HU13. The POST is never retried: the backend does not reject duplicates, so the caller must resolve a
+     * lost response (by reading the catalog) before it sends another one.
+     */
+    suspend fun createPrize(draft: NewPrize): DataResult<Prize, DataError>
 
     suspend fun assignPrize(
         performerId: Int,

@@ -3,6 +3,7 @@ package co.edu.uniandes.vinilos.testing
 import co.edu.uniandes.vinilos.models.ArtistPrize
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.NewPrize
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.models.Prize
 import co.edu.uniandes.vinilos.models.PrizeAssignmentRef
@@ -15,8 +16,11 @@ internal class FakePrizeRepository : PrizeRepository {
     var assigned: DataResult<ArtistPrize, DataError> = DataResult.Failure(DataError.Network)
     var artistPrizes: DataResult<List<ArtistPrize>, DataError> = DataResult.Success(emptyList())
     val artistRequests = mutableListOf<Pair<List<PrizeAssignmentRef>, Boolean>>()
+    var created: DataResult<Prize, DataError> = DataResult.Failure(DataError.Network)
+    val createdDrafts = mutableListOf<NewPrize>()
     var loadGate: CompletableDeferred<Unit>? = null
     var saveGate: CompletableDeferred<Unit>? = null
+    var createGate: CompletableDeferred<Unit>? = null
     var loadCalls = 0
     var saveCalls = 0
     var lastForceRefresh = false
@@ -36,6 +40,12 @@ internal class FakePrizeRepository : PrizeRepository {
     ): DataResult<List<ArtistPrize>, DataError> {
         artistRequests += assignments to forceRefresh
         return artistPrizes
+    }
+
+    override suspend fun createPrize(draft: NewPrize): DataResult<Prize, DataError> {
+        createdDrafts += draft
+        createGate?.await()
+        return created
     }
 
     override suspend fun assignPrize(
