@@ -2,13 +2,17 @@ package co.edu.uniandes.vinilos.repositories
 
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.NewPrize
 import co.edu.uniandes.vinilos.models.PerformerType
+import co.edu.uniandes.vinilos.models.Prize
 import co.edu.uniandes.vinilos.models.PrizeAssignmentRef
 import co.edu.uniandes.vinilos.network.NetworkClient
 import co.edu.uniandes.vinilos.network.PrizeServiceAdapterImpl
 import co.edu.uniandes.vinilos.network.VinilosApiService
 import co.edu.uniandes.vinilos.testing.MockWebServerRule
 import co.edu.uniandes.vinilos.testing.readResource
+import com.google.gson.JsonNull
+import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
@@ -33,6 +37,12 @@ class PrizeRepositoryImplTest {
 
     private val clients = mutableListOf<NetworkClient>()
     private val date = LocalDate.of(1985, 9, 18)
+    private val draft =
+        NewPrize(
+            name = "Voz del Caribe",
+            description = "Reconoce a intérpretes que llevaron la música del Caribe a nuevas audiencias.",
+            organization = "Asociación de Coleccionistas de Vinilo",
+        )
 
     @After
     fun closeClients() {
@@ -357,6 +367,192 @@ class PrizeRepositoryImplTest {
             assertEquals(DataResult.Failure(DataError.Serialization), result)
             assertEquals(1, serverRule.server.requestCount)
         }
+
+    @Test
+    fun `create prize posts exactly the three backend fields and maps the saved prize`() =
+        runTest {
+            serverRule.enqueueJson("api/prize_created.json")
+
+            val result = repository(testScheduler).createPrize(draft)
+
+            val created = (result as DataResult.Success).value
+            assertEquals(Prize(75, draft.name, draft.description, draft.organization), created)
+            assertTrue(created.assignments.isEmpty())
+            val request = serverRule.server.takeRequest()
+            assertEquals("POST", request.method)
+            assertEquals("/prizes", request.path)
+            assertTrue(request.getHeader("Content-Type").orEmpty().startsWith("application/json"))
+            val json = JsonParser.parseString(request.body.readUtf8()).asJsonObject
+            assertEquals(setOf("name", "description", "organization"), json.keySet())
+            assertEquals(draft.name, json["name"].asString)
+            assertEquals(draft.description, json["description"].asString)
+            assertEquals(draft.organization, json["organization"].asString)
+            assertEquals(1, serverRule.server.requestCount)
+        }
+
+    @Test
+    fun `create prize sends accents quotes and line breaks unchanged`() =
+        runTest {
+            val special = NewPrize("Año «Vinilo» \"2026\"", "Línea 1\nLínea 2 ñ", "Org & Co. <ñandú>")
+            serverRule.server.enqueue(
+                MockResponse().setBody(
+                    JsonParser
+                        .parseString(readResource("api/prize_created.json"))
+                        .asJsonObject
+                        .apply {
+                            addProperty("name", special.name)
+                            addProperty("description", special.description)
+                            addProperty("organization", special.organization)
+                        }.toString(),
+                ),
+            )
+
+            val result = repository(testScheduler).createPrize(special)
+
+            val saved = (result as DataResult.Success).value
+            assertEquals(special, NewPrize(saved.name, saved.description, saved.organization))
+            val request = serverRule.server.takeRequest()
+            val json = JsonParser.parseString(request.body.readUtf8()).asJsonObject
+            assertEquals(special.name, json["name"].asString)
+            assertEquals(special.description, json["description"].asString)
+            assertEquals(special.organization, json["organization"].asString)
+        }
+
+    @Test
+    fun `a 2xx without a valid id name description or organization is a serialization error`() =
+        runTest {
+            val repository = repository(testScheduler)
+            val invalid =
+                listOf("id", "name", "description", "organization").flatMap { field ->
+                    listOf(
+                        mutatedCreated { remove(field) },
+                        mutatedCreated { add(field, JsonNull.INSTANCE) },
+                    )
+                } +
+                    listOf(
+                        mutatedCreated { addProperty("id", 0) },
+                        mutatedCreated { addProperty("id", -3) },
+                        mutatedCreated { addProperty("id", "abc") },
+                        mutatedCreated { addProperty("id", 7.5) },
+                    )
+            invalid.forEach { body ->
+                serverRule.server.enqueue(MockResponse().setBody(body))
+
+                assertEquals(body, DataResult.Failure(DataError.Serialization), repository.createPrize(draft))
+            }
+            assertEquals(invalid.size, serverRule.server.requestCount)
+        }
+
+    @Test
+    fun `a 2xx for a different prize is not a confirmation`() =
+        runTest {
+            val repository = repository(testScheduler)
+            listOf("name", "description", "organization").forEach { field ->
+                serverRule.server.enqueue(MockResponse().setBody(mutatedCreated { addProperty(field, "Otro valor") }))
+
+                assertEquals(DataResult.Failure(DataError.Serialization), repository.createPrize(draft))
+            }
+        }
+
+    @Test
+    fun `invalid success bodies are not a created prize`() =
+        runTest {
+            val repository = repository(testScheduler)
+            val responses =
+                listOf(
+                    MockResponse().setResponseCode(204),
+                    MockResponse().setBody(""),
+                    MockResponse().setBody("null"),
+                    MockResponse().setBody("{"),
+                    MockResponse().setBody("[]"),
+                    MockResponse().setBody("<html>ok</html>"),
+                )
+            responses.forEach { response ->
+                serverRule.server.enqueue(response)
+
+                assertEquals(DataResult.Failure(DataError.Serialization), repository.createPrize(draft))
+            }
+            assertEquals(responses.size, serverRule.server.requestCount)
+        }
+
+    @Test
+    fun `create prize keeps the HTTP 400 of the backend and does not retry`() =
+        runTest {
+            serverRule.enqueueJson("api/prize_create_missing_field.json", code = 400)
+
+            val result = repository(testScheduler).createPrize(draft)
+
+            assertEquals(DataResult.Failure(DataError.Http(400)), result)
+            assertEquals(1, serverRule.server.requestCount)
+        }
+
+    @Test
+    fun `create prize keeps the HTTP 500 of the backend and does not retry`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setResponseCode(500).setBody("""{"statusCode":500}"""))
+
+            val result = repository(testScheduler).createPrize(draft)
+
+            assertEquals(DataResult.Failure(DataError.Http(500)), result)
+            assertEquals(1, serverRule.server.requestCount)
+        }
+
+    @Test
+    fun `create prize timeout is a network error and never resends the POST`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE))
+            serverRule.enqueueJson("api/prize_created.json")
+
+            val result = repository(testScheduler, readTimeoutMillis = 100).createPrize(draft)
+
+            assertEquals(DataResult.Failure(DataError.Network), result)
+            assertEquals(1, serverRule.server.requestCount)
+            val request = serverRule.server.takeRequest()
+            assertEquals("POST", request.method)
+            assertEquals("/prizes", request.path)
+            // The queued 200 is still there: nothing resent the request after the timeout.
+            assertEquals(1, serverRule.server.requestCount)
+        }
+
+    @Test
+    fun `create prize with a lost response is a network error without an automatic retry`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AFTER_REQUEST))
+            serverRule.enqueueJson("api/prize_created.json")
+
+            val result = repository(testScheduler).createPrize(draft)
+
+            assertEquals(DataResult.Failure(DataError.Network), result)
+            assertEquals(1, serverRule.server.requestCount)
+        }
+
+    @Test
+    fun `a blank draft does not reach the network`() =
+        runTest {
+            val repository = repository(testScheduler)
+            val blanks =
+                listOf(
+                    draft.copy(name = ""),
+                    draft.copy(name = "   "),
+                    draft.copy(description = "\n"),
+                    draft.copy(organization = " "),
+                )
+
+            blanks.forEach { blank ->
+                val error = runCatching { repository.createPrize(blank) }.exceptionOrNull()
+                assertTrue(error is IllegalArgumentException)
+            }
+
+            assertEquals(0, clients.size)
+            assertEquals(0, serverRule.server.requestCount)
+        }
+
+    private fun mutatedCreated(change: JsonObject.() -> Unit): String =
+        JsonParser
+            .parseString(readResource("api/prize_created.json"))
+            .asJsonObject
+            .apply(change)
+            .toString()
 
     private fun repository(
         scheduler: TestCoroutineScheduler,

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Círculo de selección del premio: carbón al elegirlo, solo borde si no. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true">
+        <shape android:shape="oval"><solid android:color="@color/vinilos_charcoal" /></shape>
+    </item>
+    <item>
+        <shape android:shape="oval">
+            <stroke android:width="@dimen/list_divider_thickness" android:color="@color/vinilos_charcoal" />
+        </shape>
+    </item>
+</selector>

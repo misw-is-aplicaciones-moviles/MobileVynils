@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Línea inferior de la fila, curva en los extremos. La vista la recorta a su alto: solo se ve la base del rectángulo. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:top="@dimen/prize_row_line_offset">
+        <shape android:shape="rectangle">
+            <stroke android:width="@dimen/list_divider_thickness" android:color="@color/vinilos_line" />
+            <corners android:radius="@dimen/prize_row_radius" />
+        </shape>
+    </item>
+</layer-list>

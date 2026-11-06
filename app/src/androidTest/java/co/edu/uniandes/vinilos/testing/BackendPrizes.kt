@@ -3,6 +3,7 @@ package co.edu.uniandes.vinilos.testing
 import androidx.test.platform.app.InstrumentationRegistry
 import co.edu.uniandes.vinilos.BuildConfig
 import co.edu.uniandes.vinilos.models.PerformerType
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import java.net.HttpURLConnection
@@ -61,11 +62,32 @@ class BackendPrizes(
 
     fun artist(): JSONObject = request("GET", "$collection/$performerId")
 
+    /** Todos los premios del backend ahora: HU13 comprueba con esto que una pantalla escribió una vez o ninguna. */
+    fun prizes(): List<JSONObject> {
+        val all = JSONArray(send("GET", "prizes"))
+        return List(all.length()) { all.getJSONObject(it) }
+    }
+
+    /**
+     * Nombre de un premio que HU13 crea desde la pantalla. Lleva la marca de la ejecución y, escritos con la
+     * descripción y la organización de los fixtures, `limpiar_premios_e2e.sql` lo reconoce y lo elimina.
+     */
+    fun uiPrizeName(suffix: String) = "$name $suffix"
+
     private fun request(
         method: String,
         path: String,
         body: JSONObject? = null,
     ): JSONObject {
+        val text = send(method, path, body)
+        return if (method == "DELETE") JSONObject() else JSONObject(text)
+    }
+
+    private fun send(
+        method: String,
+        path: String,
+        body: JSONObject? = null,
+    ): String {
         val connection = URL("${BuildConfig.BASE_URL}$path").openConnection() as HttpURLConnection
         try {
             connection.requestMethod = method
@@ -77,13 +99,7 @@ class BackendPrizes(
                 connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
             }
             assertEquals("$method $path", if (method == "DELETE") HTTP_NO_CONTENT else HTTP_OK, connection.responseCode)
-            return if (method ==
-                "DELETE"
-            ) {
-                JSONObject()
-            } else {
-                JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
-            }
+            return if (method == "DELETE") "" else connection.inputStream.bufferedReader().use { it.readText() }
         } finally {
             connection.disconnect()
         }

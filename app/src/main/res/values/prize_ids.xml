@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- HU13 supplies this destination; do not add a placeholder creation screen. -->
-    <item name="prizeCreateFragment" type="id" />
-</resources>

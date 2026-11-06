@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Círculo del trofeo: gris relleno cuando la fila está elegida. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true">
+        <shape android:shape="oval">
+            <solid android:color="@color/vinilos_graphite" />
+            <stroke android:width="@dimen/list_divider_thickness" android:color="@color/vinilos_charcoal" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="oval">
+            <stroke android:width="@dimen/list_divider_thickness" android:color="@color/vinilos_charcoal" />
+        </shape>
+    </item>
+</selector>

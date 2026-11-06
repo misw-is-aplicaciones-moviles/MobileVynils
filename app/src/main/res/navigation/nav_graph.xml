@@ -53,6 +53,11 @@
         <argument android:name="performerName" app:argType="string" />
         <argument android:name="assignmentIds" app:argType="integer[]" />
     </fragment>
+    <!-- Nuevo premio (HU13): pantalla completa sobre el selector, sin barra inferior (MainActivity). -->
+    <fragment
+        android:id="@+id/prizeCreateFragment"
+        android:name="co.edu.uniandes.vinilos.ui.artists.PrizeCreateFragment"
+        android:label="@string/create_prize_title" />
 
     <fragment
         android:id="@+id/performerListFragment"

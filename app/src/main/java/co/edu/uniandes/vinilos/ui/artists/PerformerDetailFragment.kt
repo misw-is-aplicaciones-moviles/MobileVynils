@@ -23,6 +23,7 @@ import co.edu.uniandes.vinilos.models.Prize
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
+import co.edu.uniandes.vinilos.ui.common.showConfirmationSnackbar
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailViewModel
 import co.edu.uniandes.vinilos.viewmodels.PerformerDetailEvent
 import co.edu.uniandes.vinilos.viewmodels.PerformerDetailUiState
@@ -38,6 +39,7 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
     private var bindingOrNull: FragmentAlbumDetailBinding? = null
     private val binding get() = checkNotNull(bindingOrNull)
     private val viewModel: PerformerDetailViewModel by viewModels { PerformerDetailViewModel.Factory }
+    private var revealAssignedPrizeOnNextList = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,6 +63,11 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
             )
         binding.detailList.layoutManager = LinearLayoutManager(requireContext())
         binding.detailList.adapter = adapter
+        binding.detailList.updatePadding(
+            bottom =
+                binding.detailList.paddingBottom +
+                    resources.getDimensionPixelSize(R.dimen.performer_detail_notice_clearance),
+        )
         binding.errorState.retryButton.setOnClickListener { viewModel.retry() }
         viewModel.uiState.observe(viewLifecycleOwner) { render(it, adapter) }
         viewModel.events.observe(viewLifecycleOwner) { it.getContentIfNotHandled()?.let(::handle) }
@@ -110,7 +117,7 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
         binding.loadingState.root.isVisible = state.isLoading
         binding.errorScroll.isVisible = state.error != null
         binding.detailList.isVisible = state.detail != null
-        state.detail?.let { adapter.submitDetail(state) }
+        state.detail?.let { adapter.submitDetail(state) { revealAssignedPrize(adapter) } }
         renderRole(state.role)
         val notFound = state.error == DataError.Http(NOT_FOUND)
         binding.errorState.errorTitle.setText(
@@ -138,6 +145,15 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
         val label = if (role == UserRole.VISITOR) R.string.role_visitor else R.string.role_collector
         chip.setText(label)
         chip.contentDescription = getString(R.string.role_chip_action, getString(label))
+    }
+
+    // A long biography would leave the highlighted row below the fold (mockup HU14-6 shows it).
+    private fun revealAssignedPrize(adapter: PerformerDetailAdapter) {
+        if (!revealAssignedPrizeOnNextList) return
+        val position = adapter.highlightedPosition()
+        if (position < 0) return
+        revealAssignedPrizeOnNextList = false
+        bindingOrNull?.detailList?.scrollToPosition(position)
     }
 
     private fun observePrizeResults() {
@@ -203,7 +219,13 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
             }
 
             PerformerDetailEvent.PrizeAssigned -> {
-                Snackbar.make(binding.root, R.string.prize_assigned_message, Snackbar.LENGTH_LONG).show()
+                revealAssignedPrizeOnNextList = true
+                showConfirmationSnackbar(
+                    binding.root,
+                    (activity as? PrimaryActionHost)?.snackbarAnchor,
+                    R.string.prize_assigned_message,
+                    Snackbar.LENGTH_LONG,
+                )
             }
 
             PerformerDetailEvent.OpenRoleSelector -> {

@@ -25,7 +25,9 @@
             <com.google.android.material.button.MaterialButton android:id="@+id/prizeDate"
                 style="@style/Widget.Vinilos.Button.Secondary" android:layout_width="match_parent"
                 android:layout_height="wrap_content" android:minHeight="@dimen/button_height"
-                android:layout_marginTop="@dimen/space_s" android:text="@string/prize_date_hint" />
+                android:layout_marginTop="@dimen/space_s" android:gravity="start|center_vertical"
+                android:text="@string/prize_date_hint" app:icon="@drawable/ic_calendar" app:iconGravity="end"
+                app:iconTint="@color/vinilos_charcoal" />
             <TextView android:id="@+id/dateError" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:text="@string/prize_date_required_error" android:textAppearance="@style/TextAppearance.Vinilos.Body"
                 android:visibility="gone" />

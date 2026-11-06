@@ -1,10 +1,13 @@
 package co.edu.uniandes.vinilos.network
 
 import co.edu.uniandes.vinilos.models.ArtistPrize
+import co.edu.uniandes.vinilos.models.NewPrize
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.models.Prize
+import co.edu.uniandes.vinilos.network.dto.toCreatedModel
 import co.edu.uniandes.vinilos.network.dto.toModel
 import co.edu.uniandes.vinilos.network.dto.toPrizeAssignmentRequest
+import co.edu.uniandes.vinilos.network.dto.toRequest
 import com.google.gson.JsonParseException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -14,6 +17,8 @@ import java.time.LocalDate
 
 internal interface PrizeServiceAdapter {
     suspend fun getPrizes(forceRefresh: Boolean = false): List<Prize>
+
+    suspend fun createPrize(draft: NewPrize): Prize
 
     suspend fun assignPrize(
         performerId: Int,
@@ -35,6 +40,12 @@ internal class PrizeServiceAdapterImpl(
         return withContext(defaultDispatcher) {
             dtos.map { it?.toModel() ?: throw JsonParseException("Null prize in catalog") }
         }
+    }
+
+    override suspend fun createPrize(draft: NewPrize): Prize {
+        val request = draft.toRequest()
+        val dto = withContext(ioDispatcher) { api.createPrize(request).requiredBody() }
+        return withContext(defaultDispatcher) { dto.toCreatedModel(draft) }
     }
 
     override suspend fun assignPrize(
