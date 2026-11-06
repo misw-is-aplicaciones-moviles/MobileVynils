@@ -3,6 +3,7 @@ package co.edu.uniandes.vinilos.repositories
 import co.edu.uniandes.vinilos.models.ArtistPrize
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.NewPrize
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.models.Prize
 import co.edu.uniandes.vinilos.models.PrizeAssignmentRef
@@ -26,6 +27,13 @@ internal class PrizeRepositoryImpl(
             is DataResult.Failure -> catalog
             is DataResult.Success -> networkRequest { resolveArtistPrizes(assignments, catalog.value) }
         }
+    }
+
+    override suspend fun createPrize(draft: NewPrize): DataResult<Prize, DataError> {
+        require(draft.name.isNotBlank()) { "name must not be blank" }
+        require(draft.description.isNotBlank()) { "description must not be blank" }
+        require(draft.organization.isNotBlank()) { "organization must not be blank" }
+        return networkRequest { serviceAdapter.createPrize(draft) }
     }
 
     override suspend fun assignPrize(

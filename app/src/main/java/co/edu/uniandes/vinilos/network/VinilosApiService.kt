@@ -6,6 +6,7 @@ import co.edu.uniandes.vinilos.network.dto.CollectorAlbumDto
 import co.edu.uniandes.vinilos.network.dto.CollectorDto
 import co.edu.uniandes.vinilos.network.dto.MusicianDto
 import co.edu.uniandes.vinilos.network.dto.NewAlbumRequest
+import co.edu.uniandes.vinilos.network.dto.NewPrizeRequest
 import co.edu.uniandes.vinilos.network.dto.NewTrackRequest
 import co.edu.uniandes.vinilos.network.dto.PrizeAssignmentDto
 import co.edu.uniandes.vinilos.network.dto.PrizeAssignmentRequest
@@ -23,6 +24,11 @@ internal interface VinilosApiService {
     suspend fun getPrizes(
         @Header("Cache-Control") cacheControl: String? = null,
     ): Response<List<PrizeDto?>>
+
+    @POST("prizes")
+    suspend fun createPrize(
+        @Body request: NewPrizeRequest,
+    ): Response<PrizeDto>
 
     @POST("prizes/{prizeId}/musicians/{performerId}")
     suspend fun assignPrizeToMusician(

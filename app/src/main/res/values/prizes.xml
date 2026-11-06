@@ -30,6 +30,36 @@
     <string name="prize_detail_loading">Cargando premios…</string>
     <string name="prize_detail_empty">Este artista aún no tiene premios registrados.</string>
     <string name="prize_detail_description">%1$s, %2$s, %3$s</string>
-    <dimen name="prize_row_min_height">84dp</dimen>
+    <!-- Filas y avisos de los mockups HU14 y HU13 (1 px = 0,5 dp en la exportación de 780 px). -->
+    <dimen name="prize_row_min_height">76dp</dimen>
+    <dimen name="prize_row_radius">14dp</dimen>
+    <dimen name="prize_row_line_offset">-24dp</dimen>
+    <dimen name="prize_list_overhang">-8dp</dimen>
     <dimen name="prize_icon_size">24dp</dimen>
+    <dimen name="prize_icon_circle">52dp</dimen>
+    <dimen name="prize_icon_padding">14dp</dimen>
+    <dimen name="prize_check_size">28dp</dimen>
+    <dimen name="prize_check_mark">16dp</dimen>
+    <dimen name="prize_assigned_radius">11dp</dimen>
+    <dimen name="prize_search_vertical_padding">10dp</dimen>
+    <dimen name="prize_shadow_height">20dp</dimen>
+    <dimen name="performer_prize_row_height">60dp</dimen>
+    <dimen name="performer_prize_icon_circle">40dp</dimen>
+    <dimen name="performer_prize_icon_padding">10dp</dimen>
+    <color name="vinilos_prize_selected">#FFE2DFD8</color>
+    <!-- Espacio bajo la última fila del detalle: el aviso de éxito no tapa el premio recién asignado. -->
+    <dimen name="performer_detail_notice_clearance">76dp</dimen>
+    <dimen name="confirmation_snackbar_margin">20dp</dimen>
+    <dimen name="confirmation_snackbar_gap">12dp</dimen>
+    <dimen name="confirmation_snackbar_icon_gap">12dp</dimen>
+    <!-- Tarjeta punteada "Crear un premio nuevo" (mockup HU14-1, 1 px = 0,5 dp en la exportación de 780 px). -->
+    <dimen name="prize_create_card_min_height">48dp</dimen>
+    <dimen name="prize_create_card_radius">24dp</dimen>
+    <dimen name="prize_create_card_padding">15dp</dimen>
+    <dimen name="prize_create_card_stroke">1dp</dimen>
+    <dimen name="prize_create_card_dash">6dp</dimen>
+    <dimen name="prize_create_card_dash_gap">4dp</dimen>
+    <dimen name="prize_create_card_icon_circle">52dp</dimen>
+    <dimen name="prize_create_card_icon">24dp</dimen>
+    <dimen name="prize_create_card_gap">12dp</dimen>
 </resources>

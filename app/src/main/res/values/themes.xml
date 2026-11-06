@@ -607,4 +607,21 @@
         <item name="colorOnSurface">@color/vinilos_charcoal</item>
         <item name="colorOnSurfaceVariant">@color/vinilos_graphite</item>
     </style>
+
+    <!-- Aviso de éxito de HU13 y HU14: píldora carbón con texto crema. El ✓ lo pone ConfirmationSnackbar.kt. -->
+    <style name="ShapeAppearance.Vinilos.Confirmation" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+    <style name="Widget.Vinilos.Snackbar.Confirmation" parent="Widget.Material3.Snackbar">
+        <item name="backgroundTint">@color/vinilos_charcoal</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Vinilos.Confirmation</item>
+    </style>
+    <style name="Widget.Vinilos.Snackbar.Confirmation.Text" parent="Widget.Material3.Snackbar.TextView">
+        <item name="android:textColor">@color/vinilos_cream</item>
+    </style>
+    <style name="ThemeOverlay.Vinilos.ConfirmationSnackbar" parent="">
+        <item name="snackbarStyle">@style/Widget.Vinilos.Snackbar.Confirmation</item>
+        <item name="snackbarTextViewStyle">@style/Widget.Vinilos.Snackbar.Confirmation.Text</item>
+    </style>
 </resources>

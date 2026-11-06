@@ -279,6 +279,8 @@ Una respuesta incierta conserva las entradas y bloquea otro POST, incluso al res
 
 Se reserva el ID `prizeCreateFragment` para que HU13 añada su destino real. Crear un premio nuevo y su ayuda se muestran únicamente si el grafo contiene ese destino; no se implementa un formulario sustituto ni un control sin acción. HU13 devuelve un Bundle en `PrizeFlowContract.PRIZE_CREATED`, con prizeId, name, description y organization, al selector. Al consumirlo, se limpia la búsqueda, se añade/actualiza el registro por ID, queda seleccionado y se muestra Premio creado. Una respuesta anterior del catálogo no elimina ese premio nuevo.
 
+**Actualización 05/11/2026:** HU13 ya implementa `prizeCreateFragment` y devuelve el Bundle de `PRIZE_CREATED` tal como se describe arriba; el ID se declara en `nav_graph.xml` y se elimina `prize_ids.xml`. Ver [14-hu13-diseno-tecnico.md](14-hu13-diseno-tecnico.md).
+
 ### Estado de integración y verificación
 
 HU04 y HU13 no están integradas en la base revisada. Las pantallas, argumentos, resultados y reglas de estado están implementados; la entrada real desde el detalle, la actualización visual del detalle y el recorrido de creación permanecen pendientes de integrar con sus historias. HU14-03 no debe declararse validada de extremo a extremo mientras falte ese enlace.

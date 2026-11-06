@@ -217,7 +217,7 @@ class PrizePickerScreenTest {
         ).check(matches(allOf(isDisplayed(), isDescendantOfA(isSelected()))))
         onView(withId(R.id.prizeOrganization)).check(matches(allOf(isDisplayed(), withText("Equipo de pruebas HU14"))))
         val shownDate = date.format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
-        onView(withId(R.id.alreadyAssigned)).check(matches(allOf(isDisplayed(), withText(shownDate))))
+        onView(withId(R.id.prizeAwardDate)).check(matches(allOf(isDisplayed(), withText(shownDate))))
         val saved = fixture.artist().getJSONArray("performerPrizes")
         assertEquals(1, saved.length())
         assertEquals("${date}T00:00:00.000Z", saved.getJSONObject(0).getString("premiationDate"))

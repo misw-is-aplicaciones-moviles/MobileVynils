@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Marca de confirmación: premio elegido y avisos de éxito de los mockups HU13 y HU14. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="@dimen/prize_check_mark" android:height="@dimen/prize_check_mark"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:strokeColor="@color/vinilos_cream" android:strokeWidth="3" android:strokeLineJoin="round"
+        android:strokeLineCap="round" android:pathData="M4,13l5,5L20,6" />
+</vector>

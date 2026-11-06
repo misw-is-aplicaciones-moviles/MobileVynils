@@ -85,6 +85,8 @@ Destinos de `res/navigation/nav_graph.xml` y sus argumentos (`Bundle`, claves en
 | `albumListFragment` | — | HU01 |
 | `albumDetailFragment` | `albumId: Int` | HU02 |
 | `albumCreateFragment` | — | HU07 |
+| `prizePickerFragment` | `performerId: Int`, `performerType: String`, `performerName: String`, `assignmentIds: Int[]` | HU14 |
+| `prizeCreateFragment` | — (se abre con `launchSingleTop` desde `prizePickerFragment`) | HU13 |
 | `performerListFragment` | — | HU03 |
 | `performerDetailFragment` | `performerId: Int`, `type: String` (`MUSICIAN` o `BAND`) | HU04 |
 | `albumPickerFragment` | `performerId: Int`, `type: String` | HU15 |
@@ -121,6 +123,7 @@ Siete pantallas base, un selector de rol, un formulario, dos hojas y tres select
 | 11 | Elegir álbum | `artists/` | HU15 | Sin selección (botón deshabilitado), con selección; ítems "Ya agregado" deshabilitados |
 | 12 | Elegir músico | `artists/` | HU12 | Sin selección, con selección, con error "pertenece a otra banda"; ítems "Ya integrante" |
 | 13 | Elegir artista | `collectors/` | HU10 | Sin selección, con selección; ítems "Ya es favorito" |
+| 14 | Nuevo premio | `artists/` | HU13 | Vacío, errores por campo ("Campo obligatorio"), completo, enviando, rechazado, resultado incierto y comprobación; el selector regresa con el premio creado y el aviso "Premio creado" |
 
 Los tres selectores comparten un layout `fragment_picker.xml` y un adaptador `PickerAdapter` en `ui/common` (campo de búsqueda, lista con `RadioButton`, chip de estado por ítem, botón inferior con el nombre elegido entre comillas angulares: "Agregar «The Game»").
 
@@ -305,6 +308,8 @@ Flujo:
 
 **HU14 · Asignar premio (incorporada al Sprint 2).** Desde el detalle de músico o banda, el coleccionista abre "Elegir premio" (`GET /prizes`), busca localmente por nombre y selecciona un registro elegible. Los premios ya asignados al artista llevan "YA ASIGNADO" sin selección activa. "Continuar con «premio»" abre la hoja inferior "Fecha de premiación", con calendario, fecha obligatoria y acción "Asignar premio" deshabilitada hasta elegir día. Se retiran Omitir y la indicación de fecha opcional del mockup por decisión del responsable, respetando el backend local y sin inventar una fecha. Con día elegido, envía `premiationDate` con `POST /prizes/:prizeId/musicians/:musicianId` o `POST /prizes/:prizeId/bands/:bandId`. En éxito regresa al detalle con contador, fila actualizada y "Premio asignado al artista". "Crear un premio nuevo" abre HU13 y devuelve el premio creado al selector, seleccionado y visible. El [diseño técnico](12-hu14-diseno-tecnico.md) define estados, resultados, conservación de fecha, tratamiento de escrituras inciertas e integración temprana del selector para HU13.
 
+**HU13 · Crear premio (incorporada al Sprint 2).** `prizeCreateFragment` a pantalla completa, sin barra inferior, desde la tarjeta punteada "Crear un premio nuevo" de "Elegir premio" (solo Coleccionista). Cabecera con X, título "Nuevo premio" y chip de rol; aviso "Todos los campos son obligatorios. Al crearlo, el premio queda disponible para cualquier artista."; campos NOMBRE ("Nombre del premio"), DESCRIPCIÓN multilínea ("¿Qué reconoce este premio?") y ORGANIZACIÓN ("Quién otorga el premio"); botones fijos "Cancelar" y "Crear premio". Validación en `PrizeFormValidator`: "Campo obligatorio" bajo cada campo vacío o con solo espacios (el backend aceptaría estos últimos, la app no). Envía `POST /prizes` con `name`, `description` y `organization`, recortados; el backend responde 200 con el premio guardado. En éxito deja el premio en `previousBackStackEntry.savedStateHandle` (`PRIZE_CREATED`) y vuelve al selector, que lo muestra arriba, seleccionado, con "Premio creado" una vez y "Continuar con «…»". Cancelar y X vuelven sin escribir. Un resultado desconocido (timeout, desconexión, 5xx, 2xx ilegible) bloquea el reenvío y se resuelve consultando el catálogo, porque el backend no evita duplicados. Diseño técnico: [14-hu13-diseno-tecnico.md](14-hu13-diseno-tecnico.md).
+
 ### Sprint 3 · Funcionalidades adicionales
 
 **HU09 · Comentar álbum.** `CommentCreateBottomSheet` (`BottomSheetDialogFragment`) con sobretítulo del álbum y título "Comentar álbum". Grupo "¿Quién comenta?" con chips de los coleccionistas (una selección). Grupo "Valoración (0 a 5)" con seis chips circulares `0` a `5`; al elegir, la etiqueta cambia a "Valoración · 4 de 5". Campo "Comentario" multilínea con marcador "Escribe tu opinión". Botones "Cancelar" y "Publicar comentario". Errores: "Selecciona un coleccionista", "Selecciona una valoración", "Campo obligatorio". Envío: `POST /albums/:albumId/comments` con `description`, `rating` y `collector: { id }`. En éxito, el comentario aparece al final de la lista con el nombre del coleccionista y se muestra "Comentario publicado". Los coleccionistas de la hoja salen de `CollectorRepository.getCollectors()`.
@@ -402,6 +407,11 @@ Claves para `res/values/strings.xml` según el prototipo. El código usa los nom
 | `picker_already_added` / `picker_already_member` / `picker_already_favorite` | Ya agregado / Ya integrante / Ya es favorito |
 | `picker_member_elsewhere` | %1$s ya pertenece a otra banda (%2$s). Un músico solo puede estar en una banda. |
 | `snack_album_added_to_artist` / `snack_member_added` / `snack_favorite_added` | Álbum agregado al artista / Integrante agregado a la banda / Artista favorito agregado |
+| `create_prize_title` / `create_prize_all_required` | Nuevo premio / Todos los campos son obligatorios. Al crearlo, el premio queda disponible para cualquier artista. |
+| `field_organization` / `hint_prize_name` / `hint_prize_description` / `hint_prize_organization` | Organización / Nombre del premio / ¿Qué reconoce este premio? / Quién otorga el premio |
+| `action_create_prize` / `action_creating_prize` / `action_check_prize` / `action_checking_prize` | Crear premio / Creando… / Comprobar / Comprobando… |
+| `create_prize_rejected` / `create_prize_uncertain` / `create_prize_check_failed` / `create_prize_not_saved` | Avisos del formulario de HU13 (rechazado, resultado sin confirmar, comprobación fallida, premio no guardado) |
+| `create_prize_card_description` | Crear un premio nuevo. ¿No está en la lista? Regístralo y asígnalo. |
 
 ## 9. Reparto por sprint
 
@@ -447,6 +457,7 @@ Resultado de contrastar wiki, prototipo, documento del curso y código del backe
 | 2026-11-03 | HU03-01: diseño técnico de la lista de artistas (wiki `HU03-Diseno-tecnico`). `Performer` mínimo para la lista y `PerformerEntity` sin tablas de relación (HU04 las agrega); base versión 3 con migración explícita 2 → 3 en lugar de la recreación destructiva; unión de `GET /musicians` y `GET /bands` en paralelo con fallo total ante cualquier fallo parcial; pertenencia a banda derivada de `bands[].musicians`; filtro en el ViewModel; sin botón "+"; destino `performerDetailFragment` provisional con `performerId` y `type`. Orden por nombre decidido: el mockup de "Todos" no es alfabético. |
 | 2026-11-04 | HU05-01: diseño técnico de la lista de coleccionistas. `Collector` y `CollectorEntity` mínimos para la lista; base versión 4 con migración explícita 3 → 4; mapeo fuera del hilo principal también en el Repository y el ViewModel; destino `collectorDetailFragment` provisional con `collectorId`; textos con plurales. Hallazgo 17 sobre las rutas `DELETE` de BackVynils. |
 | 2026-11-04 | HU06: el detalle es `CollectorDetail`, remoto. `Collector` y Room siguen en la versión 4. Las dos consultas van en paralelo y un fallo de una anula la carga. Los botones de agregar se ven solo para el coleccionista y quedan deshabilitados. No se usan las rutas `DELETE` del hallazgo 17. |
+| 2026-11-05 | HU13: formulario "Nuevo premio" con validación pura, `POST /prizes` en el `PrizeRepository` de HU14, resultado incierto resuelto consultando el catálogo (el backend no evita duplicados), tarjeta punteada "Crear un premio nuevo" con `launchSingleTop`. Textos nuevos en `strings.xml`, como fija la sección 8. Las pantallas de HU14 y HU13 se ajustan a los mockups 70 a 75 (filas del selector y del detalle, aviso de éxito en píldora, X en círculo, hoja de fecha); la fecha sigue siendo obligatoria y sin "Omitir" (`docs/12`). Ver [14-hu13-diseno-tecnico.md](14-hu13-diseno-tecnico.md). |
 
 ### Propuesta HU04-01 · 04/11/2026
 
