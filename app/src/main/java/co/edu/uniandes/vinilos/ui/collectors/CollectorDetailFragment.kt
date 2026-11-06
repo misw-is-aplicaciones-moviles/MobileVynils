@@ -21,10 +21,12 @@ import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailViewModel
+import co.edu.uniandes.vinilos.viewmodels.CollectorAlbumPickerViewModel
 import co.edu.uniandes.vinilos.viewmodels.CollectorDetailEvent
 import co.edu.uniandes.vinilos.viewmodels.CollectorDetailUiState
 import co.edu.uniandes.vinilos.viewmodels.CollectorDetailViewModel
 import co.edu.uniandes.vinilos.viewmodels.PerformerListViewModel
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
 
 /** Collector detail: contact, favorite artists and albums with price and availability. */
@@ -46,7 +48,12 @@ class CollectorDetailFragment : Fragment(R.layout.fragment_album_detail) {
         bindingOrNull = FragmentAlbumDetailBinding.bind(view)
         (activity as? PrimaryActionHost)?.hidePrimaryAction()
         bindHeader()
-        val adapter = CollectorDetailAdapter(viewModel::onAlbumClicked, viewModel::onFavoriteClicked)
+        val adapter =
+            CollectorDetailAdapter(
+                onAlbumClick = viewModel::onAlbumClicked,
+                onFavoriteClick = viewModel::onFavoriteClicked,
+                onAddAlbumClick = viewModel::onAddAlbumClicked,
+            )
         binding.detailList.layoutManager = LinearLayoutManager(requireContext())
         binding.detailList.adapter = adapter
         binding.errorState.retryButton.setOnClickListener { viewModel.retry() }
@@ -54,6 +61,7 @@ class CollectorDetailFragment : Fragment(R.layout.fragment_album_detail) {
         viewModel.events.observe(viewLifecycleOwner) { event ->
             event.getContentIfNotHandled()?.let(::handle)
         }
+        observeSelectedAlbum()
     }
 
     override fun onResume() {
@@ -129,6 +137,13 @@ class CollectorDetailFragment : Fragment(R.layout.fragment_album_detail) {
 
     private fun handle(event: CollectorDetailEvent) {
         when (event) {
+            is CollectorDetailEvent.OpenAlbumPicker -> {
+                findNavController().navigate(
+                    R.id.collectorAlbumPickerFragment,
+                    bundleOf(CollectorAlbumPickerViewModel.ARG_COLLECTOR_ID to event.collectorId),
+                )
+            }
+
             is CollectorDetailEvent.OpenAlbum -> {
                 findNavController().navigate(
                     R.id.albumDetailFragment,
@@ -151,6 +166,28 @@ class CollectorDetailFragment : Fragment(R.layout.fragment_album_detail) {
                 findNavController().navigateToRoleSelector()
             }
         }
+    }
+
+    private fun observeSelectedAlbum() {
+        val handle = findNavController().currentBackStackEntry?.savedStateHandle ?: return
+        handle
+            .getLiveData<Bundle>(CollectorAlbumPickerViewModel.RESULT_ALBUM_SELECTED)
+            .observe(viewLifecycleOwner) { result ->
+                handle.remove<Bundle>(CollectorAlbumPickerViewModel.RESULT_ALBUM_SELECTED)
+                val detail = viewModel.uiState.value?.detail ?: return@observe
+                val resultCollectorId = result.getInt(CollectorAlbumPickerViewModel.RESULT_COLLECTOR_ID)
+                if (resultCollectorId != detail.collector.id) return@observe
+                val albumName = result.getString(CollectorAlbumPickerViewModel.RESULT_ALBUM_NAME) ?: return@observe
+                viewModel.refreshAfterAlbumAdded()
+                val snackbar =
+                    Snackbar.make(
+                        binding.root,
+                        getString(R.string.collector_album_selected, albumName),
+                        Snackbar.LENGTH_SHORT,
+                    )
+                (activity as? PrimaryActionHost)?.let { snackbar.setAnchorView(it.snackbarAnchor) }
+                snackbar.show()
+            }
     }
 
     private companion object {

@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modal HU11: precio y estado para agregar un álbum a la colección. -->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sheetScroll"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clipToPadding="false"
+    android:overScrollMode="never"
+    android:scrollbars="none">
+
+    <co.edu.uniandes.vinilos.ui.albums.TrackSheetLayout
+        android:id="@+id/sheetBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/track_sheet_shadow_space"
+        android:paddingBottom="@dimen/space_xl">
+
+        <ImageButton
+            android:id="@+id/closeSheet"
+            android:layout_width="@dimen/track_close_size"
+            android:layout_height="@dimen/track_close_size"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/track_close_margin_top"
+            android:background="@drawable/bg_track_close"
+            android:contentDescription="@string/action_close"
+            android:padding="@dimen/space_l"
+            android:scaleType="centerInside"
+            app:srcCompat="@drawable/ic_close"
+            app:tint="@color/vinilos_cream" />
+
+        <TextView
+            android:id="@+id/sheetSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_close_content_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.Vinilos.Overline"
+            tools:text="A Day at the Races · Queen" />
+
+        <TextView
+            android:id="@+id/sheetTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_title_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:gravity="center"
+            android:text="@string/collector_album_add_title"
+            android:textAppearance="@style/TextAppearance.Vinilos.SheetTitle" />
+
+        <!-- Precio -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_section_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:labelFor="@+id/priceDisplay"
+            android:text="@string/collector_album_add_price_label"
+            android:textAppearance="@style/TextAppearance.Vinilos.Overline" />
+
+        <TextView
+            android:id="@+id/priceDisplay"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/track_field_height"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_label_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:background="@drawable/bg_picker_price_field"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:textAppearance="@style/TextAppearance.Vinilos.Duration"
+            android:textColor="@color/vinilos_duration_empty"
+            tools:text="$0" />
+
+        <LinearLayout
+            android:id="@+id/priceError"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_label_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:accessibilityLiveRegion="polite"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="@dimen/track_field_error_icon"
+                android:layout_height="@dimen/track_field_error_icon"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/ic_field_error" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/track_field_error_gap"
+                android:includeFontPadding="false"
+                android:text="@string/collector_album_add_price_error"
+                android:textAppearance="@style/TextAppearance.Vinilos.FieldError" />
+        </LinearLayout>
+
+        <!-- Teclado numérico -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_section_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/key1"
+                style="@style/Widget.Vinilos.Key"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/track_key_height"
+                android:layout_marginEnd="@dimen/track_key_gap"
+                android:layout_weight="1" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/key2"
+                style="@style/Widget.Vinilos.Key"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/track_key_height"
+                android:layout_marginEnd="@dimen/track_key_gap"
+                android:layout_weight="1" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/key3"
+                style="@style/Widget.Vinilos.Key"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/track_key_height"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/key4"
+                style="@style/Widget.Vinilos.Key"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/track_key_height"
+                android:layout_marginEnd="@dimen/track_key_gap"
+                android:layout_weight="1" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/key5"
+                style="@style/Widget.Vinilos.Key"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/track_key_height"
+                android:layout_marginEnd="@dimen/track_key_gap"
+                android:layout_weight="1" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/key6"
+                style="@style/Widget.Vinilos.Key"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/track_key_height"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/key7"
+                style="@style/Widget.Vinilos.Key"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/track_key_height"
+                android:layout_marginEnd="@dimen/track_key_gap"
+                android:layout_weight="1" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/key8"
+                style="@style/Widget.Vinilos.Key"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/track_key_height"
+                android:layout_marginEnd="@dimen/track_key_gap"
+                android:layout_weight="1" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/key9"
+                style="@style/Widget.Vinilos.Key"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/track_key_height"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/keyClear"
+                style="@style/Widget.Vinilos.Key"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/track_key_height"
+                android:layout_marginEnd="@dimen/track_key_gap"
+                android:layout_weight="1"
+                android:text="@string/action_clear"
+                android:textAppearance="@style/TextAppearance.Vinilos.Field.Charcoal" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/key0"
+                style="@style/Widget.Vinilos.Key"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/track_key_height"
+                android:layout_marginEnd="@dimen/track_key_gap"
+                android:layout_weight="1" />
+
+            <ImageButton
+                android:id="@+id/keyDelete"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/track_key_height"
+                android:layout_weight="1"
+                android:background="@drawable/bg_track_key"
+                android:contentDescription="@string/action_delete_digit"
+                android:scaleType="center"
+                app:srcCompat="@drawable/ic_backspace" />
+        </LinearLayout>
+
+        <!-- Estado -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_section_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:text="@string/collector_album_add_status_label"
+            android:textAppearance="@style/TextAppearance.Vinilos.Overline" />
+
+        <LinearLayout
+            android:id="@+id/statusGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_label_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/statusAvailable"
+                style="@style/Widget.Vinilos.Button.Secondary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/button_gap"
+                android:minWidth="0dp"
+                android:text="@string/album_status_available" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/statusUnavailable"
+                style="@style/Widget.Vinilos.Button.Secondary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="0dp"
+                android:text="@string/album_status_unavailable" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/statusError"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_label_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:accessibilityLiveRegion="polite"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="@dimen/track_field_error_icon"
+                android:layout_height="@dimen/track_field_error_icon"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/ic_field_error" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/track_field_error_gap"
+                android:includeFontPadding="false"
+                android:text="@string/collector_album_add_status_error"
+                android:textAppearance="@style/TextAppearance.Vinilos.FieldError" />
+        </LinearLayout>
+
+        <!-- Error de envío -->
+        <TextView
+            android:id="@+id/submitError"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_label_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:accessibilityLiveRegion="polite"
+            android:textAppearance="@style/TextAppearance.Vinilos.FieldError"
+            android:visibility="gone" />
+
+        <!-- Acciones -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_actions_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cancelButton"
+                style="@style/Widget.Vinilos.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/track_actions_button_gap"
+                android:layout_weight="1"
+                android:text="@string/action_cancel" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/addButton"
+                style="@style/Widget.Vinilos.Button.Primary.Medium"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/collector_album_add_submit" />
+        </LinearLayout>
+    </co.edu.uniandes.vinilos.ui.albums.TrackSheetLayout>
+</androidx.core.widget.NestedScrollView>

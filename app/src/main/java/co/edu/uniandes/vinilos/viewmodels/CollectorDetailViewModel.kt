@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import co.edu.uniandes.vinilos.VinilosApplication
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.repositories.CollectorRepository
 import co.edu.uniandes.vinilos.repositories.SessionRepository
 import kotlinx.coroutines.Job
@@ -52,6 +53,17 @@ class CollectorDetailViewModel(
         if (navigationPending || current().detail?.albums?.none { it.albumId == albumId } != false) return
         navigationPending = true
         _events.value = Event(CollectorDetailEvent.OpenAlbum(albumId))
+    }
+
+    fun onAddAlbumClicked() {
+        val state = current()
+        if (navigationPending || state.role != UserRole.COLLECTOR || state.detail == null) return
+        navigationPending = true
+        _events.value = Event(CollectorDetailEvent.OpenAlbumPicker(collectorId))
+    }
+
+    fun refreshAfterAlbumAdded() {
+        load(forceRefresh = true)
     }
 
     fun onFavoriteClicked(performerId: Int) {

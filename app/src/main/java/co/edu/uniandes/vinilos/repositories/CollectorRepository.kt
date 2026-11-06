@@ -4,6 +4,7 @@ import co.edu.uniandes.vinilos.models.Collector
 import co.edu.uniandes.vinilos.models.CollectorDetail
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.NewCollectorAlbum
 
 /** Source of collector data; the list is cached in Room and expected remote failures are returned as values. */
 interface CollectorRepository {
@@ -24,4 +25,11 @@ interface CollectorRepository {
         id: Int,
         forceRefresh: Boolean = false,
     ): DataResult<CollectorDetail, DataError>
+
+    /** Adds an album to a collector's collection. Returns the saved association. */
+    suspend fun addAlbum(
+        collectorId: Int,
+        albumId: Int,
+        draft: NewCollectorAlbum,
+    ): DataResult<Unit, DataError>
 }

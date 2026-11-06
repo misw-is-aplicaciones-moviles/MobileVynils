@@ -6,6 +6,7 @@ import co.edu.uniandes.vinilos.network.dto.CollectorAlbumDto
 import co.edu.uniandes.vinilos.network.dto.CollectorDto
 import co.edu.uniandes.vinilos.network.dto.MusicianDto
 import co.edu.uniandes.vinilos.network.dto.NewAlbumRequest
+import co.edu.uniandes.vinilos.network.dto.NewCollectorAlbumRequest
 import co.edu.uniandes.vinilos.network.dto.NewPrizeRequest
 import co.edu.uniandes.vinilos.network.dto.NewTrackRequest
 import co.edu.uniandes.vinilos.network.dto.PrizeAssignmentDto
@@ -96,4 +97,11 @@ internal interface VinilosApiService {
         @Path("id") id: Int,
         @Header("Cache-Control") cacheControl: String? = null,
     ): Response<List<CollectorAlbumDto?>>
+
+    @POST("collectors/{collectorId}/albums/{albumId}")
+    suspend fun addAlbumToCollector(
+        @Path("collectorId") collectorId: Int,
+        @Path("albumId") albumId: Int,
+        @Body body: NewCollectorAlbumRequest,
+    ): Response<CollectorAlbumDto>
 }

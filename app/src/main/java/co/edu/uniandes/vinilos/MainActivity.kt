@@ -142,6 +142,7 @@ class MainActivity :
                 val tabId =
                     when (destination.id) {
                         R.id.albumDetailFragment -> R.id.albumListFragment
+                        R.id.collectorAlbumPickerFragment -> R.id.collectorListFragment
                         R.id.performerDetailFragment -> R.id.performerListFragment
                         R.id.collectorDetailFragment -> R.id.collectorListFragment
                         else -> destination.id
@@ -197,6 +198,12 @@ class MainActivity :
     private companion object {
         /** El selector de rol y las pantallas completas (formulario de nuevo álbum) se dibujan sin la barra inferior. */
         val DESTINATIONS_WITHOUT_BOTTOM_BAR =
-            setOf(R.id.roleSelectFragment, R.id.albumCreateFragment, R.id.prizePickerFragment, R.id.prizeCreateFragment)
+            setOf(
+                R.id.roleSelectFragment,
+                R.id.albumCreateFragment,
+                R.id.collectorAlbumPickerFragment,
+                R.id.prizePickerFragment,
+                R.id.prizeCreateFragment,
+            )
     }
 }

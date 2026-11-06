@@ -86,22 +86,18 @@
             app:destination="@id/collectorDetailFragment" />
     </fragment>
 
-    <!-- Detalle de coleccionista. Hasta que llegue su historia es la pantalla provisional: esa historia solo cambia la clase.
-         El argumento es el de docs/10 (sección 3); la provisional solo lee titleRes y messageRes. -->
+    <!-- Detalle de coleccionista (HU06). -->
     <fragment
         android:id="@+id/collectorDetailFragment"
         android:name="co.edu.uniandes.vinilos.ui.collectors.CollectorDetailFragment"
         android:label="@string/collector_detail_title">
-        <argument
-            android:name="collectorId"
-            app:argType="integer" />
-        <argument
-            android:name="titleRes"
-            android:defaultValue="@string/collector_detail_title"
-            app:argType="reference" />
-        <argument
-            android:name="messageRes"
-            android:defaultValue="@string/pending_next_sprint"
-            app:argType="reference" />
+        <argument android:name="collectorId" app:argType="integer" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/collectorAlbumPickerFragment"
+        android:name="co.edu.uniandes.vinilos.ui.collectors.CollectorAlbumPickerFragment"
+        android:label="@string/collector_album_picker_title">
+        <argument android:name="collectorId" app:argType="integer" />
     </fragment>
 </navigation>
