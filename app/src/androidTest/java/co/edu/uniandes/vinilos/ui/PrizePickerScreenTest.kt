@@ -51,13 +51,14 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-/** HU14 desde la entrada real de HU04; run_e2e.sh limpia solo los fixtures de esta ejecución. */
+/** HU14 desde la entrada real de HU04. [BackendPrizes] borra al terminar solo los datos de esta prueba. */
 @RunWith(AndroidJUnit4::class)
 class PrizePickerScreenTest {
+    private val prizes = BackendPrizes()
     private val firewall = BackendFirewall()
     private val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
-    @get:Rule val rules: TestRule = RuleChain.outerRule(firewall).around(activityRule)
+    @get:Rule val rules: TestRule = RuleChain.outerRule(prizes).around(firewall).around(activityRule)
     private val artists = PerformerListRobot()
     private val detail = PerformerDetailRobot()
     private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
@@ -197,7 +198,7 @@ class PrizePickerScreenTest {
     }
 
     private fun assertSaved(
-        fixture: BackendPrizes,
+        fixture: BackendPrizes.Fixture,
         date: LocalDate,
     ) {
         waitUntilGone(withId(R.id.prizeSearch))
@@ -238,10 +239,10 @@ class PrizePickerScreenTest {
             ),
         )
 
-    private fun fixture(type: PerformerType) = BackendPrizes(type).apply { prepare() }
+    private fun fixture(type: PerformerType) = prizes.open(type)
 
     private fun open(
-        fixture: BackendPrizes,
+        fixture: BackendPrizes.Fixture,
         assigned: Int = 0,
     ) {
         artists.enterAs(R.string.role_collector).tapRow(fixture.name)
