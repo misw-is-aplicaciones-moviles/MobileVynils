@@ -101,6 +101,7 @@ class CollectorAlbumPickerFragment : Fragment(R.layout.fragment_collector_album_
     private fun render(state: CollectorAlbumPickerUiState) {
         binding.searchField.isEnabled = !state.isLoading
         binding.loadingState.root.isVisible = state.isLoading
+        binding.pickerStatus.isVisible = state.error != null
         binding.errorState.root.isVisible = state.error != null
         binding.errorState.errorBody.setText(
             when (state.error) {
@@ -147,7 +148,7 @@ class CollectorAlbumPickerFragment : Fragment(R.layout.fragment_collector_album_
                                 ?.collectorName
                                 .orEmpty(),
                     )
-            }.show(childFragmentManager, CollectorAlbumAddSheet.TAG)
+            }.showNow(childFragmentManager, CollectorAlbumAddSheet.TAG)
     }
 
     private fun returnSelectedAlbum(event: CollectorAlbumPickerEvent.ContinueWithAlbum) {
@@ -209,6 +210,8 @@ private class CollectorAlbumPickerAdapter(
     }
 }
 
+private const val ALREADY_ADDED_ALPHA = 0.5f
+
 private class CollectorAlbumOptionHolder(
     parent: android.view.ViewGroup,
     private val onAlbumClick: (Int) -> Unit,
@@ -242,7 +245,7 @@ private class CollectorAlbumOptionHolder(
             },
         )
         binding.root.isEnabled = !option.isAlreadyAdded
-        binding.root.alpha = if (option.isAlreadyAdded) 0.5f else 1f
+        binding.root.alpha = if (option.isAlreadyAdded) ALREADY_ADDED_ALPHA else 1f
         binding.root.setBackgroundColor(
             ContextCompat.getColor(
                 context,

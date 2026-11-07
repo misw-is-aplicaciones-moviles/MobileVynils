@@ -55,10 +55,10 @@ class CollectorDetailScreenTest {
     }
 
     @Test
-    fun collector_sees_the_same_detail_with_add_actions_disabled() {
+    fun collector_sees_the_same_detail_with_the_album_action_enabled() {
         val collector = openCollector(R.string.role_collector)
 
-        detail.assertContact(collector).assertCounts(collector).assertAddActionsDisabled()
+        detail.assertContact(collector).assertCounts(collector).assertFavoriteDisabledAndAlbumEnabled()
     }
 
     @Test

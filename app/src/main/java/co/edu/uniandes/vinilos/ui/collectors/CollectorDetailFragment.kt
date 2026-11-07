@@ -14,6 +14,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.SimpleItemAnimator
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.FragmentAlbumDetailBinding
 import co.edu.uniandes.vinilos.models.DataError
@@ -55,6 +56,8 @@ class CollectorDetailFragment : Fragment(R.layout.fragment_album_detail) {
                 onAddAlbumClick = viewModel::onAddAlbumClicked,
             )
         binding.detailList.layoutManager = LinearLayoutManager(requireContext())
+        // Con la escala de animación en 0 la cabecera anterior no se retira y quedan dos «Agregar álbum».
+        (binding.detailList.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
         binding.detailList.adapter = adapter
         binding.errorState.retryButton.setOnClickListener { viewModel.retry() }
         viewModel.uiState.observe(viewLifecycleOwner) { render(it, adapter) }

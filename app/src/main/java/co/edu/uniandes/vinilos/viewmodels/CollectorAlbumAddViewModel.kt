@@ -41,9 +41,9 @@ class CollectorAlbumAddViewModel(
     val events: LiveData<Event<CollectorAlbumAddEvent>> = _events
 
     fun onDigit(digit: Int) {
-        if (digit !in 0..9 || current().isSubmitting) return
+        if (digit !in 0..HIGHEST_DIGIT || current().isSubmitting) return
         update {
-            val next = (priceDigits * 10 + digit).coerceAtMost(MAX_PRICE)
+            val next = (priceDigits * DECIMAL_BASE + digit).coerceAtMost(MAX_PRICE)
             copy(priceDigits = next, validationAttempted = false, submitError = null)
         }
     }
@@ -108,6 +108,8 @@ class CollectorAlbumAddViewModel(
         private const val PRICE_DIGITS = "collectorAlbumAddPrice"
         private const val STATUS_KEY = "collectorAlbumAddStatus"
         private const val MAX_PRICE = 999_999
+        private const val DECIMAL_BASE = 10
+        private const val HIGHEST_DIGIT = 9
 
         val Factory: ViewModelProvider.Factory =
             viewModelFactory {

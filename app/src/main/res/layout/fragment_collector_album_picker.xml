@@ -87,13 +87,20 @@
                 android:layout_gravity="center"
                 android:visibility="gone" />
 
-            <include
-                android:id="@+id/errorState"
-                layout="@layout/view_state_error"
+            <ScrollView
+                android:id="@+id/pickerStatus"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:visibility="gone" />
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:fillViewport="true"
+                android:visibility="gone">
+
+                <include
+                    android:id="@+id/errorState"
+                    layout="@layout/view_state_error"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </ScrollView>
         </LinearLayout>
     </co.edu.uniandes.vinilos.ui.common.PaperSheetLayout>
 
