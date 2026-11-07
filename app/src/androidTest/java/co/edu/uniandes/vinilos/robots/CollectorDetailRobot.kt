@@ -61,10 +61,17 @@ class CollectorDetailRobot {
         return this
     }
 
-    fun assertAddActionsDisabled(): CollectorDetailRobot {
-        assertAction(R.string.action_add_favorite, displayed = true)
-        assertAction(R.string.action_add_album, displayed = true)
+    fun assertFavoriteDisabledAndAlbumEnabled(): CollectorDetailRobot {
+        assertAction(R.string.action_add_favorite, displayed = true, enabled = false)
+        assertAction(R.string.action_add_album, displayed = true, enabled = true)
         onView(withId(R.id.headerTitle)).check(matches(withText(R.string.collector_detail_title)))
+        return this
+    }
+
+    fun tapAddAlbum(): CollectorDetailRobot {
+        val label = context.getString(R.string.action_add_album)
+        scrollTo(label)
+        onView(allOf(withText(label), isEnabled(), isDisplayed())).perform(click())
         return this
     }
 
@@ -165,13 +172,20 @@ class CollectorDetailRobot {
     private fun assertAction(
         @StringRes label: Int,
         displayed: Boolean,
+        enabled: Boolean = false,
     ) {
-        scrollTo(context.getString(label))
-        val action = onView(withText(label))
-        if (displayed) {
-            action.check(matches(allOf(isDisplayed(), not(isEnabled()))))
+        val text = context.getString(label)
+        scrollTo(text)
+        if (!displayed) {
+            onView(withText(text)).check(matches(not(isDisplayed())))
+            return
+        }
+        scrollTo(text)
+        val action = onView(withText(text))
+        if (enabled) {
+            action.check(matches(allOf(isDisplayed(), isEnabled())))
         } else {
-            action.check(matches(not(isDisplayed())))
+            action.check(matches(allOf(isDisplayed(), not(isEnabled()))))
         }
     }
 
@@ -205,12 +219,12 @@ class CollectorDetailRobot {
             ),
         )
 
-    /** La fila del álbum, no el `RecyclerView` del detalle, que contiene todos los títulos. */
+    /** La fila del álbum. Un ancestro más alto también contiene los otros álbumes y haría ambiguo el precio. */
     private fun inAlbumRow(name: String) =
         isDescendantOfA(
             allOf(
+                withId(R.id.collectorAlbumRow),
                 hasDescendant(allOf(withId(R.id.albumTitle), withText(name))),
-                not(withId(R.id.detailList)),
             ),
         )
 

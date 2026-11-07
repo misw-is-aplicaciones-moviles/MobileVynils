@@ -4,6 +4,7 @@ import co.edu.uniandes.vinilos.models.Collector
 import co.edu.uniandes.vinilos.models.CollectorDetail
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.NewCollectorAlbum
 import co.edu.uniandes.vinilos.repositories.CollectorRepository
 import kotlinx.coroutines.CompletableDeferred
 
@@ -52,4 +53,20 @@ internal class FakeCollectorRepository(
         detailGate?.await()
         return detailResult
     }
+
+    override suspend fun addAlbum(
+        collectorId: Int,
+        albumId: Int,
+        draft: NewCollectorAlbum,
+    ): DataResult<Unit, DataError> {
+        addAlbumCalls++
+        lastAddAlbumRequest = Triple(collectorId, albumId, draft)
+        return addAlbumResult
+    }
+
+    var addAlbumCalls = 0
+        private set
+    var lastAddAlbumRequest: Triple<Int, Int, NewCollectorAlbum>? = null
+        private set
+    var addAlbumResult: DataResult<Unit, DataError> = DataResult.Success(Unit)
 }

@@ -62,6 +62,7 @@ internal sealed interface CollectorDetailRow {
 internal class CollectorDetailAdapter(
     private val onAlbumClick: (Int) -> Unit,
     private val onFavoriteClick: (Int) -> Unit,
+    private val onAddAlbumClick: () -> Unit,
 ) : ListAdapter<CollectorDetailRow, RecyclerView.ViewHolder>(Rows) {
     init {
         stateRestorationPolicy = StateRestorationPolicy.PREVENT_WHEN_EMPTY
@@ -90,7 +91,7 @@ internal class CollectorDetailAdapter(
         return when (viewType) {
             HEADER -> HeaderHolder(ItemCollectorDetailHeaderBinding.inflate(inflater, parent, false))
             CONTACT -> ContactHolder(ItemCollectorContactBinding.inflate(inflater, parent, false))
-            SECTION -> SectionHolder(ItemCollectorSectionBinding.inflate(inflater, parent, false))
+            SECTION -> SectionHolder(ItemCollectorSectionBinding.inflate(inflater, parent, false), onAddAlbumClick)
             FAVORITES -> FavoritesHolder(favoriteList(parent), onFavoriteClick)
             ALBUM -> AlbumHolder(ItemCollectorAlbumBinding.inflate(inflater, parent, false), onAlbumClick)
             MESSAGE -> MessageHolder(ItemAlbumDetailMessageBinding.inflate(inflater, parent, false))
@@ -133,13 +134,16 @@ internal class CollectorDetailAdapter(
 
     private class SectionHolder(
         private val binding: ItemCollectorSectionBinding,
+        private val onAddAlbumClick: () -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(row: CollectorDetailRow.Section) {
             binding.sectionTitle.text = binding.root.context.getString(row.title, row.count)
             ViewCompat.setAccessibilityHeading(binding.sectionTitle, true)
             binding.sectionAction.isVisible = row.canEdit
             binding.sectionAction.setText(row.action)
-            binding.sectionAction.isEnabled = false
+            val canAddAlbum = row.canEdit && row.action == R.string.action_add_album
+            binding.sectionAction.isEnabled = canAddAlbum
+            binding.sectionAction.setOnClickListener { if (canAddAlbum) onAddAlbumClick() }
         }
     }
 

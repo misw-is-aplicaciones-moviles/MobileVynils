@@ -2,7 +2,9 @@ package co.edu.uniandes.vinilos.testing
 
 import co.edu.uniandes.vinilos.models.Collector
 import co.edu.uniandes.vinilos.models.CollectorDetail
+import co.edu.uniandes.vinilos.models.NewCollectorAlbum
 import co.edu.uniandes.vinilos.network.CollectorServiceAdapter
+import co.edu.uniandes.vinilos.network.dto.CollectorAlbumDto
 
 /** Adapter that returns [collectors] or throws [failure], and counts its calls. */
 internal class FakeCollectorServiceAdapter(
@@ -36,4 +38,20 @@ internal class FakeCollectorServiceAdapter(
         detailFailure?.let { throw it }
         return checkNotNull(detail) { "FakeCollectorServiceAdapter has no detail" }
     }
+
+    override suspend fun addAlbum(
+        collectorId: Int,
+        albumId: Int,
+        draft: NewCollectorAlbum,
+    ): CollectorAlbumDto {
+        addAlbumCalls++
+        lastAddAlbumRequest = Triple(collectorId, albumId, draft)
+        return addAlbumResponse
+    }
+
+    var addAlbumCalls = 0
+        private set
+    var lastAddAlbumRequest: Triple<Int, Int, NewCollectorAlbum>? = null
+        private set
+    var addAlbumResponse: CollectorAlbumDto = CollectorAlbumDto(price = 0, status = "Active", album = null)
 }

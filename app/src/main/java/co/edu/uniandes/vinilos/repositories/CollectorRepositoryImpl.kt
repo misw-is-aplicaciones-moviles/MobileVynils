@@ -7,6 +7,7 @@ import co.edu.uniandes.vinilos.models.Collector
 import co.edu.uniandes.vinilos.models.CollectorDetail
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.NewCollectorAlbum
 import co.edu.uniandes.vinilos.network.CollectorServiceAdapter
 import co.edu.uniandes.vinilos.network.networkRequest
 import com.google.gson.JsonParseException
@@ -53,6 +54,19 @@ internal class CollectorRepositoryImpl(
             serviceAdapter.getCollector(id, forceRefresh).also { detail ->
                 if (detail.collector.id != id) throw JsonParseException("Unexpected collector identity")
             }
+        }
+    }
+
+    override suspend fun addAlbum(
+        collectorId: Int,
+        albumId: Int,
+        draft: NewCollectorAlbum,
+    ): DataResult<Unit, DataError> {
+        require(collectorId > 0) { "collectorId must be positive" }
+        require(albumId > 0) { "albumId must be positive" }
+        return networkRequest {
+            serviceAdapter.addAlbum(collectorId, albumId, draft)
+            Unit
         }
     }
 

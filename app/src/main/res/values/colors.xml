@@ -29,6 +29,7 @@
     <color name="vinilos_cream_ripple">#33F2EFE7</color>
     <!-- Ripple del botón secundario: carbón al 12 % sobre la hoja. -->
     <color name="vinilos_charcoal_ripple">#1F232323</color>
+    <color name="vinilos_selected_row">#12232323</color>
     <!-- Aviso de error: blanco al 50 % sobre la hoja. -->
     <color name="vinilos_notice_error_fill">#80FFFFFF</color>
     <!-- Sombra del aviso de éxito: negro al 60 %. -->

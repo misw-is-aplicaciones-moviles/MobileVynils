@@ -2,8 +2,11 @@ package co.edu.uniandes.vinilos.network
 
 import co.edu.uniandes.vinilos.models.Collector
 import co.edu.uniandes.vinilos.models.CollectorDetail
+import co.edu.uniandes.vinilos.models.NewCollectorAlbum
+import co.edu.uniandes.vinilos.network.dto.CollectorAlbumDto
 import co.edu.uniandes.vinilos.network.dto.toDetail
 import co.edu.uniandes.vinilos.network.dto.toModel
+import co.edu.uniandes.vinilos.network.dto.toRequest
 import com.google.gson.JsonParseException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
@@ -27,6 +30,13 @@ internal interface CollectorServiceAdapter {
         id: Int,
         forceRefresh: Boolean = false,
     ): CollectorDetail
+
+    /** Adds [draft] to [collectorId]'s collection and returns the saved association. */
+    suspend fun addAlbum(
+        collectorId: Int,
+        albumId: Int,
+        draft: NewCollectorAlbum,
+    ): CollectorAlbumDto
 }
 
 internal class CollectorServiceAdapterImpl(
@@ -59,5 +69,17 @@ internal class CollectorServiceAdapterImpl(
     private fun <T> Response<T>.requiredBody(): T {
         if (!isSuccessful) throw HttpException(this)
         return body() ?: throw JsonParseException("Missing collector response")
+    }
+
+    override suspend fun addAlbum(
+        collectorId: Int,
+        albumId: Int,
+        draft: NewCollectorAlbum,
+    ): CollectorAlbumDto {
+        require(collectorId > 0) { "collectorId must be positive" }
+        require(albumId > 0) { "albumId must be positive" }
+        val request = draft.toRequest()
+        val response = withContext(ioDispatcher) { api.addAlbumToCollector(collectorId, albumId, request) }
+        return response.requiredBody()
     }
 }

@@ -22,4 +22,25 @@
     <dimen name="collector_detail_initials">58dp</dimen>
     <dimen name="collector_detail_tile_radius">14dp</dimen>
     <dimen name="collector_status_radius">12dp</dimen>
+
+    <!-- Selector de álbum HU11 · Fase 1. -->
+    <string name="collector_album_picker_title">Elegir álbum</string>
+    <string name="collector_album_picker_context">para la colección de %1$s</string>
+    <string name="collector_album_picker_search_hint">Buscar en el catálogo</string>
+    <string name="collector_album_picker_select">Selecciona un álbum</string>
+    <string name="collector_album_picker_continue">Continuar con «%1$s»</string>
+    <string name="collector_album_picker_empty">Aún no hay álbumes en el catálogo.</string>
+    <string name="collector_album_picker_no_results">No se encontraron álbumes.</string>
+    <string name="collector_album_picker_already_added">Ya agregado</string>
+    <string name="collector_album_picker_row_description">%1$s, %2$s, %3$s. Elegir álbum.</string>
+    <string name="collector_album_selected">Álbum seleccionado: %1$s</string>
+    <string name="collector_album_add_title">Precio y estado</string>
+    <string name="collector_album_add_price_label">Precio (USD)</string>
+    <string name="collector_album_add_price_error">Ingresa un precio mayor a 0</string>
+    <string name="collector_album_add_status_label">Estado</string>
+    <string name="collector_album_add_status_error">Selecciona un estado</string>
+    <string name="collector_album_add_submit">Agregar a la colección</string>
+    <string name="collector_album_add_submitting">Agregando…</string>
+    <string name="collector_album_add_error">No se pudo agregar el álbum. Inténtalo de nuevo.</string>
+    <string name="collector_album_add_network_error">No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.</string>
 </resources>
