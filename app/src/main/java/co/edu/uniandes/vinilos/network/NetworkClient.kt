@@ -17,6 +17,8 @@ internal class NetworkClient(
     cacheDirectory: File,
     connectTimeoutMillis: Long = CONNECT_TIMEOUT_MILLIS,
     readTimeoutMillis: Long = READ_TIMEOUT_MILLIS,
+    cacheEnabled: Boolean = true,
+    configureClient: (OkHttpClient.Builder) -> Unit = {},
 ) : Closeable {
     internal val httpClient =
         OkHttpClient
@@ -28,8 +30,9 @@ internal class NetworkClient(
             // Sin reintentos, una conexión que el servidor ya cerró falla la petición. Node cierra las inactivas a los
             // 5 s (keepAliveTimeout), así que el pool las descarta antes y nunca reutiliza una cerrada.
             .connectionPool(ConnectionPool(MAX_IDLE_CONNECTIONS, KEEP_ALIVE_MILLIS, TimeUnit.MILLISECONDS))
-            .cache(Cache(cacheDirectory, HTTP_CACHE_BYTES))
+            .apply { if (cacheEnabled) cache(Cache(cacheDirectory, HTTP_CACHE_BYTES)) }
             .apply { configureNetworkLogging(this) }
+            .apply(configureClient)
             .build()
 
     private val retrofit =

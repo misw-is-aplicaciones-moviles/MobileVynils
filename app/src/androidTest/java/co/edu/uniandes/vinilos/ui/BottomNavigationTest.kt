@@ -12,10 +12,9 @@ import androidx.test.espresso.matcher.ViewMatchers.isDescendantOfA
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
+import co.edu.uniandes.vinilos.testing.VinilosE2ERule
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import org.hamcrest.Description
 import org.hamcrest.Matcher
@@ -28,7 +27,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class BottomNavigationTest {
     @get:Rule
-    val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    val activityRule = VinilosE2ERule(autoLaunch = true)
 
     private fun enterAsVisitor() {
         onView(withText(R.string.role_visitor)).perform(click())

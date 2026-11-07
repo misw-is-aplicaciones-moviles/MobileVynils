@@ -9,13 +9,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import co.edu.uniandes.vinilos.VinilosApplication
+import co.edu.uniandes.vinilos.core.DefaultDispatcherProvider
 import co.edu.uniandes.vinilos.models.Collector
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.repositories.CollectorRepository
 import co.edu.uniandes.vinilos.repositories.SessionRepository
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
@@ -27,7 +27,7 @@ import java.util.Locale
 class CollectorListViewModel(
     private val collectorRepository: CollectorRepository,
     private val sessionRepository: SessionRepository,
-    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val defaultDispatcher: CoroutineDispatcher = DefaultDispatcherProvider.default,
 ) : ViewModel() {
     private val _uiState =
         MediatorLiveData(CollectorListUiState()).apply {
@@ -138,7 +138,11 @@ class CollectorListViewModel(
                         checkNotNull(application as? VinilosApplication) {
                             "CollectorListViewModel requires VinilosApplication"
                         }
-                    CollectorListViewModel(app.container.collectorRepository, app.container.sessionRepository)
+                    CollectorListViewModel(
+                        app.container.collectorRepository,
+                        app.container.sessionRepository,
+                        app.container.dispatchers.default,
+                    )
                 }
             }
     }

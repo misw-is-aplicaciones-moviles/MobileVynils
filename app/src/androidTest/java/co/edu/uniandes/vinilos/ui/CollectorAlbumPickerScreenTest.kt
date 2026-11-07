@@ -13,10 +13,8 @@ import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.robots.AlbumListRobot
 import co.edu.uniandes.vinilos.robots.CollectorAlbumAddRobot
@@ -26,6 +24,7 @@ import co.edu.uniandes.vinilos.robots.CollectorListRobot
 import co.edu.uniandes.vinilos.testing.AlbumSnapshot
 import co.edu.uniandes.vinilos.testing.BackendCollectorAlbums
 import co.edu.uniandes.vinilos.testing.BackendFirewall
+import co.edu.uniandes.vinilos.testing.VinilosE2ERule
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import co.edu.uniandes.vinilos.testing.waitUntilGone
 import org.hamcrest.Matcher
@@ -53,13 +52,13 @@ private const val FOLK = "Folk"
 
 /**
  * Agregar un álbum a un coleccionista contra BackVynils local. Un método por caso E2E del inventario de docs/06.
- * El coleccionista y los álbumes son de esa ejecución. La limpieza borra solo esos vínculos.
+ * El coleccionista y los álbumes son propios; Gradle descarta la base de esta ejecución.
  */
 @RunWith(AndroidJUnit4::class)
 class CollectorAlbumPickerScreenTest {
     private val data = BackendCollectorAlbums()
     private val firewall = BackendFirewall()
-    private val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    private val activityRule = VinilosE2ERule(autoLaunch = true)
 
     @get:Rule val ruleChain: TestRule = RuleChain.outerRule(data).around(firewall).around(activityRule)
 

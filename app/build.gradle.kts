@@ -1,5 +1,7 @@
+import co.edu.uniandes.vinilos.buildlogic.E2eEnvironment
 import java.net.URI
 import java.util.Properties
+import javax.xml.parsers.DocumentBuilderFactory
 
 plugins {
     alias(libs.plugins.android.application)
@@ -178,3 +180,73 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.espresso.contrib) // RecyclerViewActions
 }
+
+// El backend real de E2E vive únicamente mientras se ejecutan las pruebas instrumentadas.
+// El servicio se crea en ejecución, por lo que una caché de configuración nunca reutiliza una base.
+val e2eEnvironment =
+    gradle.sharedServices.registerIfAbsent("e2eEnvironment", E2eEnvironment::class) {
+        parameters.root.set(rootProject.layout.projectDirectory)
+        parameters.reports.set(layout.buildDirectory.dir("reports/e2e-environment"))
+        parameters.adb.set(androidComponents.sdkComponents.adb)
+        parameters.image.set(providers.gradleProperty("e2e.backendImage").orElse("backvynils-web:latest"))
+        parameters.serial.set(providers.environmentVariable("ANDROID_SERIAL").orElse(""))
+        maxParallelUsages.set(1)
+    }
+
+val prepareE2eEnvironment =
+    tasks.register("prepareE2eEnvironment") {
+        group = "verification"
+        description = "Prepara PostgreSQL y BackVynils exclusivos y conecta el dispositivo."
+        usesService(e2eEnvironment)
+        val environment = e2eEnvironment
+        doLast { environment.get().start() }
+    }
+val verifyE2eResults =
+    tasks.register("verifyE2eResults") {
+        group = "verification"
+        description = "Evita aprobar instrumentación que no ejecutó ninguna prueba."
+        mustRunAfter("connectedDebugAndroidTest")
+        val results = layout.buildDirectory.dir("outputs/androidTest-results/connected/debug")
+        val environment = e2eEnvironment
+        usesService(environment)
+        doLast {
+            val startedAt = environment.get().startedAtMillis
+            check(startedAt > 0) { "La preparación E2E no se ejecutó en esta invocación." }
+            val parser = DocumentBuilderFactory.newInstance()
+            parser.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+            val count =
+                results
+                    .get()
+                    .asFile
+                    .walkTopDown()
+                    .filter {
+                        it.isFile && it.name.startsWith("TEST-") &&
+                            it.extension == "xml" && it.lastModified() >= startedAt
+                    }.sumOf {
+                        parser
+                            .newDocumentBuilder()
+                            .parse(it)
+                            .documentElement
+                            .getAttribute("tests")
+                            .toInt()
+                    }
+            check(count > 0) { "La instrumentación no ejecutó pruebas. Revisa los logs del dispositivo y de AGP." }
+        }
+    }
+val stopE2eEnvironment =
+    tasks.register("stopE2eEnvironment") {
+        group = "verification"
+        description = "Descarta solamente el entorno E2E creado en esta invocación."
+        mustRunAfter("connectedDebugAndroidTest", verifyE2eResults)
+        usesService(e2eEnvironment)
+        val environment = e2eEnvironment
+        doLast { environment.get().stop() }
+    }
+prepareE2eEnvironment.configure { finalizedBy(stopE2eEnvironment) }
+tasks.matching { it.name == "connectedDebugAndroidTest" }.configureEach {
+    dependsOn(prepareE2eEnvironment)
+    usesService(e2eEnvironment)
+    finalizedBy(verifyE2eResults, stopE2eEnvironment)
+}
+android.defaultConfig.testInstrumentationRunnerArguments["isolatedE2e"] = "true"
+android.defaultConfig.testInstrumentationRunnerArguments["backendSmoke"] = "true"

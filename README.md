@@ -62,7 +62,7 @@ Para crear el emulador recomendado: `Tools > Device Manager > Create Virtual Dev
 
 ## 1. Levantar el backend local
 
-Para desarrollar o ejecutar las pruebas contra un backend local, levanta [BackVynils](https://github.com/TheSoftwareDesignLab/BackVynils) en tu computador con Docker y Docker Compose. Este paso no es necesario para instalar el APK publicado, que utiliza Heroku.
+Para desarrollar y probar la app **manualmente** con un backend local, levanta [BackVynils](https://github.com/TheSoftwareDesignLab/BackVynils) con Docker y Docker Compose. Las **pruebas E2E automatizadas** de la [sección 4](#4-ejecutar-las-pruebas) preparan su propio backend y base aislados; no necesitan este servidor de desarrollo. El APK publicado utiliza Heroku y tampoco necesita este paso.
 
 ```bash
 git clone https://github.com/TheSoftwareDesignLab/BackVynils.git
@@ -206,28 +206,56 @@ Los reportes quedan en `app/build/reports/`.
 
 ### Pruebas instrumentadas y E2E (Espresso)
 
-Necesitan un dispositivo o emulador conectado y BackVynils local con la semilla. Compila con `vinilos.baseUrl=http://10.0.2.2:3000/` para el emulador, o `vinilos.baseUrl=http://127.0.0.1:3000/` para la tablet por USB y ejecuta antes `adb -d reverse tcp:3000 tcp:3000`. Las pruebas E2E se ejecutan contra el backend local; el APK de entrega conectado a Heroku se conserva por separado en la raíz del repositorio. Las pruebas que crean álbumes y canciones requieren que las secuencias de IDs de la base estén alineadas con la semilla. `scripts/run_e2e.sh` las prepara (sin borrar datos) y luego ejecuta `connectedDebugAndroidTest`:
+Se ejecutan con Espresso y AndroidX Test mediante Gradle, sin scripts Bash. Se necesitan JDK 17, Docker con Compose, las imágenes locales `postgres:17` y `backvynils-web:latest`, y una tablet autorizada por USB o un emulador ya iniciado. [Preparación del entorno E2E](tests/e2e/README.md).
 
 ```bash
-./scripts/run_e2e.sh
+./gradlew connectedDebugAndroidTest
 ```
 
-El script requiere bash (en Windows, Git Bash) y acceso a `docker`. Si el backend no usa el puerto 3000 o no lo encuentra, indica el contenedor PostgreSQL con `E2E_DB_CONTAINER=<id> ./scripts/run_e2e.sh`. Repite el script cada vez que vuelvas a cargar la semilla de BackVynils.
+Gradle crea PostgreSQL y BackVynils exclusivos por ejecución, carga la semilla de compatibilidad, alinea sus secuencias y prepara la conexión USB. Al terminar intenta descartar únicamente ese entorno. No se usa el backend de desarrollo ni se modifica `local.properties` o el APK de entrega.
 
-Para ejecutar una sola clase, pasa los argumentos de Gradle al script:
+Si hay varios dispositivos conectados, elegir uno con su identificador de `adb devices`:
 
 ```bash
-./scripts/run_e2e.sh -Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.ui.AlbumListScreenTest
+ANDROID_SERIAL=SERIAL ./gradlew connectedDebugAndroidTest
 ```
+
+```bash
+# Solo UI
+./gradlew connectedDebugAndroidTest \
+  '-Pandroid.testInstrumentationRunnerArguments.package=co.edu.uniandes.vinilos.ui'
+
+# Una clase o un método
+./gradlew connectedDebugAndroidTest \
+  '-Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.ui.PrizePickerScreenTest'
+./gradlew connectedDebugAndroidTest \
+  '-Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.ui.PrizePickerScreenTest#assigns_prize_to_musician_and_updates_its_detail'
+```
+
+El comando completo incluye UI, componentes, integración de red y pruebas instrumentadas de Room; las unitarias JVM se ejecutan aparte con `testDebugUnitTest`. Los reportes Android quedan en `app/build/reports/androidTests/connected/debug/index.html`; los de preparación y descarte, en `app/build/reports/e2e-environment/`. Un reporte de una ejecución anterior no demuestra que la actual haya pasado.
+
+Para ejecutarlas desde **Android Studio**:
+
+1. Abrir la raíz `MobileVynils` y sincronizar Gradle (`Sync Project with Gradle Files`).
+2. En `Settings > Build, Execution, Deployment > Build Tools > Gradle`, seleccionar **JDK 17** para Gradle, que es el utilizado en la validación local. El JDK de la terminal puede ser distinto del configurado en el IDE.
+3. Iniciar Docker y preparar las imágenes según la [guía E2E](tests/e2e/README.md#requisitos-y-ejecución).
+4. Conectar la tablet y autorizar depuración USB, o iniciar un emulador desde `Tools > Device Manager`. Mantener un solo dispositivo conectado simplifica la selección.
+5. Abrir `Run > Edit Configurations…`, pulsar `+` y elegir **Gradle**.
+6. Asignar el nombre `E2E Vinilos`, seleccionar la raíz del proyecto en **Gradle project** y escribir `:app:connectedDebugAndroidTest` en **Run** (tareas y argumentos). No escribir `./gradlew` en ese campo.
+7. Si hay varios equipos, abrir **Environment variables** —puede estar en `Modify options`— y definir `ANDROID_SERIAL` con el identificador obtenido mediante `adb devices`, por ejemplo `emulator-5554`. No poner esa asignación en el campo Run.
+8. Guardar con `Apply > OK`, seleccionar `E2E Vinilos` en la barra superior y pulsar Run. Gradle prepara el entorno y abre la app para ejecutar las pruebas.
+
+El selector de dispositivo de una configuración Android nativa no selecciona el equipo de una tarea Gradle. El botón Run al lado de una clase de prueba no prepara automáticamente Docker: para este ciclo completo se usa la configuración **Gradle** anterior. [Filtros, errores frecuentes y reportes](tests/e2e/README.md#ejecutar-desde-android-studio).
+
+La ejecución por terminal está validada en API 21 y API 37. Los pasos del IDE están documentados; todavía falta comprobar este flujo de extremo a extremo desde Android Studio.
 
 ### Prueba de conexión con el backend
 
-Comprueba que la app compilada llega a BackVynils: consulta `/albums` con la URL compilada y valida que la respuesta trae álbumes con id y nombre. Se omite si no se pasa `backendSmoke=true`.
+Se conserva la prueba de contrato real de conexión y JSON; Gradle la habilita automáticamente:
 
 ```bash
 ./gradlew connectedDebugAndroidTest \
-  -Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.network.BackendConnectionTest \
-  -Pandroid.testInstrumentationRunnerArguments.backendSmoke=true
+  '-Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.network.BackendConnectionTest'
 ```
 
 ## 5. Publicar el APK de una entrega (equipo)

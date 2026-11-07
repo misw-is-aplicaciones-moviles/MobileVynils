@@ -1,6 +1,6 @@
 package co.edu.uniandes.vinilos.testing
 
-import co.edu.uniandes.vinilos.BuildConfig
+import co.edu.uniandes.vinilos.network.BackendEndpoint
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import java.net.HttpURLConnection
@@ -23,7 +23,7 @@ fun createAlbumOnBackend(name: String) {
             .put("genre", "Rock")
             .put("recordLabel", "EMI")
             .toString()
-    val connection = URL("${BuildConfig.BASE_URL}albums").openConnection() as HttpURLConnection
+    val connection = URL("${BackendEndpoint.baseUrl}albums").openConnection() as HttpURLConnection
     try {
         connection.requestMethod = "POST"
         connection.connectTimeout = TIMEOUT_MILLIS

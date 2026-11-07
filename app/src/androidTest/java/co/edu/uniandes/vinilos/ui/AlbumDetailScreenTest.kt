@@ -18,14 +18,13 @@ import androidx.test.espresso.matcher.ViewMatchers.isSelected
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.VinilosApplication
 import co.edu.uniandes.vinilos.network.VinilosApiService
 import co.edu.uniandes.vinilos.robots.AlbumListRobot
+import co.edu.uniandes.vinilos.testing.VinilosE2ERule
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.Description
@@ -42,7 +41,7 @@ import java.io.File
 /** HU02 flows through actual catalog cards and the local BackVynils backend. */
 @RunWith(AndroidJUnit4::class)
 class AlbumDetailScreenTest {
-    @get:Rule val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    @get:Rule val activityRule = VinilosE2ERule(autoLaunch = true)
 
     @Test
     fun catalog_card_opens_its_detail_and_returns_without_collector_actions() {

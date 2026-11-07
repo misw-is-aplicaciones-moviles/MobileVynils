@@ -10,11 +10,10 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
+import co.edu.uniandes.vinilos.testing.VinilosE2ERule
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
 import org.junit.Assert.assertTrue
@@ -25,7 +24,7 @@ import org.junit.runner.RunWith
 /** TR-04: cabecera con chip de rol y vuelta al selector. El catálogo (HU01) los usa tal cual. */
 @RunWith(AndroidJUnit4::class)
 class SharedComponentsTest {
-    @get:Rule val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    @get:Rule val activityRule = VinilosE2ERule(autoLaunch = true)
 
     @Test
     fun catalog_shows_the_header_and_the_role_chip() {

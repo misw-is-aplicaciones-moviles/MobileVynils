@@ -16,9 +16,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isSelected
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.robots.AlbumListRobot
 import co.edu.uniandes.vinilos.robots.CollectorDetailRobot
@@ -28,6 +26,7 @@ import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.testing.BackendCollectors
 import co.edu.uniandes.vinilos.testing.BackendPerformers
 import co.edu.uniandes.vinilos.testing.CollectorSnapshot
+import co.edu.uniandes.vinilos.testing.VinilosE2ERule
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
@@ -47,7 +46,7 @@ import org.junit.runner.RunWith
 class TabNavigationTest {
     private val collectorData = BackendCollectors()
     private val performerData = BackendPerformers()
-    private val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    private val activityRule = VinilosE2ERule(autoLaunch = true)
 
     @get:Rule val ruleChain: TestRule =
         RuleChain.outerRule(collectorData).around(performerData).around(activityRule)

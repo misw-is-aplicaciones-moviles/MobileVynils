@@ -335,12 +335,12 @@ Se reutilizan PerformerListRobot, BackendFirewall y las esperas existentes. El d
 
 ### Preparación y limpieza
 
-BackendPrizes crea premios y artistas exclusivos con una marca propia de la prueba. No reutiliza ni altera la semilla. Desde el 2026-11-06 la propia regla borra por HTTP, al terminar, el vínculo, el premio y el artista, y falla sin borrar si el vínculo mezcla un fixture con otro dato. `scripts/run_e2e.sh` ya no es requisito: sigue disponible para adelantar las secuencias del Postgres de Docker. El párrafo que sigue conserva el comando de esa fecha.
+BackendPrizes crea premios y artistas exclusivos con una marca propia de la prueba. No reutiliza ni altera la semilla. El 2026-11-06 la regla borraba por HTTP el vínculo, el premio y el artista. El piloto de la unificación en API 21 detectó que el DELETE dejaba la asociación propia: ahora conserva los fixtures hasta el descarte de la base exclusiva y comprueba su propiedad y los registros/vínculos previos. La unificación combinada ejecuta ahora el entorno mediante Gradle, sin Bash; reutiliza esta regla y utiliza un backend exclusivo. Ver `tests/e2e/README.md`. La ejecución de esta migración en dispositivo permanece pendiente.
 
 La limpieza se comprobó en tablas temporales: conserva semilla y otra ejecución y rechaza una asociación ajena. Las ejecuciones reales se contrastan con una lectura de las asignaciones anterior a las pruebas. No se llama a `DELETE /collectors/:id/albums/:albumId` ni se modifica BackVynils.
 
 ```bash
-bash scripts/run_e2e.sh \
+./gradlew connectedDebugAndroidTest \
   '-Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.ui.PrizePickerScreenTest' \
   '-Pandroid.testInstrumentationRunnerArguments.package=co.edu.uniandes.vinilos.ui' \
   '-Pandroid.testInstrumentationRunnerArguments.captureScreenshots=true' \

@@ -1,6 +1,6 @@
 package co.edu.uniandes.vinilos.testing
 
-import co.edu.uniandes.vinilos.BuildConfig
+import co.edu.uniandes.vinilos.network.BackendEndpoint
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -9,7 +9,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 private const val HTTP_OK = 200
-private const val HTTP_NO_CONTENT = 204
 private const val TIMEOUT_MILLIS = 10_000
 private const val TELEPHONE = "3000000000"
 private const val HTTP_ERROR = 400
@@ -22,20 +21,10 @@ data class CollectorAlbumLink(
     val status: String,
 )
 
-/**
- * Coleccionista y álbumes de una ejecución. Los crea con POST y, al terminar, borra solo los vínculos de esos
- * coleccionistas cuyo álbum también creó esta regla. Después borra el coleccionista y el álbum. No llama al DELETE
- * de un vínculo ajeno: antes de borrar anota cuántos álbumes tenía cada coleccionista que ya existía y, al final,
- * comprueba que ese número no bajó.
- */
+/** Datos propios de HU11. La base completa se descarta al final; no usar DELETE de vínculos defectuoso. */
 class BackendCollectorAlbums : ExternalResource() {
     private val collectors = mutableListOf<Int>()
     private val albums = mutableSetOf<Int>()
-    private var albumCountsAtStart: Map<Int, Int> = emptyMap()
-
-    override fun before() {
-        albumCountsAtStart = albumCounts()
-    }
 
     /** Crea un coleccionista sin álbumes ni favoritos. Devuelve su id. */
     fun createCollector(
@@ -93,51 +82,13 @@ class BackendCollectorAlbums : ExternalResource() {
         }
     }
 
-    override fun after() {
-        collectors.forEach { collectorId -> removeOwnedLinks(collectorId) }
-        collectors.forEach { send("DELETE", "collectors/$it", null, HTTP_NO_CONTENT) }
-        albums.forEach { send("DELETE", "albums/$it", null, HTTP_NO_CONTENT) }
-        val now = albumCounts()
-        albumCountsAtStart.forEach { (id, count) ->
-            assertEquals("El coleccionista $id perdió álbumes durante la limpieza", count, now[id] ?: 0)
-        }
-    }
-
-    private fun removeOwnedLinks(collectorId: Int) {
-        repeat(albums.size + 1) {
-            val current = albumsOf(collectorId)
-            val target = current.firstOrNull { it.albumId in albums } ?: return
-            val others = current.filter { it.albumId != target.albumId }.map { it.albumId }.toSet()
-            send("DELETE", "collectors/$collectorId/albums/${target.albumId}", null, HTTP_NO_CONTENT)
-            val after = albumsOf(collectorId).map { it.albumId }.toSet()
-            check(target.albumId !in after) {
-                "DELETE /collectors/$collectorId/albums/${target.albumId} no quitó ese álbum"
-            }
-            check(others == after) {
-                "DELETE /collectors/$collectorId/albums/${target.albumId} quitó otros vínculos"
-            }
-        }
-        val leftover = albumsOf(collectorId).filter { it.albumId in albums }
-        check(leftover.isEmpty()) { "Siguieron vínculos de esta prueba en el coleccionista $collectorId" }
-    }
-
-    private fun albumCounts(): Map<Int, Int> {
-        val response = JSONArray(send("GET", "collectors", null, HTTP_OK))
-        return buildMap {
-            repeat(response.length()) { index ->
-                val collector = response.getJSONObject(index)
-                put(collector.getInt("id"), collector.optJSONArray("collectorAlbums")?.length() ?: 0)
-            }
-        }
-    }
-
     private fun send(
         method: String,
         path: String,
         body: JSONObject?,
         expectedCode: Int,
     ): String {
-        val connection = URL("${BuildConfig.BASE_URL}$path").openConnection() as HttpURLConnection
+        val connection = URL("${BackendEndpoint.baseUrl}$path").openConnection() as HttpURLConnection
         try {
             connection.requestMethod = method
             connection.connectTimeout = TIMEOUT_MILLIS

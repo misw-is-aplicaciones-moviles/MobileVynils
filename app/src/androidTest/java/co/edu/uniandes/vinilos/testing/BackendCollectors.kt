@@ -1,6 +1,6 @@
 package co.edu.uniandes.vinilos.testing
 
-import co.edu.uniandes.vinilos.BuildConfig
+import co.edu.uniandes.vinilos.network.BackendEndpoint
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -180,7 +180,7 @@ class BackendCollectors : ExternalResource() {
         body: JSONObject?,
         expectedCode: Int,
     ): String {
-        val connection = URL("${BuildConfig.BASE_URL}$path").openConnection() as HttpURLConnection
+        val connection = URL("${BackendEndpoint.baseUrl}$path").openConnection() as HttpURLConnection
         try {
             connection.requestMethod = method
             connection.connectTimeout = TIMEOUT_MILLIS

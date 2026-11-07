@@ -5,7 +5,7 @@ import okhttp3.Dispatcher
 
 /**
  * Espresso espera a que no haya llamadas de red en curso en el [Dispatcher] de OkHttp antes de cada acción.
- * Vive en androidTest: la app no necesita `espresso-idling-resource`. Se registra con [OkHttpIdlingResourceRule].
+ * Vive en androidTest: la app no necesita `espresso-idling-resource`. Se registra con [VinilosE2ERule].
  */
 class OkHttpIdlingResource(
     private val name: String,
@@ -13,7 +13,7 @@ class OkHttpIdlingResource(
 ) : IdlingResource {
     override fun getName(): String = name
 
-    override fun isIdleNow(): Boolean = dispatcher.runningCallsCount() == 0
+    override fun isIdleNow(): Boolean = dispatcher.runningCallsCount() == 0 && dispatcher.queuedCallsCount() == 0
 
     override fun registerIdleTransitionCallback(callback: IdlingResource.ResourceCallback) {
         // OkHttp llama a idleCallback cuando termina la última llamada en curso.

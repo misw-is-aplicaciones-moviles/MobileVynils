@@ -19,16 +19,14 @@ import androidx.test.espresso.matcher.ViewMatchers.isSelected
 import androidx.test.espresso.matcher.ViewMatchers.withAlpha
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.robots.PerformerDetailRobot
 import co.edu.uniandes.vinilos.robots.PerformerListRobot
-import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.BackendPrizes
+import co.edu.uniandes.vinilos.testing.VinilosE2ERule
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import co.edu.uniandes.vinilos.testing.waitUntilGone
 import org.hamcrest.Description
@@ -55,10 +53,9 @@ import java.util.concurrent.TimeUnit
 @RunWith(AndroidJUnit4::class)
 class PrizePickerScreenTest {
     private val prizes = BackendPrizes()
-    private val firewall = BackendFirewall()
-    private val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    private val activityRule = VinilosE2ERule()
 
-    @get:Rule val rules: TestRule = RuleChain.outerRule(prizes).around(firewall).around(activityRule)
+    @get:Rule val rules: TestRule = RuleChain.outerRule(prizes).around(activityRule)
     private val artists = PerformerListRobot()
     private val detail = PerformerDetailRobot()
     private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
@@ -68,7 +65,7 @@ class PrizePickerScreenTest {
     fun configureTheme() {
         previousNightMode = AppCompatDelegate.getDefaultNightMode()
         val dark = InstrumentationRegistry.getArguments().getString("darkMode") ?: return
-        activityRule.scenario.onActivity {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
             AppCompatDelegate.setDefaultNightMode(
                 if (dark == "true") AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO,
             )
@@ -77,7 +74,9 @@ class PrizePickerScreenTest {
 
     @After
     fun restoreTheme() {
-        activityRule.scenario.onActivity { AppCompatDelegate.setDefaultNightMode(previousNightMode) }
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            AppCompatDelegate.setDefaultNightMode(previousNightMode)
+        }
     }
 
     @Test
@@ -156,12 +155,12 @@ class PrizePickerScreenTest {
         onView(withId(R.id.continuePrize)).perform(click())
         waitForDisplayed(withId(R.id.savePrize)).check(matches(not(isEnabled())))
         chooseDate()
-        firewall.block()
+        activityRule.network.offline()
         onView(withId(R.id.savePrize)).perform(click())
         waitForDisplayed(withText(R.string.prize_assign_uncertain))
         onView(withId(R.id.savePrize)).check(matches(not(isEnabled())))
         capture("hu14-resultado-incierto.png")
-        firewall.restore()
+        activityRule.network.restore()
         assertEquals(0, fixture.artist().getJSONArray("performerPrizes").length())
         onView(withId(R.id.reviewArtist)).perform(click())
         waitUntilGone(withId(R.id.prizeSearch))
@@ -245,6 +244,7 @@ class PrizePickerScreenTest {
         fixture: BackendPrizes.Fixture,
         assigned: Int = 0,
     ) {
+        activityRule.launch()
         artists.enterAs(R.string.role_collector).tapRow(fixture.name)
         waitForDisplayed(allOf(withId(R.id.performerName), withText(fixture.name)))
         detail.scrollToText(context.getString(R.string.prize_detail_count, assigned))
