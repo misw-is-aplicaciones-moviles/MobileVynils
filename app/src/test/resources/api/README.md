@@ -13,6 +13,8 @@ curl http://localhost:3000/albums/2147483647 -o app/src/test/resources/api/album
 curl http://localhost:3000/musicians -o app/src/test/resources/api/musicians.json
 curl http://localhost:3000/bands -o app/src/test/resources/api/bands.json
 curl http://localhost:3000/collectors -o app/src/test/resources/api/collectors.json
+curl http://localhost:3000/collectors/100 -o app/src/test/resources/api/collector_100.json
+curl http://localhost:3000/collectors/100/albums -o app/src/test/resources/api/collector_100_albums.json
 ```
 
 ## Nombres
@@ -37,6 +39,8 @@ curl http://localhost:3000/collectors -o app/src/test/resources/api/collectors.j
 | `musicians_with_band.json` | `GET /musicians` tras crear a Freddie Mercury, Brian May, Roger Taylor y John Deacon con `POST /musicians` y asociarlos a Queen con `POST /bands/101/musicians/:id`; capturado el 2026-11-03 | HU03: aun asociados, los músicos no traen su banda |
 | `bands_with_members.json` | `GET /bands` en ese mismo estado; capturado el 2026-11-03 | HU03: `musicians[]` de Queen con los cuatro integrantes, de donde se deriva la pertenencia |
 | `collectors.json` | `GET /collectors` con la semilla (Manolo Bellon, id 100, y Jaime Monsalve, id 101); capturado del backend local el 2026-11-04 | HU05: contrato de `GET /collectors`; conteos de `collectorAlbums` y `favoritePerformers` |
+| `collector_100.json` | `GET /collectors/100` con la semilla; capturado del backend local el 2026-11-04 | HU06: Manolo, teléfono y favorito músico. `collectorAlbums` no trae el álbum anidado |
+| `collector_100_albums.json` | `GET /collectors/100/albums` con la semilla; capturado del backend local el 2026-11-04 | HU06: vínculo con precio, estado y álbum anidado "Buscando América" |
 
 Los casos de HTTP 500, desconexión, JSON inválido, campo requerido ausente,
 JSON `null` y HTTP 204 se generan en MockWebServer; no son respuestas capturadas

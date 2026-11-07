@@ -143,6 +143,7 @@ class MainActivity :
                     when (destination.id) {
                         R.id.albumDetailFragment -> R.id.albumListFragment
                         R.id.performerDetailFragment -> R.id.performerListFragment
+                        R.id.collectorDetailFragment -> R.id.collectorListFragment
                         else -> destination.id
                     }
                 binding.bottomNav.menu
@@ -161,6 +162,7 @@ class MainActivity :
             when (tabId) {
                 R.id.albumListFragment -> R.id.albumDetailFragment
                 R.id.performerListFragment -> R.id.performerDetailFragment
+                R.id.collectorListFragment -> R.id.collectorDetailFragment
                 else -> return
             }
         if (navController.currentDestination?.id != detailId) return

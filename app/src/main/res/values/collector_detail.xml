@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="collectorFavorites" type="id" />
+    <string name="collector_phone">Teléfono</string>
+    <string name="collector_email">Correo</string>
+    <string name="collector_section_favorites">Artistas favoritos · %1$d</string>
+    <string name="collector_section_albums">Sus álbumes · %1$d</string>
+    <string name="collector_no_favorites">Aún no tiene artistas favoritos.</string>
+    <string name="collector_album_price">$ %1$d</string>
+    <string name="album_status_available">Disponible</string>
+    <string name="album_status_unavailable">No disponible</string>
+    <string name="action_add_favorite">Agregar favorito</string>
+    <string name="action_add_album">Agregar álbum</string>
+    <string name="collector_detail_error">No se pudo cargar el coleccionista</string>
+    <string name="collector_detail_error_body">Inténtalo de nuevo para consultar su información.</string>
+    <string name="collector_detail_not_found">No encontramos este coleccionista</string>
+    <string name="collector_detail_not_found_body">El coleccionista ya no está disponible. Puedes reintentar o regresar.</string>
+    <string name="collector_detail_invalid">No se pudo identificar el coleccionista</string>
+    <string name="collector_detail_invalid_body">Regresa y selecciona un coleccionista de nuevo.</string>
+    <string name="collector_open_favorite">%1$s, %2$s. Consultar artista.</string>
+    <string name="collector_open_album">%1$s, %2$s, %3$s. Consultar álbum.</string>
+    <dimen name="collector_detail_initials">58dp</dimen>
+    <dimen name="collector_detail_tile_radius">14dp</dimen>
+    <dimen name="collector_status_radius">12dp</dimen>
+</resources>

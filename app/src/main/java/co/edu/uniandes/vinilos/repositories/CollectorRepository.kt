@@ -1,6 +1,7 @@
 package co.edu.uniandes.vinilos.repositories
 
 import co.edu.uniandes.vinilos.models.Collector
+import co.edu.uniandes.vinilos.models.CollectorDetail
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 
@@ -14,4 +15,13 @@ interface CollectorRepository {
 
     /** Tells whether Room already holds collectors, so the screen can show them before the network answers. */
     suspend fun hasCachedCollectors(): Boolean
+
+    /**
+     * Returns one collector from the backend, joining `GET /collectors/:id` and `GET /collectors/:id/albums`.
+     * Does not read or write the list cache. A failed call leaves that cache as it was.
+     */
+    suspend fun getCollector(
+        id: Int,
+        forceRefresh: Boolean = false,
+    ): DataResult<CollectorDetail, DataError>
 }

@@ -2,6 +2,7 @@ package co.edu.uniandes.vinilos.network
 
 import co.edu.uniandes.vinilos.network.dto.AlbumDto
 import co.edu.uniandes.vinilos.network.dto.BandDto
+import co.edu.uniandes.vinilos.network.dto.CollectorAlbumDto
 import co.edu.uniandes.vinilos.network.dto.CollectorDto
 import co.edu.uniandes.vinilos.network.dto.MusicianDto
 import co.edu.uniandes.vinilos.network.dto.NewAlbumRequest
@@ -83,4 +84,16 @@ internal interface VinilosApiService {
 
     @GET("collectors")
     suspend fun getCollectors(): List<CollectorDto>
+
+    @GET("collectors/{id}")
+    suspend fun getCollector(
+        @Path("id") id: Int,
+        @Header("Cache-Control") cacheControl: String? = null,
+    ): Response<CollectorDto>
+
+    @GET("collectors/{id}/albums")
+    suspend fun getCollectorAlbums(
+        @Path("id") id: Int,
+        @Header("Cache-Control") cacheControl: String? = null,
+    ): Response<List<CollectorAlbumDto?>>
 }

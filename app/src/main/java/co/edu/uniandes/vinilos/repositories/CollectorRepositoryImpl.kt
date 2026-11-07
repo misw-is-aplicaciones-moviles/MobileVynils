@@ -4,10 +4,12 @@ import co.edu.uniandes.vinilos.database.dao.CollectorDao
 import co.edu.uniandes.vinilos.database.toEntity
 import co.edu.uniandes.vinilos.database.toModel
 import co.edu.uniandes.vinilos.models.Collector
+import co.edu.uniandes.vinilos.models.CollectorDetail
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.network.CollectorServiceAdapter
 import co.edu.uniandes.vinilos.network.networkRequest
+import com.google.gson.JsonParseException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -41,6 +43,18 @@ internal class CollectorRepositoryImpl(
                 }
             }
         }
+
+    override suspend fun getCollector(
+        id: Int,
+        forceRefresh: Boolean,
+    ): DataResult<CollectorDetail, DataError> {
+        require(id > 0) { "collectorId must be positive" }
+        return networkRequest {
+            serviceAdapter.getCollector(id, forceRefresh).also { detail ->
+                if (detail.collector.id != id) throw JsonParseException("Unexpected collector identity")
+            }
+        }
+    }
 
     // The backend has no pagination, so the size of the list has no limit: it is mapped off the main thread.
     private suspend fun readAll(): List<Collector> {

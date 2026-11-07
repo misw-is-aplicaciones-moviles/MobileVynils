@@ -120,6 +120,13 @@
     <dimen name="button_stroke">1dp</dimen>
     <dimen name="button_padding_horizontal">23dp</dimen>
     <dimen name="button_gap">10dp</dimen>
+    <!-- "Agregar álbum": píldora de 44 dp, ícono de 16 a 13 dp del borde y 8 dp antes del texto. -->
+    <dimen name="button_compact_height">44dp</dimen>
+    <dimen name="button_compact_radius">22dp</dimen>
+    <dimen name="button_compact_icon">16dp</dimen>
+    <dimen name="button_compact_padding_start">13dp</dimen>
+    <dimen name="button_compact_padding_end">17dp</dimen>
+    <dimen name="button_compact_icon_gap">8dp</dimen>
 
     <!-- Formulario de nuevo álbum. Campos de 25 dp de radio, como los botones. -->
     <dimen name="form_padding_horizontal">20dp</dimen>
