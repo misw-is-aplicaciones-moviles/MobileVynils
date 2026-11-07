@@ -1,12 +1,11 @@
 package co.edu.uniandes.vinilos.ui
 
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.robots.AlbumListRobot
+import co.edu.uniandes.vinilos.testing.VinilosE2ERule
 import co.edu.uniandes.vinilos.testing.createAlbumOnBackend
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.junit.Rule
@@ -19,7 +18,7 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class AlbumListScreenTest {
-    @get:Rule val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    @get:Rule val activityRule = VinilosE2ERule(autoLaunch = true)
 
     private val catalog = AlbumListRobot()
     private val context = InstrumentationRegistry.getInstrumentation().targetContext

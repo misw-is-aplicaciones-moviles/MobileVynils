@@ -8,11 +8,10 @@ import androidx.test.espresso.matcher.ViewMatchers.isDescendantOfA
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.VinilosApplication
+import co.edu.uniandes.vinilos.testing.VinilosE2ERule
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
 import org.junit.Assert.assertEquals
@@ -26,7 +25,7 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class RoleSelectTest {
-    @get:Rule val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    @get:Rule val activityRule = VinilosE2ERule(autoLaunch = true)
 
     @Test
     fun role_selector_is_the_start_screen_without_the_bottom_bar() {

@@ -24,17 +24,15 @@ import androidx.test.espresso.matcher.ViewMatchers.isSelected
 import androidx.test.espresso.matcher.ViewMatchers.withAlpha
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.robots.PerformerDetailRobot
 import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.robots.PrizeCreateRobot
-import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.BackendPrizes
+import co.edu.uniandes.vinilos.testing.VinilosE2ERule
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import co.edu.uniandes.vinilos.testing.waitUntilGone
 import co.edu.uniandes.vinilos.ui.artists.PrizeAdapter
@@ -64,10 +62,9 @@ import java.util.concurrent.TimeUnit
 @RunWith(AndroidJUnit4::class)
 class PrizeCreateScreenTest {
     private val prizes = BackendPrizes()
-    private val firewall = BackendFirewall()
-    private val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    private val activityRule = VinilosE2ERule()
 
-    @get:Rule val rules: TestRule = RuleChain.outerRule(prizes).around(firewall).around(activityRule)
+    @get:Rule val rules: TestRule = RuleChain.outerRule(prizes).around(activityRule)
     private val artists = PerformerListRobot()
     private val detail = PerformerDetailRobot()
     private val form = PrizeCreateRobot()
@@ -229,7 +226,7 @@ class PrizeCreateScreenTest {
         openCreateForm()
         form.typeName(name).typeDescription(PRIZE_DESCRIPTION).typeOrganization(PRIZE_ORGANIZATION)
 
-        firewall.block()
+        activityRule.network.offline()
         form
             .tapCreate()
             .waitForNotice(
@@ -238,7 +235,7 @@ class PrizeCreateScreenTest {
         form.assertFieldsLocked(true)
         // Sin conexión tampoco se puede comprobar, y nada se envía de nuevo.
         form.tapCreate().waitForNotice(R.string.create_prize_check_failed).assertFieldsLocked(true)
-        firewall.restore()
+        activityRule.network.restore()
         assertTrue(fixture.prizes().none { it.getString("name") == name })
 
         form.waitForPrimaryAction(R.string.action_check_prize).tapCreate()
@@ -263,22 +260,9 @@ class PrizeCreateScreenTest {
         onView(withId(R.id.bottomNav)).check(matches(not(isDisplayed())))
     }
 
-    /**
-     * El toque en la pestaña a veces llega como pulsación larga ("Overslept and turned a tap into a long press" en
-     * logcat, conocido en PerformerListScreenTest) y no navega: se repite el toque, no la espera.
-     */
     private fun openArtistsAsCollector() {
-        artists.chooseRole(R.string.role_collector)
-        repeat(TAB_ATTEMPTS - 1) {
-            artists.openArtistsTab()
-            try {
-                waitForDisplayed(withId(R.id.performerList), TAB_WAIT_MILLIS)
-                return
-            } catch (_: AssertionError) {
-                // Otro intento con un toque nuevo.
-            }
-        }
-        artists.openArtistsTab().waitForList()
+        activityRule.launch()
+        artists.enterAs(R.string.role_collector)
     }
 
     private fun openCreateForm() {
@@ -413,7 +397,5 @@ class PrizeCreateScreenTest {
         const val PRIZE_ORGANIZATION = "Equipo de pruebas HU14"
         const val NOTICE_TIMEOUT_MILLIS = 10_000L
         const val POLL_MILLIS = 50L
-        const val TAB_ATTEMPTS = 3
-        const val TAB_WAIT_MILLIS = 4_000L
     }
 }

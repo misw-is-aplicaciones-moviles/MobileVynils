@@ -8,10 +8,8 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isSelected
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.VinilosApplication
 import co.edu.uniandes.vinilos.robots.CollectorDetailRobot
@@ -20,6 +18,7 @@ import co.edu.uniandes.vinilos.testing.BackendCollectors
 import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.CollectorSnapshot
 import co.edu.uniandes.vinilos.testing.ListedCollector
+import co.edu.uniandes.vinilos.testing.VinilosE2ERule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -35,7 +34,7 @@ import org.junit.runner.RunWith
 class CollectorDetailScreenTest {
     private val data = BackendCollectors()
     private val firewall = BackendFirewall()
-    private val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    private val activityRule = VinilosE2ERule(autoLaunch = true)
 
     @get:Rule val ruleChain: TestRule = RuleChain.outerRule(data).around(firewall).around(activityRule)
 

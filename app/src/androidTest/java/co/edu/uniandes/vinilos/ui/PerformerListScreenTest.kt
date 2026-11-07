@@ -4,16 +4,15 @@ import androidx.fragment.app.FragmentActivity
 import androidx.navigation.fragment.NavHostFragment
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.VinilosApplication
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.BackendPerformers
+import co.edu.uniandes.vinilos.testing.VinilosE2ERule
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.Matchers.allOf
@@ -33,7 +32,7 @@ import org.junit.runner.RunWith
 class PerformerListScreenTest {
     private val data = BackendPerformers()
     private val firewall = BackendFirewall()
-    private val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    private val activityRule = VinilosE2ERule(autoLaunch = true)
 
     // La limpieza de los datos se ejecuta al final: el corte de red ya se restauró y la actividad ya se cerró.
     @get:Rule val ruleChain: TestRule = RuleChain.outerRule(data).around(firewall).around(activityRule)

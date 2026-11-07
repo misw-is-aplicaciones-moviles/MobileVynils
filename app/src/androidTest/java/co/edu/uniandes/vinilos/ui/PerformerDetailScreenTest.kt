@@ -16,15 +16,14 @@ import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.isSelected
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.robots.AlbumListRobot
 import co.edu.uniandes.vinilos.robots.PerformerDetailRobot
 import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.testing.BackendPerformers
+import co.edu.uniandes.vinilos.testing.VinilosE2ERule
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
@@ -40,7 +39,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class PerformerDetailScreenTest {
     private val data = BackendPerformers()
-    private val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    private val activityRule = VinilosE2ERule(autoLaunch = true)
 
     @get:Rule val ruleChain: TestRule = RuleChain.outerRule(data).around(activityRule)
     private val artists = PerformerListRobot()

@@ -11,7 +11,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import retrofit2.http.GET
 
-/** Prueba optativa: verifica URL compilada, permiso de internet, HTTP y Gson dentro de Android. */
+/** Prueba de integración: verifica URL efectiva, permiso de internet, HTTP y Gson dentro de Android. */
 @RunWith(AndroidJUnit4::class)
 class BackendConnectionTest {
     @Test

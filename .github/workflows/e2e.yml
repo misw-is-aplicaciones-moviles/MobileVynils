@@ -1,0 +1,65 @@
+name: E2E aisladas
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  instrumented:
+    name: Espresso API ${{ matrix.api }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [21, 37]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: TheSoftwareDesignLab/BackVynils
+          ref: 7178f83662022904dc9e88b8a2292568954b56cf
+          path: .e2e-backend
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Preparar imágenes del entorno real
+        run: |
+          docker pull postgres:17
+          docker build -t backvynils-web:latest .e2e-backend
+      - name: Habilitar KVM en el runner de CI
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Ejecutar las mismas pruebas Gradle
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -memory 2048 -cores 2
+          script: ./gradlew connectedDebugAndroidTest --console=plain --max-workers=2 -Dorg.gradle.parallel=false '-Dorg.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8'
+      - name: Conservar reportes incluso al fallar
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-api-${{ matrix.api }}
+          path: |
+            app/build/reports/androidTests/
+            app/build/reports/e2e-environment/
+            app/build/outputs/androidTest-results/
+          retention-days: 14

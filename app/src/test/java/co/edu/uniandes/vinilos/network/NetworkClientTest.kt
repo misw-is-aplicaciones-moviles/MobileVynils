@@ -42,6 +42,38 @@ class NetworkClientTest {
     }
 
     @Test
+    fun `test customization disables cache without changing the real HTTP contract`() =
+        runTest {
+            repeat(2) { server.enqueue(MockResponse().setBody(albumsJson).setHeader("Cache-Control", "max-age=60")) }
+            val client =
+                NetworkClient(
+                    server.url("/api/").toString(),
+                    temporaryFolder.newFolder(),
+                    cacheEnabled = false,
+                    configureClient = { builder ->
+                        builder.addInterceptor { chain ->
+                            chain.proceed(
+                                chain
+                                    .request()
+                                    .newBuilder()
+                                    .header("X-Test-Client", "isolated")
+                                    .build(),
+                            )
+                        }
+                    },
+                ).also(clients::add)
+            val api = client.create(ProbeApi::class.java)
+
+            assertEquals(100, api.albums().single().id)
+            assertEquals(100, api.albums().single().id)
+
+            assertNull(client.httpClient.cache)
+            assertEquals(false, client.httpClient.retryOnConnectionFailure)
+            assertEquals(2, server.requestCount)
+            assertEquals("isolated", server.takeRequest().getHeader("X-Test-Client"))
+        }
+
+    @Test
     fun `request preserves base path and decodes backend shaped JSON`() =
         runTest {
             server.enqueue(MockResponse().setBody(albumsJson))

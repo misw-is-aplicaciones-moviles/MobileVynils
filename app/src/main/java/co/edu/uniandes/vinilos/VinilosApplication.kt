@@ -6,7 +6,7 @@ import co.edu.uniandes.vinilos.di.AppContainer
 
 class VinilosApplication : Application() {
     lateinit var container: AppContainer
-        private set
+        internal set
 
     override fun onCreate() {
         super.onCreate()

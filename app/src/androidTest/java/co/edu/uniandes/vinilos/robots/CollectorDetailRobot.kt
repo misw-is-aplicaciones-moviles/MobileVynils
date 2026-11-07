@@ -121,6 +121,8 @@ class CollectorDetailRobot {
     fun openAlbum(album: AlbumSnapshot): CollectorDetailRobot {
         scrollTo(album.name)
         onView(allOf(withId(R.id.albumTitle), withText(album.name))).perform(click())
+        waitForDisplayed(allOf(withId(R.id.headerTitle), withText(R.string.album_detail_title)))
+        PerformerDetailRobot().scrollToText(album.name, R.id.albumName)
         waitForDisplayed(allOf(withId(R.id.albumName), withText(album.name), isDisplayed()))
         onView(withId(R.id.headerTitle)).check(matches(withText(R.string.album_detail_title)))
         return this
