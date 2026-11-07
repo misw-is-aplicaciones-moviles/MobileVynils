@@ -121,20 +121,10 @@ class MainActivity :
         binding.bottomNav.setOnItemSelectedListener { item ->
             // El punto acompaña a la selección en el mismo cuadro, sin esperar al cambio de destino.
             binding.bottomNav.post { moveNavDot(item.itemId) }
-            navController.navigate(
-                item.itemId,
-                null,
-                navOptions {
-                    launchSingleTop = true
-                    restoreState = true
-                    // El inicio del grafo es el selector y sale de la pila al elegir rol.
-                    // Las pestañas se anclan al catálogo, que queda como raíz.
-                    popUpTo(R.id.albumListFragment) { saveState = true }
-                },
-            )
+            openTab(navController, item.itemId)
             true
         }
-        binding.bottomNav.setOnItemReselectedListener { item -> reselectTab(navController, item.itemId) }
+        binding.bottomNav.setOnItemReselectedListener { item -> openTab(navController, item.itemId) }
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val showBottomBar = destination.id !in DESTINATIONS_WITHOUT_BOTTOM_BAR
             binding.bottomBar.isVisible = showBottomBar
@@ -155,29 +145,29 @@ class MainActivity :
         }
     }
 
-    private fun reselectTab(
+    /** Lleva a la lista de [tabId]. De cada pestaña solo se guarda su lista: un detalle nunca se restaura al volver. */
+    private fun openTab(
         navController: NavController,
         tabId: Int,
     ) {
-        val detailId =
-            when (tabId) {
-                R.id.albumListFragment -> R.id.albumDetailFragment
-                R.id.performerListFragment -> R.id.performerDetailFragment
-                R.id.collectorListFragment -> R.id.collectorDetailFragment
-                else -> return
-            }
-        if (navController.currentDestination?.id != detailId) return
-        if (!navController.popBackStack(tabId, false)) {
-            navController.navigate(
-                tabId,
-                null,
-                navOptions {
-                    launchSingleTop = true
-                    popUpTo(R.id.albumListFragment) { saveState = true }
-                },
-            )
-        }
+        val currentRoot = TAB_ROOTS.firstOrNull { navController.hasBackStackEntry(it) } ?: return
+        navController.popBackStack(currentRoot, false)
+        if (currentRoot == tabId) return
+        navController.navigate(
+            tabId,
+            null,
+            navOptions {
+                launchSingleTop = true
+                restoreState = true
+                // El inicio del grafo es el selector y sale de la pila al elegir rol.
+                // Las pestañas se anclan al catálogo, que queda como raíz.
+                popUpTo(R.id.albumListFragment) { saveState = true }
+            },
+        )
     }
+
+    private fun NavController.hasBackStackEntry(destinationId: Int): Boolean =
+        runCatching { getBackStackEntry(destinationId) }.isSuccess
 
     /** Coloca el punto del kit v2 centrado bajo la etiqueta de la pestaña activa. */
     private fun moveNavDot(itemId: Int) {
@@ -196,6 +186,10 @@ class MainActivity :
         descendants.filterIsInstance<TextView>().firstOrNull { it.isShown && it.text.isNotEmpty() }
 
     private companion object {
+        /** Solo una lista de pestaña vive sobre el catálogo, que siempre es la raíz: por eso se busca de último. */
+        val TAB_ROOTS =
+            listOf(R.id.collectorListFragment, R.id.performerListFragment, R.id.albumListFragment)
+
         /** El selector de rol y las pantallas completas (formulario de nuevo álbum) se dibujan sin la barra inferior. */
         val DESTINATIONS_WITHOUT_BOTTOM_BAR =
             setOf(
