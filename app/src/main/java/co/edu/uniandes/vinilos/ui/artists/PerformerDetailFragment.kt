@@ -72,6 +72,9 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
         viewModel.uiState.observe(viewLifecycleOwner) { render(it, adapter) }
         viewModel.events.observe(viewLifecycleOwner) { it.getContentIfNotHandled()?.let(::handle) }
         observePrizeResults()
+        // La transición retrasa onResume. Un clic en ese hueco deja navigationPending activo
+        // y el selector de premios no se abre al volver de un integrante.
+        viewModel.onNavigationReturned()
     }
 
     override fun onResume() {

@@ -21,6 +21,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.models.PerformerType
+import co.edu.uniandes.vinilos.testing.bringIntoView
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import co.edu.uniandes.vinilos.ui.artists.PerformerAdapter
 import co.edu.uniandes.vinilos.viewmodels.PerformerItem
@@ -169,8 +170,13 @@ class PerformerListRobot {
 
     fun tapRow(name: String): PerformerListRobot {
         scrollTo(name)
-        onView(withId(R.id.performerList))
-            .perform(RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(hasDescendant(withText(name)), click()))
+        onView(
+            allOf(
+                withId(R.id.performerName),
+                withText(name),
+                isDescendantOfA(withId(R.id.performerList)),
+            ),
+        ).perform(bringIntoView(), click())
         return this
     }
 

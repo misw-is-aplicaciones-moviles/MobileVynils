@@ -14,6 +14,8 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import co.edu.uniandes.vinilos.R
+import co.edu.uniandes.vinilos.testing.bringIntoView
+import co.edu.uniandes.vinilos.testing.clickVisible
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.endsWith
@@ -46,7 +48,7 @@ class PrizeCreateRobot {
     }
 
     fun tapClose(): PrizeCreateRobot {
-        onView(allOf(withId(R.id.headerClose), isDisplayed())).perform(click())
+        onView(withId(R.id.headerClose)).perform(bringIntoView(), clickVisible())
         return this
     }
 
@@ -54,6 +56,7 @@ class PrizeCreateRobot {
         @IdRes error: Int,
         @StringRes message: Int,
     ): PrizeCreateRobot {
+        onView(withId(error)).perform(bringIntoView())
         onView(withId(error)).check(matches(allOf(isDisplayed(), withText(endsWith(context.getString(message))))))
         return this
     }
