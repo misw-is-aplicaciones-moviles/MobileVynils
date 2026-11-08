@@ -35,6 +35,7 @@ import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.robots.PrizeCreateRobot
 import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.BackendPrizes
+import co.edu.uniandes.vinilos.testing.clickVisible
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import co.edu.uniandes.vinilos.testing.waitUntilGone
 import co.edu.uniandes.vinilos.ui.artists.PrizeAdapter
@@ -186,6 +187,13 @@ class PrizeCreateScreenTest {
             .tapCreate()
         waitForDisplayed(createdNotice())
         assertCreatedRowIsFirstAndSelected(name)
+        // El aviso de "Premio creado" es corto. Si sigue en pantalla, el de la asignación no llega a verse.
+        waitUntilGone(
+            allOf(
+                withId(com.google.android.material.R.id.snackbar_text),
+                withText(R.string.prize_created_message),
+            ),
+        )
 
         onView(withId(R.id.continuePrize)).perform(click())
         waitForDisplayed(withId(R.id.savePrize)).check(matches(not(isEnabled())))
@@ -258,7 +266,7 @@ class PrizeCreateScreenTest {
         artists.tapRow(fixture.name)
         waitForDisplayed(allOf(withId(R.id.performerName), withText(fixture.name)))
         detail.scrollToText(context.getString(R.string.prize_detail_count, 0))
-        onView(withId(R.id.addPrizeButton)).check(matches(isEnabled())).perform(click())
+        onView(allOf(withId(R.id.addPrizeButton), isEnabled(), isDisplayed())).perform(clickVisible())
         waitForDisplayed(withId(R.id.prizeSearch))
         onView(withId(R.id.bottomNav)).check(matches(not(isDisplayed())))
     }

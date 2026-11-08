@@ -14,6 +14,8 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import co.edu.uniandes.vinilos.R
+import co.edu.uniandes.vinilos.testing.bringIntoView
+import co.edu.uniandes.vinilos.testing.clickVisible
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.endsWith
@@ -24,8 +26,10 @@ class PrizeCreateRobot {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
     fun assertFormShown(): PrizeCreateRobot {
-        waitForDisplayed(allOf(withText(R.string.create_prize_all_required), isDisplayed()))
         waitForDisplayed(allOf(withId(R.id.headerTitle), withText(R.string.create_prize_title)))
+        // En API 21 el formulario no cabe: al llevar un error a la vista, el aviso de arriba sale del scroll.
+        onView(withId(R.id.requiredNotice)).perform(bringIntoView())
+        waitForDisplayed(allOf(withId(R.id.requiredNotice), withText(R.string.create_prize_all_required)))
         return this
     }
 
@@ -46,7 +50,7 @@ class PrizeCreateRobot {
     }
 
     fun tapClose(): PrizeCreateRobot {
-        onView(allOf(withId(R.id.headerClose), isDisplayed())).perform(click())
+        onView(withId(R.id.headerClose)).perform(bringIntoView(), clickVisible())
         return this
     }
 
@@ -54,6 +58,7 @@ class PrizeCreateRobot {
         @IdRes error: Int,
         @StringRes message: Int,
     ): PrizeCreateRobot {
+        onView(withId(error)).perform(bringIntoView())
         onView(withId(error)).check(matches(allOf(isDisplayed(), withText(endsWith(context.getString(message))))))
         return this
     }

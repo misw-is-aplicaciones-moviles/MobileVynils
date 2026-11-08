@@ -7,6 +7,7 @@ import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
@@ -25,6 +26,7 @@ import co.edu.uniandes.vinilos.robots.AlbumListRobot
 import co.edu.uniandes.vinilos.robots.PerformerDetailRobot
 import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.testing.BackendPerformers
+import co.edu.uniandes.vinilos.testing.clickVisible
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
@@ -130,7 +132,7 @@ class PerformerDetailScreenTest {
         artists.enterAs(R.string.role_visitor).tapRow(name)
         waitForDisplayed(allOf(withId(R.id.performerName), withText(name)))
         scrollToText(context.getString(R.string.artist_detail_no_albums))
-        onView(withId(R.id.headerBack)).perform(click())
+        onView(withId(R.id.headerBack)).perform(clickVisible())
         artists.tapRow(bandName)
         waitForDisplayed(allOf(withId(R.id.performerName), withText(bandName)))
         scrollToText(context.getString(R.string.artist_detail_no_members))
@@ -176,7 +178,8 @@ class PerformerDetailScreenTest {
         artists.enterAs(R.string.role_collector).tapRow(name)
         waitForDisplayed(allOf(withId(R.id.performerName), withText(name)))
         scrollToText(context.getString(R.string.prize_detail_count, 0))
-        onView(withId(R.id.addPrizeButton)).perform(click())
+        // En API 21 conviven un instante el botón deshabilitado de la carga y el habilitado.
+        onView(allOf(withId(R.id.addPrizeButton), isEnabled(), isDisplayed())).perform(clickVisible())
         waitForDisplayed(withText(R.string.prize_picker_title))
         pressBack()
         waitForDisplayed(allOf(withId(R.id.headerTitle), withText(R.string.artist_musician)))
@@ -188,7 +191,7 @@ class PerformerDetailScreenTest {
         waitForDisplayed(allOf(withId(R.id.performerName), withText(name)))
         onView(withId(R.id.roleChip)).check(matches(withText(R.string.role_visitor)))
         scrollToText(context.getString(R.string.prize_detail_count, 0))
-        onView(withId(R.id.addPrizeButton)).check(matches(not(isDisplayed())))
+        onView(allOf(withId(R.id.addPrizeButton), isDisplayed())).check(doesNotExist())
         pressBack()
         waitForDisplayed(allOf(withId(R.id.headerTitle), withText(R.string.artist_list_title)))
         onView(withId(R.id.roleChip)).check(matches(withText(R.string.role_visitor)))
@@ -201,7 +204,7 @@ class PerformerDetailScreenTest {
         data.deleteMusician(id)
         artists.tapRow(name)
         waitForDisplayed(withText(R.string.artist_detail_not_found))
-        onView(withId(R.id.retryButton)).perform(click())
+        onView(withId(R.id.retryButton)).perform(clickVisible())
         waitForDisplayed(withText(R.string.artist_detail_not_found))
         onView(withId(R.id.headerBack)).perform(click())
         waitForDisplayed(allOf(withId(R.id.headerTitle), withText(R.string.artist_list_title)))

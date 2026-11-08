@@ -4,6 +4,8 @@ import androidx.annotation.IdRes
 import androidx.annotation.StringRes
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.NoMatchingViewException
+import androidx.test.espresso.PerformException
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -21,6 +23,7 @@ import co.edu.uniandes.vinilos.testing.AlbumSnapshot
 import co.edu.uniandes.vinilos.testing.CollectorSnapshot
 import co.edu.uniandes.vinilos.testing.FavoriteKind
 import co.edu.uniandes.vinilos.testing.FavoriteSnapshot
+import co.edu.uniandes.vinilos.testing.bringIntoView
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import co.edu.uniandes.vinilos.viewmodels.collectorInitials
 import org.hamcrest.Matchers.allOf
@@ -31,8 +34,27 @@ class CollectorDetailRobot {
     private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
 
     fun waitUntilReady(name: String): CollectorDetailRobot {
-        waitForDisplayed(allOf(withId(R.id.collectorName), withText(name), isDisplayed()))
+        val nameInList =
+            allOf(withId(R.id.collectorName), withText(name), isDescendantOfA(withId(R.id.detailList)))
+        waitForDisplayed(allOf(nameInList, isDisplayed())) { revealCollectorName(name) }
         return this
+    }
+
+    private fun revealCollectorName(name: String) {
+        try {
+            onView(withId(R.id.detailList)).perform(
+                RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+                    hasDescendant(allOf(withId(R.id.collectorName), withText(name))),
+                ),
+            )
+            onView(
+                allOf(withId(R.id.collectorName), withText(name), isDescendantOfA(withId(R.id.detailList))),
+            ).perform(bringIntoView())
+        } catch (ignored: PerformException) {
+            // La fila todavía no está en el adaptador.
+        } catch (ignored: NoMatchingViewException) {
+            // El detalle todavía no está en pantalla.
+        }
     }
 
     /** Cabecera, teléfono y correo tal como los devolvió el GET, sin reformatear el teléfono. */

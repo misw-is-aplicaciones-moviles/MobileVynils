@@ -13,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.VinilosApplication
+import co.edu.uniandes.vinilos.testing.bringIntoView
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
 import org.junit.Assert.assertEquals
@@ -33,6 +34,8 @@ class RoleSelectTest {
         onView(withText(R.string.role_question)).check(matches(isDisplayed()))
         onView(withText(R.string.role_visitor)).check(matches(isDisplayed()))
         onView(withText(R.string.role_collector)).check(matches(isDisplayed()))
+        // En API 21 la nota queda bajo el borde de la hoja y su área visible está vacía.
+        onView(withId(R.id.roleHint)).perform(bringIntoView())
         onView(withText(R.string.role_change_hint)).check(matches(isDisplayed()))
         onView(withText(R.string.role_title)).check(matches(isDisplayed()))
         onView(withId(R.id.artworkDisc)).check(matches(isDisplayed()))

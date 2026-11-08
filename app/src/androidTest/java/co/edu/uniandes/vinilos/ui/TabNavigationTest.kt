@@ -28,6 +28,7 @@ import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.testing.BackendCollectors
 import co.edu.uniandes.vinilos.testing.BackendPerformers
 import co.edu.uniandes.vinilos.testing.CollectorSnapshot
+import co.edu.uniandes.vinilos.testing.clickVisible
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
@@ -96,7 +97,7 @@ class TabNavigationTest {
         artists.enterAs(R.string.role_visitor).tapRow(name)
         waitForDisplayed(allOf(withId(R.id.performerName), withText(name)))
         PerformerDetailRobot().scrollToText(albumName)
-        onView(allOf(withId(R.id.albumTitle), withText(albumName))).perform(click())
+        onView(allOf(withId(R.id.albumTitle), withText(albumName))).perform(clickVisible())
         waitForDisplayed(allOf(withId(R.id.albumName), withText(albumName)))
 
         tapTab(R.id.performerListFragment)

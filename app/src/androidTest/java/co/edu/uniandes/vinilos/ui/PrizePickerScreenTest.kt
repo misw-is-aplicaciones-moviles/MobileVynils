@@ -29,6 +29,8 @@ import co.edu.uniandes.vinilos.robots.PerformerDetailRobot
 import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.BackendPrizes
+import co.edu.uniandes.vinilos.testing.clickListener
+import co.edu.uniandes.vinilos.testing.clickVisible
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import co.edu.uniandes.vinilos.testing.waitUntilGone
 import org.hamcrest.Description
@@ -135,11 +137,11 @@ class PrizePickerScreenTest {
             ),
         )
         capture("hu14-fecha-restaurada.png")
-        onView(withId(R.id.closeSheet)).perform(click())
+        onView(withId(R.id.closeSheet)).perform(clickListener())
         waitUntilGone(withId(R.id.savePrize))
         waitForPickerFocus().perform(click())
         waitForDisplayed(withId(R.id.savePrize)).check(matches(isEnabled()))
-        onView(withId(R.id.closeSheet)).perform(click())
+        onView(withId(R.id.closeSheet)).perform(clickListener())
         waitUntilGone(withId(R.id.savePrize))
         waitForPickerFocus()
         onView(withId(R.id.headerClose)).perform(click())
@@ -166,7 +168,7 @@ class PrizePickerScreenTest {
         onView(withId(R.id.reviewArtist)).perform(click())
         waitUntilGone(withId(R.id.prizeSearch))
         detail.scrollToText(context.getString(R.string.prize_detail_count, 0))
-        onView(withId(R.id.addPrizeButton)).check(matches(isEnabled())).perform(click())
+        onView(allOf(withId(R.id.addPrizeButton), isEnabled(), isDisplayed())).perform(clickVisible())
         waitForDisplayed(withId(R.id.prizeSearch))
         filter(fixture.name)
         select(fixture.name)
@@ -248,7 +250,7 @@ class PrizePickerScreenTest {
         artists.enterAs(R.string.role_collector).tapRow(fixture.name)
         waitForDisplayed(allOf(withId(R.id.performerName), withText(fixture.name)))
         detail.scrollToText(context.getString(R.string.prize_detail_count, assigned))
-        onView(withId(R.id.addPrizeButton)).check(matches(isEnabled())).perform(click())
+        onView(allOf(withId(R.id.addPrizeButton), isEnabled(), isDisplayed())).perform(clickVisible())
         waitForDisplayed(withId(R.id.prizeSearch))
         onView(withId(R.id.bottomNav)).check(matches(not(isDisplayed())))
     }
