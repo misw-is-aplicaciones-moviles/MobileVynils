@@ -14,6 +14,8 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import co.edu.uniandes.vinilos.R
+import co.edu.uniandes.vinilos.testing.bringIntoView
+import co.edu.uniandes.vinilos.testing.clickListener
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Matchers.allOf
 
@@ -49,7 +51,8 @@ class TrackCreateRobot {
     }
 
     fun enterDigits(vararg digits: Int): TrackCreateRobot {
-        digits.forEach { digit -> onView(withId(keyId(digit))).perform(scrollTo(), click()) }
+        // En API 21 el toque inyectado no llega a la tecla tras cerrar el teclado.
+        digits.forEach { digit -> onView(withId(keyId(digit))).perform(bringIntoView(), clickListener()) }
         return this
     }
 

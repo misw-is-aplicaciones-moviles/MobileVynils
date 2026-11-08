@@ -74,6 +74,13 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
         observePrizeResults()
     }
 
+    override fun onStart() {
+        super.onStart()
+        // La transición retrasa onResume. Un clic en ese hueco deja navigationPending activo
+        // y el selector de premios no se abre al volver de un integrante.
+        viewModel.onNavigationReturned()
+    }
+
     override fun onResume() {
         super.onResume()
         viewModel.onNavigationReturned()

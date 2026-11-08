@@ -335,9 +335,9 @@ Se reutilizan PerformerListRobot, BackendFirewall y las esperas existentes. El d
 
 ### Preparación y limpieza
 
-BackendPrizes crea premios y artistas exclusivos con una marca generada por el runner compartido. No reutiliza ni altera la semilla. `scripts/run_e2e.sh` prepara las cinco secuencias necesarias, pasa `hu14FixtureRun` y ejecuta la limpieza al terminar Gradle. La transacción de `limpiar_premios_e2e.sql` selecciona los IDs por marca y campos propios, elimina primero sus asociaciones y aborta si encuentra una relación con datos ajenos. Conserva el resultado de Gradle y devuelve error si falla la limpieza.
+BackendPrizes crea premios y artistas exclusivos con una marca propia de la prueba. No reutiliza ni altera la semilla. Desde el 2026-11-06 la propia regla borra por HTTP, al terminar, el vínculo, el premio y el artista, y falla sin borrar si el vínculo mezcla un fixture con otro dato. `scripts/run_e2e.sh` ya no es requisito: sigue disponible para adelantar las secuencias del Postgres de Docker. El párrafo que sigue conserva el comando de esa fecha.
 
-La limpieza se comprobó en tablas temporales: conserva semilla y otra ejecución y rechaza una asociación ajena. Las ejecuciones reales se contrastan con una lectura de las asignaciones anterior a las pruebas. No se usa el DELETE defectuoso ni se modifica BackVynils. Para esta suite se utiliza el runner compartido; la preparación falla antes de escribir si se invoca directamente sin su marca.
+La limpieza se comprobó en tablas temporales: conserva semilla y otra ejecución y rechaza una asociación ajena. Las ejecuciones reales se contrastan con una lectura de las asignaciones anterior a las pruebas. No se llama a `DELETE /collectors/:id/albums/:albumId` ni se modifica BackVynils.
 
 ```bash
 bash scripts/run_e2e.sh \

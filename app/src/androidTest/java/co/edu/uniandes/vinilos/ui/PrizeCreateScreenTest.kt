@@ -35,6 +35,7 @@ import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.robots.PrizeCreateRobot
 import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.BackendPrizes
+import co.edu.uniandes.vinilos.testing.clickVisible
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import co.edu.uniandes.vinilos.testing.waitUntilGone
 import co.edu.uniandes.vinilos.ui.artists.PrizeAdapter
@@ -59,14 +60,15 @@ import java.util.concurrent.TimeUnit
  * HU13 por la vía real: Artistas, detalle, "Agregar premio", "Elegir premio" y "Crear un premio nuevo".
  *
  * Los premios que crea la pantalla llevan la marca de la ejecución, la descripción y la organización de los fixtures
- * de HU14, así que `scripts/run_e2e.sh` (y la limpieza manual de docs/06) los elimina junto con el resto.
+ * de HU14. [BackendPrizes] los elimina junto con el artista al terminar.
  */
 @RunWith(AndroidJUnit4::class)
 class PrizeCreateScreenTest {
+    private val prizes = BackendPrizes()
     private val firewall = BackendFirewall()
     private val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
-    @get:Rule val rules: TestRule = RuleChain.outerRule(firewall).around(activityRule)
+    @get:Rule val rules: TestRule = RuleChain.outerRule(prizes).around(firewall).around(activityRule)
     private val artists = PerformerListRobot()
     private val detail = PerformerDetailRobot()
     private val form = PrizeCreateRobot()
@@ -185,6 +187,13 @@ class PrizeCreateScreenTest {
             .tapCreate()
         waitForDisplayed(createdNotice())
         assertCreatedRowIsFirstAndSelected(name)
+        // El aviso de "Premio creado" es corto. Si sigue en pantalla, el de la asignación no llega a verse.
+        waitUntilGone(
+            allOf(
+                withId(com.google.android.material.R.id.snackbar_text),
+                withText(R.string.prize_created_message),
+            ),
+        )
 
         onView(withId(R.id.continuePrize)).perform(click())
         waitForDisplayed(withId(R.id.savePrize)).check(matches(not(isEnabled())))
@@ -250,14 +259,14 @@ class PrizeCreateScreenTest {
         assertEquals(1, fixture.prizes().count { it.getString("name") == name })
     }
 
-    private fun fixture() = BackendPrizes(PerformerType.MUSICIAN).apply { prepare() }
+    private fun fixture() = prizes.open(PerformerType.MUSICIAN)
 
-    private fun openPicker(fixture: BackendPrizes) {
+    private fun openPicker(fixture: BackendPrizes.Fixture) {
         openArtistsAsCollector()
         artists.tapRow(fixture.name)
         waitForDisplayed(allOf(withId(R.id.performerName), withText(fixture.name)))
         detail.scrollToText(context.getString(R.string.prize_detail_count, 0))
-        onView(withId(R.id.addPrizeButton)).check(matches(isEnabled())).perform(click())
+        onView(allOf(withId(R.id.addPrizeButton), isEnabled(), isDisplayed())).perform(clickVisible())
         waitForDisplayed(withId(R.id.prizeSearch))
         onView(withId(R.id.bottomNav)).check(matches(not(isDisplayed())))
     }
@@ -407,7 +416,7 @@ class PrizeCreateScreenTest {
     }
 
     private companion object {
-        // Con estos dos valores `limpiar_premios_e2e.sql` reconoce el premio como fixture de la ejecución.
+        // Con estos dos valores la limpieza de BackendPrizes reconoce el premio que escribió la pantalla.
         const val PRIZE_DESCRIPTION = "Dato HU14"
         const val PRIZE_ORGANIZATION = "Equipo de pruebas HU14"
         const val NOTICE_TIMEOUT_MILLIS = 10_000L

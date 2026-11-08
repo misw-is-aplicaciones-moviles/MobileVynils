@@ -29,6 +29,8 @@ import co.edu.uniandes.vinilos.robots.PerformerDetailRobot
 import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.BackendPrizes
+import co.edu.uniandes.vinilos.testing.clickListener
+import co.edu.uniandes.vinilos.testing.clickVisible
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import co.edu.uniandes.vinilos.testing.waitUntilGone
 import org.hamcrest.Description
@@ -51,13 +53,14 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-/** HU14 desde la entrada real de HU04; run_e2e.sh limpia solo los fixtures de esta ejecución. */
+/** HU14 desde la entrada real de HU04. [BackendPrizes] borra al terminar solo los datos de esta prueba. */
 @RunWith(AndroidJUnit4::class)
 class PrizePickerScreenTest {
+    private val prizes = BackendPrizes()
     private val firewall = BackendFirewall()
     private val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
-    @get:Rule val rules: TestRule = RuleChain.outerRule(firewall).around(activityRule)
+    @get:Rule val rules: TestRule = RuleChain.outerRule(prizes).around(firewall).around(activityRule)
     private val artists = PerformerListRobot()
     private val detail = PerformerDetailRobot()
     private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
@@ -134,11 +137,11 @@ class PrizePickerScreenTest {
             ),
         )
         capture("hu14-fecha-restaurada.png")
-        onView(withId(R.id.closeSheet)).perform(click())
+        onView(withId(R.id.closeSheet)).perform(clickListener())
         waitUntilGone(withId(R.id.savePrize))
         waitForPickerFocus().perform(click())
         waitForDisplayed(withId(R.id.savePrize)).check(matches(isEnabled()))
-        onView(withId(R.id.closeSheet)).perform(click())
+        onView(withId(R.id.closeSheet)).perform(clickListener())
         waitUntilGone(withId(R.id.savePrize))
         waitForPickerFocus()
         onView(withId(R.id.headerClose)).perform(click())
@@ -165,7 +168,7 @@ class PrizePickerScreenTest {
         onView(withId(R.id.reviewArtist)).perform(click())
         waitUntilGone(withId(R.id.prizeSearch))
         detail.scrollToText(context.getString(R.string.prize_detail_count, 0))
-        onView(withId(R.id.addPrizeButton)).check(matches(isEnabled())).perform(click())
+        onView(allOf(withId(R.id.addPrizeButton), isEnabled(), isDisplayed())).perform(clickVisible())
         waitForDisplayed(withId(R.id.prizeSearch))
         filter(fixture.name)
         select(fixture.name)
@@ -197,7 +200,7 @@ class PrizePickerScreenTest {
     }
 
     private fun assertSaved(
-        fixture: BackendPrizes,
+        fixture: BackendPrizes.Fixture,
         date: LocalDate,
     ) {
         waitUntilGone(withId(R.id.prizeSearch))
@@ -238,16 +241,16 @@ class PrizePickerScreenTest {
             ),
         )
 
-    private fun fixture(type: PerformerType) = BackendPrizes(type).apply { prepare() }
+    private fun fixture(type: PerformerType) = prizes.open(type)
 
     private fun open(
-        fixture: BackendPrizes,
+        fixture: BackendPrizes.Fixture,
         assigned: Int = 0,
     ) {
         artists.enterAs(R.string.role_collector).tapRow(fixture.name)
         waitForDisplayed(allOf(withId(R.id.performerName), withText(fixture.name)))
         detail.scrollToText(context.getString(R.string.prize_detail_count, assigned))
-        onView(withId(R.id.addPrizeButton)).check(matches(isEnabled())).perform(click())
+        onView(allOf(withId(R.id.addPrizeButton), isEnabled(), isDisplayed())).perform(clickVisible())
         waitForDisplayed(withId(R.id.prizeSearch))
         onView(withId(R.id.bottomNav)).check(matches(not(isDisplayed())))
     }
