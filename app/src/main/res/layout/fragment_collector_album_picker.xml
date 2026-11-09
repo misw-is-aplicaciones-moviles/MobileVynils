@@ -40,6 +40,7 @@
                 android:drawablePadding="@dimen/space_m"
                 android:hint="@string/collector_album_picker_search_hint"
                 android:imeOptions="actionSearch"
+                android:importantForAutofill="no"
                 android:inputType="text"
                 android:maxLines="1"
                 android:minHeight="@dimen/min_touch_target"

@@ -264,7 +264,7 @@ Rama `feature/HU04-05-pruebas-e2e`. Amplía la clase existente `PerformerDetailS
 Las ejecuciones detectaron dos supuestos de la prueba: clic por ID compartido entre varios integrantes y título del álbum fuera de pantalla en horizontal por la altura de su portada. Se corrigieron buscando al integrante por nombre y desplazando hasta el texto hijo de una fila alta antes de verificar o tocar el contenido. No se modificó código productivo ni se debilitaron verificaciones.
 
 ```bash
-bash scripts/run_e2e.sh \
+./gradlew connectedDebugAndroidTest \
   '-Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.ui.PerformerDetailScreenTest' \
   '-Pandroid.testInstrumentationRunnerArguments.package=co.edu.uniandes.vinilos.ui' \
   -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true \

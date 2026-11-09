@@ -80,7 +80,9 @@
             android:textColor="@color/vinilos_duration_empty"
             tools:text="$0" />
 
-        <LinearLayout
+        <!-- Un solo TextView con el ícono como compound drawable (Lint UseCompoundDrawables): 15 dp intrínsecos,
+             igual que el ImageView anterior. AppCompatTextView para que drawableStartCompat cargue el vector en API 21. -->
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/priceError"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -88,25 +90,13 @@
             android:layout_marginTop="@dimen/track_label_gap"
             android:layout_marginEnd="@dimen/track_sheet_margin"
             android:accessibilityLiveRegion="polite"
+            android:drawablePadding="@dimen/track_field_error_gap"
             android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:visibility="gone">
-
-            <ImageView
-                android:layout_width="@dimen/track_field_error_icon"
-                android:layout_height="@dimen/track_field_error_icon"
-                android:contentDescription="@null"
-                android:importantForAccessibility="no"
-                app:srcCompat="@drawable/ic_field_error" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/track_field_error_gap"
-                android:includeFontPadding="false"
-                android:text="@string/collector_album_add_price_error"
-                android:textAppearance="@style/TextAppearance.Vinilos.FieldError" />
-        </LinearLayout>
+            android:includeFontPadding="false"
+            android:text="@string/collector_album_add_price_error"
+            android:textAppearance="@style/TextAppearance.Vinilos.FieldError"
+            android:visibility="gone"
+            app:drawableStartCompat="@drawable/ic_field_error" />
 
         <!-- Teclado numérico -->
         <LinearLayout
@@ -276,7 +266,7 @@
                 android:text="@string/album_status_unavailable" />
         </LinearLayout>
 
-        <LinearLayout
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/statusError"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -284,25 +274,13 @@
             android:layout_marginTop="@dimen/track_label_gap"
             android:layout_marginEnd="@dimen/track_sheet_margin"
             android:accessibilityLiveRegion="polite"
+            android:drawablePadding="@dimen/track_field_error_gap"
             android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:visibility="gone">
-
-            <ImageView
-                android:layout_width="@dimen/track_field_error_icon"
-                android:layout_height="@dimen/track_field_error_icon"
-                android:contentDescription="@null"
-                android:importantForAccessibility="no"
-                app:srcCompat="@drawable/ic_field_error" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/track_field_error_gap"
-                android:includeFontPadding="false"
-                android:text="@string/collector_album_add_status_error"
-                android:textAppearance="@style/TextAppearance.Vinilos.FieldError" />
-        </LinearLayout>
+            android:includeFontPadding="false"
+            android:text="@string/collector_album_add_status_error"
+            android:textAppearance="@style/TextAppearance.Vinilos.FieldError"
+            android:visibility="gone"
+            app:drawableStartCompat="@drawable/ic_field_error" />
 
         <!-- Error de envío -->
         <TextView
