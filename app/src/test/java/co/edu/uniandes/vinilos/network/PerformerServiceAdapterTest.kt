@@ -175,7 +175,8 @@ class PerformerServiceAdapterTest {
         runTest {
             serve("/musicians" to json("api/musicians.json"), "/bands" to MockResponse().setResponseCode(500))
             val dao = FakePerformerDao()
-            val repository = PerformerRepositoryImpl(dao, newAdapter(testScheduler))
+            val dispatcher = StandardTestDispatcher(testScheduler)
+            val repository = PerformerRepositoryImpl(dao, newAdapter(testScheduler), dispatcher)
 
             val result = repository.getPerformers()
 

@@ -15,16 +15,21 @@ import co.edu.uniandes.vinilos.models.Performer
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.repositories.PerformerRepository
 import co.edu.uniandes.vinilos.repositories.SessionRepository
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Artist screen. Shows what Room already has, revalidates once against the backend, and keeps the list on
- * screen when a refresh fails. The Todos / Músicos / Bandas filter is applied here to the list already loaded:
- * choosing a chip never calls the repository.
+ * screen when a refresh fails. The rows are built in [defaultDispatcher], so the main thread only draws them.
+ * The Todos / Músicos / Bandas filter is applied here to the list already loaded: choosing a chip never calls
+ * the repository.
  */
 class PerformerListViewModel(
     private val performerRepository: PerformerRepository,
     private val sessionRepository: SessionRepository,
+    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
     private val _uiState =
         MediatorLiveData(PerformerListUiState()).apply {
@@ -81,10 +86,11 @@ class PerformerListViewModel(
         }
     }
 
-    private fun publish(result: DataResult<List<Performer>, DataError>) {
+    private suspend fun publish(result: DataResult<List<Performer>, DataError>) {
         when (result) {
             is DataResult.Success -> {
-                loaded = result.value.map(::toItem)
+                loaded = withContext(defaultDispatcher) { result.value.map(::toItem) }
+                // `filter` is read here, after the rows are built: a chip chosen meanwhile is the one applied.
                 update {
                     copy(
                         performers = visibleFor(filter),

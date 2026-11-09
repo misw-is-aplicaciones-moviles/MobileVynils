@@ -363,6 +363,7 @@ class PerformerDetailServiceAdapterTest {
         return PerformerRepositoryImpl(
             FakePerformerDao(),
             PerformerServiceAdapterImpl({ client.create(VinilosApiService::class.java) }, dispatcher, dispatcher),
+            dispatcher,
         )
     }
 }

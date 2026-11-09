@@ -11,12 +11,15 @@ import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.network.PerformerServiceAdapter
 import co.edu.uniandes.vinilos.network.networkRequest
 import com.google.gson.JsonParseException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 internal class PerformerRepositoryImpl(
     private val performerDao: PerformerDao,
     private val serviceAdapter: PerformerServiceAdapter,
+    private val defaultDispatcher: CoroutineDispatcher,
 ) : PerformerRepository {
     private val mutex = Mutex()
 
@@ -39,14 +42,14 @@ internal class PerformerRepositoryImpl(
 
     override suspend fun getPerformers(forceRefresh: Boolean): DataResult<List<Performer>, DataError> =
         mutex.withLock {
-            val cached = if (forceRefresh) emptyList() else performerDao.getAll()
+            val cached = if (forceRefresh) emptyList() else readAll()
             if (cached.isNotEmpty()) {
-                DataResult.Success(cached.toModels())
+                DataResult.Success(cached)
             } else {
                 when (val result = networkRequest { serviceAdapter.getPerformers() }) {
                     is DataResult.Success -> {
-                        performerDao.replaceAll(result.value.map { it.toEntity() })
-                        DataResult.Success(performerDao.getAll().toModels())
+                        performerDao.replaceAll(withContext(defaultDispatcher) { result.value.map { it.toEntity() } })
+                        DataResult.Success(readAll())
                     }
 
                     // Nothing was fetched completely, so Room is not touched.
@@ -56,4 +59,11 @@ internal class PerformerRepositoryImpl(
                 }
             }
         }
+
+    // The backend has no pagination, so the size of the list has no limit: it is mapped off the main thread.
+    // Room runs the query on its own executor but resumes the caller, which for the artist screen is Main.
+    private suspend fun readAll(): List<Performer> {
+        val rows = performerDao.getAll()
+        return withContext(defaultDispatcher) { rows.toModels() }
+    }
 }

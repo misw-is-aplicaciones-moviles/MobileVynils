@@ -15,6 +15,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -34,12 +36,12 @@ class PerformerRepositoryImplTest {
     private val ruben = musician(id = 100, name = "Rubén Blades", year = 1948, albums = 2)
     private val network = listOf(ruben, queen, freddie, brian)
 
-    private fun repository(
+    private fun TestScope.repository(
         dao: FakePerformerDao,
         adapter: FakePerformerServiceAdapter,
-    ) = PerformerRepositoryImpl(dao, adapter)
+    ) = PerformerRepositoryImpl(dao, adapter, StandardTestDispatcher(testScheduler))
 
-    private suspend fun loadFromNetwork(performers: List<Performer>) =
+    private suspend fun TestScope.loadFromNetwork(performers: List<Performer>) =
         repository(FakePerformerDao(), FakePerformerServiceAdapter(performers = performers)).getPerformers()
 
     private fun names(result: DataResult<List<Performer>, DataError>) =
