@@ -22,6 +22,7 @@ import co.edu.uniandes.vinilos.viewmodels.PerformerFilter
 import co.edu.uniandes.vinilos.viewmodels.PerformerListEvent
 import co.edu.uniandes.vinilos.viewmodels.PerformerListUiState
 import co.edu.uniandes.vinilos.viewmodels.PerformerListViewModel
+import com.bumptech.glide.Glide
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
 
@@ -30,7 +31,12 @@ class PerformerListFragment : Fragment(R.layout.fragment_performer_list) {
     private var bindingOrNull: FragmentPerformerListBinding? = null
     private val binding get() = checkNotNull(bindingOrNull)
     private val viewModel: PerformerListViewModel by viewModels { PerformerListViewModel.Factory }
-    private val adapter = PerformerAdapter(onPerformerClick = { id, type -> viewModel.onPerformerClicked(id, type) })
+
+    // Created on the first onViewCreated, when the Fragment is attached and Glide can bind to its lifecycle. It is
+    // kept across view recreations, as before, so the list is there at once when coming back from a detail.
+    private val adapter by lazy {
+        PerformerAdapter(Glide.with(this)) { id, type -> viewModel.onPerformerClicked(id, type) }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,6 +91,8 @@ class PerformerListFragment : Fragment(R.layout.fragment_performer_list) {
     }
 
     private fun bindList() {
+        // match_parent inside the refresh layout: its size never depends on the rows, so new lists skip re-measuring it.
+        binding.performerList.setHasFixedSize(true)
         binding.performerList.adapter = adapter
         binding.performerList.addItemDecoration(
             createListDivider(requireContext(), R.dimen.performer_divider_inset_end),
