@@ -206,18 +206,28 @@ Los reportes quedan en `app/build/reports/`.
 
 ### Pruebas instrumentadas y E2E (Espresso)
 
-Necesitan un dispositivo o emulador conectado y BackVynils local con la semilla. Compila con `vinilos.baseUrl=http://10.0.2.2:3000/` para el emulador, o `vinilos.baseUrl=http://127.0.0.1:3000/` para la tablet por USB y ejecuta antes `adb -d reverse tcp:3000 tcp:3000`. Las pruebas E2E se ejecutan contra el backend local; el APK de entrega conectado a Heroku se conserva por separado en la raíz del repositorio. Las pruebas que crean álbumes y canciones requieren que las secuencias de IDs de la base estén alineadas con la semilla. `scripts/run_e2e.sh` las prepara (sin borrar datos) y luego ejecuta `connectedDebugAndroidTest`:
+Necesitan un dispositivo o emulador conectado y BackVynils local con la semilla. Compila con `vinilos.baseUrl=http://10.0.2.2:3000/` para el emulador, o `vinilos.baseUrl=http://127.0.0.1:3000/` para la tablet por USB y ejecuta antes `adb -d reverse tcp:3000 tcp:3000`. Las pruebas E2E se ejecutan contra el backend local; el APK de entrega conectado a Heroku se conserva por separado en la raíz del repositorio.
+
+Antes de cada corrida completa, reinicia BackVynils desde cero y carga la semilla (Git Bash, en la carpeta de BackVynils), como indica su `GETTING_STARTED.md`:
 
 ```bash
-./scripts/run_e2e.sh
+docker compose down
+rm -rf pgdata
+docker compose up -d
+until curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/albums | grep -q 200; do sleep 3; done
+docker compose exec -T db psql -U postgres -d vinyls < sql/data.sql
 ```
 
-El script requiere bash (en Windows, Git Bash) y acceso a `docker`. Si el backend no usa el puerto 3000 o no lo encuentra, indica el contenedor PostgreSQL con `E2E_DB_CONTAINER=<id> ./scripts/run_e2e.sh`. Repite el script cada vez que vuelvas a cargar la semilla de BackVynils.
-
-Para ejecutar una sola clase, pasa los argumentos de Gradle al script:
+No adelantes las secuencias de la base con `setval`: deben quedar en 1, por debajo de la semilla (ids 100 y 101), para que las pruebas de premios limpien sus propios vínculos. Tampoco interrumpas una corrida a la mitad; si pasa, repite el reinicio. Luego ejecuta las pruebas directamente con Gradle:
 
 ```bash
-./scripts/run_e2e.sh -Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.ui.AlbumListScreenTest
+./gradlew connectedDebugAndroidTest
+```
+
+Para ejecutar una sola clase:
+
+```bash
+./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=co.edu.uniandes.vinilos.ui.AlbumListScreenTest
 ```
 
 ### Prueba de conexión con el backend
