@@ -1,5 +1,6 @@
 package co.edu.uniandes.vinilos.network
 
+import android.net.TrafficStats
 import com.google.gson.GsonBuilder
 import com.google.gson.Strictness
 import okhttp3.Cache
@@ -9,7 +10,10 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.Closeable
 import java.io.File
+import java.net.InetAddress
+import java.net.Socket
 import java.util.concurrent.TimeUnit
+import javax.net.SocketFactory
 
 /** Cliente compartido por los Service Adapters. Su propietario controla su ciclo de vida. */
 internal class NetworkClient(
@@ -29,6 +33,9 @@ internal class NetworkClient(
             // 5 s (keepAliveTimeout), así que el pool las descarta antes y nunca reutiliza una cerrada.
             .connectionPool(ConnectionPool(MAX_IDLE_CONNECTIONS, KEEP_ALIVE_MILLIS, TimeUnit.MILLISECONDS))
             .cache(Cache(cacheDirectory, HTTP_CACHE_BYTES))
+            // Etiqueta el tráfico de la app: el Network Profiler lo atribuye y StrictMode deja de reportar
+            // UntaggedSocketViolation en debug.
+            .socketFactory(TaggedSocketFactory())
             .apply { configureNetworkLogging(this) }
             .build()
 
@@ -52,7 +59,48 @@ internal class NetworkClient(
         httpClient.dispatcher.executorService.shutdown()
     }
 
+    /**
+     * Pone el tag de [TrafficStats] en el hilo que crea cada socket. OkHttp crea y conecta los sockets en sus
+     * propios hilos, que es donde StrictMode revisa el tag; por eso no basta con etiquetar el hilo que llama.
+     */
+    private class TaggedSocketFactory(
+        private val delegate: SocketFactory = getDefault(),
+    ) : SocketFactory() {
+        override fun createSocket(): Socket = tagged { delegate.createSocket() }
+
+        override fun createSocket(
+            host: String?,
+            port: Int,
+        ): Socket = tagged { delegate.createSocket(host, port) }
+
+        override fun createSocket(
+            host: String?,
+            port: Int,
+            localHost: InetAddress?,
+            localPort: Int,
+        ): Socket = tagged { delegate.createSocket(host, port, localHost, localPort) }
+
+        override fun createSocket(
+            host: InetAddress?,
+            port: Int,
+        ): Socket = tagged { delegate.createSocket(host, port) }
+
+        override fun createSocket(
+            address: InetAddress?,
+            port: Int,
+            localAddress: InetAddress?,
+            localPort: Int,
+        ): Socket = tagged { delegate.createSocket(address, port, localAddress, localPort) }
+
+        private inline fun tagged(create: () -> Socket): Socket {
+            TrafficStats.setThreadStatsTag(TRAFFIC_TAG)
+            return create()
+        }
+    }
+
     private companion object {
+        /** Valor arbitrario que identifica el tráfico de Vinilos en las herramientas de red. */
+        const val TRAFFIC_TAG = 0x5649_4E4C
         const val CONNECT_TIMEOUT_MILLIS = 10_000L
         const val READ_TIMEOUT_MILLIS = 30_000L
         const val HTTP_CACHE_BYTES = 10L * 1024 * 1024
