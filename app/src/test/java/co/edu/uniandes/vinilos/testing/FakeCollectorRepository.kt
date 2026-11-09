@@ -61,6 +61,7 @@ internal class FakeCollectorRepository(
     ): DataResult<Unit, DataError> {
         addAlbumCalls++
         lastAddAlbumRequest = Triple(collectorId, albumId, draft)
+        addAlbumGate?.await()
         return addAlbumResult
     }
 
@@ -69,4 +70,5 @@ internal class FakeCollectorRepository(
     var lastAddAlbumRequest: Triple<Int, Int, NewCollectorAlbum>? = null
         private set
     var addAlbumResult: DataResult<Unit, DataError> = DataResult.Success(Unit)
+    var addAlbumGate: CompletableDeferred<Unit>? = null
 }

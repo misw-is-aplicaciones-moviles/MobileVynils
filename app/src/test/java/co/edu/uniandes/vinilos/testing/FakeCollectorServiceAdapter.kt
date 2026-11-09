@@ -46,6 +46,7 @@ internal class FakeCollectorServiceAdapter(
     ): CollectorAlbumDto {
         addAlbumCalls++
         lastAddAlbumRequest = Triple(collectorId, albumId, draft)
+        addAlbumFailure?.let { throw it }
         return addAlbumResponse
     }
 
@@ -54,4 +55,5 @@ internal class FakeCollectorServiceAdapter(
     var lastAddAlbumRequest: Triple<Int, Int, NewCollectorAlbum>? = null
         private set
     var addAlbumResponse: CollectorAlbumDto = CollectorAlbumDto(price = 0, status = "Active", album = null)
+    var addAlbumFailure: Throwable? = null
 }

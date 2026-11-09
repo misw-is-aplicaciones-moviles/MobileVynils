@@ -3,9 +3,11 @@ package co.edu.uniandes.vinilos.network
 import co.edu.uniandes.vinilos.models.AlbumStatus
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.NewCollectorAlbum
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.testing.MockWebServerRule
 import co.edu.uniandes.vinilos.testing.readResource
+import com.google.gson.JsonParser
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -14,6 +16,7 @@ import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import okhttp3.mockwebserver.SocketPolicy
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -218,6 +221,82 @@ class CollectorServiceAdapterTest {
         }
 
     // Both calls arrive together, so the answer is chosen by path.
+    @Test
+    fun `add album posts exactly the price and the status`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setBody("""{"price":150,"status":"Active"}"""))
+            val adapter = newAdapter(testScheduler)
+
+            val link = adapter.addAlbum(100, 200, NewCollectorAlbum(price = 150, status = AlbumStatus.ACTIVE))
+
+            val request = serverRule.server.takeRequest()
+            assertEquals("POST", request.method)
+            assertEquals("/collectors/100/albums/200", request.path)
+            val body = JsonParser.parseString(request.body.readUtf8()).asJsonObject
+            assertEquals(setOf("price", "status"), body.keySet())
+            assertEquals(150, body["price"].asInt)
+            assertEquals("Active", body["status"].asString)
+            assertEquals(150, link.price)
+            assertEquals("Active", link.status)
+        }
+
+    @Test
+    fun `the unavailable status posts as Inactive`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setBody("""{"price":1,"status":"Inactive"}"""))
+            val adapter = newAdapter(testScheduler)
+
+            adapter.addAlbum(100, 200, NewCollectorAlbum(price = 1, status = AlbumStatus.INACTIVE))
+
+            val request = serverRule.server.takeRequest()
+            val body = JsonParser.parseString(request.body.readUtf8()).asJsonObject
+            assertEquals(1, body["price"].asInt)
+            assertEquals("Inactive", body["status"].asString)
+        }
+
+    @Test
+    fun `a failing add album keeps its HTTP status`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setResponseCode(400))
+            val adapter = newAdapter(testScheduler)
+
+            assertEquals(
+                DataResult.Failure(DataError.Http(400)),
+                networkRequest { adapter.addAlbum(100, 200, NewCollectorAlbum(150, AlbumStatus.ACTIVE)) },
+            )
+        }
+
+    @Test
+    fun `an add album disconnection is a network error and the next explicit call recovers`() =
+        runTest {
+            val adapter = newAdapter(testScheduler)
+            val draft = NewCollectorAlbum(150, AlbumStatus.ACTIVE)
+            serverRule.server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START))
+
+            assertEquals(DataResult.Failure(DataError.Network), networkRequest { adapter.addAlbum(100, 200, draft) })
+
+            serverRule.server.enqueue(MockResponse().setBody("""{"price":150,"status":"Active"}"""))
+            val link = networkRequest { adapter.addAlbum(100, 200, draft) }
+
+            assertEquals(150, (link as DataResult.Success).value.price)
+            assertEquals(2, serverRule.server.requestCount)
+        }
+
+    @Test
+    fun `a non positive add album id fails before any request`() =
+        runTest {
+            val adapter = newAdapter(testScheduler)
+            val draft = NewCollectorAlbum(150, AlbumStatus.ACTIVE)
+
+            listOf(0, -1).forEach { id ->
+                val collectorError = runCatching { adapter.addAlbum(id, 200, draft) }.exceptionOrNull()
+                assertTrue(collectorError is IllegalArgumentException)
+                val albumError = runCatching { adapter.addAlbum(100, id, draft) }.exceptionOrNull()
+                assertTrue(albumError is IllegalArgumentException)
+            }
+            assertEquals(0, serverRule.server.requestCount)
+        }
+
     private fun serve(vararg routes: Pair<String, MockResponse>) {
         val byPath = routes.toMap()
         serverRule.server.dispatcher =

@@ -1,9 +1,11 @@
 package co.edu.uniandes.vinilos.repositories
 
 import co.edu.uniandes.vinilos.database.toEntity
+import co.edu.uniandes.vinilos.models.AlbumStatus
 import co.edu.uniandes.vinilos.models.Collector
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.NewCollectorAlbum
 import co.edu.uniandes.vinilos.testing.FakeCollectorDao
 import co.edu.uniandes.vinilos.testing.FakeCollectorServiceAdapter
 import co.edu.uniandes.vinilos.testing.collector
@@ -147,5 +149,51 @@ class CollectorRepositoryImplTest {
             assertTrue(error is CancellationException)
             assertEquals(0, dao.writeCount)
             assertEquals(listOf("Guardado"), dao.getAll().map { it.name })
+        }
+
+    @Test
+    fun `adding an album sends the draft and leaves Room intact`() =
+        runTest {
+            val dao = FakeCollectorDao(listOf(cached.toEntity()))
+            val adapter = FakeCollectorServiceAdapter()
+            val draft = NewCollectorAlbum(price = 150, status = AlbumStatus.ACTIVE)
+
+            val result = repository(dao, adapter).addAlbum(100, 200, draft)
+
+            assertEquals(DataResult.Success(Unit), result)
+            assertEquals(1, adapter.addAlbumCalls)
+            assertEquals(Triple(100, 200, draft), adapter.lastAddAlbumRequest)
+            assertEquals(0, dao.writeCount)
+            assertEquals(listOf("Guardado"), dao.getAll().map { it.name })
+        }
+
+    @Test
+    fun `an add album failure returns the data error and leaves Room intact`() =
+        runTest {
+            val dao = FakeCollectorDao(listOf(cached.toEntity()))
+            val adapter = FakeCollectorServiceAdapter().apply { addAlbumFailure = IOException("boom") }
+
+            val result = repository(dao, adapter).addAlbum(100, 200, NewCollectorAlbum(150, AlbumStatus.ACTIVE))
+
+            assertEquals(DataResult.Failure(DataError.Network), result)
+            assertEquals(0, dao.writeCount)
+            assertEquals(listOf("Guardado"), dao.getAll().map { it.name })
+        }
+
+    @Test
+    fun `a non positive add album id is rejected before the adapter`() =
+        runTest {
+            val dao = FakeCollectorDao()
+            val adapter = FakeCollectorServiceAdapter()
+            val draft = NewCollectorAlbum(150, AlbumStatus.ACTIVE)
+
+            listOf(0, -1).forEach { id ->
+                val collectorError = runCatching { repository(dao, adapter).addAlbum(id, 200, draft) }.exceptionOrNull()
+                assertTrue(collectorError is IllegalArgumentException)
+                val albumError = runCatching { repository(dao, adapter).addAlbum(100, id, draft) }.exceptionOrNull()
+                assertTrue(albumError is IllegalArgumentException)
+            }
+            assertEquals(0, adapter.addAlbumCalls)
+            assertEquals(0, dao.writeCount)
         }
 }
