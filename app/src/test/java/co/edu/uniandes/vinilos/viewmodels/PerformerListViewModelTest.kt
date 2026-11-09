@@ -20,6 +20,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -232,6 +233,27 @@ class PerformerListViewModelTest {
 
             viewModel.onFilterSelected(PerformerFilter.ALL)
             assertEquals(3, states.last().performers.size)
+            advanceUntilIdle()
+            assertEquals(1, repository.localCalls)
+            assertEquals(0, repository.remoteCalls)
+        }
+
+    @Test
+    fun `Todos after other filters brings back the same loaded list, in order and without copying it`() =
+        runTest {
+            val repository = FakePerformerRepository(hasCache = false, localResult = DataResult.Success(performers))
+            val viewModel = viewModel(repository)
+            val states = viewModel.recordStates()
+            advanceUntilIdle()
+            val firstTodos = states.last().performers
+
+            viewModel.onFilterSelected(PerformerFilter.MUSICIANS)
+            viewModel.onFilterSelected(PerformerFilter.BANDS)
+            viewModel.onFilterSelected(PerformerFilter.ALL)
+
+            val todos = states.last().performers
+            assertEquals(listOf(103, 101, 100), todos.map { it.id })
+            assertSame("Todos must reuse the loaded list instead of filtering a copy", firstTodos, todos)
             advanceUntilIdle()
             assertEquals(1, repository.localCalls)
             assertEquals(0, repository.remoteCalls)

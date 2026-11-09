@@ -53,7 +53,7 @@ class PerformerListViewModel(
 
     fun onFilterSelected(filter: PerformerFilter) {
         if (filter == currentState().filter) return
-        update { copy(filter = filter, performers = loaded.filter { filter.accepts(it.type) }) }
+        update { copy(filter = filter, performers = visibleFor(filter)) }
     }
 
     fun onPerformerClicked(
@@ -87,7 +87,7 @@ class PerformerListViewModel(
                 loaded = result.value.map(::toItem)
                 update {
                     copy(
-                        performers = loaded.filter { filter.accepts(it.type) },
+                        performers = visibleFor(filter),
                         hasPerformers = loaded.isNotEmpty(),
                         isLoading = false,
                         isRefreshing = false,
@@ -109,6 +109,11 @@ class PerformerListViewModel(
             _events.value = Event(PerformerListEvent.ShowRefreshError(error))
         }
     }
+
+    // Todos lets everything through, so it shares the loaded list instead of copying it. `loaded` is never mutated,
+    // only replaced, so sharing it with the state is safe.
+    private fun visibleFor(filter: PerformerFilter): List<PerformerItem> =
+        if (filter == PerformerFilter.ALL) loaded else loaded.filter { filter.accepts(it.type) }
 
     private fun toItem(performer: Performer) =
         PerformerItem(
