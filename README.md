@@ -18,9 +18,9 @@
 
 Versión móvil de Vinilos: catálogo de álbumes, artistas y coleccionistas de vinilos, construida en Kotlin con Vistas XML, Fragments y el patrón MVVM (LiveData, Repository y Service Adapter con Retrofit) para el curso Ingeniería de software para aplicaciones móviles (MISO, Uniandes).
 
-Sprint 1 incluye HU01 (catálogo de álbumes), HU02 (detalle de álbum), HU07 (crear álbum) y HU08 (asociar canciones a un álbum). La app funciona desde Android 5.0 Lollipop (API 21).
+Sprint 1 incluye HU01 (catálogo de álbumes), HU02 (detalle de álbum), HU07 (crear álbum) y HU08 (asociar canciones a un álbum). Sprint 2 agrega HU03 (listado de artistas), HU04 (detalle de artista), HU05 (listado de coleccionistas), HU06 (detalle de coleccionista), HU11 (agregar un álbum a un coleccionista), HU13 (crear premios) y HU14 (agregar un premio a un artista). La app funciona desde Android 5.0 Lollipop (API 21).
 
-> **APK del Sprint 1:** descarga [`vinilos-1.0.0.apk`](vinilos-1.0.0.apk), ubicado en la raíz del repositorio. Este APK consume el backend desplegado en **https://backvynils-0c3a5834efca.herokuapp.com/** y necesita conexión a Internet. Puede instalarse en un dispositivo Android físico o en un emulador; no requiere levantar el backend local.
+> **APK del Sprint 2:** descarga [`vinilos-2.0.0.apk`](vinilos-2.0.0.apk), ubicado en la raíz del repositorio. El del Sprint 1, [`vinilos-1.0.0.apk`](vinilos-1.0.0.apk), se conserva junto a él. Este APK consume el backend desplegado en **https://backvynils-0c3a5834efca.herokuapp.com/** y necesita conexión a Internet. Puede instalarse en un dispositivo Android físico o en un emulador; no requiere levantar el backend local.
 
 ## Contenido
 
@@ -86,7 +86,7 @@ La URL se incorpora al APK durante la compilación mediante `vinilos.baseUrl` en
 
 ## 2. Opción A: instalar el APK publicado
 
-El APK de esta entrega está en la **raíz del repositorio**: [`vinilos-1.0.0.apk`](vinilos-1.0.0.apk). Es una compilación **debug** y tiene configurado el backend `https://backvynils-0c3a5834efca.herokuapp.com/`.
+El APK de esta entrega está en la **raíz del repositorio**: [`vinilos-2.0.0.apk`](vinilos-2.0.0.apk). Es una compilación **debug** y tiene configurado el backend `https://backvynils-0c3a5834efca.herokuapp.com/`.
 
 Pasos:
 
@@ -94,14 +94,14 @@ Pasos:
 2. En un dispositivo Android con Internet, permite la instalación desde la aplicación con la que abriste el APK y completa la instalación. También puedes instalarlo por USB:
 
    ```bash
-   adb -d install -r vinilos-1.0.0.apk
+   adb -d install -r vinilos-2.0.0.apk
    ```
 
-   En un emulador, arrastra el APK a su ventana o utiliza `adb -e install -r vinilos-1.0.0.apk`.
+   En un emulador, arrastra el APK a su ventana o utiliza `adb -e install -r vinilos-2.0.0.apk`.
 
 3. Abre **Vinilos**, elige **Visitante** o **Coleccionista** y comprueba el catálogo y el detalle de un álbum.
 
-**Backend de la versión publicada:** `vinilos-1.0.0.apk` se conecta a `https://backvynils-0c3a5834efca.herokuapp.com/`. No necesita Docker, un backend local ni `adb reverse`. Cambiar `local.properties` no cambia este APK descargado. Para conectarse a un backend local hay que generar e instalar un APK propio, como se explica a continuación.
+**Backend de la versión publicada:** `vinilos-2.0.0.apk` se conecta a `https://backvynils-0c3a5834efca.herokuapp.com/`. No necesita Docker, un backend local ni `adb reverse`. Cambiar `local.properties` no cambia este APK descargado. Para conectarse a un backend local hay que generar e instalar un APK propio, como se explica a continuación.
 
 ## 3. Opción B: construir la app desde el código
 
@@ -156,7 +156,7 @@ Para un dispositivo físico por USB, usa `vinilos.baseUrl=http://127.0.0.1:3000/
 
 7. Abre **Vinilos**, selecciona un rol, comprueba que carga el catálogo y abre el detalle de un álbum. Como coleccionista también puedes crear un álbum y asociarle una canción; los cambios se guardarán en tu backend local. Mantén el backend encendido y, si usas USB, el dispositivo conectado.
 
-Si vuelves a instalar `vinilos-1.0.0.apk` de la raíz, la aplicación volverá a utilizar Heroku. Si Android informa que las firmas son incompatibles, consulta [Solución de problemas](#solución-de-problemas).
+Si vuelves a instalar `vinilos-2.0.0.apk` de la raíz, la aplicación volverá a utilizar Heroku. Si Android informa que las firmas son incompatibles, consulta [Solución de problemas](#solución-de-problemas).
 
 ### Desde Android Studio
 
@@ -249,10 +249,10 @@ El workflow actual genera y publica el APK de release al subir un tag `sprint-*`
 Flujo de cada entrega:
 
 1. Crear `release/sprint-N` desde `develop` y revisar versión, documentación y backend de destino.
-2. Configurar `vinilos.baseUrl` antes de compilar. El APK actual `vinilos-1.0.0.apk` se compiló para Heroku. Para reemplazarlo por otra compilación debug de entrega, después de `./gradlew assembleDebug` copiar el resultado a la raíz:
+2. Configurar `vinilos.baseUrl` antes de compilar. El APK actual `vinilos-2.0.0.apk` se compiló para Heroku. Para reemplazarlo por otra compilación debug de entrega, después de `./gradlew assembleDebug` copiar el resultado a la raíz:
 
    ```bash
-   cp app/build/outputs/apk/debug/app-debug.apk vinilos-1.0.0.apk
+   cp app/build/outputs/apk/debug/app-debug.apk vinilos-2.0.0.apk
    ```
 
    Verificar la instalación y el backend antes de agregar el archivo a Git. Los directorios `build/` permanecen ignorados; el APK de entrega se versiona en la raíz. Si se entrega un APK release, generarlo con `./gradlew assembleRelease`, identificarlo como `vinilos-sprint-N-release.apk` en la raíz y actualizar el enlace de descarga.
