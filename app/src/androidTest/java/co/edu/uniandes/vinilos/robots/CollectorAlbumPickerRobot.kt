@@ -66,8 +66,9 @@ class CollectorAlbumPickerRobot {
         return this
     }
 
+    /** Espera la fila: tras una búsqueda, las filas se calculan fuera del hilo principal y llegan después. */
     fun select(name: String): CollectorAlbumPickerRobot {
-        onView(focusedList()).perform(scrollToRow(name), choose(name))
+        awaitRow(name) { onView(focusedList()).perform(choose(name)) }
         return this
     }
 

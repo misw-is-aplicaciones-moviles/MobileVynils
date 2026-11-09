@@ -7,7 +7,6 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
-import androidx.test.espresso.matcher.ViewMatchers.isDescendantOfA
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
@@ -85,7 +84,8 @@ class CollectorAlbumAddRobot {
         val visibility = if (shown) Visibility.VISIBLE else Visibility.GONE
         onView(withId(viewId)).check(matches(withEffectiveVisibility(visibility)))
         if (shown) {
-            onView(allOf(withText(text), isDescendantOfA(withId(viewId)))).check(matches(isDisplayed()))
+            // El aviso es un solo TextView con el ícono como compound drawable (Lint UseCompoundDrawables).
+            onView(allOf(withId(viewId), withText(text))).check(matches(isDisplayed()))
         }
         return this
     }

@@ -1,7 +1,9 @@
 package co.edu.uniandes.vinilos.ui.collectors
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
@@ -15,9 +17,13 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navOptions
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.FragmentCollectorAlbumPickerBinding
+import co.edu.uniandes.vinilos.databinding.ItemCollectorAlbumOptionBinding
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
@@ -26,6 +32,8 @@ import co.edu.uniandes.vinilos.viewmodels.CollectorAlbumPickerEvent
 import co.edu.uniandes.vinilos.viewmodels.CollectorAlbumPickerOption
 import co.edu.uniandes.vinilos.viewmodels.CollectorAlbumPickerUiState
 import co.edu.uniandes.vinilos.viewmodels.CollectorAlbumPickerViewModel
+import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestManager
 import com.google.android.material.transition.MaterialFadeThrough
 
 /** HU11 phase 1: choose an album from the catalog before adding it to a collector's collection. */
@@ -48,8 +56,11 @@ class CollectorAlbumPickerFragment : Fragment(R.layout.fragment_collector_album_
         bindingOrNull = FragmentCollectorAlbumPickerBinding.bind(view)
         (activity as? PrimaryActionHost)?.hidePrimaryAction()
         bindHeader()
-        adapter = CollectorAlbumPickerAdapter { albumId -> viewModel.onAlbumSelected(albumId) }
+        // One RequestManager tied to this Fragment for every row, instead of resolving it from each row's view.
+        adapter = CollectorAlbumPickerAdapter(Glide.with(this)) { albumId -> viewModel.onAlbumSelected(albumId) }
         binding.albumList.layoutManager = LinearLayoutManager(requireContext())
+        // Its height comes from the layout weight, not from the rows, so new lists do not re-measure it.
+        binding.albumList.setHasFixedSize(true)
         binding.albumList.adapter = adapter
         binding.searchField.doAfterTextChanged { text ->
             viewModel.onQueryChanged(text?.toString().orEmpty())
@@ -99,6 +110,9 @@ class CollectorAlbumPickerFragment : Fragment(R.layout.fragment_collector_album_
     }
 
     private fun render(state: CollectorAlbumPickerUiState) {
+        val visibleAlbums = state.visibleAlbums
+        val noSearchResults = state.hasNoSearchResults
+        val selectedAlbum = state.selectedAlbum
         binding.searchField.isEnabled = !state.isLoading
         binding.loadingState.root.isVisible = state.isLoading
         binding.pickerStatus.isVisible = state.error != null
@@ -109,20 +123,20 @@ class CollectorAlbumPickerFragment : Fragment(R.layout.fragment_collector_album_
                 else -> R.string.collector_detail_error_body
             },
         )
-        binding.emptyMessage.isVisible = state.isEmpty || state.hasNoSearchResults
+        binding.emptyMessage.isVisible = state.isEmpty || noSearchResults
         binding.emptyMessage.setText(
-            if (state.hasNoSearchResults) {
+            if (noSearchResults) {
                 R.string.collector_album_picker_no_results
             } else {
                 R.string.collector_album_picker_empty
             },
         )
-        binding.albumList.isVisible = state.visibleAlbums.isNotEmpty()
+        binding.albumList.isVisible = visibleAlbums.isNotEmpty()
         binding.pickerContext.text = getString(R.string.collector_album_picker_context, state.collectorName)
-        adapter.submitList(state.visibleAlbums)
+        adapter.submitList(visibleAlbums)
         binding.continueButton.isEnabled = state.canContinue
         binding.continueButton.text =
-            state.selectedAlbum?.let {
+            selectedAlbum?.let {
                 getString(R.string.collector_album_picker_continue, it.name)
             } ?: getString(R.string.collector_album_picker_select)
     }
@@ -185,19 +199,27 @@ class CollectorAlbumPickerFragment : Fragment(R.layout.fragment_collector_album_
 }
 
 private class CollectorAlbumPickerAdapter(
+    private val requestManager: RequestManager,
     private val onAlbumClick: (Int) -> Unit,
-) : androidx.recyclerview.widget.ListAdapter<CollectorAlbumPickerOption, CollectorAlbumOptionHolder>(Diff) {
+) : ListAdapter<CollectorAlbumPickerOption, CollectorAlbumOptionHolder>(Diff) {
     override fun onCreateViewHolder(
-        parent: android.view.ViewGroup,
+        parent: ViewGroup,
         viewType: Int,
-    ): CollectorAlbumOptionHolder = CollectorAlbumOptionHolder(parent, onAlbumClick)
+    ): CollectorAlbumOptionHolder =
+        CollectorAlbumOptionHolder(
+            ItemCollectorAlbumOptionBinding.inflate(LayoutInflater.from(parent.context), parent, false),
+            requestManager,
+            onAlbumClick,
+        )
 
     override fun onBindViewHolder(
         holder: CollectorAlbumOptionHolder,
         position: Int,
     ) = holder.bind(getItem(position))
 
-    private object Diff : androidx.recyclerview.widget.DiffUtil.ItemCallback<CollectorAlbumPickerOption>() {
+    override fun onViewRecycled(holder: CollectorAlbumOptionHolder) = holder.unbind()
+
+    private object Diff : DiffUtil.ItemCallback<CollectorAlbumPickerOption>() {
         override fun areItemsTheSame(
             oldItem: CollectorAlbumPickerOption,
             newItem: CollectorAlbumPickerOption,
@@ -212,22 +234,27 @@ private class CollectorAlbumPickerAdapter(
 
 private const val ALREADY_ADDED_ALPHA = 0.5f
 
+/**
+ * Receives the binding already inflated (one view lookup per row), sets its click listener once and clears its
+ * cover when recycled, so a row off screen neither keeps the bitmap nor finishes a download nobody will see.
+ */
 private class CollectorAlbumOptionHolder(
-    parent: android.view.ViewGroup,
-    private val onAlbumClick: (Int) -> Unit,
-) : androidx.recyclerview.widget.RecyclerView.ViewHolder(
-        co.edu.uniandes.vinilos.databinding.ItemCollectorAlbumOptionBinding
-            .inflate(
-                android.view.LayoutInflater.from(parent.context),
-                parent,
-                false,
-            ).root,
-    ) {
-    private val binding =
-        co.edu.uniandes.vinilos.databinding.ItemCollectorAlbumOptionBinding
-            .bind(itemView)
+    private val binding: ItemCollectorAlbumOptionBinding,
+    private val requestManager: RequestManager,
+    onAlbumClick: (Int) -> Unit,
+) : RecyclerView.ViewHolder(binding.root) {
+    private var current: CollectorAlbumPickerOption? = null
+    private val selectedColor = ContextCompat.getColor(binding.root.context, R.color.vinilos_selected_row)
+    private val unselectedColor = ContextCompat.getColor(binding.root.context, android.R.color.transparent)
+
+    init {
+        binding.root.setOnClickListener {
+            current?.takeUnless { it.isAlreadyAdded }?.let { onAlbumClick(it.album.id) }
+        }
+    }
 
     fun bind(option: CollectorAlbumPickerOption) {
+        current = option
         val context = binding.root.context
         val album = option.album
         val artist = album.performerName ?: context.getString(R.string.album_no_artist)
@@ -246,25 +273,19 @@ private class CollectorAlbumOptionHolder(
         )
         binding.root.isEnabled = !option.isAlreadyAdded
         binding.root.alpha = if (option.isAlreadyAdded) ALREADY_ADDED_ALPHA else 1f
-        binding.root.setBackgroundColor(
-            ContextCompat.getColor(
-                context,
-                if (option.isSelected) {
-                    R.color.vinilos_selected_row
-                } else {
-                    android.R.color.transparent
-                },
-            ),
-        )
+        binding.root.setBackgroundColor(if (option.isSelected) selectedColor else unselectedColor)
         binding.root.contentDescription =
             context.getString(R.string.collector_album_picker_row_description, album.name, artist, meta)
-        binding.root.setOnClickListener { if (!option.isAlreadyAdded) onAlbumClick(album.id) }
-        com.bumptech.glide.Glide
-            .with(binding.root)
+        requestManager
             .load(album.coverUrl)
             .placeholder(R.drawable.img_album_cover)
             .error(R.drawable.img_album_cover)
             .centerCrop()
             .into(binding.albumArtwork.coverView)
+    }
+
+    fun unbind() {
+        current = null
+        requestManager.clear(binding.albumArtwork.coverView)
     }
 }

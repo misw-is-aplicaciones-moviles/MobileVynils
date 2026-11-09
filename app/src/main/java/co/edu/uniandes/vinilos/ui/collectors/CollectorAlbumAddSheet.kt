@@ -3,13 +3,13 @@ package co.edu.uniandes.vinilos.ui.collectors
 import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.os.bundleOf
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -33,12 +33,16 @@ class CollectorAlbumAddSheet : BottomSheetDialogFragment(R.layout.fragment_colle
     private val binding get() = checkNotNull(bindingOrNull)
     private val viewModel: CollectorAlbumAddViewModel by viewModels { CollectorAlbumAddViewModel.Factory }
 
+    // Built once per view and released with it: render runs on every digit and only reads them.
+    private var keypad: List<View> = emptyList()
+    private var colors: SheetColors? = null
+
     override fun getTheme(): Int = R.style.ThemeOverlay_Vinilos_BottomSheet
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState) as BottomSheetDialog
         dialog.window?.setBackgroundDrawable(
-            ColorDrawable(ContextCompat.getColor(requireContext(), R.color.vinilos_sheet_scrim)),
+            ContextCompat.getColor(requireContext(), R.color.vinilos_sheet_scrim).toDrawable(),
         )
         dialog.window?.setDimAmount(0f)
         dialog.window?.setSoftInputMode(
@@ -54,6 +58,7 @@ class CollectorAlbumAddSheet : BottomSheetDialogFragment(R.layout.fragment_colle
         savedInstanceState: Bundle?,
     ) {
         bindingOrNull = FragmentCollectorAlbumAddSheetBinding.bind(view)
+        colors = SheetColors.from(requireContext())
         bindSubtitle()
         bindKeypad()
         bindFields()
@@ -69,6 +74,8 @@ class CollectorAlbumAddSheet : BottomSheetDialogFragment(R.layout.fragment_colle
 
     override fun onDestroyView() {
         super.onDestroyView()
+        keypad = emptyList()
+        colors = null
         bindingOrNull = null
     }
 
@@ -100,6 +107,7 @@ class CollectorAlbumAddSheet : BottomSheetDialogFragment(R.layout.fragment_colle
         binding.key0.setOnClickListener { onDigit(0) }
         binding.keyClear.setOnClickListener { onDigitAction { viewModel.onClearPrice() } }
         binding.keyDelete.setOnClickListener { onDigitAction { viewModel.onDeleteDigit() } }
+        keypad = digits + listOf(binding.key0, binding.keyClear, binding.keyDelete)
     }
 
     private fun bindFields() {
@@ -122,42 +130,20 @@ class CollectorAlbumAddSheet : BottomSheetDialogFragment(R.layout.fragment_colle
     }
 
     private fun render(state: CollectorAlbumAddUiState) {
+        val colors = checkNotNull(colors)
         binding.priceDisplay.text = state.priceText
-        binding.priceDisplay.setTextColor(
-            ContextCompat.getColor(
-                requireContext(),
-                if (state.priceDigits > 0) R.color.vinilos_cream else R.color.vinilos_duration_empty,
-            ),
-        )
+        binding.priceDisplay.setTextColor(if (state.priceDigits > 0) colors.cream else colors.emptyPrice)
         binding.priceError.isVisible = state.isPriceInvalid
         binding.statusError.isVisible = state.isStatusMissing
         binding.submitError.isVisible = state.submitError != null
         state.submitError?.let { binding.submitError.setText(submitErrorMessage(it)) }
 
-        binding.statusAvailable.setBackgroundColor(
-            ContextCompat.getColor(
-                requireContext(),
-                if (state.status == AlbumStatus.ACTIVE) R.color.vinilos_charcoal else android.R.color.transparent,
-            ),
-        )
-        binding.statusAvailable.setTextColor(
-            ContextCompat.getColor(
-                requireContext(),
-                if (state.status == AlbumStatus.ACTIVE) R.color.vinilos_cream else R.color.vinilos_charcoal,
-            ),
-        )
-        binding.statusUnavailable.setBackgroundColor(
-            ContextCompat.getColor(
-                requireContext(),
-                if (state.status == AlbumStatus.INACTIVE) R.color.vinilos_charcoal else android.R.color.transparent,
-            ),
-        )
-        binding.statusUnavailable.setTextColor(
-            ContextCompat.getColor(
-                requireContext(),
-                if (state.status == AlbumStatus.INACTIVE) R.color.vinilos_cream else R.color.vinilos_charcoal,
-            ),
-        )
+        val available = state.status == AlbumStatus.ACTIVE
+        val unavailable = state.status == AlbumStatus.INACTIVE
+        binding.statusAvailable.setBackgroundColor(if (available) colors.charcoal else colors.transparent)
+        binding.statusAvailable.setTextColor(if (available) colors.cream else colors.charcoal)
+        binding.statusUnavailable.setBackgroundColor(if (unavailable) colors.charcoal else colors.transparent)
+        binding.statusUnavailable.setTextColor(if (unavailable) colors.cream else colors.charcoal)
 
         binding.addButton.isEnabled = !state.isSubmitting
         binding.addButton.setText(
@@ -169,27 +155,11 @@ class CollectorAlbumAddSheet : BottomSheetDialogFragment(R.layout.fragment_colle
         )
         binding.cancelButton.isEnabled = !state.isSubmitting
         binding.closeSheet.isEnabled = !state.isSubmitting
-        keypadButtons().forEach { it.isEnabled = !state.isSubmitting }
+        keypad.forEach { it.isEnabled = !state.isSubmitting }
         binding.statusAvailable.isEnabled = !state.isSubmitting
         binding.statusUnavailable.isEnabled = !state.isSubmitting
         isCancelable = !state.isSubmitting
     }
-
-    private fun keypadButtons() =
-        listOf(
-            binding.key0,
-            binding.key1,
-            binding.key2,
-            binding.key3,
-            binding.key4,
-            binding.key5,
-            binding.key6,
-            binding.key7,
-            binding.key8,
-            binding.key9,
-            binding.keyClear,
-            binding.keyDelete,
-        )
 
     private fun submitErrorMessage(error: DataError): Int =
         when (error) {
@@ -234,6 +204,24 @@ class CollectorAlbumAddSheet : BottomSheetDialogFragment(R.layout.fragment_colle
         BottomSheetBehavior.from(sheet).apply {
             skipCollapsed = true
             state = BottomSheetBehavior.STATE_EXPANDED
+        }
+    }
+
+    /** The sheet's colors, resolved once per view instead of on every render. */
+    private class SheetColors(
+        val cream: Int,
+        val charcoal: Int,
+        val emptyPrice: Int,
+        val transparent: Int,
+    ) {
+        companion object {
+            fun from(context: Context) =
+                SheetColors(
+                    cream = ContextCompat.getColor(context, R.color.vinilos_cream),
+                    charcoal = ContextCompat.getColor(context, R.color.vinilos_charcoal),
+                    emptyPrice = ContextCompat.getColor(context, R.color.vinilos_duration_empty),
+                    transparent = ContextCompat.getColor(context, android.R.color.transparent),
+                )
         }
     }
 
