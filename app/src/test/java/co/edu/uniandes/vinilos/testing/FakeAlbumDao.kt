@@ -16,6 +16,8 @@ internal class FakeAlbumDao(
     var writeCount = 0
         private set
 
+    override suspend fun hasAlbums(): Boolean = rows.isNotEmpty()
+
     override suspend fun getAll(): List<AlbumEntity> {
         readCount++
         return rows.values.sortedBy { asciiFolded(it.name) }

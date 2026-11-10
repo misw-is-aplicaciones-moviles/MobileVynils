@@ -34,7 +34,14 @@ class AlbumViewHolder(
     private val binding: ItemAlbumCatalogBinding,
     private val onAlbumClick: (Int) -> Unit,
 ) : RecyclerView.ViewHolder(binding.root) {
+    private var current: AlbumItem? = null
+
+    init {
+        binding.root.setOnClickListener { current?.let { onAlbumClick(it.id) } }
+    }
+
     fun bind(item: AlbumItem) {
+        current = item
         val context = binding.root.context
         val artist = item.artistName ?: context.getString(R.string.album_no_artist)
         val meta = context.getString(R.string.album_genre_year, item.genreName, item.year)
@@ -44,7 +51,6 @@ class AlbumViewHolder(
         binding.albumMeta.text = meta
         // The row is a single accessibility node: its children are hidden from TalkBack.
         binding.root.contentDescription = context.getString(R.string.album_item_description, item.name, artist, meta)
-        binding.root.setOnClickListener { onAlbumClick(item.id) }
         Glide
             .with(binding.root)
             .load(item.coverUrl)
