@@ -137,6 +137,64 @@ class AlbumRepositoryImplTest {
         }
 
     @Test
+    fun `an unreadable Room says there is no cache instead of crashing`() =
+        runTest {
+            val dao = FakeAlbumDao(listOf(album(1, "A").toEntity()))
+            dao.readFailure = SQLiteException("corrupt")
+
+            assertFalse(repository(dao, FakeTrackDao(), FakeAlbumServiceAdapter()).hasCachedAlbums())
+        }
+
+    @Test
+    fun `a failing cache read goes to the network and stores its answer`() =
+        runTest {
+            val dao = FakeAlbumDao().apply { readFailure = SQLiteException("corrupt") }
+            val adapter = FakeAlbumServiceAdapter(albums = network)
+
+            val result = repository(dao, FakeTrackDao(), adapter).getAlbums()
+
+            assertEquals(1, adapter.callCount)
+            assertEquals(
+                listOf("A Day at the Races", "A Night at the Opera", "Buscando América", "Poeta del pueblo"),
+                (result as DataResult.Success).value.map { it.name },
+            )
+            dao.readFailure = null
+            assertEquals(network.size, dao.getAll().size)
+        }
+
+    @Test
+    fun `a failing write shows the backend answer in the order Room would have given`() =
+        runTest {
+            val dao = FakeAlbumDao().apply { writeFailure = SQLiteException("disk full") }
+            val fromBackend =
+                listOf(
+                    album(3, "zeta"),
+                    album(5, "Ágape"),
+                    album(1, "alfa"),
+                    album(4, "Beta"),
+                    album(2, "Alfa"),
+                )
+
+            val result = repository(dao, FakeTrackDao(), FakeAlbumServiceAdapter(albums = fromBackend)).getAlbums()
+
+            // COLLATE NOCASE only folds A-Z: "Ágape" goes after "zeta", and equal names keep the id order.
+            assertEquals(listOf(1, 2, 4, 3, 5), (result as DataResult.Success).value.map { it.id })
+            assertFalse(dao.hasAlbums())
+        }
+
+    @Test
+    fun `a failing cache read without network returns the network error`() =
+        runTest {
+            val dao = FakeAlbumDao().apply { readFailure = SQLiteException("corrupt") }
+            val adapter = FakeAlbumServiceAdapter(failure = IOException("offline"))
+
+            val result = repository(dao, FakeTrackDao(), adapter).getAlbums()
+
+            assertEquals(DataResult.Failure(DataError.Network), result)
+            assertEquals(0, dao.writeCount)
+        }
+
+    @Test
     fun `concurrent calls with empty Room make a single network call`() =
         runTest {
             val gate = CompletableDeferred<Unit>()
