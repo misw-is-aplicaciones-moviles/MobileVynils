@@ -13,6 +13,7 @@ import co.edu.uniandes.vinilos.testing.band
 import co.edu.uniandes.vinilos.testing.getOrAwaitValue
 import co.edu.uniandes.vinilos.testing.musician
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -20,9 +21,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import kotlin.coroutines.CoroutineContext
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("MagicNumber") // Fixture ids, years and counts.
@@ -40,7 +43,7 @@ class PerformerListViewModelTest {
     private fun viewModel(
         repository: FakePerformerRepository,
         session: FakeSessionRepository = FakeSessionRepository(UserRole.VISITOR),
-    ) = PerformerListViewModel(repository, session)
+    ) = PerformerListViewModel(repository, session, mainDispatcherRule.testDispatcher)
 
     /** Records every state so a test can see transitions, not only the last value. */
     private fun PerformerListViewModel.recordStates(): List<PerformerListUiState> {
@@ -236,6 +239,67 @@ class PerformerListViewModelTest {
             assertEquals(1, repository.localCalls)
             assertEquals(0, repository.remoteCalls)
         }
+
+    @Test
+    fun `Todos after other filters brings back the same loaded list, in order and without copying it`() =
+        runTest {
+            val repository = FakePerformerRepository(hasCache = false, localResult = DataResult.Success(performers))
+            val viewModel = viewModel(repository)
+            val states = viewModel.recordStates()
+            advanceUntilIdle()
+            val firstTodos = states.last().performers
+
+            viewModel.onFilterSelected(PerformerFilter.MUSICIANS)
+            viewModel.onFilterSelected(PerformerFilter.BANDS)
+            viewModel.onFilterSelected(PerformerFilter.ALL)
+
+            val todos = states.last().performers
+            assertEquals(listOf(103, 101, 100), todos.map { it.id })
+            assertSame("Todos must reuse the loaded list instead of filtering a copy", firstTodos, todos)
+            advanceUntilIdle()
+            assertEquals(1, repository.localCalls)
+            assertEquals(0, repository.remoteCalls)
+        }
+
+    @Test
+    fun `rows are built off the main dispatcher and a chip chosen meanwhile is the one applied`() =
+        runTest {
+            val held = HeldDispatcher()
+            val repository = FakePerformerRepository(hasCache = false, localResult = DataResult.Success(performers))
+            val viewModel = PerformerListViewModel(repository, FakeSessionRepository(UserRole.VISITOR), held)
+            val states = viewModel.recordStates()
+            advanceUntilIdle()
+            assertTrue("The rows wait for the injected dispatcher", states.last().isLoading)
+            assertTrue(states.last().performers.isEmpty())
+
+            viewModel.onFilterSelected(PerformerFilter.BANDS)
+            held.release()
+            advanceUntilIdle()
+
+            val last = states.last()
+            assertFalse(last.isLoading)
+            assertEquals(PerformerFilter.BANDS, last.filter)
+            assertEquals(listOf("Queen"), last.performers.map { it.name })
+            assertTrue(last.hasPerformers)
+        }
+
+    /** Keeps the dispatched work until [release], to act while the rows are being built. */
+    private class HeldDispatcher : CoroutineDispatcher() {
+        private val held = mutableListOf<Runnable>()
+
+        override fun dispatch(
+            context: CoroutineContext,
+            block: Runnable,
+        ) {
+            held += block
+        }
+
+        fun release() {
+            val blocks = held.toList()
+            held.clear()
+            blocks.forEach(Runnable::run)
+        }
+    }
 
     @Test
     fun `a filter without artists is empty but the loaded list is still there`() =
