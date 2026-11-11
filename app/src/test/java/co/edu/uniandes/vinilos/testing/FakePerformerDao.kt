@@ -1,5 +1,6 @@
 package co.edu.uniandes.vinilos.testing
 
+import android.database.sqlite.SQLiteException
 import co.edu.uniandes.vinilos.database.dao.PerformerDao
 import co.edu.uniandes.vinilos.database.entities.PerformerEntity
 
@@ -12,18 +13,31 @@ internal class FakePerformerDao(
     var writeCount = 0
         private set
 
-    override suspend fun getAll(): List<PerformerEntity> =
-        rows.values.sortedWith(compareBy({ asciiFolded(it.name) }, { it.id }))
+    /** Thrown by [getAll] and [count], as a corrupt or unreadable database would. */
+    var readFailure: SQLiteException? = null
 
-    override suspend fun count(): Int = rows.size
+    /** Thrown by the writes before changing anything, as a full disk would. */
+    var writeFailure: SQLiteException? = null
+
+    override suspend fun getAll(): List<PerformerEntity> {
+        readFailure?.let { throw it }
+        return rows.values.sortedWith(compareBy({ asciiFolded(it.name) }, { it.id }))
+    }
+
+    override suspend fun count(): Int {
+        readFailure?.let { throw it }
+        return rows.size
+    }
 
     override suspend fun upsertAll(performers: List<PerformerEntity>) {
         writeCount++
+        writeFailure?.let { throw it }
         performers.forEach { rows[it.id] = it }
     }
 
     override suspend fun deleteAllExcept(ids: List<Int>) {
         writeCount++
+        writeFailure?.let { throw it }
         rows.keys.retainAll(ids.toSet())
     }
 

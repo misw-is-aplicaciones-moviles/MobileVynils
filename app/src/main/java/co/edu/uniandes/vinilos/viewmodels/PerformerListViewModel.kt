@@ -15,16 +15,21 @@ import co.edu.uniandes.vinilos.models.Performer
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.repositories.PerformerRepository
 import co.edu.uniandes.vinilos.repositories.SessionRepository
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Artist screen. Shows what Room already has, revalidates once against the backend, and keeps the list on
- * screen when a refresh fails. The Todos / Músicos / Bandas filter is applied here to the list already loaded:
- * choosing a chip never calls the repository.
+ * screen when a refresh fails. The rows are built in [defaultDispatcher], so the main thread only draws them.
+ * The Todos / Músicos / Bandas filter is applied here to the list already loaded: choosing a chip never calls
+ * the repository.
  */
 class PerformerListViewModel(
     private val performerRepository: PerformerRepository,
     private val sessionRepository: SessionRepository,
+    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
     private val _uiState =
         MediatorLiveData(PerformerListUiState()).apply {
@@ -53,7 +58,7 @@ class PerformerListViewModel(
 
     fun onFilterSelected(filter: PerformerFilter) {
         if (filter == currentState().filter) return
-        update { copy(filter = filter, performers = loaded.filter { filter.accepts(it.type) }) }
+        update { copy(filter = filter, performers = visibleFor(filter)) }
     }
 
     fun onPerformerClicked(
@@ -81,13 +86,14 @@ class PerformerListViewModel(
         }
     }
 
-    private fun publish(result: DataResult<List<Performer>, DataError>) {
+    private suspend fun publish(result: DataResult<List<Performer>, DataError>) {
         when (result) {
             is DataResult.Success -> {
-                loaded = result.value.map(::toItem)
+                loaded = withContext(defaultDispatcher) { result.value.map(::toItem) }
+                // `filter` is read here, after the rows are built: a chip chosen meanwhile is the one applied.
                 update {
                     copy(
-                        performers = loaded.filter { filter.accepts(it.type) },
+                        performers = visibleFor(filter),
                         hasPerformers = loaded.isNotEmpty(),
                         isLoading = false,
                         isRefreshing = false,
@@ -109,6 +115,11 @@ class PerformerListViewModel(
             _events.value = Event(PerformerListEvent.ShowRefreshError(error))
         }
     }
+
+    // Todos lets everything through, so it shares the loaded list instead of copying it. `loaded` is never mutated,
+    // only replaced, so sharing it with the state is safe.
+    private fun visibleFor(filter: PerformerFilter): List<PerformerItem> =
+        if (filter == PerformerFilter.ALL) loaded else loaded.filter { filter.accepts(it.type) }
 
     private fun toItem(performer: Performer) =
         PerformerItem(

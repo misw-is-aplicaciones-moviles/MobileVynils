@@ -1,5 +1,6 @@
 package co.edu.uniandes.vinilos.repositories
 
+import android.database.sqlite.SQLiteException
 import co.edu.uniandes.vinilos.database.toEntity
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
@@ -15,6 +16,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -34,12 +37,12 @@ class PerformerRepositoryImplTest {
     private val ruben = musician(id = 100, name = "Rubén Blades", year = 1948, albums = 2)
     private val network = listOf(ruben, queen, freddie, brian)
 
-    private fun repository(
+    private fun TestScope.repository(
         dao: FakePerformerDao,
         adapter: FakePerformerServiceAdapter,
-    ) = PerformerRepositoryImpl(dao, adapter)
+    ) = PerformerRepositoryImpl(dao, adapter, StandardTestDispatcher(testScheduler))
 
-    private suspend fun loadFromNetwork(performers: List<Performer>) =
+    private suspend fun TestScope.loadFromNetwork(performers: List<Performer>) =
         repository(FakePerformerDao(), FakePerformerServiceAdapter(performers = performers)).getPerformers()
 
     private fun names(result: DataResult<List<Performer>, DataError>) =
@@ -170,6 +173,62 @@ class PerformerRepositoryImplTest {
 
             assertFalse(repository(FakePerformerDao(), adapter).hasCachedPerformers())
             assertTrue(repository(FakePerformerDao(listOf(band(1, "A").toEntity())), adapter).hasCachedPerformers())
+        }
+
+    @Test
+    fun `an unreadable Room says there is no cache instead of crashing`() =
+        runTest {
+            val dao = FakePerformerDao(listOf(band(1, "A").toEntity()))
+            dao.readFailure = SQLiteException("corrupt")
+
+            assertFalse(repository(dao, FakePerformerServiceAdapter()).hasCachedPerformers())
+        }
+
+    @Test
+    fun `a failing cache read goes to the network and stores its answer`() =
+        runTest {
+            val dao = FakePerformerDao().apply { readFailure = SQLiteException("corrupt") }
+            val adapter = FakePerformerServiceAdapter(performers = network)
+
+            val result = repository(dao, adapter).getPerformers()
+
+            assertEquals(1, adapter.callCount)
+            assertEquals(listOf("Brian May", "Freddie Mercury", "Queen", "Rubén Blades"), names(result))
+            dao.readFailure = null
+            assertEquals(network.size, dao.count())
+        }
+
+    @Test
+    fun `a failing write shows the backend answer in the order Room would have given`() =
+        runTest {
+            val dao = FakePerformerDao().apply { writeFailure = SQLiteException("disk full") }
+            val fromBackend =
+                listOf(
+                    musician(id = 3, name = "zeta"),
+                    musician(id = 5, name = "Ángel"),
+                    musician(id = 1, name = "alfa", bandId = 2, bandName = "Alfa"),
+                    musician(id = 4, name = "Beta"),
+                    band(id = 2, name = "Alfa"),
+                )
+
+            val result = repository(dao, FakePerformerServiceAdapter(performers = fromBackend)).getPerformers()
+
+            // COLLATE NOCASE only folds A-Z: "Ángel" goes after "zeta", and equal names keep the id order.
+            assertEquals(listOf(1, 2, 4, 3, 5), (result as DataResult.Success).value.map { it.id })
+            assertEquals("Alfa", result.value.first().bandName)
+            assertEquals(0, dao.count())
+        }
+
+    @Test
+    fun `a failing cache read without network returns the network error`() =
+        runTest {
+            val dao = FakePerformerDao().apply { readFailure = SQLiteException("corrupt") }
+            val adapter = FakePerformerServiceAdapter(failure = IOException("offline"))
+
+            val result = repository(dao, adapter).getPerformers()
+
+            assertEquals(DataResult.Failure(DataError.Network), result)
+            assertEquals(0, dao.writeCount)
         }
 
     @Test

@@ -11,10 +11,14 @@ import co.edu.uniandes.vinilos.databinding.ItemPerformerBinding
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.viewmodels.PerformerItem
 import co.edu.uniandes.vinilos.viewmodels.PerformerSummaryLine
-import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestManager
 
-/** Artist rows. A tap reports the id and type; the adapter never touches data or navigation. */
+/**
+ * Artist rows. A tap reports the id and type; the adapter never touches data or navigation. Images go through the
+ * [requestManager] of the Fragment that owns the list, instead of resolving one from each row's view.
+ */
 class PerformerAdapter(
+    private val requestManager: RequestManager,
     private val onPerformerClick: (Int, PerformerType) -> Unit,
 ) : ListAdapter<PerformerItem, PerformerViewHolder>(PerformerItemDiff) {
     override fun onCreateViewHolder(
@@ -22,7 +26,7 @@ class PerformerAdapter(
         viewType: Int,
     ): PerformerViewHolder {
         val binding = ItemPerformerBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return PerformerViewHolder(binding, onPerformerClick)
+        return PerformerViewHolder(binding, requestManager, onPerformerClick)
     }
 
     override fun onBindViewHolder(
@@ -31,13 +35,27 @@ class PerformerAdapter(
     ) {
         holder.bind(getItem(position))
     }
+
+    override fun onViewRecycled(holder: PerformerViewHolder) = holder.unbind()
 }
 
+/**
+ * Sets its click listener once, for the artist bound at the time of the tap, and clears its image when recycled, so
+ * a row off screen neither keeps the bitmap nor finishes a download nobody will see.
+ */
 class PerformerViewHolder(
     private val binding: ItemPerformerBinding,
-    private val onPerformerClick: (Int, PerformerType) -> Unit,
+    private val requestManager: RequestManager,
+    onPerformerClick: (Int, PerformerType) -> Unit,
 ) : RecyclerView.ViewHolder(binding.root) {
+    private var current: PerformerItem? = null
+
+    init {
+        binding.root.setOnClickListener { current?.let { onPerformerClick(it.id, it.type) } }
+    }
+
     fun bind(item: PerformerItem) {
+        current = item
         val context = binding.root.context
         val overline = overlineOf(context, item)
         val summary = summaryOf(context, item.summary)
@@ -47,14 +65,17 @@ class PerformerViewHolder(
         // The row is a single accessibility node: its children are hidden from TalkBack.
         binding.root.contentDescription =
             context.getString(R.string.artist_item_description, item.name, overline, summary)
-        binding.root.setOnClickListener { onPerformerClick(item.id, item.type) }
-        Glide
-            .with(binding.root)
+        requestManager
             .load(item.imageUrl)
             .placeholder(R.drawable.bg_performer_image_placeholder)
             .error(R.drawable.bg_performer_image_placeholder)
             .centerCrop()
             .into(binding.performerImage)
+    }
+
+    fun unbind() {
+        current = null
+        requestManager.clear(binding.performerImage)
     }
 
     private fun overlineOf(
