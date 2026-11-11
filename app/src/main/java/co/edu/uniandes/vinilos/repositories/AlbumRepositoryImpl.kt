@@ -14,17 +14,21 @@ import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.network.AlbumServiceAdapter
 import co.edu.uniandes.vinilos.network.networkRequest
 import com.google.gson.JsonParseException
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 internal class AlbumRepositoryImpl(
     private val albumDao: AlbumDao,
     private val trackDao: TrackDao,
     private val serviceAdapter: AlbumServiceAdapter,
+    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : AlbumRepository {
     private val mutex = Mutex()
 
-    override suspend fun hasCachedAlbums(): Boolean = albumDao.getAll().isNotEmpty()
+    override suspend fun hasCachedAlbums(): Boolean = albumDao.hasAlbums()
 
     override suspend fun getAlbum(
         id: Int,
@@ -42,12 +46,13 @@ internal class AlbumRepositoryImpl(
         mutex.withLock {
             val cached = if (forceRefresh) emptyList() else albumDao.getAll()
             if (cached.isNotEmpty()) {
-                DataResult.Success(cached.map { it.toModel() })
+                DataResult.Success(withContext(defaultDispatcher) { cached.map { it.toModel() } })
             } else {
                 when (val result = networkRequest { serviceAdapter.getAlbums() }) {
                     is DataResult.Success -> {
-                        albumDao.replaceAll(result.value.map { it.toEntity() })
-                        DataResult.Success(albumDao.getAll().map { it.toModel() })
+                        albumDao.replaceAll(withContext(defaultDispatcher) { result.value.map { it.toEntity() } })
+                        val rows = albumDao.getAll()
+                        DataResult.Success(withContext(defaultDispatcher) { rows.map { it.toModel() } })
                     }
 
                     is DataResult.Failure -> {
