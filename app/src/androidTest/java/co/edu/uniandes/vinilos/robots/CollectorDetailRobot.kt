@@ -104,13 +104,12 @@ class CollectorDetailRobot {
             onView(allOf(withId(R.id.detailMessage), withText(message))).check(matches(isDisplayed()))
             return this
         }
-        scrollToId(R.id.collectorFavorites)
         favorites.forEach { favorite ->
             val type = context.getString(typeRes(favorite.kind))
-            onView(withId(R.id.collectorFavorites)).perform(
-                RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText(favorite.name))),
-            )
-            onView(allOf(withId(R.id.favoriteName), withText(favorite.name))).check(matches(isDisplayed()))
+            // La tira publica sus filas en diferido: se espera a que cada nombre esté en pantalla.
+            waitForDisplayed(allOf(withId(R.id.favoriteName), withText(favorite.name), isDisplayed())) {
+                revealFavorite(favorite.name)
+            }
             onView(typeOf(favorite)).check(matches(withText(type)))
         }
         return this
@@ -215,6 +214,19 @@ class CollectorDetailRobot {
         onView(withId(R.id.detailList)).perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText(text))),
         )
+    }
+
+    private fun revealFavorite(name: String) {
+        try {
+            scrollToId(R.id.collectorFavorites)
+            onView(withId(R.id.collectorFavorites)).perform(
+                RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withText(name))),
+            )
+        } catch (ignored: PerformException) {
+            // La tira todavía no publicó esta fila.
+        } catch (ignored: NoMatchingViewException) {
+            // La sección de favoritos todavía no está en pantalla.
+        }
     }
 
     private fun scrollToId(

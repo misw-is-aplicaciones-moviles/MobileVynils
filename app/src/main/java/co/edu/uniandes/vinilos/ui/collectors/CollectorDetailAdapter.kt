@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.ItemAlbumDetailMessageBinding
 import co.edu.uniandes.vinilos.databinding.ItemCollectorAlbumBinding
@@ -149,10 +150,17 @@ internal class CollectorDetailAdapter(
 
     private class FavoritesHolder(
         private val list: RecyclerView,
-        private val onClick: (Int) -> Unit,
+        onClick: (Int) -> Unit,
     ) : RecyclerView.ViewHolder(list) {
+        private val favoritesAdapter = FavoriteAdapter(onClick)
+
+        init {
+            // Replacing the adapter on each bind drops the horizontal scroll of this strip.
+            list.adapter = favoritesAdapter
+        }
+
         fun bind(favorites: List<PerformerSummary>) {
-            list.adapter = FavoriteAdapter(favorites, onClick)
+            favoritesAdapter.submitList(favorites)
         }
     }
 
@@ -260,6 +268,8 @@ internal class CollectorDetailAdapter(
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                     )
                 layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
+                // Animator scale 0 would otherwise keep the previous chip when a favorite changes.
+                (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
                 clipChildren = false
                 clipToPadding = false
             }
@@ -267,11 +277,8 @@ internal class CollectorDetailAdapter(
 }
 
 private class FavoriteAdapter(
-    private val favorites: List<PerformerSummary>,
     private val onClick: (Int) -> Unit,
-) : RecyclerView.Adapter<FavoriteHolder>() {
-    override fun getItemCount(): Int = favorites.size
-
+) : ListAdapter<PerformerSummary, FavoriteHolder>(FavoriteDiff) {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int,
@@ -283,14 +290,35 @@ private class FavoriteAdapter(
     override fun onBindViewHolder(
         holder: FavoriteHolder,
         position: Int,
-    ) = holder.bind(favorites[position])
+    ) = holder.bind(getItem(position))
+
+    override fun onViewRecycled(holder: FavoriteHolder) = holder.clearBoundFavorite()
+}
+
+private object FavoriteDiff : DiffUtil.ItemCallback<PerformerSummary>() {
+    override fun areItemsTheSame(
+        oldItem: PerformerSummary,
+        newItem: PerformerSummary,
+    ): Boolean = oldItem.id == newItem.id
+
+    override fun areContentsTheSame(
+        oldItem: PerformerSummary,
+        newItem: PerformerSummary,
+    ): Boolean = oldItem == newItem
 }
 
 private class FavoriteHolder(
     private val binding: ItemCollectorFavoriteBinding,
     private val onClick: (Int) -> Unit,
 ) : RecyclerView.ViewHolder(binding.root) {
+    private var boundFavorite: PerformerSummary? = null
+
+    init {
+        binding.root.setOnClickListener { boundFavorite?.let { onClick(it.id) } }
+    }
+
     fun bind(favorite: PerformerSummary) {
+        boundFavorite = favorite
         val context = binding.root.context
         val typeLabel =
             if (favorite.type == PerformerType.BAND) R.string.artist_band else R.string.artist_musician
@@ -299,7 +327,11 @@ private class FavoriteHolder(
         binding.favoriteType.text = type
         binding.favoriteArtwork.performerImage.loadImage(favorite.imageUrl, R.drawable.bg_performer_image_placeholder)
         binding.root.contentDescription = context.getString(R.string.collector_open_favorite, favorite.name, type)
-        binding.root.setOnClickListener { onClick(favorite.id) }
+    }
+
+    /** Drops the id so a recycled chip cannot open the artist that used to be bound. */
+    fun clearBoundFavorite() {
+        boundFavorite = null
     }
 }
 

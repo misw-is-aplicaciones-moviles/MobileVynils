@@ -3,11 +3,13 @@ package co.edu.uniandes.vinilos.ui
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.PerformException
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
+import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -253,7 +255,7 @@ class CollectorAlbumPickerScreenTest {
         firewall.restore()
         sheet.tapAdd()
 
-        waitForDisplayed(withText(context.getString(R.string.collector_album_selected, album)))
+        awaitSavedAlbum(album)
         assertOnDetail(album, count = 1, price = SAMPLE_PRICE, status = ACTIVE)
         assertEquals(1, data.albumsOf(collector).size)
         assertLink(collector, album, SAMPLE_PRICE, ACTIVE)
@@ -339,6 +341,38 @@ class CollectorAlbumPickerScreenTest {
         }
         fail("El catálogo no mostró $name ($last)")
     }
+
+    // El aviso dura poco y el detalle se recarga al guardar. En la suite completa tapAdd regresa
+    // cuando ese texto ya salió; la sección «Sus álbumes» permanece y demuestra el guardado.
+    private fun awaitSavedAlbum(album: String) {
+        val notice = withText(context.getString(R.string.collector_album_selected, album))
+        val savedSection =
+            allOf(
+                withId(R.id.sectionTitle),
+                withText(context.getString(R.string.collector_section_albums, 1)),
+            )
+        val deadline = System.currentTimeMillis() + CATALOG_TIMEOUT_MILLIS
+        var last: Throwable? = null
+        while (System.currentTimeMillis() < deadline) {
+            last = displayFailure(notice)
+            if (last == null) return
+            val sectionMissing = displayFailure(savedSection)
+            if (sectionMissing == null) return
+            last = sectionMissing
+            Thread.sleep(POLL_MILLIS)
+        }
+        fail("El álbum guardado no apareció en $CATALOG_TIMEOUT_MILLIS ms ($last)")
+    }
+
+    private fun displayFailure(matcher: Matcher<View>): Throwable? =
+        try {
+            onView(matcher).check(matches(isDisplayed()))
+            null
+        } catch (missing: NoMatchingViewException) {
+            missing
+        } catch (hidden: AssertionError) {
+            hidden
+        }
 
     private fun assertOnDetail(
         name: String,
