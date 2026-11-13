@@ -34,6 +34,11 @@ class MainActivity :
     PrimaryActionHost {
     private lateinit var binding: ActivityMainBinding
 
+    /** Fondos ya construidos en esta Activity. Una Activity nueva vuelve a leer color, elevación y medidas. */
+    private var appliedHump: Boolean? = null
+    private var flatBarBackground: MaterialShapeDrawable? = null
+    private var humpBarBackground: MaterialShapeDrawable? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val cream = ContextCompat.getColor(this, R.color.vinilos_cream)
         // Íconos claros sobre la cabecera carbón y oscuros sobre la barra inferior crema.
@@ -81,8 +86,22 @@ class MainActivity :
         applyBarShape(withHump = false)
     }
 
-    /** Fondo de la barra: crema con sombra superior suave; con joroba solo mientras el botón "+" está visible. */
+    /**
+     * Fondo de la barra: crema con sombra superior suave; con joroba solo mientras el botón "+" está visible.
+     * La misma forma no reconstruye el drawable.
+     */
     private fun applyBarShape(withHump: Boolean) {
+        if (appliedHump == withHump) return
+        binding.bottomBar.background =
+            if (withHump) {
+                humpBarBackground ?: createBarBackground(withHump = true).also { humpBarBackground = it }
+            } else {
+                flatBarBackground ?: createBarBackground(withHump = false).also { flatBarBackground = it }
+            }
+        appliedHump = withHump
+    }
+
+    private fun createBarBackground(withHump: Boolean): MaterialShapeDrawable {
         val shape = ShapeAppearanceModel.builder()
         if (withHump) {
             shape.setTopEdge(
@@ -94,13 +113,12 @@ class MainActivity :
             )
         }
         val elevation = resources.getDimension(R.dimen.bottom_bar_shadow_elevation)
-        binding.bottomBar.background =
-            MaterialShapeDrawable(shape.build()).apply {
-                fillColor = ColorStateList.valueOf(ContextCompat.getColor(this@MainActivity, R.color.vinilos_cream))
-                // La sombra propia de Material sí admite formas no convexas desde API 21.
-                shadowCompatibilityMode = MaterialShapeDrawable.SHADOW_COMPAT_MODE_ALWAYS
-                this.elevation = elevation
-            }
+        return MaterialShapeDrawable(shape.build()).apply {
+            fillColor = ColorStateList.valueOf(ContextCompat.getColor(this@MainActivity, R.color.vinilos_cream))
+            // La sombra propia de Material sí admite formas no convexas desde API 21.
+            shadowCompatibilityMode = MaterialShapeDrawable.SHADOW_COMPAT_MODE_ALWAYS
+            this.elevation = elevation
+        }
     }
 
     private fun returnToRoleSelectorIfRoleWasLost(
