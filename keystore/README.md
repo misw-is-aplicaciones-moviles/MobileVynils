@@ -1,6 +1,8 @@
 # Keystore de depuración del proyecto
 
-`debug.keystore` firma el APK de release que se publica en cada GitHub Release (`sprint-N`). Es una keystore de **depuración** compartida por el equipo y por CI: se versiona a propósito para que todos los APK del proyecto lleven la misma firma y las actualizaciones se instalen sobre la versión anterior en los dispositivos de prueba. Nunca se usa para publicar en una tienda ni se guarda aquí una keystore de producción (`docs/08-flujo-de-trabajo-git.md`, sección 5).
+`debug.keystore` firma el APK de release que se publica en cada GitHub Release (`sprint-N`). Es una keystore de **depuración** compartida por el equipo y por CI: se versiona a propósito para que las compilaciones de la variante `release` firmadas con ella puedan actualizarse entre sí en los dispositivos de prueba. Nunca se usa para publicar en una tienda ni se guarda aquí una keystore de producción (`docs/08-flujo-de-trabajo-git.md`, sección 5).
+
+La variante `debug` (`assembleDebug`) usa la keystore local de Android, no este archivo. La entrega `vinilos-2.0.0.apk` de la raíz es debug; se verificó que conserva el certificado de la APK de entrega anterior. No debe asumirse que un APK debug de otra máquina o uno release tiene el mismo certificado.
 
 | Dato | Valor |
 |---|---|
