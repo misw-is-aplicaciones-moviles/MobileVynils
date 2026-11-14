@@ -1,6 +1,7 @@
 package co.edu.uniandes.vinilos.ui.albums
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.ViewCompat
 import androidx.core.widget.TextViewCompat
@@ -20,7 +21,9 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /** One scrolling surface for the album header, section labels, tracks and comments. */
-internal class AlbumDetailAdapter : ListAdapter<AlbumDetailRow, RecyclerView.ViewHolder>(RowDiff) {
+internal class AlbumDetailAdapter(
+    private val onArtistClick: () -> Unit,
+) : ListAdapter<AlbumDetailRow, RecyclerView.ViewHolder>(RowDiff) {
     init {
         stateRestorationPolicy = StateRestorationPolicy.PREVENT_WHEN_EMPTY
     }
@@ -53,7 +56,7 @@ internal class AlbumDetailAdapter : ListAdapter<AlbumDetailRow, RecyclerView.Vie
     ): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
-            HEADER -> HeaderHolder(ItemAlbumDetailHeaderBinding.inflate(inflater, parent, false))
+            HEADER -> HeaderHolder(ItemAlbumDetailHeaderBinding.inflate(inflater, parent, false), onArtistClick)
             TRACK -> TrackHolder(ItemAlbumDetailTrackBinding.inflate(inflater, parent, false))
             COMMENT -> CommentHolder(ItemAlbumDetailCommentBinding.inflate(inflater, parent, false))
             MESSAGE -> MessageHolder(ItemAlbumDetailMessageBinding.inflate(inflater, parent, false))
@@ -75,6 +78,7 @@ internal class AlbumDetailAdapter : ListAdapter<AlbumDetailRow, RecyclerView.Vie
 
     private class HeaderHolder(
         private val binding: ItemAlbumDetailHeaderBinding,
+        private val onArtistClick: () -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(album: Album) {
             val context = binding.root.context
@@ -84,8 +88,23 @@ internal class AlbumDetailAdapter : ListAdapter<AlbumDetailRow, RecyclerView.Vie
                 context.getString(R.string.album_genre_year, album.genre.apiName, album.releaseDate.year)
             binding.albumArtist.text = album.performerName ?: context.getString(R.string.album_no_artist)
             binding.albumDescription.text = album.description
+            bindArtistNavigation(album)
             bindArtwork(album)
             bindInfo(album)
+        }
+
+        private fun bindArtistNavigation(album: Album) {
+            val artist = album.performers.firstOrNull()
+            val canOpen = artist != null && artist.id > 0 && artist.type != null
+            binding.artistLink.setOnClickListener(if (canOpen) View.OnClickListener { onArtistClick() } else null)
+            binding.artistLink.isClickable = canOpen
+            binding.artistLink.isFocusable = canOpen
+            binding.artistLink.contentDescription =
+                if (canOpen) binding.root.context.getString(R.string.artist_open_detail, artist?.name) else null
+            binding.artistLink.importantForAccessibility =
+                if (canOpen) View.IMPORTANT_FOR_ACCESSIBILITY_YES else View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            binding.albumArtist.importantForAccessibility =
+                if (canOpen) View.IMPORTANT_FOR_ACCESSIBILITY_NO else View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
         }
 
         private fun bindArtwork(album: Album) {

@@ -34,6 +34,11 @@ class MainActivity :
     PrimaryActionHost {
     private lateinit var binding: ActivityMainBinding
 
+    /** Fondos ya construidos en esta Activity. Una Activity nueva vuelve a leer color, elevación y medidas. */
+    private var appliedHump: Boolean? = null
+    private var flatBarBackground: MaterialShapeDrawable? = null
+    private var humpBarBackground: MaterialShapeDrawable? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val cream = ContextCompat.getColor(this, R.color.vinilos_cream)
         // Íconos claros sobre la cabecera carbón y oscuros sobre la barra inferior crema.
@@ -81,8 +86,22 @@ class MainActivity :
         applyBarShape(withHump = false)
     }
 
-    /** Fondo de la barra: crema con sombra superior suave; con joroba solo mientras el botón "+" está visible. */
+    /**
+     * Fondo de la barra: crema con sombra superior suave; con joroba solo mientras el botón "+" está visible.
+     * La misma forma no reconstruye el drawable.
+     */
     private fun applyBarShape(withHump: Boolean) {
+        if (appliedHump == withHump) return
+        binding.bottomBar.background =
+            if (withHump) {
+                humpBarBackground ?: createBarBackground(withHump = true).also { humpBarBackground = it }
+            } else {
+                flatBarBackground ?: createBarBackground(withHump = false).also { flatBarBackground = it }
+            }
+        appliedHump = withHump
+    }
+
+    private fun createBarBackground(withHump: Boolean): MaterialShapeDrawable {
         val shape = ShapeAppearanceModel.builder()
         if (withHump) {
             shape.setTopEdge(
@@ -94,13 +113,12 @@ class MainActivity :
             )
         }
         val elevation = resources.getDimension(R.dimen.bottom_bar_shadow_elevation)
-        binding.bottomBar.background =
-            MaterialShapeDrawable(shape.build()).apply {
-                fillColor = ColorStateList.valueOf(ContextCompat.getColor(this@MainActivity, R.color.vinilos_cream))
-                // La sombra propia de Material sí admite formas no convexas desde API 21.
-                shadowCompatibilityMode = MaterialShapeDrawable.SHADOW_COMPAT_MODE_ALWAYS
-                this.elevation = elevation
-            }
+        return MaterialShapeDrawable(shape.build()).apply {
+            fillColor = ColorStateList.valueOf(ContextCompat.getColor(this@MainActivity, R.color.vinilos_cream))
+            // La sombra propia de Material sí admite formas no convexas desde API 21.
+            shadowCompatibilityMode = MaterialShapeDrawable.SHADOW_COMPAT_MODE_ALWAYS
+            this.elevation = elevation
+        }
     }
 
     private fun returnToRoleSelectorIfRoleWasLost(
@@ -121,31 +139,22 @@ class MainActivity :
         binding.bottomNav.setOnItemSelectedListener { item ->
             // El punto acompaña a la selección en el mismo cuadro, sin esperar al cambio de destino.
             binding.bottomNav.post { moveNavDot(item.itemId) }
-            navController.navigate(
-                item.itemId,
-                null,
-                navOptions {
-                    launchSingleTop = true
-                    restoreState = true
-                    // El inicio del grafo es el selector y sale de la pila al elegir rol.
-                    // Las pestañas se anclan al catálogo, que queda como raíz.
-                    popUpTo(R.id.albumListFragment) { saveState = true }
-                },
-            )
+            openTab(navController, item.itemId)
             true
         }
-        binding.bottomNav.setOnItemReselectedListener { item ->
-            if (item.itemId == R.id.albumListFragment &&
-                navController.currentDestination?.id == R.id.albumDetailFragment
-            ) {
-                navController.popBackStack(R.id.albumListFragment, false)
-            }
-        }
+        binding.bottomNav.setOnItemReselectedListener { item -> openTab(navController, item.itemId) }
         navController.addOnDestinationChangedListener { _, destination, _ ->
             val showBottomBar = destination.id !in DESTINATIONS_WITHOUT_BOTTOM_BAR
             binding.bottomBar.isVisible = showBottomBar
             if (showBottomBar) {
-                val tabId = if (destination.id == R.id.albumDetailFragment) R.id.albumListFragment else destination.id
+                val tabId =
+                    when (destination.id) {
+                        R.id.albumDetailFragment -> R.id.albumListFragment
+                        R.id.collectorAlbumPickerFragment -> R.id.collectorListFragment
+                        R.id.performerDetailFragment -> R.id.performerListFragment
+                        R.id.collectorDetailFragment -> R.id.collectorListFragment
+                        else -> destination.id
+                    }
                 binding.bottomNav.menu
                     .findItem(tabId)
                     ?.isChecked = true
@@ -153,6 +162,30 @@ class MainActivity :
             }
         }
     }
+
+    /** Lleva a la lista de [tabId]. De cada pestaña solo se guarda su lista: un detalle nunca se restaura al volver. */
+    private fun openTab(
+        navController: NavController,
+        tabId: Int,
+    ) {
+        val currentRoot = TAB_ROOTS.firstOrNull { navController.hasBackStackEntry(it) } ?: return
+        navController.popBackStack(currentRoot, false)
+        if (currentRoot == tabId) return
+        navController.navigate(
+            tabId,
+            null,
+            navOptions {
+                launchSingleTop = true
+                restoreState = true
+                // El inicio del grafo es el selector y sale de la pila al elegir rol.
+                // Las pestañas se anclan al catálogo, que queda como raíz.
+                popUpTo(R.id.albumListFragment) { saveState = true }
+            },
+        )
+    }
+
+    private fun NavController.hasBackStackEntry(destinationId: Int): Boolean =
+        runCatching { getBackStackEntry(destinationId) }.isSuccess
 
     /** Coloca el punto del kit v2 centrado bajo la etiqueta de la pestaña activa. */
     private fun moveNavDot(itemId: Int) {
@@ -171,7 +204,18 @@ class MainActivity :
         descendants.filterIsInstance<TextView>().firstOrNull { it.isShown && it.text.isNotEmpty() }
 
     private companion object {
+        /** Solo una lista de pestaña vive sobre el catálogo, que siempre es la raíz: por eso se busca de último. */
+        val TAB_ROOTS =
+            listOf(R.id.collectorListFragment, R.id.performerListFragment, R.id.albumListFragment)
+
         /** El selector de rol y las pantallas completas (formulario de nuevo álbum) se dibujan sin la barra inferior. */
-        val DESTINATIONS_WITHOUT_BOTTOM_BAR = setOf(R.id.roleSelectFragment, R.id.albumCreateFragment)
+        val DESTINATIONS_WITHOUT_BOTTOM_BAR =
+            setOf(
+                R.id.roleSelectFragment,
+                R.id.albumCreateFragment,
+                R.id.collectorAlbumPickerFragment,
+                R.id.prizePickerFragment,
+                R.id.prizeCreateFragment,
+            )
     }
 }

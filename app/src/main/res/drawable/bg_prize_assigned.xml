@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Píldora "YA ASIGNADO". -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <stroke android:width="@dimen/list_divider_thickness" android:color="@color/vinilos_charcoal" />
+    <corners android:radius="@dimen/prize_assigned_radius" />
+</shape>

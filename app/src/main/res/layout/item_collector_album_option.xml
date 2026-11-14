@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fila de álbum en el selector HU11. Toda la fila es un nodo accesible. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/albumRow"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/album_row_height"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:clipChildren="false"
+    android:focusable="true"
+    android:paddingStart="@dimen/album_row_padding_horizontal"
+    android:paddingEnd="@dimen/album_row_padding_horizontal">
+
+    <co.edu.uniandes.vinilos.ui.common.VinylArtworkView
+        android:id="@+id/albumArtwork"
+        android:layout_width="@dimen/album_catalog_artwork_width"
+        android:layout_height="@dimen/album_catalog_artwork_height"
+        android:clipChildren="false"
+        android:importantForAccessibility="no"
+        app:artworkCornerRadius="@dimen/album_catalog_artwork_radius"
+        app:artworkElevation="@dimen/album_catalog_artwork_elevation"
+        app:artworkRatio="71:48"
+        app:discScale="@dimen/album_disc_scale"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/trailingBarrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="start"
+        app:constraint_referenced_ids="radioIcon,addedChip" />
+
+    <TextView
+        android:id="@+id/albumTitle"
+        android:includeFontPadding="false"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/album_row_gap"
+        android:layout_marginEnd="@dimen/album_row_gap"
+        android:ellipsize="end"
+        android:importantForAccessibility="no"
+        android:maxLines="2"
+        android:textAppearance="@style/TextAppearance.Vinilos.AlbumTitle"
+        app:layout_constraintBottom_toTopOf="@id/albumSubtitle"
+        app:layout_constraintEnd_toStartOf="@id/trailingBarrier"
+        app:layout_constraintStart_toEndOf="@id/albumArtwork"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Buscando América" />
+
+    <TextView
+        android:id="@+id/albumSubtitle"
+        android:includeFontPadding="false"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/album_subtitle_gap"
+        android:ellipsize="end"
+        android:importantForAccessibility="no"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.Vinilos.Overline"
+        app:layout_constraintBottom_toTopOf="@id/albumMeta"
+        app:layout_constraintEnd_toEndOf="@id/albumTitle"
+        app:layout_constraintStart_toStartOf="@id/albumTitle"
+        app:layout_constraintTop_toBottomOf="@id/albumTitle"
+        tools:text="Rubén Blades" />
+
+    <TextView
+        android:id="@+id/albumMeta"
+        android:includeFontPadding="false"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/album_meta_gap"
+        android:ellipsize="end"
+        android:importantForAccessibility="no"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.Vinilos.Caption"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/albumTitle"
+        app:layout_constraintStart_toStartOf="@id/albumTitle"
+        app:layout_constraintTop_toBottomOf="@id/albumSubtitle"
+        tools:text="Salsa · 1984" />
+
+    <ImageView
+        android:id="@+id/radioIcon"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:clickable="false"
+        android:focusable="false"
+        android:importantForAccessibility="no"
+        android:src="@drawable/bg_picker_radio_unchecked"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/addedChip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_album_status_unavailable"
+        android:importantForAccessibility="no"
+        android:paddingStart="@dimen/collector_status_radius"
+        android:paddingTop="@dimen/space_xs"
+        android:paddingEnd="@dimen/collector_status_radius"
+        android:paddingBottom="@dimen/space_xs"
+        android:text="@string/collector_album_picker_already_added"
+        android:textAppearance="@style/TextAppearance.Vinilos.Overline"
+        android:textColor="@color/vinilos_charcoal"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible" />
+</androidx.constraintlayout.widget.ConstraintLayout>

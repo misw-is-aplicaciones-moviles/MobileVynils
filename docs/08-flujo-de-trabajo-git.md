@@ -11,7 +11,7 @@ GitFlow tal como lo exige el curso: rama de releases, rama de desarrollo e integ
 | `feature/HUxx-descripcion` | Una tarea o historia | Su asignado | Se borra al integrarla |
 | `fix/<issue>-descripcion` | Corrección de defecto | Su asignado | Igual que feature |
 | `chore/*`, `docs/*`, `build/*`, `test/*` | Cambios sin funcionalidad: configuración, documentación, build, pruebas | Su asignado | Igual que feature |
-| `release/sprint-N` | Estabilización y pruebas de la entrega | Equipo | Solo correcciones; se integra a `main` y de vuelta a `develop` |
+| `release/sprint-N` o `release/<version>` | Estabilización y pruebas de la entrega | Equipo | Solo correcciones; se integra a `main` y de vuelta a `develop` |
 | `hotfix/<issue>-descripcion` | Corrección urgente sobre `main` | Equipo | Se integra a `main` y a `develop` |
 
 Nombres en minúsculas con guiones: `feature/HU01-album-catalog`, `fix/23-detail-crash-rotation`.
@@ -53,13 +53,15 @@ GitHub Actions (`.github/workflows/ci.yml`):
 
 ## 5. Releases y APK
 
-1. Al cerrar el sprint se crea `release/sprint-N` desde `develop`.
+1. Al cerrar el sprint se crea una rama `release/*` desde `develop`. Para la entrega 2.0.0 se usa `release/2.0.0`; también se admite el nombre `release/sprint-N`.
 2. Se ejecuta la matriz de pruebas (`06-pruebas.md`, sección 4) y se corrigen defectos en la rama.
-3. En la misma rama se revisa el README (las instrucciones para compilar la app de forma local deben funcionar en una máquina limpia; la rúbrica lo evalúa) y se versiona el APK de release en `apk/vinilos-sprint-N.apk`, porque la rúbrica pide el APK "disponible también en el repositorio".
-4. PR de `release/sprint-N` a `main`, aprobación, merge (merge commit, no squash, para conservar historia) y tag `sprint-N` (`git tag -a sprint-1 -m "Sprint 1: HU01, HU02, HU07, HU08"`).
+3. En la misma rama se revisa el README y se versiona la APK de entrega en la **raíz del repositorio**. La entrega actual es `vinilos-2.0.0.apk`: versión 2.0.0, `versionCode = 2`, variante **debug** y backend Heroku. Las instrucciones de instalación y compilación están en el README. La rama `release/2.0.0` identifica la entrega; no implica que el archivo de la raíz sea de la variante `release`.
+4. PR de la rama `release/*` a `main`, aprobación, merge (merge commit, no squash, para conservar historia) y tag `sprint-N` (`git tag -a sprint-1 -m "Sprint 1: HU01, HU02, HU07, HU08"`).
 5. La CI construye el APK de release desde el tag y publica un GitHub Release `Sprint N` con el APK, las historias incluidas y el enlace a la wiki.
 6. Merge de `main` de vuelta a `develop` (merge commit).
-7. Firma: keystore de depuración del proyecto versionada en `keystore/debug.keystore` con contraseñas en `local.properties` (no versionado) y en secrets de GitHub. Suficiente para "APK listo para instalar"; nunca una keystore de producción en el repositorio.
+7. Firma: la variante `release` de CI usa `keystore/debug.keystore`, con contraseñas en `local.properties` (no versionado) o secrets de GitHub. La variante `debug` usa la keystore de depuración local de Android. Para actualizar una app instalada deben coincidir el certificado y el applicationId, y aumentar el versionCode. Se verificó que la APK 2.0.0 de la raíz conserva el certificado de la entrega anterior. Nunca se guarda una keystore de producción en el repositorio.
+
+El APK generado desde un tag por CI es un artefacto distinto del archivo debug guardado en la raíz. El workflow actual no configura `vinilos.baseUrl` y usa el destino predeterminado para emulador; antes de distribuirlo para Heroku hay que configurar ese backend al compilar. Crear un tag `v2.0.0` no activa el flujo actual de publicación, que escucha tags `sprint-*`.
 
 ## 6. Wiki
 
@@ -89,3 +91,4 @@ Cada sprint publica en la wiki el diseño arquitectónico de sus historias con d
 | 2026-10-07 | GitFlow con `main`, `develop`, `feature/HUxx-*`, `release/sprint-N`; Conventional Commits en inglés; squash and merge; tags `sprint-N`; APK por CI en GitHub Release. |
 | 2026-10-26 | Reinicio con Vistas: ámbitos de commit por capa, verificación local en API 21 y API 37 antes de cada PR; el CI ya no ejecuta Konsist. |
 | 2026-10-27 | Ámbito `database` para el paquete de Room (TR-03). |
+| 2026-11-14 | Entrega 2.0.0 en `release/2.0.0`; APK debug `vinilos-2.0.0.apk` en la raíz, backend Heroku y versión/certificado verificados. El APK release de CI sigue siendo un artefacto independiente. |

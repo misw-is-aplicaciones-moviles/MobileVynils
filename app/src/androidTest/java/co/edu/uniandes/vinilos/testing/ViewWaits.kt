@@ -20,11 +20,13 @@ private const val DEFAULT_TIMEOUT_MILLIS = 15_000L
 fun waitForDisplayed(
     matcher: Matcher<View>,
     timeoutMillis: Long = DEFAULT_TIMEOUT_MILLIS,
+    prepare: (() -> Unit)? = null,
 ): ViewInteraction {
     val deadline = System.currentTimeMillis() + timeoutMillis
     var last: Throwable? = null
     while (System.currentTimeMillis() < deadline) {
         try {
+            prepare?.invoke()
             return onView(matcher).check(matches(isDisplayed()))
         } catch (error: NoMatchingViewException) {
             last = error

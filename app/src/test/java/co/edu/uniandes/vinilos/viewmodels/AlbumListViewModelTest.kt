@@ -37,7 +37,7 @@ class AlbumListViewModelTest {
     private fun viewModel(
         repository: FakeAlbumRepository,
         session: FakeSessionRepository = FakeSessionRepository(UserRole.VISITOR),
-    ) = AlbumListViewModel(repository, session)
+    ) = AlbumListViewModel(repository, session, mainDispatcherRule.testDispatcher)
 
     /** Records every state so a test can see transitions, not only the last value. */
     private fun AlbumListViewModel.recordStates(): List<AlbumListUiState> {
@@ -45,6 +45,23 @@ class AlbumListViewModelTest {
         uiState.observeForever(Observer { states += it })
         return states
     }
+
+    @Test
+    fun `catalog positions keep leading zeroes without truncating three digits`() =
+        runTest {
+            val catalog = List(101) { races.copy(id = it + 1) }
+            val vm = viewModel(FakeAlbumRepository(localResult = DataResult.Success(catalog)))
+
+            advanceUntilIdle()
+
+            val items = checkNotNull(vm.uiState.value).albums
+            assertEquals("01", items[0].position)
+            assertEquals("09", items[8].position)
+            assertEquals("10", items[9].position)
+            assertEquals("99", items[98].position)
+            assertEquals("100", items[99].position)
+            assertEquals("101", items[100].position)
+        }
 
     @Test
     fun `without cache it shows loading and then the list`() =

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/performer_detail_member_width" android:layout_height="wrap_content"
+    android:orientation="vertical" android:gravity="center_horizontal"
+    android:paddingTop="@dimen/space_m" android:paddingBottom="@dimen/space_m"
+    android:minHeight="@dimen/min_touch_target" android:background="?attr/selectableItemBackground"
+    android:clickable="true" android:focusable="true" android:clipChildren="false" android:clipToPadding="false">
+
+    <include android:id="@+id/favoriteArtwork" layout="@layout/view_performer_artwork"
+        android:layout_width="@dimen/performer_detail_member_artwork_size"
+        android:layout_height="@dimen/performer_detail_member_artwork_size" />
+
+    <TextView android:id="@+id/favoriteName" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_s" android:gravity="center" android:maxLines="2" android:ellipsize="end"
+        android:importantForAccessibility="no" android:textAppearance="@style/TextAppearance.Vinilos.Caption" />
+
+    <TextView android:id="@+id/favoriteType" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center" android:importantForAccessibility="no"
+        android:textAppearance="@style/TextAppearance.Vinilos.Caption" />
+</LinearLayout>

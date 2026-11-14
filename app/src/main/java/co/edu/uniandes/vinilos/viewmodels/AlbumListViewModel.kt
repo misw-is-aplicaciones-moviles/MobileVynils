@@ -14,8 +14,10 @@ import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.repositories.AlbumRepository
 import co.edu.uniandes.vinilos.repositories.SessionRepository
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.Locale
+import kotlinx.coroutines.withContext
 
 /**
  * Catalog screen. Shows what Room already has, revalidates once against the backend,
@@ -24,6 +26,7 @@ import java.util.Locale
 class AlbumListViewModel(
     private val albumRepository: AlbumRepository,
     private val sessionRepository: SessionRepository,
+    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
     private val _uiState =
         MediatorLiveData(AlbumListUiState()).apply {
@@ -81,12 +84,13 @@ class AlbumListViewModel(
         }
     }
 
-    private fun publish(result: DataResult<List<Album>, DataError>) {
+    private suspend fun publish(result: DataResult<List<Album>, DataError>) {
         when (result) {
             is DataResult.Success -> {
+                val items = withContext(defaultDispatcher) { result.value.mapIndexed(::toItem) }
                 update {
                     copy(
-                        albums = result.value.mapIndexed(::toItem),
+                        albums = items,
                         isLoading = false,
                         isRefreshing = false,
                         error = null,
@@ -113,7 +117,7 @@ class AlbumListViewModel(
         album: Album,
     ) = AlbumItem(
         id = album.id,
-        position = String.format(Locale.ROOT, POSITION_FORMAT, index + 1),
+        position = (index + 1).toString().padStart(2, '0'),
         name = album.name,
         artistName = album.performerName,
         genreName = album.genre.apiName,
@@ -128,8 +132,6 @@ class AlbumListViewModel(
     }
 
     companion object {
-        private const val POSITION_FORMAT = "%02d"
-
         val Factory: ViewModelProvider.Factory =
             viewModelFactory {
                 initializer {

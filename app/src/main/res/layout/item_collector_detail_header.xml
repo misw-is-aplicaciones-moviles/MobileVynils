@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:orientation="horizontal" android:gravity="center_vertical"
+    android:clipChildren="false" android:clipToPadding="false">
+
+    <FrameLayout android:layout_width="@dimen/performer_detail_artwork_size"
+        android:layout_height="@dimen/performer_detail_artwork_size"
+        android:background="@drawable/bg_performer_disc" android:elevation="@dimen/performer_disc_elevation"
+        android:importantForAccessibility="noHideDescendants">
+        <ImageView android:layout_width="match_parent" android:layout_height="match_parent"
+            android:importantForAccessibility="no" app:srcCompat="@drawable/img_vinyl_disc" />
+        <TextView android:id="@+id/collectorInitials"
+            android:layout_width="@dimen/collector_detail_initials"
+            android:layout_height="@dimen/collector_detail_initials"
+            android:layout_gravity="center" android:gravity="center"
+            android:background="@drawable/bg_collector_initials"
+            android:textAppearance="@style/TextAppearance.Vinilos.AlbumTitle"
+            android:textSize="19sp" tools:text="MB" />
+    </FrameLayout>
+
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_weight="1" android:layout_marginStart="@dimen/space_l" android:orientation="vertical">
+        <TextView android:id="@+id/collectorOverline" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:text="@string/collector_detail_title"
+            android:textAppearance="@style/TextAppearance.Vinilos.Overline" />
+        <TextView android:id="@+id/collectorName" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_s"
+            android:textAppearance="@style/TextAppearance.Vinilos.AlbumDetailTitle" tools:text="Manolo Bellon" />
+    </LinearLayout>
+</LinearLayout>

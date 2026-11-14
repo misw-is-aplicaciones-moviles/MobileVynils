@@ -11,7 +11,9 @@ import co.edu.uniandes.vinilos.database.entities.TrackEntity
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,6 +38,18 @@ class AlbumDaoTest {
     fun closeDatabase() {
         database.close()
     }
+
+    @Test
+    fun has_albums_reflects_insertions_and_removal_of_the_last_album() =
+        runTest {
+            assertFalse(albumDao.hasAlbums())
+            albumDao.upsertAll(listOf(buscando, poeta))
+            assertTrue(albumDao.hasAlbums())
+            albumDao.replaceAll(listOf(poeta))
+            assertTrue(albumDao.hasAlbums())
+            albumDao.replaceAll(emptyList())
+            assertFalse(albumDao.hasAlbums())
+        }
 
     @Test
     fun get_all_returns_albums_sorted_by_name() =

@@ -197,7 +197,13 @@ class AlbumServiceAdapterTest {
         runTest {
             serverRule.enqueueJson("api/album_create_missing_field.json", HTTP_BAD_REQUEST)
             val dao = FakeAlbumDao()
-            val repository = AlbumRepositoryImpl(dao, FakeTrackDao(), newAdapter(testScheduler))
+            val repository =
+                AlbumRepositoryImpl(
+                    dao,
+                    FakeTrackDao(),
+                    newAdapter(testScheduler),
+                    defaultDispatcher = StandardTestDispatcher(testScheduler),
+                )
 
             val result = repository.createAlbum(draft)
 
@@ -210,7 +216,13 @@ class AlbumServiceAdapterTest {
         runTest {
             serverRule.enqueueJson("api/album_create_invalid_genre.json", HTTP_BAD_REQUEST)
             val dao = FakeAlbumDao()
-            val repository = AlbumRepositoryImpl(dao, FakeTrackDao(), newAdapter(testScheduler))
+            val repository =
+                AlbumRepositoryImpl(
+                    dao,
+                    FakeTrackDao(),
+                    newAdapter(testScheduler),
+                    defaultDispatcher = StandardTestDispatcher(testScheduler),
+                )
 
             val result = repository.createAlbum(draft)
 
@@ -223,7 +235,13 @@ class AlbumServiceAdapterTest {
         runTest {
             serverRule.server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AFTER_REQUEST))
             val dao = FakeAlbumDao()
-            val repository = AlbumRepositoryImpl(dao, FakeTrackDao(), newAdapter(testScheduler))
+            val repository =
+                AlbumRepositoryImpl(
+                    dao,
+                    FakeTrackDao(),
+                    newAdapter(testScheduler),
+                    defaultDispatcher = StandardTestDispatcher(testScheduler),
+                )
 
             val result = repository.createAlbum(draft)
 

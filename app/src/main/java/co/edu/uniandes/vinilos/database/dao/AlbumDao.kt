@@ -10,7 +10,11 @@ import co.edu.uniandes.vinilos.database.entities.AlbumWithTracks
 // Upsert y no Insert(REPLACE): REPLACE borra la fila y el CASCADE se llevaría sus canciones.
 @Dao
 internal interface AlbumDao {
-    @Query("SELECT * FROM albums ORDER BY name COLLATE NOCASE")
+    @Query("SELECT EXISTS(SELECT 1 FROM albums)")
+    suspend fun hasAlbums(): Boolean
+
+    // El id desempata nombres iguales: el repositorio reproduce este orden si Room no puede guardar la lista.
+    @Query("SELECT * FROM albums ORDER BY name COLLATE NOCASE, id")
     suspend fun getAll(): List<AlbumEntity>
 
     @Transaction

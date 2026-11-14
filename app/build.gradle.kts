@@ -55,8 +55,8 @@ android {
         // La rúbrica evalúa desde Lollipop (API 21). El catálogo fija versiones que admiten 21.
         minSdk = 21
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0.0"
         buildConfigField("String", "BASE_URL", "\"${backendUri.toASCIIString()}\"")
 
         testInstrumentationRunner = "co.edu.uniandes.vinilos.testing.VinilosTestRunner"
@@ -98,6 +98,10 @@ android {
         // NewApi protege el mínimo de API 21; HardcodedText obliga a usar strings.xml.
         error += setOf("NewApi", "HardcodedText")
         abortOnError = true
+    }
+    sourceSets {
+        // MigrationTestHelper lee los esquemas exportados de Room como assets de las pruebas instrumentadas.
+        getByName("androidTest").assets.directories.add("$projectDir/schemas")
     }
     testOptions {
         // Espresso falla de forma intermitente con animaciones activas (docs/06-pruebas.md, sección 4).

@@ -4,6 +4,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Observer
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.network.dto.AlbumDto
@@ -209,6 +210,48 @@ class AlbumDetailViewModelTest {
                 assertNull(event.getContentIfNotHandled())
             } finally {
                 viewModel.uiState.removeObserver(observer)
+            }
+        }
+
+    @Test
+    fun `typed artist navigation is emitted once until returning`() =
+        runTest {
+            val artist = album.performers.first().copy(type = PerformerType.MUSICIAN)
+            val repository =
+                FakeAlbumRepository().apply {
+                    detailResult = DataResult.Success(album.copy(performers = listOf(artist)))
+                }
+            val vm = AlbumDetailViewModel(album.id, repository, FakeSessionRepository())
+            advanceUntilIdle()
+            vm.onPerformerClicked()
+            assertEquals(
+                AlbumDetailEvent.OpenPerformer(artist.id, PerformerType.MUSICIAN),
+                vm.events.value?.getContentIfNotHandled(),
+            )
+            vm.onPerformerClicked()
+            assertNull(vm.events.value?.getContentIfNotHandled())
+            vm.onNavigationReturned()
+            vm.onPerformerClicked()
+            assertEquals(
+                AlbumDetailEvent.OpenPerformer(artist.id, PerformerType.MUSICIAN),
+                vm.events.value?.getContentIfNotHandled(),
+            )
+            assertEquals(1, repository.detailRequests.size)
+        }
+
+    @Test
+    fun `missing or untyped album artists cannot open a guessed endpoint`() =
+        runTest {
+            val artist = album.performers.first().copy(type = null)
+            listOf(emptyList(), listOf(artist)).forEach { artists ->
+                val repository =
+                    FakeAlbumRepository().apply {
+                        detailResult = DataResult.Success(album.copy(performers = artists))
+                    }
+                val vm = AlbumDetailViewModel(album.id, repository, FakeSessionRepository())
+                advanceUntilIdle()
+                vm.onPerformerClicked()
+                assertNull(vm.events.value)
             }
         }
 }

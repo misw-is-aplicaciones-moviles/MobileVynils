@@ -1,0 +1,19 @@
+[
+  {
+    "id": 71,
+    "name": "Premio de pruebas",
+    "description": "Catálogo sintético con la estructura de BackVynils",
+    "organization": "Organización de pruebas",
+    "performerPrizes": [
+      { "id": 901, "premiationDate": "1985-09-18T00:00:00.000Z" },
+      { "id": 902, "premiationDate": "1986-09-18T00:00:00.000Z" }
+    ]
+  },
+  {
+    "id": 72,
+    "name": "Otro premio",
+    "description": "Sin asignaciones",
+    "organization": "Otra organización",
+    "performerPrizes": []
+  }
+]

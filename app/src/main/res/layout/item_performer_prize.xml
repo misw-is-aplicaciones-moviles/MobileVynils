@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Premio en el detalle del artista (mockup HU14-6): trofeo, nombre, organización y fecha, con línea debajo. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/prize_list_overhang" android:layout_marginEnd="@dimen/prize_list_overhang"
+    android:orientation="vertical" android:focusable="true">
+    <LinearLayout android:id="@+id/prizeRow" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:background="@drawable/bg_performer_prize_row" android:gravity="center_vertical"
+        android:minHeight="@dimen/performer_prize_row_height" android:orientation="horizontal"
+        android:paddingStart="@dimen/space_s" android:paddingTop="@dimen/space_s"
+        android:paddingEnd="@dimen/space_s" android:paddingBottom="@dimen/space_s">
+        <ImageView android:layout_width="@dimen/performer_prize_icon_circle"
+            android:layout_height="@dimen/performer_prize_icon_circle" android:background="@drawable/bg_performer_prize_icon"
+            android:importantForAccessibility="no" android:padding="@dimen/performer_prize_icon_padding"
+            app:srcCompat="@drawable/ic_prize" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_m" android:layout_marginEnd="@dimen/space_s"
+            android:layout_weight="1" android:importantForAccessibility="noHideDescendants"
+            android:orientation="vertical">
+            <TextView android:id="@+id/prizeName" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:textAppearance="@style/TextAppearance.Vinilos.ListTitle" />
+            <TextView android:id="@+id/prizeOrganization" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:layout_marginTop="@dimen/space_xs"
+                android:textAppearance="@style/TextAppearance.Vinilos.Caption" />
+        </LinearLayout>
+        <TextView android:id="@+id/prizeAwardDate" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:importantForAccessibility="no"
+            android:textAppearance="@style/TextAppearance.Vinilos.Caption" />
+    </LinearLayout>
+    <View android:layout_width="match_parent" android:layout_height="@dimen/list_divider_thickness"
+        android:layout_marginStart="@dimen/space_s" android:layout_marginEnd="@dimen/space_s"
+        android:background="@color/vinilos_line" android:importantForAccessibility="no" />
+</LinearLayout>

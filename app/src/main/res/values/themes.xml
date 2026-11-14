@@ -208,6 +208,11 @@
         <item name="android:textColor">@color/vinilos_charcoal</item>
     </style>
 
+    <!-- Iniciales de un coleccionista: como el título del álbum, a 12 sp para caber en el centro del disco. -->
+    <style name="TextAppearance.Vinilos.Initials" parent="TextAppearance.Vinilos.AlbumTitle">
+        <item name="android:textSize">12sp</item>
+    </style>
+
     <!-- Sobretítulo (artista): Montserrat 600, 10.5 sp, mayúsculas, espaciado 0.1 em, grafito. -->
     <style name="TextAppearance.Vinilos.Overline" parent="TextAppearance.Vinilos.Body">
         <item name="lineHeight">13sp</item>
@@ -354,6 +359,38 @@
         <item name="android:textColor">@color/vinilos_charcoal</item>
         <item name="iconTint">@color/vinilos_charcoal</item>
         <item name="rippleColor">@color/vinilos_charcoal_ripple</item>
+    </style>
+
+    <!-- "Agregar álbum": Outfit 400, 14/18 sp. El secundario de formulario queda en 15 sp. -->
+    <style name="TextAppearance.Vinilos.Button.Compact" parent="TextAppearance.Vinilos.Button">
+        <item name="android:textSize">14sp</item>
+        <item name="lineHeight">18sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">18sp</item>
+    </style>
+
+    <style name="ShapeAppearance.Vinilos.Button.Compact" parent="ShapeAppearance.Vinilos.Button">
+        <item name="cornerSize">@dimen/button_compact_radius</item>
+    </style>
+
+    <!--
+        Píldora de sección, 44 dp. Conserva el borde carbón del mockup aunque la acción
+        siga deshabilitada: el secundario de formulario se rellena de piedra en ese estado.
+    -->
+    <style name="Widget.Vinilos.Button.Secondary.Compact" parent="Widget.Vinilos.Button.Secondary">
+        <item name="android:minHeight">@dimen/button_compact_height</item>
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.Button.Compact</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Vinilos.Button.Compact</item>
+        <item name="android:paddingStart">@dimen/button_compact_padding_start</item>
+        <item name="android:paddingEnd">@dimen/button_compact_padding_end</item>
+        <item name="android:paddingLeft">@dimen/button_compact_padding_start</item>
+        <item name="android:paddingRight">@dimen/button_compact_padding_end</item>
+        <item name="iconSize">@dimen/button_compact_icon</item>
+        <item name="iconPadding">@dimen/button_compact_icon_gap</item>
+        <item name="iconGravity">textStart</item>
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="strokeColor">@color/vinilos_charcoal</item>
+        <item name="android:textColor">@color/vinilos_charcoal</item>
+        <item name="iconTint">@color/vinilos_charcoal</item>
     </style>
 
     <!-- "Guardar canción" es Outfit 500; el primario compartido queda en 400. -->
@@ -542,6 +579,22 @@
         <item name="chipMinTouchTargetSize">@dimen/min_touch_target</item>
     </style>
 
+    <!-- Texto de un chip de filtro de lista (mockups HU03): Outfit 400, 14 sp. -->
+    <style name="TextAppearance.Vinilos.FilterChip" parent="TextAppearance.Vinilos.Body">
+        <item name="lineHeight">18sp</item>
+        <item name="android:lineHeight" tools:targetApi="28">18sp</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <!-- Chip de filtro de una lista: el de una sola elección con el texto y el relleno de los mockups. -->
+    <style name="Widget.Vinilos.Chip.Filter" parent="Widget.Vinilos.Chip">
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.FilterChip</item>
+        <item name="chipStartPadding">0dp</item>
+        <item name="chipEndPadding">0dp</item>
+        <item name="textStartPadding">@dimen/performer_filter_text_padding</item>
+        <item name="textEndPadding">@dimen/performer_filter_text_padding</item>
+    </style>
+
     <!-- Calendario de la fecha de lanzamiento con los colores del kit. -->
     <style name="ThemeOverlay.Vinilos.DatePicker" parent="ThemeOverlay.Material3.MaterialCalendar">
         <item name="colorPrimary">@color/vinilos_charcoal</item>
@@ -553,5 +606,22 @@
         <item name="colorSurfaceContainerHighest">@color/vinilos_cream</item>
         <item name="colorOnSurface">@color/vinilos_charcoal</item>
         <item name="colorOnSurfaceVariant">@color/vinilos_graphite</item>
+    </style>
+
+    <!-- Aviso de éxito de HU13 y HU14: píldora carbón con texto crema. El ✓ lo pone ConfirmationSnackbar.kt. -->
+    <style name="ShapeAppearance.Vinilos.Confirmation" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+    <style name="Widget.Vinilos.Snackbar.Confirmation" parent="Widget.Material3.Snackbar">
+        <item name="backgroundTint">@color/vinilos_charcoal</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Vinilos.Confirmation</item>
+    </style>
+    <style name="Widget.Vinilos.Snackbar.Confirmation.Text" parent="Widget.Material3.Snackbar.TextView">
+        <item name="android:textColor">@color/vinilos_cream</item>
+    </style>
+    <style name="ThemeOverlay.Vinilos.ConfirmationSnackbar" parent="">
+        <item name="snackbarStyle">@style/Widget.Vinilos.Snackbar.Confirmation</item>
+        <item name="snackbarTextViewStyle">@style/Widget.Vinilos.Snackbar.Confirmation.Text</item>
     </style>
 </resources>

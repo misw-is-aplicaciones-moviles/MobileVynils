@@ -31,6 +31,7 @@ class AlbumDetailViewModel(
     private val _events = MutableLiveData<Event<AlbumDetailEvent>>()
     val events: LiveData<Event<AlbumDetailEvent>> = _events
     private var loadJob: Job? = null
+    private var navigationPending = false
 
     init {
         require(albumId > 0) { "albumId must be positive" }
@@ -39,6 +40,22 @@ class AlbumDetailViewModel(
 
     fun retry() {
         load(forceRefresh = true)
+    }
+
+    fun onPerformerClicked() {
+        val performer =
+            _uiState.value
+                ?.album
+                ?.performers
+                ?.firstOrNull() ?: return
+        val type = performer.type ?: return
+        if (performer.id <= 0 || navigationPending) return
+        navigationPending = true
+        _events.value = Event(AlbumDetailEvent.OpenPerformer(performer.id, type))
+    }
+
+    fun onNavigationReturned() {
+        navigationPending = false
     }
 
     fun onTrackCreated(track: Track) {

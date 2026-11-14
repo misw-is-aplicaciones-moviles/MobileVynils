@@ -37,9 +37,70 @@
     <string name="error_required">Campo obligatorio</string>
     <string name="error_select_genre">Selecciona un género</string>
     <string name="error_select_label">Selecciona un sello</string>
+    <!-- Formulario de nuevo premio (HU13; docs/14, sección 6) -->
+    <string name="create_prize_title">Nuevo premio</string>
+    <string name="create_prize_all_required">Todos los campos son obligatorios. Al crearlo, el premio queda disponible para cualquier artista.</string>
+    <string name="field_organization">Organización</string>
+    <string name="hint_prize_name">Nombre del premio</string>
+    <string name="hint_prize_description">¿Qué reconoce este premio?</string>
+    <string name="hint_prize_organization">Quién otorga el premio</string>
+    <string name="action_create_prize">Crear premio</string>
+    <string name="action_creating_prize">Creando…</string>
+    <string name="action_check_prize">Comprobar</string>
+    <string name="action_checking_prize">Comprobando…</string>
+    <string name="create_prize_rejected">No se pudo crear el premio. Revisa los datos e inténtalo de nuevo.</string>
+    <string name="create_prize_uncertain">No pudimos confirmar si el premio se guardó. Compruébalo antes de volver a crearlo, para no duplicarlo.</string>
+    <string name="create_prize_check_failed">No se pudo comprobar. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="create_prize_not_saved">El premio no aparece en el catálogo. Puedes intentar crearlo de nuevo.</string>
+    <string name="create_prize_card_description">Crear un premio nuevo. ¿No está en la lista? Regístralo y asígnalo.</string>
 
+    <!-- Lista de artistas (HU03, docs/10 sección 6) -->
     <string name="artist_list_title">Artistas</string>
+    <string name="filter_all">Todos</string>
+    <string name="filter_musicians">Músicos</string>
+    <string name="filter_bands">Bandas</string>
+    <string name="artist_musician">Músico</string>
+    <string name="artist_band">Banda</string>
+    <string name="artist_since">desde %1$d</string>
+    <string name="artist_overline">%1$s · %2$s</string>
+    <string name="artist_member_of">Integrante de %1$s</string>
+    <string name="artist_band_summary">%1$s · %2$s</string>
+    <plurals name="artist_albums_count">
+        <item quantity="one">%1$d álbum</item>
+        <item quantity="other">%1$d álbumes</item>
+    </plurals>
+    <plurals name="artist_members_count">
+        <item quantity="one">%1$d integrante</item>
+        <item quantity="other">%1$d integrantes</item>
+    </plurals>
+    <string name="artist_item_description">%1$s, %2$s, %3$s</string>
+    <string name="artist_list_error_title">No se pudieron cargar los artistas</string>
+    <string name="artist_list_error_body">Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="artist_list_empty">Aún no hay artistas</string>
+    <string name="artist_list_empty_musicians">Aún no hay músicos</string>
+    <string name="artist_list_empty_bands">Aún no hay bandas</string>
+    <string name="artist_list_offline_notice">Sin conexión. Mostrando los datos guardados</string>
+    <string name="artist_list_refresh_error">No se pudieron actualizar los artistas</string>
+
+    <!-- Lista de coleccionistas (docs/10 sección 6) -->
     <string name="collector_list_title">Coleccionistas</string>
+    <string name="collector_detail_title">Coleccionista</string>
+    <string name="collector_summary">%1$s · %2$s</string>
+    <string name="collector_no_albums">Sin álbumes aún</string>
+    <plurals name="collector_albums_count">
+        <item quantity="one">%1$d álbum</item>
+        <item quantity="other">%1$d álbumes</item>
+    </plurals>
+    <plurals name="collector_favorites_count">
+        <item quantity="one">%1$d favorito</item>
+        <item quantity="other">%1$d favoritos</item>
+    </plurals>
+    <string name="collector_item_description">%1$s, %2$s, %3$s</string>
+    <string name="collector_list_error_title">No se pudieron cargar los coleccionistas</string>
+    <string name="collector_list_error_body">Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="collector_list_empty">Aún no hay coleccionistas</string>
+    <string name="collector_list_offline_notice">Sin conexión. Mostrando los datos guardados</string>
+    <string name="collector_list_refresh_error">No se pudieron actualizar los coleccionistas</string>
 
     <!-- Contenido provisional de las pestañas hasta que llegue su historia -->
     <string name="pending_this_sprint">El catálogo llega en este sprint.</string>

@@ -1,0 +1,11 @@
+{
+  "id": 903,
+  "premiationDate": "1985-09-18T00:00:00.000Z",
+  "prize": {
+    "id": 71,
+    "name": "Premio de pruebas",
+    "description": "Premio asignado",
+    "organization": "Organización de pruebas"
+  },
+  "performer": { "id": 83 }
+}

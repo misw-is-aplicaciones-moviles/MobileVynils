@@ -10,11 +10,16 @@ Con BackVynils corriendo en local con la semilla (`docker compose up`):
 curl http://localhost:3000/albums -o app/src/test/resources/api/albums.json
 curl http://localhost:3000/albums/100 -o app/src/test/resources/api/album_100.json
 curl http://localhost:3000/albums/2147483647 -o app/src/test/resources/api/album_not_found.json
+curl http://localhost:3000/musicians -o app/src/test/resources/api/musicians.json
+curl http://localhost:3000/bands -o app/src/test/resources/api/bands.json
+curl http://localhost:3000/collectors -o app/src/test/resources/api/collectors.json
+curl http://localhost:3000/collectors/100 -o app/src/test/resources/api/collector_100.json
+curl http://localhost:3000/collectors/100/albums -o app/src/test/resources/api/collector_100_albums.json
 ```
 
 ## Nombres
 
-`snake_case`, uno por endpoint y caso: `albums.json`, `album_100.json`, `album_not_found.json`, `musicians.json`.
+`snake_case`, uno por endpoint y caso: `albums.json`, `album_100.json`, `album_not_found.json`, `musicians.json`, `bands_with_members.json`.
 
 ## Archivos actuales
 
@@ -27,6 +32,15 @@ curl http://localhost:3000/albums/2147483647 -o app/src/test/resources/api/album
 | `album_created.json` | Ejemplo sintético con la forma de la respuesta 200 de `POST /albums`: el álbum guardado, sin `tracks`, `performers` ni `comments` | HU07, POST válido |
 | `album_create_missing_field.json` | `POST /albums` real sin `cover` (400) | HU07, campos faltantes |
 | `album_create_invalid_genre.json` | `POST /albums` real con `genre` fuera de la lista (400) | HU07, valores fuera de las listas |
+| `prize_created.json` | Ejemplo sintético con la forma de la respuesta 200 de `POST /prizes`: el premio guardado (`id`, `organization`, `name`, `description`), sin `performerPrizes`; sintético para no crear premios en la base local al capturarlo | HU13, POST válido |
+| `prize_create_missing_field.json` | `POST /prizes` real con solo `name` (400, `"description" is required`); capturado del backend local el 2026-11-05 sin escribir en la base | HU13, campo faltante |
+| `musicians.json` | `GET /musicians` con la semilla (Rubén Blades Bellido de Luna, id 100); capturado del backend local el 2026-11-03 | HU03: contrato de `GET /musicians`; el músico no trae banda |
+| `bands.json` | `GET /bands` con la semilla (Queen, id 101, sin integrantes); capturado el 2026-11-03 | HU03: contrato de `GET /bands` |
+| `musicians_with_band.json` | `GET /musicians` tras crear a Freddie Mercury, Brian May, Roger Taylor y John Deacon con `POST /musicians` y asociarlos a Queen con `POST /bands/101/musicians/:id`; capturado el 2026-11-03 | HU03: aun asociados, los músicos no traen su banda |
+| `bands_with_members.json` | `GET /bands` en ese mismo estado; capturado el 2026-11-03 | HU03: `musicians[]` de Queen con los cuatro integrantes, de donde se deriva la pertenencia |
+| `collectors.json` | `GET /collectors` con la semilla (Manolo Bellon, id 100, y Jaime Monsalve, id 101); capturado del backend local el 2026-11-04 | HU05: contrato de `GET /collectors`; conteos de `collectorAlbums` y `favoritePerformers` |
+| `collector_100.json` | `GET /collectors/100` con la semilla; capturado del backend local el 2026-11-04 | HU06: Manolo, teléfono y favorito músico. `collectorAlbums` no trae el álbum anidado |
+| `collector_100_albums.json` | `GET /collectors/100/albums` con la semilla; capturado del backend local el 2026-11-04 | HU06: vínculo con precio, estado y álbum anidado "Buscando América" |
 
 Los casos de HTTP 500, desconexión, JSON inválido, campo requerido ausente,
 JSON `null` y HTTP 204 se generan en MockWebServer; no son respuestas capturadas
@@ -41,3 +55,14 @@ curl -X POST http://localhost:3000/albums -H "Content-Type: application/json" \
 ```
 
 La respuesta 200 de `POST /albums` es sintética para no crear álbumes en la base local al capturarla.
+
+HU04-02 reutiliza el primer objeto de `musicians.json` y `bands_with_members.json` como respuesta del detalle en `PerformerDetailServiceAdapterTest`: sus campos se contrastaron con `GET /musicians/:id` y `GET /bands/:id` del backend local. Las variantes inválidas y vacías se preparan en memoria sobre esos objetos, sin duplicar los archivos ni depender del estado del backend durante las pruebas JVM.
+
+Las respuestas 400 de `POST /prizes` también se capturan sin escribir en la base, porque el backend valida antes de guardar (verificado el 2026-11-05: `{"name":"Probe"}` responde `"description" is required`, un nombre vacío `"name" is not allowed to be empty` y un campo extra como `id` `"id" is not allowed`; el listado seguía con los dos premios de la semilla):
+
+```bash
+curl -X POST http://localhost:3000/prizes -H "Content-Type: application/json" \
+  -d '{"name":"Probe"}' -o app/src/test/resources/api/prize_create_missing_field.json
+```
+
+La respuesta 200 de `POST /prizes` es sintética por la misma razón. El esquema Joi (`Joi.string().required()`) acepta una cadena de solo espacios, que sí quedaría guardada: por eso el formulario de HU13 la trata como vacía.

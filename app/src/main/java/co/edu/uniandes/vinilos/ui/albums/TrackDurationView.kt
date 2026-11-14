@@ -33,6 +33,7 @@ class TrackDurationView
         private val ringOuterPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         private val ringInnerPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         private val shape = RectF()
+        private val drawingBounds = RectF()
         private val radius: Float
         private val shadowOffsetY: Float
         private val shadowSpread: Float
@@ -89,14 +90,14 @@ class TrackDurationView
                 drawShadow(canvas)
             }
             canvas.drawRoundRect(shape, radius, radius, fillPaint)
-            val border = RectF(shape)
+            val border = drawingBounds.apply { set(shape) }
             border.inset(strokePaint.strokeWidth / 2f, strokePaint.strokeWidth / 2f)
             canvas.drawRoundRect(border, radius, radius, strokePaint)
             super.onDraw(canvas)
         }
 
         private fun drawShadow(canvas: Canvas) {
-            val shadow = RectF(shape)
+            val shadow = drawingBounds.apply { set(shape) }
             shadow.inset(shadowSpread, shadowSpread)
             shadow.offset(0f, shadowOffsetY)
             canvas.drawRoundRect(shadow, radius, radius, shadowPaint)
@@ -104,10 +105,10 @@ class TrackDurationView
 
         /** Anillo de 3 dp crema y 2,5 dp carbón por fuera de la pastilla. El CSS lo da como dos sombras de 0. */
         private fun drawErrorRing(canvas: Canvas) {
-            val outer = RectF(shape)
+            val outer = drawingBounds.apply { set(shape) }
             outer.inset(-ringOuter, -ringOuter)
             canvas.drawRoundRect(outer, radius + ringOuter, radius + ringOuter, ringOuterPaint)
-            val inner = RectF(shape)
+            val inner = drawingBounds.apply { set(shape) }
             inner.inset(-ringInner, -ringInner)
             canvas.drawRoundRect(inner, radius + ringInner, radius + ringInner, ringInnerPaint)
         }

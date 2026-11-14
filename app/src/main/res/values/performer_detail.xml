@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="performerMembers" type="id" />
+    <string name="artist_detail_prizes">Premios</string>
+    <string name="artist_add_prize">Agregar premio</string>
+    <string name="artist_detail_title">Artista</string>
+    <string name="artist_detail_birth">Músico · nació el %1$s</string>
+    <string name="artist_detail_albums">Álbumes · %1$d</string>
+    <string name="artist_detail_members">Integrantes · %1$d</string>
+    <string name="artist_detail_no_albums">Este artista aún no tiene álbumes registrados.</string>
+    <string name="artist_detail_no_members">Esta banda aún no tiene integrantes registrados.</string>
+    <string name="artist_detail_error">No se pudo cargar el artista</string>
+    <string name="artist_detail_error_body">Inténtalo de nuevo para consultar su información.</string>
+    <string name="artist_detail_not_found">No encontramos este artista</string>
+    <string name="artist_detail_not_found_body">El artista ya no está disponible. Puedes reintentar o regresar.</string>
+    <string name="artist_detail_invalid">No se pudo identificar el artista</string>
+    <string name="artist_detail_invalid_body">Regresa y selecciona un artista de nuevo.</string>
+    <string name="artist_open_detail">Consultar el detalle de %1$s</string>
+    <string name="artist_detail_album_description">%1$s, %2$d. Consultar álbum.</string>
+    <dimen name="performer_detail_artwork_size">116dp</dimen>
+    <dimen name="performer_detail_album_artwork_width">102dp</dimen>
+    <dimen name="performer_detail_album_artwork_height">69dp</dimen>
+    <dimen name="performer_detail_album_height">84dp</dimen>
+    <dimen name="performer_detail_member_width">76dp</dimen>
+    <dimen name="performer_detail_member_artwork_size">60dp</dimen>
+</resources>

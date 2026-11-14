@@ -1,13 +1,9 @@
 package co.edu.uniandes.vinilos.ui.albums
 
 import android.os.Bundle
-import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.style.ImageSpan
 import android.view.View
 import android.widget.EditText
 import androidx.annotation.StringRes
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.children
@@ -23,7 +19,9 @@ import co.edu.uniandes.vinilos.databinding.ItemChoiceChipBinding
 import co.edu.uniandes.vinilos.models.Genre
 import co.edu.uniandes.vinilos.models.RecordLabel
 import co.edu.uniandes.vinilos.models.UserRole
+import co.edu.uniandes.vinilos.ui.common.fieldErrorText
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
+import co.edu.uniandes.vinilos.ui.common.showFieldError
 import co.edu.uniandes.vinilos.viewmodels.AlbumCreateEvent
 import co.edu.uniandes.vinilos.viewmodels.AlbumCreateUiState
 import co.edu.uniandes.vinilos.viewmodels.AlbumCreateViewModel
@@ -214,30 +212,19 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
         binding.recordLabelError.text = errors.recordLabel?.let(::errorText)
     }
 
-    // Disabling the error when there is none frees the space it reserves under the field.
     private fun TextInputLayout.showError(error: FieldError?) {
-        if (error == null) {
-            isErrorEnabled = false
-        } else {
-            this.error = errorText(error)
-        }
+        showFieldError(error?.let(::errorMessage))
     }
 
-    private fun errorText(error: FieldError): CharSequence {
-        @StringRes val message =
-            when (error) {
-                FieldError.REQUIRED -> R.string.error_required
-                FieldError.MISSING_GENRE -> R.string.error_select_genre
-                FieldError.MISSING_RECORD_LABEL -> R.string.error_select_label
-            }
-        val icon = checkNotNull(AppCompatResources.getDrawable(requireContext(), R.drawable.ic_warning))
-        val size = resources.getDimensionPixelSize(R.dimen.field_error_icon)
-        icon.setBounds(0, 0, size, size)
-        return SpannableStringBuilder()
-            .append(ICON_PLACEHOLDER, ImageSpan(icon, ImageSpan.ALIGN_BASELINE), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            .append(ICON_GAP)
-            .append(getString(message))
-    }
+    private fun errorText(error: FieldError): CharSequence = requireContext().fieldErrorText(errorMessage(error))
+
+    @StringRes
+    private fun errorMessage(error: FieldError): Int =
+        when (error) {
+            FieldError.REQUIRED -> R.string.error_required
+            FieldError.MISSING_GENRE -> R.string.error_select_genre
+            FieldError.MISSING_RECORD_LABEL -> R.string.error_select_label
+        }
 
     private fun openDatePicker() {
         if (findDatePicker() != null) return
@@ -306,7 +293,5 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
         private const val DATE_PICKER_TAG = "releaseDatePicker"
         private const val DATE_PATTERN = "dd / MM / yyyy"
         private const val SUBMITTING_ALPHA = 0.5f
-        private const val ICON_PLACEHOLDER = " "
-        private const val ICON_GAP = "  "
     }
 }

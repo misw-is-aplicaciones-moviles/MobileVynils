@@ -14,6 +14,8 @@ Documento de diseño que desarrolla la planeación del Inception: convierte el b
 
 Alcance: las 12 historias comprometidas (HU01 a HU08 del MVP y HU09, HU15, HU12 y HU10 como extras) y las 6 tareas transversales del Sprint 1. HU13, HU14 y HU11 forman el backlog alterno; se mencionan solo donde el diseño debe dejarles sitio.
 
+**Actualización del Sprint 2 (03/11/2026):** la planeación vigente de la Wiki incorporó HU13, HU14 y HU11 a este sprint. El texto y las tablas originales de este documento conservan la distribución inicial como referencia histórica. Para premios prevalecen [HU14 en la Wiki](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/wiki/HU14) y el [diseño técnico HU14](12-hu14-diseno-tecnico.md): consulta de premios en el detalle de HU04, creación en HU13 y selección/asignación en HU14. Los frames exportados de HU14 ya se contrastaron. Por decisión del responsable, la fecha será obligatoria y no habrá Omitir, respetando el NOT NULL del backend local.
+
 Los tableros del prototipo:
 
 | Tablero en Figma | Contenido |
@@ -83,6 +85,8 @@ Destinos de `res/navigation/nav_graph.xml` y sus argumentos (`Bundle`, claves en
 | `albumListFragment` | — | HU01 |
 | `albumDetailFragment` | `albumId: Int` | HU02 |
 | `albumCreateFragment` | — | HU07 |
+| `prizePickerFragment` | `performerId: Int`, `performerType: String`, `performerName: String`, `assignmentIds: Int[]` | HU14 |
+| `prizeCreateFragment` | — (se abre con `launchSingleTop` desde `prizePickerFragment`) | HU13 |
 | `performerListFragment` | — | HU03 |
 | `performerDetailFragment` | `performerId: Int`, `type: String` (`MUSICIAN` o `BAND`) | HU04 |
 | `albumPickerFragment` | `performerId: Int`, `type: String` | HU15 |
@@ -94,7 +98,7 @@ Destinos de `res/navigation/nav_graph.xml` y sus argumentos (`Bundle`, claves en
 Comportamiento de navegación:
 
 - `roleSelectFragment` es el destino inicial; al elegir rol se navega a `albumListFragment` con `popUpTo` del selector (`inclusive = true`). El chip de rol vuelve al selector limpiando la pila. La barra inferior se oculta en el selector.
-- Los detalles se apilan sobre su pestaña y vuelven con la flecha y con el botón atrás. Los selectores abren a pantalla completa con "X" y vuelven al detalle que los abrió. `albumCreateFragment` abre a pantalla completa con "X", sin barra inferior, y vuelve al catálogo; si crea el álbum, deja el resultado en `previousBackStackEntry.savedStateHandle` antes de cerrarse (HU07, sección 6).
+- Los detalles se apilan sobre su pestaña y vuelven con la flecha y con el botón atrás. Tocar una pestaña abre siempre su lista, aunque el detalle abierto venga de otra pestaña: de cada pestaña solo se conserva el estado de la lista, como su filtro, nunca sus detalles. Los selectores abren a pantalla completa con "X" y vuelven al detalle que los abrió. `albumCreateFragment` abre a pantalla completa con "X", sin barra inferior, y vuelve al catálogo; si crea el álbum, deja el resultado en `previousBackStackEntry.savedStateHandle` antes de cerrarse (HU07, sección 6).
 - `TrackCreateBottomSheet` y `CommentCreateBottomSheet` son `BottomSheetDialogFragment` abiertos desde el detalle con `show(childFragmentManager, TAG)`. Al guardar, la hoja llama a `parentFragmentManager.setFragmentResult(...)` y el detalle, que escucha con `childFragmentManager.setFragmentResultListener(...)`, vuelve a cargar el álbum. Así "HU08 + HU09 en cualquier orden" se cumple sin apilar destinos.
 - Tras una escritura exitosa se vuelve a la pantalla de origen y se muestra un `Snackbar` de confirmación.
 - Transición `MaterialFadeThrough` de 300 ms entre destinos.
@@ -119,6 +123,7 @@ Siete pantallas base, un selector de rol, un formulario, dos hojas y tres select
 | 11 | Elegir álbum | `artists/` | HU15 | Sin selección (botón deshabilitado), con selección; ítems "Ya agregado" deshabilitados |
 | 12 | Elegir músico | `artists/` | HU12 | Sin selección, con selección, con error "pertenece a otra banda"; ítems "Ya integrante" |
 | 13 | Elegir artista | `collectors/` | HU10 | Sin selección, con selección; ítems "Ya es favorito" |
+| 14 | Nuevo premio | `artists/` | HU13 | Vacío, errores por campo ("Campo obligatorio"), completo, enviando, rechazado, resultado incierto y comprobación; el selector regresa con el premio creado y el aviso "Premio creado" |
 
 Los tres selectores comparten un layout `fragment_picker.xml` y un adaptador `PickerAdapter` en `ui/common` (campo de búsqueda, lista con `RadioButton`, chip de estado por ítem, botón inferior con el nombre elegido entre comillas angulares: "Agregar «The Game»").
 
@@ -147,9 +152,9 @@ Cada repositorio guarda en Room (2.7.2, la última versión que admite API 21) l
 | `AlbumEntity` (Sprint 1) | `id` | — |
 | `TrackEntity` (Sprint 1) | `id` | `albumId` → `AlbumEntity`, `CASCADE` al borrar |
 | `CommentEntity` | `id` | `albumId` → `AlbumEntity`; `collectorId`, `collectorName` opcionales |
-| `PerformerEntity` | `id` | `type`, `bandId` opcional (músico que pertenece a una banda) |
+| `PerformerEntity` (HU03, versión 3) | `id` | `type`, `name`, `image`, `date`, `albumCount`, `memberCount`, `bandId` opcional (músico que pertenece a una banda; su nombre se resuelve al leer). Sin relaciones: las de álbumes e integrantes llegan con HU04 |
 | `AlbumPerformerCrossRef` | (`albumId`, `performerId`) | álbumes de un artista y artistas de un álbum |
-| `CollectorEntity` | `id` | — |
+| `CollectorEntity` (HU05, versión 4) | `id` | `name`, `email`, `albumCount`, `favoriteCount`. HU06 no agrega columnas: el teléfono y las relaciones se consultan en remoto |
 | `CollectorFavoriteCrossRef` | (`collectorId`, `performerId`) | favoritos |
 | `CollectorAlbumEntity` | (`collectorId`, `albumId`) | `price`, `status` |
 
@@ -166,7 +171,7 @@ interface AlbumRepository {
 
 interface PerformerRepository {
     suspend fun getPerformers(forceRefresh: Boolean = false): DataResult<List<Performer>, DataError> // GET /musicians + GET /bands
-    suspend fun getPerformer(id: Int, type: PerformerType): DataResult<Performer, DataError>
+    suspend fun getPerformer(id: Int, type: PerformerType, forceRefresh: Boolean = false): DataResult<PerformerDetail, DataError>
     suspend fun addAlbum(performerId: Int, type: PerformerType, albumId: Int): DataResult<Unit, DataError> // HU15
     suspend fun addMember(bandId: Int, musicianId: Int): DataResult<Unit, DataError>                     // HU12
 }
@@ -270,13 +275,40 @@ Flujo:
 
 ### Sprint 2 · Artistas y coleccionistas
 
-**HU03 · Lista de artistas.** `ChipGroup` con selección única: "Todos", "Músicos", "Bandas". Tarjeta con imagen, nombre, "Músico · 1947" o "Banda · desde 1970" y tercera línea: "2 álbumes · 4 integrantes" para banda, "Integrante de Queen" o "N álbumes" para músico. La unión de `GET /musicians` y `GET /bands` se hace en `PerformerServiceAdapter`; la pertenencia a banda se deriva de `bands[].musicians`. Orden: por nombre, con el filtro aplicado en el ViewModel sobre la lista cargada.
+**HU03 · Lista de artistas.** `ChipGroup` con selección única: "Todos", "Músicos", "Bandas". Tarjeta con imagen, nombre, "Músico · 1947" o "Banda · desde 1970" y tercera línea: "2 álbumes · 4 integrantes" para banda, "Integrante de Queen" o "N álbumes" para músico. La unión de `GET /musicians` y `GET /bands` se hace en `PerformerServiceAdapter`; la pertenencia a banda se deriva de `bands[].musicians`. Orden: por nombre, con el filtro aplicado en el ViewModel sobre la lista cargada. Sin botón "+" para ningún rol. Diseño técnico completo en la wiki (`HU03-Diseno-tecnico`).
 
-**HU04 · Detalle de artista.** Título "Músico" o "Banda" según el tipo. Cabecera con imagen, "Músico · nació el 16 jul 1948" o "Banda · desde 1970", nombre y descripción. Banda: sección "Integrantes · N" (lista de músicos) y "Álbumes · N". Músico: solo "Álbumes · N". Para coleccionista, cada sección lleva a la derecha un `MaterialButton` con estilo de contorno: "Agregar integrante" (solo banda) y "Agregar álbum". Los premios (`performerPrizes`) no se muestran en el alcance comprometido.
+*Diseño técnico de HU03 (HU03-01).*
+
+- **Datos.** `PerformerServiceAdapter` llama a `GET /musicians` y `GET /bands` en paralelo y devuelve `Performer` con tipo. `GET /musicians` no trae la banda del músico (el backend no carga esa relación): se deriva de `bands[].musicians[].id`. Si falla cualquiera de las dos llamadas falla toda la carga y Room no se toca: nunca se muestra ni se guarda una lista a medias. Músicos y bandas comparten secuencia de ids; una respuesta con un id repetido se rechaza como `DataError.Serialization`.
+- **Modelo.** `Performer(id, type, name, imageUrl, date, albumCount, memberCount, bandId, bandName)` contiene solo lo que dibuja la lista; HU04 lo amplía con descripción, álbumes e integrantes. `PerformerEntity` guarda lo mismo con `bandId` (el nombre de la banda se resuelve al leer) y la base pasa a la versión 3 con una `Migration(2, 3)` que solo crea la tabla `performers`: el catálogo guardado se conserva.
+- **Presentación.** `PerformerFilter` (`ALL`, `MUSICIANS`, `BANDS`) vive en el `UiState` y filtra la lista ya cargada sin llamar al repositorio; sobrevive a la rotación. La tercera línea la decide el ViewModel como dato (`PerformerSummaryLine`) y el adaptador la escribe con `plurals`. Año en UTC, como en HU01.
+- **Navegación.** Tocar una fila abre `performerDetailFragment` con `performerId: Int` y `type: String` (`MUSICIAN` o `BAND`); hasta HU04 es `PendingTabFragment`.
+- **Orden.** Por nombre sin distinguir mayúsculas ASCII (`COLLATE NOCASE`, desempate por id), la regla del catálogo; el mockup de "Todos" es un ejemplo y no sigue ese orden.
+
+**HU04 · Detalle de artista.** Título "Músico" o "Banda" según el tipo. Cabecera con imagen, "Músico · nació el 16 jul 1948" o "Banda · desde 1970", nombre y descripción. Banda: sección "Integrantes · N" (lista de músicos) y "Álbumes · N". Músico: "Álbumes · N". Los valores y contadores se obtienen del backend, sin exigir los ejemplos del prototipo. Agregar integrantes o álbumes pertenece a HU12/HU15; sus botones solo se conectan cuando existe una acción real. Los wireframes actuales también incluyen Premios: esa sección y el acceso de Coleccionista a la asignación se completan al integrar HU14 sobre el detalle de HU04, reutilizando su implementación de premios. El [diseño técnico HU04](13-hu04-diseno-tecnico.md) propone componer el `Performer` de HU03 con los datos del detalle, conservar sus contratos de navegación y consultar el detalle remotamente sin modificar la caché de lista de HU03. HU04-03 implementa la pantalla y navegación base sobre esos contratos; el detalle de avance y las pruebas están en la sección 10 de su diseño técnico. La navegación desde HU02 requiere conservar el tipo de su artista, sin inferirlo por ID o nombre.
 
 **HU05 · Lista de coleccionistas.** Tarjeta con avatar de iniciales, nombre, correo y "N álbumes · M favoritos" ("Sin álbumes aún" cuando no tiene), a partir de los arreglos de `GET /collectors`.
 
-**HU06 · Detalle de coleccionista.** Cabecera con avatar, sobretítulo "Coleccionista" y nombre; fichas Teléfono y Correo; sección "Artistas favoritos · N" (imagen, nombre, tipo); sección "Sus álbumes · N" con precio a la derecha ("$ 35") y chip de estado "DISPONIBLE" / "NO DISPONIBLE". Requiere dos llamadas: `GET /collectors/:id` y `GET /collectors/:id/albums`. Para coleccionista, botón "Agregar favorito" en la sección de favoritos.
+*Diseño técnico de HU05 (HU05-01).*
+
+- **Datos.** `CollectorServiceAdapter` llama a `GET /collectors` y devuelve `Collector`. Crea la API dentro de `withContext(ioDispatcher)`, porque el primer acceso prepara la caché HTTP en disco, y mapea en `defaultDispatcher`. Una respuesta sin `id`, `name` o `email` se rechaza como `DataError.Serialization`. Si la llamada falla, Room no se toca.
+- **Modelo.** `Collector(id, name, email, albumCount, favoriteCount)` contiene solo lo que dibuja la lista. HU06 no lo amplía ni sube la versión de Room: el detalle es `CollectorDetail`, remoto. Los conteos de la lista salen del tamaño de `collectorAlbums` y `favoritePerformers`. La base pasa a la versión 4 con una `Migration(3, 4)` que solo crea la tabla `collectors`.
+- **Presentación.** El ViewModel calcula en `Dispatchers.Default` la posición ("01"), las iniciales (primera letra de la primera y de la última palabra: "Ana Lucía Pardo" es "AP") y la tercera línea como dato (`CollectorSummaryLine`); el adaptador la escribe con `plurals`. Con 0 álbumes se muestra "Sin álbumes aún", aunque tenga favoritos. El Repository también mapea entidades en ese dispatcher: el backend no pagina, así que el tamaño de la lista no tiene límite (`07-desempeno.md`).
+- **Navegación.** Tocar una fila abre `collectorDetailFragment` con `collectorId: Int`. HU06 reemplaza `PendingTabFragment` por `CollectorDetailFragment`.
+- **Orden.** Por nombre sin distinguir mayúsculas ASCII (`COLLATE NOCASE`, desempate por id), la regla del catálogo y de los artistas; el mockup es un ejemplo y no sigue ese orden.
+
+**HU06 · Detalle de coleccionista.** Cabecera con iniciales, sobretítulo "Coleccionista" y nombre; fichas Teléfono y Correo; sección "Artistas favoritos · N" (imagen, nombre y tipo); sección "Sus álbumes · N" con precio a la derecha ("$ 35") y chip "Disponible" o "No disponible". El visitante no ve acciones. El coleccionista ve "Agregar favorito" y "Agregar álbum" deshabilitados: HU10 y HU11 los conectan.
+
+*Diseño técnico de HU06.*
+
+- **Datos.** `getCollector` llama en paralelo a `GET /collectors/:id` y `GET /collectors/:id/albums`. Si falla una, se cancela la otra y falla toda la carga. La primera respuesta no anida el álbum: el id que abre el detalle del álbum es el del objeto anidado en la segunda, no el del vínculo. Un músico trae solo `birthDate` y una banda solo `creationDate`; las dos fechas o ninguna se rechazan. Los conteos del detalle salen de las colecciones ya mapeadas, no de `collectorAlbums`, que en ese endpoint llega incompleto. Un id no positivo se rechaza antes de la red. Si el id recibido no es el pedido, el resultado es `DataError.Serialization`. El reintento envía `Cache-Control: no-cache` en las dos llamadas. El mapeo corre fuera del hilo principal.
+- **Modelo.** `Collector`, `CollectorEntity` y la versión 4 de Room no cambian. El detalle es `CollectorDetail(collector, telephone, favorites, albums)` y no lee ni escribe la caché de la lista.
+- **Presentación.** Reutiliza `fragment_album_detail.xml`. El teléfono se muestra como llega. `Active` es el chip relleno "Disponible"; `Inactive`, el contorno "No disponible". Un favorito sin tipo no navega. Un álbum abre su detalle y un favorito con tipo abre el del artista.
+- **Navegación.** La pestaña Coleccionistas sigue marcada. Tocándola se vuelve a la lista. El "+" de la barra no se muestra.
+
+**HU14 · Asignar premio (incorporada al Sprint 2).** Desde el detalle de músico o banda, el coleccionista abre "Elegir premio" (`GET /prizes`), busca localmente por nombre y selecciona un registro elegible. Los premios ya asignados al artista llevan "YA ASIGNADO" sin selección activa. "Continuar con «premio»" abre la hoja inferior "Fecha de premiación", con calendario, fecha obligatoria y acción "Asignar premio" deshabilitada hasta elegir día. Se retiran Omitir y la indicación de fecha opcional del mockup por decisión del responsable, respetando el backend local y sin inventar una fecha. Con día elegido, envía `premiationDate` con `POST /prizes/:prizeId/musicians/:musicianId` o `POST /prizes/:prizeId/bands/:bandId`. En éxito regresa al detalle con contador, fila actualizada y "Premio asignado al artista". "Crear un premio nuevo" abre HU13 y devuelve el premio creado al selector, seleccionado y visible. El [diseño técnico](12-hu14-diseno-tecnico.md) define estados, resultados, conservación de fecha, tratamiento de escrituras inciertas e integración temprana del selector para HU13.
+
+**HU13 · Crear premio (incorporada al Sprint 2).** `prizeCreateFragment` a pantalla completa, sin barra inferior, desde la tarjeta punteada "Crear un premio nuevo" de "Elegir premio" (solo Coleccionista). Cabecera con X, título "Nuevo premio" y chip de rol; aviso "Todos los campos son obligatorios. Al crearlo, el premio queda disponible para cualquier artista."; campos NOMBRE ("Nombre del premio"), DESCRIPCIÓN multilínea ("¿Qué reconoce este premio?") y ORGANIZACIÓN ("Quién otorga el premio"); botones fijos "Cancelar" y "Crear premio". Validación en `PrizeFormValidator`: "Campo obligatorio" bajo cada campo vacío o con solo espacios (el backend aceptaría estos últimos, la app no). Envía `POST /prizes` con `name`, `description` y `organization`, recortados; el backend responde 200 con el premio guardado. En éxito deja el premio en `previousBackStackEntry.savedStateHandle` (`PRIZE_CREATED`) y vuelve al selector, que lo muestra arriba, seleccionado, con "Premio creado" una vez y "Continuar con «…»". Cancelar y X vuelven sin escribir. Un resultado desconocido (timeout, desconexión, 5xx, 2xx ilegible) bloquea el reenvío y se resuelve consultando el catálogo, porque el backend no evita duplicados. Diseño técnico: [14-hu13-diseno-tecnico.md](14-hu13-diseno-tecnico.md).
 
 ### Sprint 3 · Funcionalidades adicionales
 
@@ -349,11 +381,17 @@ Claves para `res/values/strings.xml` según el prototipo. El código usa los nom
 | `action_save_track` / `snack_track_added` | Guardar canción / Canción agregada al álbum |
 | `artist_list_title` / `filter_all` / `filter_musicians` / `filter_bands` | Artistas / Todos / Músicos / Bandas |
 | `artist_musician` / `artist_band` / `artist_born` / `artist_since` | Músico / Banda / nació el %1$s / desde %1$d |
-| `artist_member_of` / `artist_albums_count` / `artist_members_count` | Integrante de %1$s / %1$d álbumes / %1$d integrantes |
+| `artist_overline` / `artist_band_summary` | %1$s · %2$s (sobrelínea "Banda · desde 1970" y tercera línea "2 álbumes · 4 integrantes") |
+| `artist_member_of` | Integrante de %1$s |
+| `artist_albums_count` / `artist_members_count` (`plurals`) | 1 álbum, %1$d álbumes / 1 integrante, %1$d integrantes |
+| `artist_item_description` | %1$s, %2$s, %3$s (descripción de la fila para TalkBack) |
+| `artist_list_error_title` / `artist_list_error_body` | No se pudieron cargar los artistas / Revisa tu conexión e inténtalo de nuevo. |
+| `artist_list_empty` / `artist_list_empty_musicians` / `artist_list_empty_bands` | Aún no hay artistas / músicos / bandas |
+| `artist_list_offline_notice` / `artist_list_refresh_error` | Sin conexión. Mostrando los datos guardados / No se pudieron actualizar los artistas |
 | `artist_section_members` / `artist_section_albums` | Integrantes · %1$d / Álbumes · %1$d |
 | `action_add_member` / `action_add_album` | Agregar integrante / Agregar álbum |
 | `collector_list_title` / `collector_detail_title` | Coleccionistas / Coleccionista |
-| `collector_summary` / `collector_no_albums` | %1$d álbumes · %2$d favoritos / Sin álbumes aún |
+| `collector_summary` / `collector_no_albums` | %1$s · %2$s (con los plurales `collector_albums_count` y `collector_favorites_count`) / Sin álbumes aún |
 | `collector_phone` / `collector_email` | Teléfono / Correo |
 | `collector_section_favorites` / `collector_section_albums` | Artistas favoritos · %1$d / Sus álbumes · %1$d |
 | `album_status_available` / `album_status_unavailable` | Disponible / No disponible |
@@ -369,6 +407,11 @@ Claves para `res/values/strings.xml` según el prototipo. El código usa los nom
 | `picker_already_added` / `picker_already_member` / `picker_already_favorite` | Ya agregado / Ya integrante / Ya es favorito |
 | `picker_member_elsewhere` | %1$s ya pertenece a otra banda (%2$s). Un músico solo puede estar en una banda. |
 | `snack_album_added_to_artist` / `snack_member_added` / `snack_favorite_added` | Álbum agregado al artista / Integrante agregado a la banda / Artista favorito agregado |
+| `create_prize_title` / `create_prize_all_required` | Nuevo premio / Todos los campos son obligatorios. Al crearlo, el premio queda disponible para cualquier artista. |
+| `field_organization` / `hint_prize_name` / `hint_prize_description` / `hint_prize_organization` | Organización / Nombre del premio / ¿Qué reconoce este premio? / Quién otorga el premio |
+| `action_create_prize` / `action_creating_prize` / `action_check_prize` / `action_checking_prize` | Crear premio / Creando… / Comprobar / Comprobando… |
+| `create_prize_rejected` / `create_prize_uncertain` / `create_prize_check_failed` / `create_prize_not_saved` | Avisos del formulario de HU13 (rechazado, resultado sin confirmar, comprobación fallida, premio no guardado) |
+| `create_prize_card_description` | Crear un premio nuevo. ¿No está en la lista? Regístralo y asígnalo. |
 
 ## 9. Reparto por sprint
 
@@ -400,6 +443,7 @@ Resultado de contrastar wiki, prototipo, documento del curso y código del backe
 14. **Botón para agregar una canción (HU08).** El prototipo v1 dibuja un FAB extendido "+ Canción"; los mockups v2, un "+" en la joroba de la barra inferior. Equipo: decidir uno y alinear el Gherkin de HU08 y los casos CP.
 15. **Duración de la canción (HU08).** Los mockups v2 usan un teclado propio "00:00" con "Limpiar" y borrar; la expresión `^\d{1,2}:[0-5]\d$` de la sección 6 acepta `60:00` y `00:00`, que el Gherkin rechaza. Equipo: fijar la regla (mínimo `00:01`, máximo `59:59`) antes de implementar HU08.
 16. **Datos de los mockups frente a la semilla.** El mockup del catálogo muestra "Poeta del pueblo · SIN ARTISTA · 1974"; la semilla de BackVynils lo trae con Rubén Blades y 1984. Las pruebas usan los datos de la semilla.
+17. **Rutas de BackVynils para quitar relaciones de un coleccionista (HU05).** `DELETE /collectors/:id/albums/:albumId` busca por `collectorId` y `albumId`, que no son columnas de `CollectorAlbum`: ignora el filtro, responde 204 y borra el vínculo de id más bajo, aunque sea de otro coleccionista. `DELETE /collectors/:id/musicians/:id` responde 204 sin quitar el favorito. Como `collector_album` no borra en cascada, un coleccionista con álbumes no se puede eliminar sin la primera ruta. La app no usa ninguna de las dos; quien las necesite (HU10, HU11 o sus pruebas) debe tenerlo en cuenta. Equipo.
 
 ## 11. Bitácora de decisiones
 
@@ -410,3 +454,16 @@ Resultado de contrastar wiki, prototipo, documento del curso y código del backe
 | 2026-10-27 | TR-03: Room deja de ser opcional; `AlbumEntity` y `TrackEntity` en Sprint 1, el resto de entidades en Sprint 2. |
 | 2026-10-28 | HU01-01: el catálogo se guarda en Room (`AlbumEntity` con `performerName`, base de datos versión 2), orden alfabético, fila propia `item_album_catalog.xml` con las medidas del mockup (carátula de 96 dp, ya no 56 dp), estado de error con ilustración, botón "+" en la joroba de la barra para el coleccionista (lo muestra el Fragment según `canEdit` de su `UiState`) y cinco textos nuevos del catálogo (`album_list_empty`, `album_list_offline_notice`, `album_list_refresh_error`, `album_genre_year`, `album_create_pending`). |
 | 2026-10-28 | HU07-01: diseño técnico del formulario "Nuevo álbum" (sección 6): siete estados, validación de campos obligatorios en `AlbumFormValidator` con errores como tipos, contrato de `POST /albums` con fecha en medianoche UTC, `RecordLabel` con `apiName` (antes decía `apiValue`), `NewAlbumRequest` como cuerpo del POST, resultado al catálogo por `savedStateHandle`. El álbum nuevo aparece en su posición alfabética (antes decía "al final"); `album_create_pending` se retira y se suman los textos de pista, selector de fecha y error al crear. |
+| 2026-11-03 | HU03-01: diseño técnico de la lista de artistas (wiki `HU03-Diseno-tecnico`). `Performer` mínimo para la lista y `PerformerEntity` sin tablas de relación (HU04 las agrega); base versión 3 con migración explícita 2 → 3 en lugar de la recreación destructiva; unión de `GET /musicians` y `GET /bands` en paralelo con fallo total ante cualquier fallo parcial; pertenencia a banda derivada de `bands[].musicians`; filtro en el ViewModel; sin botón "+"; destino `performerDetailFragment` provisional con `performerId` y `type`. Orden por nombre decidido: el mockup de "Todos" no es alfabético. |
+| 2026-11-04 | HU05-01: diseño técnico de la lista de coleccionistas. `Collector` y `CollectorEntity` mínimos para la lista; base versión 4 con migración explícita 3 → 4; mapeo fuera del hilo principal también en el Repository y el ViewModel; destino `collectorDetailFragment` provisional con `collectorId`; textos con plurales. Hallazgo 17 sobre las rutas `DELETE` de BackVynils. |
+| 2026-11-04 | HU06: el detalle es `CollectorDetail`, remoto. `Collector` y Room siguen en la versión 4. Las dos consultas van en paralelo y un fallo de una anula la carga. Los botones de agregar se ven solo para el coleccionista y quedan deshabilitados. No se usan las rutas `DELETE` del hallazgo 17. |
+| 2026-11-05 | HU13: formulario "Nuevo premio" con validación pura, `POST /prizes` en el `PrizeRepository` de HU14, resultado incierto resuelto consultando el catálogo (el backend no evita duplicados), tarjeta punteada "Crear un premio nuevo" con `launchSingleTop`. Textos nuevos en `strings.xml`, como fija la sección 8. Las pantallas de HU14 y HU13 se ajustan a los mockups 70 a 75 (filas del selector y del detalle, aviso de éxito en píldora, X en círculo, hoja de fecha); la fecha sigue siendo obligatoria y sin "Omitir" (`docs/12`). Ver [14-hu13-diseno-tecnico.md](14-hu13-diseno-tecnico.md). |
+| 2026-11-06 | Barra inferior: tocar una pestaña abre siempre su lista. `MainActivity.openTab` saca los detalles antes de guardar la pila, porque restaurarla dejaba al usuario en un detalle, incluso de otra pestaña (por ejemplo, un álbum abierto desde un coleccionista). Cambia un comportamiento anterior: Álbumes → detalle → Artistas → Álbumes vuelve al catálogo, no al detalle. Atrás y la flecha no cambian. |
+
+### Propuesta HU04-01 · 04/11/2026
+
+El detalle de artista se especifica en [13-hu04-diseno-tecnico.md](13-hu04-diseno-tecnico.md). El modelo y las capas de artistas se reutilizan desde la copia local incorporada de HU03, cuya aprobación y correcciones siguen pendientes; se reconciliará la versión aceptada cuando esté disponible en develop. La propuesta acota para HU04 la política general de caché de la sección 5.2: detalle remoto como HU02, sin nuevas tablas o relaciones Room ni promesa offline; la lista conserva la caché de HU03. El alcance de premios se conecta posteriormente en HU14, respetando los frames exportados. Esta entrada es una propuesta de diseño de la tarea #37, no evidencia de implementación ni de pruebas.
+
+### Avance HU04-03 · 04/11/2026
+
+Implementados el detalle de músico/banda y su navegación desde HU03/HU02. El detalle de artista reutiliza directamente `fragment_album_detail.xml` y los estados de HU02; su cabecera e integrantes comparten el disco de `view_performer_artwork.xml`, sin refactorizar el listado HU03. El dominio completo se compone como `PerformerDetail`, conservando el `Performer` del listado y la caché de HU03. Premios y acciones de HU12/HU13/HU15 se conectan al integrar sus historias; no se presentan controles sin acción. Las verificaciones y pendientes están en [13-hu04-diseno-tecnico.md](13-hu04-diseno-tecnico.md).
