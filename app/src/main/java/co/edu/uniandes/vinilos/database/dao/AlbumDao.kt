@@ -13,7 +13,8 @@ internal interface AlbumDao {
     @Query("SELECT EXISTS(SELECT 1 FROM albums)")
     suspend fun hasAlbums(): Boolean
 
-    @Query("SELECT * FROM albums ORDER BY name COLLATE NOCASE")
+    // El id desempata nombres iguales: el repositorio reproduce este orden si Room no puede guardar la lista.
+    @Query("SELECT * FROM albums ORDER BY name COLLATE NOCASE, id")
     suspend fun getAll(): List<AlbumEntity>
 
     @Transaction

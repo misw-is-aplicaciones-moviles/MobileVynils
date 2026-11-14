@@ -2,6 +2,7 @@ package co.edu.uniandes.vinilos.repositories
 
 import android.database.sqlite.SQLiteException
 import co.edu.uniandes.vinilos.database.dao.PerformerDao
+import co.edu.uniandes.vinilos.database.nocaseKey
 import co.edu.uniandes.vinilos.database.toEntity
 import co.edu.uniandes.vinilos.database.toModels
 import co.edu.uniandes.vinilos.models.DataError
@@ -95,14 +96,7 @@ internal class PerformerRepositoryImpl(
     }
 
     private companion object {
-        const val ASCII_CASE_OFFSET = 'a' - 'A'
-
-        // Same order as PerformerDao.getAll(): `name COLLATE NOCASE, id`. NOCASE only folds A-Z, so "Ángel" goes
-        // after "zeta"; lowercase() would fold Unicode too and give a different order.
-        val ROOM_ORDER: Comparator<Performer> =
-            compareBy<Performer>({ asciiFolded(it.name) }, { it.id })
-
-        fun asciiFolded(text: String): String =
-            text.map { if (it in 'A'..'Z') it + ASCII_CASE_OFFSET else it }.joinToString("")
+        // Same order as PerformerDao.getAll(): `name COLLATE NOCASE, id`.
+        val ROOM_ORDER: Comparator<Performer> = compareBy<Performer>({ nocaseKey(it.name) }, { it.id })
     }
 }

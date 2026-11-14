@@ -1,10 +1,14 @@
 package co.edu.uniandes.vinilos.testing
 
+import android.database.sqlite.SQLiteException
 import co.edu.uniandes.vinilos.database.dao.AlbumDao
 import co.edu.uniandes.vinilos.database.entities.AlbumEntity
 import co.edu.uniandes.vinilos.database.entities.AlbumWithTracks
 
-/** In-memory [AlbumDao] that sorts by name ignoring case, like the real query. [upsertFailure] makes [upsert] throw. */
+/**
+ * In-memory [AlbumDao] that sorts by name ignoring ASCII case and then by id, like the real query.
+ * [upsertFailure] makes [upsert] throw.
+ */
 internal class FakeAlbumDao(
     initial: List<AlbumEntity> = emptyList(),
     var upsertFailure: Throwable? = null,
@@ -16,11 +20,21 @@ internal class FakeAlbumDao(
     var writeCount = 0
         private set
 
-    override suspend fun hasAlbums(): Boolean = rows.isNotEmpty()
+    /** Thrown by [getAll] and [hasAlbums], as a corrupt or unreadable database would. */
+    var readFailure: SQLiteException? = null
+
+    /** Thrown by the list writes before changing anything, as a full disk would. */
+    var writeFailure: SQLiteException? = null
+
+    override suspend fun hasAlbums(): Boolean {
+        readFailure?.let { throw it }
+        return rows.isNotEmpty()
+    }
 
     override suspend fun getAll(): List<AlbumEntity> {
+        readFailure?.let { throw it }
         readCount++
-        return rows.values.sortedBy { asciiFolded(it.name) }
+        return rows.values.sortedWith(compareBy({ asciiFolded(it.name) }, { it.id }))
     }
 
     override suspend fun getWithTracks(id: Int): AlbumWithTracks? = null
@@ -32,11 +46,13 @@ internal class FakeAlbumDao(
     }
 
     override suspend fun upsertAll(albums: List<AlbumEntity>) {
+        writeFailure?.let { throw it }
         writeCount++
         albums.forEach { rows[it.id] = it }
     }
 
     override suspend fun deleteAllExcept(ids: List<Int>) {
+        writeFailure?.let { throw it }
         rows.keys.retainAll(ids.toSet())
     }
 
