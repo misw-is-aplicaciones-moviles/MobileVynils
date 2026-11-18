@@ -314,7 +314,7 @@ Para cerrar la implementación completa, no solo HU15-01:
 - Evidencias visuales comparadas con los mockups identificados en esta página y auditoría de accesibilidad del flujo.
 - Inventario, resultados y limitaciones reales publicados, con PR por tarea según el flujo del repositorio.
 
-**Pendientes explícitos:** validar HTTP en backend aislado; revisar la interpretación de álbumes de otros artistas con el equipo; completar la cobertura de ViewModel y las E2E, la auditoría de accesibilidad y publicar sus resultados. Los avances de datos/UI no equivalen a validar HU15 contra el backend real.
+**Pendientes explícitos:** validar HTTP en backend aislado; revisar la interpretación de álbumes de otros artistas con el equipo; completar las E2E y la auditoría de accesibilidad y publicar sus resultados. Los avances de datos/UI no equivalen a validar HU15 contra el backend real.
 
 ## 10. Avance HU15-02 · Capa de datos
 
@@ -345,9 +345,20 @@ Rama de subtarea: `feature/HU15-03-selector`, creada desde `feature/HU15-agregar
 
 Las comprobaciones previas reducen el riesgo de sobrescribir relaciones existentes, pero no constituyen una operación atómica entre clientes: el backend debe resolver la concurrencia. Sigue pendiente comprobar el contrato real de las rutas de BackVynils en HU15-06.
 
-**Cobertura inicial de UI lógica:** `PerformerAlbumPickerViewModelTest` (11 casos) y `PerformerAlbumDetailResultTest` (3 casos). Incluyen músico/banda, rol, búsqueda, selección, asociación concurrente detectada en preflight, respuesta perdida, resultado incierto, restauración, doble toque e identidad del resultado. HU15-04 ampliará la cobertura y HU15-05 incorporará los escenarios Espresso específicos.
+**Cobertura inicial de UI lógica:** `PerformerAlbumPickerViewModelTest` (11 casos) y `PerformerAlbumDetailResultTest` (3 casos). Incluyen músico/banda, rol, búsqueda, selección, asociación concurrente detectada en preflight, respuesta perdida, resultado incierto, restauración, doble toque e identidad del resultado. La cobertura se amplía en HU15-04 (sección 12); HU15-05 incorporará los escenarios Espresso específicos.
 
 
 **Validación local HU15-03 (17/11/2026):** `spotlessCheck`, `detekt`, `lintDebug`, `testDebugUnitTest`, `assembleDebug` y `assembleDebugAndroidTest` correctos; **410 pruebas JVM, 0 fallos, 0 errores y 0 omisiones**. Revisión visual exploratoria con fixtures HTTP en memoria: músico en emulador API 21 y banda en emulador API 37, selección, confirmación y detalle refrescado con resaltado; un POST por recorrido en el log del simulador. El fixture de banda conservó sus cuatro integrantes. No se ejecutó Espresso específico de HU15, no se validó contra BackVynils real ni se auditó aún con TalkBack/Scanner/fuente ampliada. No se guardaron fotos en el repositorio ni se reemplazó el APK de entrega.
 
 **Simplificación de HU15-03:** se retiraron los tres archivos independientes del modelo genérico, adaptador compartido y contrato de claves. La presentación queda específica de esta HU, sin anticipar infraestructura para otras historias. Después de simplificar se repitieron los controles de compilación, análisis y las 410 pruebas JVM; la revisión visual exploratoria anterior no se volvió a ejecutar.
+
+
+## 12. Avance HU15-04 · Pruebas unitarias
+
+Rama: `feature/HU15-04-unitarias`, desde `feature/HU15-agregar-album-artista` con HU15-03 integrada. Issue: [#64](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/issues/64).
+
+- Se amplía `PerformerAlbumPickerViewModelTest` de 11 a 20 casos: recuperación tras fallos de carga, catálogo vacío/búsqueda por artista, restauración de búsqueda/selección y descarte de un álbum ocupado, pérdida del rol durante preflight o envío, reintento explícito tras ausencia confirmada, pertenencia sin subtipo y cancelación/restauración de un envío pendiente sin repetir POST. Se amplía también el caso existente de identidad inválida.
+- Se amplía `PerformerAlbumDetailResultTest` de 3 a 5 casos: refresco de músico y banda con datos remotos, resaltado y conservación de integrantes/premios; asociación ya existente y consumo único del evento.
+- El único cambio auxiliar es una compuerta suspendible en `FakePerformerRepository`. No se añadieron archivos ni se modificaron clases de producción.
+
+**Validación (17/11/2026):** JDK 17; `spotlessCheck`, `detekt`, `lintDebug` y `testDebugUnitTest` correctos. Suite completa: **421 casos, 0 fallos, 0 errores y 0 omisiones**; 25 casos de ViewModel de HU15, 11 nuevos respecto a HU15-03. Con las 36 pruebas de datos existentes, HU15 cuenta con 61 casos JVM. No se ejecutaron pruebas instrumentadas ni se consultó BackVynils real; HU15-05/HU15-06 y la auditoría de accesibilidad continúan pendientes.

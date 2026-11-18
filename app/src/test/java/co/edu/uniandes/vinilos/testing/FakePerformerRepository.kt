@@ -47,6 +47,7 @@ internal class FakePerformerRepository(
         return remoteResult
     }
 
+    var addAlbumGate: CompletableDeferred<Unit>? = null
     var addAlbumResult: DataResult<Unit, DataError> = DataResult.Success(Unit)
     val addedAlbumRequests = mutableListOf<Triple<Int, PerformerType, Int>>()
 
@@ -56,6 +57,7 @@ internal class FakePerformerRepository(
         albumId: Int,
     ): DataResult<Unit, DataError> {
         addedAlbumRequests += Triple(performerId, type, albumId)
+        addAlbumGate?.await()
         return addAlbumResult
     }
 
