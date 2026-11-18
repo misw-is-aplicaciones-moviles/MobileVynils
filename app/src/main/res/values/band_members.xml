@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Agregar músicos a una banda: detalle de banda y selector "Elegir músico". -->
+<resources>
+    <string name="artist_add_member">Agregar integrante</string>
+    <string name="band_member_picker_title">Elegir músico</string>
+    <string name="band_member_search_hint">Buscar músico</string>
+    <string name="band_member_context">para %1$s</string>
+    <string name="band_member_already">YA INTEGRANTE</string>
+    <string name="band_member_select_action">Selecciona un músico</string>
+    <string name="band_member_add_action">Agregar a %1$s</string>
+    <string name="band_member_review_action">Revisar banda</string>
+    <string name="band_member_conflict">%1$s ya pertenece a otra banda (%2$s). Un músico solo puede estar en una banda.</string>
+    <string name="band_member_conflict_unknown_band">%1$s ya pertenece a otra banda. Un músico solo puede estar en una banda.</string>
+    <string name="band_member_not_found">La banda o el músico ya no existen. Elige otro músico o vuelve a la banda.</string>
+    <string name="band_member_add_error">No se pudo agregar el integrante. Inténtalo de nuevo.</string>
+    <string name="band_member_uncertain">No sabemos si se agregó el integrante. Revisa la banda antes de intentarlo de nuevo.</string>
+    <string name="band_member_added_message">Integrante agregado a la banda</string>
+    <string name="band_member_empty">Aún no hay músicos registrados.</string>
+    <string name="band_member_no_results">No hay músicos que coincidan con tu búsqueda.</string>
+    <string name="band_member_load_error">No se pudieron cargar los músicos.</string>
+    <string name="band_member_row_description">%1$s, %2$s</string>
+    <string name="band_member_row_member_description">%1$s, %2$s, ya es integrante</string>
+    <dimen name="band_member_artwork_size">56dp</dimen>
+</resources>

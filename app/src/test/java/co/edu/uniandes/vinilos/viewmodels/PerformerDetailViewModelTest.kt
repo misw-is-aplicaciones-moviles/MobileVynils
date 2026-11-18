@@ -371,6 +371,105 @@ class PerformerDetailViewModelTest {
         }
 
     @Test
+    fun `add member opens the picker once with the band members`() =
+        runTest {
+            val repository = FakePerformerRepository().apply { detailResult = DataResult.Success(band) }
+            val vm =
+                PerformerDetailViewModel(
+                    1,
+                    PerformerType.BAND,
+                    repository,
+                    FakeSessionRepository(UserRole.COLLECTOR),
+                    FakePrizeRepository(),
+                )
+            advanceUntilIdle()
+
+            vm.onAddMemberClicked()
+            val event = vm.events.value
+            vm.onAddMemberClicked()
+
+            assertSame(event, vm.events.value)
+            assertEquals(PerformerDetailEvent.OpenMemberPicker(band), event?.getContentIfNotHandled())
+            vm.onNavigationReturned()
+            vm.onAddMemberClicked()
+            assertEquals(PerformerDetailEvent.OpenMemberPicker(band), vm.events.value?.getContentIfNotHandled())
+        }
+
+    @Test
+    fun `visitors and musicians cannot add members`() =
+        runTest {
+            val musicianDetail = band.copy(performer = musician(1, "Músico"), members = emptyList())
+            listOf(
+                Triple(band, PerformerType.BAND, UserRole.VISITOR),
+                Triple(musicianDetail, PerformerType.MUSICIAN, UserRole.COLLECTOR),
+            ).forEach { (detail, type, role) ->
+                val repository = FakePerformerRepository().apply { detailResult = DataResult.Success(detail) }
+                val vm =
+                    PerformerDetailViewModel(1, type, repository, FakeSessionRepository(role), FakePrizeRepository())
+                val observer = Observer<PerformerDetailUiState> {}
+                vm.uiState.observeForever(observer)
+                try {
+                    advanceUntilIdle()
+                    vm.onAddMemberClicked()
+                    assertNull(vm.events.value)
+                } finally {
+                    vm.uiState.removeObserver(observer)
+                }
+            }
+        }
+
+    @Test
+    fun `added member is appended and confirmed once`() =
+        runTest {
+            val repository = FakePerformerRepository().apply { detailResult = DataResult.Success(band) }
+            val vm =
+                PerformerDetailViewModel(
+                    1,
+                    PerformerType.BAND,
+                    repository,
+                    FakeSessionRepository(UserRole.COLLECTOR),
+                    FakePrizeRepository(),
+                )
+            advanceUntilIdle()
+            val adam = PerformerSummary(6, "Adam Lambert", type = PerformerType.MUSICIAN)
+
+            vm.onMemberAdded(1, adam)
+
+            assertEquals(
+                listOf(member, adam),
+                vm.uiState.value
+                    ?.detail
+                    ?.members,
+            )
+            assertEquals(6, vm.uiState.value?.highlightedMemberId)
+            assertEquals(PerformerDetailEvent.MemberAdded, vm.events.value?.getContentIfNotHandled())
+            assertNull(vm.events.value?.getContentIfNotHandled())
+        }
+
+    @Test
+    fun `duplicate or foreign results are ignored`() =
+        runTest {
+            val repository = FakePerformerRepository().apply { detailResult = DataResult.Success(band) }
+            val vm =
+                PerformerDetailViewModel(
+                    1,
+                    PerformerType.BAND,
+                    repository,
+                    FakeSessionRepository(UserRole.COLLECTOR),
+                    FakePrizeRepository(),
+                )
+            advanceUntilIdle()
+
+            vm.onMemberAdded(1, member)
+            vm.onMemberAdded(2, PerformerSummary(6, "Otra banda", type = PerformerType.MUSICIAN))
+            vm.onMemberAdded(1, PerformerSummary(0, "Sin id", type = PerformerType.MUSICIAN))
+
+            assertEquals(band, vm.uiState.value?.detail)
+            assertNull(vm.uiState.value?.highlightedMemberId)
+            assertNull(vm.events.value)
+        }
+
+    @Test
     fun `role changes update the header without reloading and the chip clears the session`() =
         runTest {
             val repository = FakePerformerRepository().apply { detailResult = DataResult.Success(band) }

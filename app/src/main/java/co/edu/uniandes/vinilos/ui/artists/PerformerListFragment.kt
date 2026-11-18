@@ -58,6 +58,7 @@ class PerformerListFragment : Fragment(R.layout.fragment_performer_list) {
         viewModel.events.observe(viewLifecycleOwner) { event ->
             event.getContentIfNotHandled()?.let(::handle)
         }
+        viewModel.onListShown()
         // Esta pantalla no tiene acción principal en ningún rol. Se oculta una sola vez, al abrirla: el botón
         // "+" del catálogo no debe seguir visible aquí, y render() no debe tocarlo cuando esta vista ya sale.
         (activity as? PrimaryActionHost)?.hidePrimaryAction()

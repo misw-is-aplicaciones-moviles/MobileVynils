@@ -216,6 +216,7 @@ class MainActivity :
                 R.id.collectorAlbumPickerFragment,
                 R.id.prizePickerFragment,
                 R.id.prizeCreateFragment,
+                R.id.bandMemberPickerFragment,
             )
     }
 }
