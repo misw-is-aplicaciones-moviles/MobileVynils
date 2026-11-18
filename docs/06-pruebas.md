@@ -570,7 +570,22 @@ Validación local del 17/11/2026: `spotlessCheck`, `detekt`, `lintDebug`, `testD
 
 Revisión visual exploratoria mediante ADB en emuladores API 21 y API 37, usando exclusivamente un servidor HTTP simulado con fixtures en memoria: músico en API 21 y banda en API 37. Se verificó selector, confirmación, regreso al destino, incremento del contador obtenido del servidor y resaltado. El log del servidor simulado registró un POST por recorrido, seguido de GET de comprobación y refresco. En banda se conservaron los cuatro integrantes del fixture. No se modificó PostgreSQL ni se probó BackVynils real. Las capturas temporales de revisión no forman parte del entregable ni sustituyen las evidencias E2E.
 
-**Pendiente:** HU15-04 amplía la cobertura; HU15-05 añade y ejecuta Espresso específico y regresión; HU15-06 verifica las dos rutas contra BackVynils aislado. TalkBack, Accessibility Scanner y fuente ampliada siguen pendientes de auditoría.
+**Seguimiento:** HU15-04 amplía la cobertura en la sección siguiente. Pendiente: HU15-05 añade y ejecuta Espresso específico y regresión; HU15-06 verifica las dos rutas contra BackVynils aislado. TalkBack, Accessibility Scanner y fuente ampliada siguen pendientes de auditoría.
+
+### HU15-04 · Ampliación de pruebas unitarias
+
+Rama: `feature/HU15-04-unitarias`, desde la integración de HU15-03. Issue: [#64](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/issues/64). Se amplían las dos clases existentes, sin nuevas clases ni cambios en producción.
+
+| Clase | Casos antes → ahora | Cobertura añadida |
+|---|---:|---|
+| `PerformerAlbumPickerViewModelTest` | 11 → 20 | Fallo de catálogo/detalle y recuperación; catálogo vacío y búsqueda por artista; IDs ocupados/desconocidos; restauración y selección que pasa a estar ocupada; pérdida de rol antes/después de enviar; reintento explícito tras ausencia confirmada; pertenencia sin subtipo; cancelación y restauración sin repetir POST |
+| `PerformerAlbumDetailResultTest` | 3 → 5 | Refresco de músico/banda con álbum resaltado, integrantes y premios conservados; resultado de asociación ya existente consumido una sola vez |
+
+Además, el caso existente de identidad inválida cubre ID cero/negativo y tipo desconocido/ausente, sin lecturas ni escrituras. `FakePerformerRepository.addAlbumGate` permite detener un envío de forma determinista para comprobar pérdida de rol y cancelación, sin esperas temporizadas.
+
+Trazabilidad al diseño: CP-HU15-03/04 (bloqueos), 05 (búsqueda y vacío), 06 (rol/identidad), 07 (restauración/cierre), 08 (carga/reintento), 09 (resultado incierto y reintento explícito), 11 (refresco y conservación del detalle). Esta cobertura complementa las 36 pruebas de datos de HU15-02; **no acredita los escenarios E2E ni la auditoría de accesibilidad**.
+
+**Validación local (17/11/2026):** JDK 17; `spotlessCheck`, `detekt`, `lintDebug` y `testDebugUnitTest` correctos. **421 pruebas JVM, 0 fallos, 0 errores y 0 omisiones**; 25 pertenecen a las dos clases de ViewModel de HU15 (11 nuevas en esta subtarea). Reporte generado: `app/build/reports/tests/testDebugUnitTest/index.html` (local, no publicado). No se ejecutaron peticiones a BackVynils ni pruebas instrumentadas. HU15-05 y HU15-06 continúan pendientes.
 
 ## 6. Reportes de defectos
 
