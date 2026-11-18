@@ -53,6 +53,15 @@
         <argument android:name="performerName" app:argType="string" />
         <argument android:name="assignmentIds" app:argType="integer[]" />
     </fragment>
+    <!-- Elegir músico para una banda: pantalla completa sobre el detalle, sin barra inferior (MainActivity). -->
+    <fragment
+        android:id="@+id/bandMemberPickerFragment"
+        android:name="co.edu.uniandes.vinilos.ui.artists.BandMemberPickerFragment"
+        android:label="@string/band_member_picker_title">
+        <argument android:name="bandId" app:argType="integer" />
+        <argument android:name="bandName" app:argType="string" />
+        <argument android:name="memberIds" app:argType="integer[]" />
+    </fragment>
     <!-- Nuevo premio (HU13): pantalla completa sobre el selector, sin barra inferior (MainActivity). -->
     <fragment
         android:id="@+id/prizeCreateFragment"
