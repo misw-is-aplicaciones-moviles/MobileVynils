@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="picker_row_min_height">100dp</dimen>
+    <dimen name="picker_artwork_width">102dp</dimen>
+    <dimen name="picker_artwork_height">68dp</dimen>
+    <dimen name="picker_radio_size">28dp</dimen>
+    <string name="artist_add_album">Agregar álbum</string>
+    <string name="artist_album_picker_error">No se pudo cargar el selector</string>
+    <string name="artist_album_picker_error_body">Inténtalo de nuevo para consultar los álbumes disponibles.</string>
+    <string name="artist_album_context">para %1$s</string>
+    <string name="artist_album_confirm">Agregar «%1$s»</string>
+    <string name="artist_album_check">Comprobar asociación</string>
+    <string name="artist_album_busy">Procesando asociación…</string>
+    <string name="artist_album_added">Álbum agregado al artista</string>
+    <string name="artist_album_already">El álbum ya pertenece a este artista</string>
+    <string name="artist_album_unavailable">El álbum ya no está disponible para esta asociación. Elige otro.</string>
+    <string name="artist_album_not_saved">La asociación no aparece en el servidor. Puedes volver a intentarlo.</string>
+    <string name="artist_album_uncertain">No pudimos confirmar el resultado. Comprueba la asociación antes de volver a intentarlo.</string>
+    <string name="artist_album_read_failed">No pudimos comprobar la disponibilidad. Intenta de nuevo.</string>
+    <string name="artist_album_elsewhere">Asociado a otro artista; no disponible</string>
+    <string name="picker_selected">Seleccionado</string>
+    <string name="picker_available">Disponible para seleccionar</string>
+    <string name="picker_option_description">%1$s. %2$s. %3$s. %4$s</string>
+</resources>

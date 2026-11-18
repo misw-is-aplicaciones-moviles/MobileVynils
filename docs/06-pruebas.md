@@ -555,7 +555,22 @@ Los siguientes casos de datos complementan el [diseño técnico de HU15](15-hu15
 
 **Validación local (17/11/2026):** JDK 17; `spotlessCheck detekt lintDebug testDebugUnitTest assembleDebug` correctos. Suite JVM completa: **396 pruebas, 0 fallos, 0 errores y 0 omisiones**.
 
-No se marca ningún caso E2E CP-HU15 como aprobado por estas pruebas de datos. Las pruebas de ViewModel, UI, accesibilidad y dispositivos quedan en sus respectivas subtareas.
+No se marca ningún caso E2E CP-HU15 como aprobado por estas pruebas de datos. La cobertura inicial de ViewModel y la revisión visual se incorporan en HU15-03; su ampliación, Espresso y la auditoría de accesibilidad continúan en las subtareas correspondientes.
+
+### HU15-03 · Pruebas iniciales del selector
+
+La subtarea de interfaz añade 14 pruebas JVM, sin depender del backend real:
+
+| Clase | Casos | Cobertura |
+|---|---:|---|
+| `PerformerAlbumPickerViewModelTest` | 11 | Disponibilidad, búsqueda/selección, músico/banda, rol e identidad, preflight, doble toque, respuesta perdida, resultado incierto y restauración sin repetir POST |
+| `PerformerAlbumDetailResultTest` | 3 | Navegación solo para Coleccionista, identidad del resultado y refresco fallido sin repetir la asociación |
+
+Validación local del 17/11/2026: `spotlessCheck`, `detekt`, `lintDebug`, `testDebugUnitTest`, `assembleDebug` y `assembleDebugAndroidTest`. Suite JVM completa: **410 casos, 0 fallos, 0 errores, 0 omisiones**. Compilar el APK instrumentado no equivale a ejecutar Espresso.
+
+Revisión visual exploratoria mediante ADB en emuladores API 21 y API 37, usando exclusivamente un servidor HTTP simulado con fixtures en memoria: músico en API 21 y banda en API 37. Se verificó selector, confirmación, regreso al destino, incremento del contador obtenido del servidor y resaltado. El log del servidor simulado registró un POST por recorrido, seguido de GET de comprobación y refresco. En banda se conservaron los cuatro integrantes del fixture. No se modificó PostgreSQL ni se probó BackVynils real. Las capturas temporales de revisión no forman parte del entregable ni sustituyen las evidencias E2E.
+
+**Pendiente:** HU15-04 amplía la cobertura; HU15-05 añade y ejecuta Espresso específico y regresión; HU15-06 verifica las dos rutas contra BackVynils aislado. TalkBack, Accessibility Scanner y fuente ampliada siguen pendientes de auditoría.
 
 ## 6. Reportes de defectos
 

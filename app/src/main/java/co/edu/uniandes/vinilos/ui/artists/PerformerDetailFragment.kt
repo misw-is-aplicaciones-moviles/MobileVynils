@@ -25,6 +25,7 @@ import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.ui.common.showConfirmationSnackbar
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailViewModel
+import co.edu.uniandes.vinilos.viewmodels.PerformerAlbumPickerViewModel
 import co.edu.uniandes.vinilos.viewmodels.PerformerDetailEvent
 import co.edu.uniandes.vinilos.viewmodels.PerformerDetailUiState
 import co.edu.uniandes.vinilos.viewmodels.PerformerDetailViewModel
@@ -40,6 +41,7 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
     private val binding get() = checkNotNull(bindingOrNull)
     private val viewModel: PerformerDetailViewModel by viewModels { PerformerDetailViewModel.Factory }
     private var revealAssignedPrizeOnNextList = false
+    private var revealAddedAlbumOnNextList = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +62,7 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
                 viewModel::onMemberClicked,
                 viewModel::onAddPrizeClicked,
                 viewModel::retry,
+                viewModel::onAddAlbumClicked,
             )
         binding.detailList.layoutManager = LinearLayoutManager(requireContext())
         binding.detailList.adapter = adapter
@@ -72,6 +75,7 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
         viewModel.uiState.observe(viewLifecycleOwner) { render(it, adapter) }
         viewModel.events.observe(viewLifecycleOwner) { it.getContentIfNotHandled()?.let(::handle) }
         observePrizeResults()
+        observeAlbumResults()
     }
 
     override fun onStart() {
@@ -156,11 +160,40 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
 
     // A long biography would leave the highlighted row below the fold (mockup HU14-6 shows it).
     private fun revealAssignedPrize(adapter: PerformerDetailAdapter) {
+        if (revealAddedAlbumOnNextList) {
+            val albumPosition = adapter.highlightedAlbumPosition()
+            if (albumPosition >= 0) {
+                revealAddedAlbumOnNextList = false
+                bindingOrNull?.detailList?.scrollToPosition(albumPosition)
+            }
+        }
         if (!revealAssignedPrizeOnNextList) return
         val position = adapter.highlightedPosition()
         if (position < 0) return
         revealAssignedPrizeOnNextList = false
         bindingOrNull?.detailList?.scrollToPosition(position)
+    }
+
+    private fun observeAlbumResults() {
+        val handle = findNavController().currentBackStackEntry?.savedStateHandle ?: return
+        handle.getLiveData<Boolean>(PerformerAlbumPickerViewModel.REFRESH_REQUESTED).observe(viewLifecycleOwner) {
+            handle.remove<Boolean>(PerformerAlbumPickerViewModel.REFRESH_REQUESTED)
+            if (it == true) viewModel.retry()
+        }
+        handle
+            .getLiveData<Bundle>(
+                PerformerAlbumPickerViewModel.ALBUM_ASSOCIATED,
+            ).observe(viewLifecycleOwner) { result ->
+                handle.remove<Bundle>(PerformerAlbumPickerViewModel.ALBUM_ASSOCIATED)
+                viewModel.onAlbumAssociated(
+                    result.getInt(PerformerAlbumPickerViewModel.PERFORMER_ID),
+                    PerformerType.entries.firstOrNull {
+                        it.name == result.getString(PerformerAlbumPickerViewModel.PERFORMER_TYPE)
+                    },
+                    result.getInt(PerformerAlbumPickerViewModel.ALBUM_ID),
+                    result.getBoolean(PerformerAlbumPickerViewModel.ALREADY_ASSOCIATED),
+                )
+            }
     }
 
     private fun observePrizeResults() {
@@ -194,6 +227,23 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
 
     private fun handle(event: PerformerDetailEvent) {
         when (event) {
+            is PerformerDetailEvent.OpenAlbumPicker -> {
+                findNavController().navigate(
+                    R.id.performerAlbumPickerFragment,
+                    PerformerAlbumPickerFragment.argumentsFor(event.detail.performer.id, event.detail.performer.type),
+                )
+            }
+
+            is PerformerDetailEvent.AlbumAssociated -> {
+                revealAddedAlbumOnNextList = true
+                showConfirmationSnackbar(
+                    binding.root,
+                    (activity as? PrimaryActionHost)?.snackbarAnchor,
+                    if (event.alreadyAssociated) R.string.artist_album_already else R.string.artist_album_added,
+                    Snackbar.LENGTH_LONG,
+                )
+            }
+
             is PerformerDetailEvent.OpenAlbum -> {
                 findNavController().navigate(
                     R.id.albumDetailFragment,

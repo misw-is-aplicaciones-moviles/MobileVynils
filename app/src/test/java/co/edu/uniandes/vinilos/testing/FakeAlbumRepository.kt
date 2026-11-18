@@ -48,6 +48,7 @@ internal class FakeAlbumRepository(
     var associationCatalogCalls = 0
         private set
     val associationDetailRequests = mutableListOf<Int>()
+    val associationDetailResults = ArrayDeque<DataResult<Album, DataError>>()
 
     override suspend fun getAlbumsForAssociation(): DataResult<List<Album>, DataError> {
         associationCatalogCalls++
@@ -58,7 +59,7 @@ internal class FakeAlbumRepository(
     override suspend fun getAlbumForAssociation(albumId: Int): DataResult<Album, DataError> {
         associationDetailRequests += albumId
         detailGate?.await()
-        return associationDetailResult
+        return associationDetailResults.removeFirstOrNull() ?: associationDetailResult
     }
 
     override suspend fun hasCachedAlbums(): Boolean = hasCache

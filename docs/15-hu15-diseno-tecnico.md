@@ -116,14 +116,14 @@ suspend fun addAlbum(
 | `PerformerDetailFragment`, `PerformerDetailAdapter` y `PerformerDetailViewModel` existentes | Mostrar la acción solo para Coleccionista con detalle válido; abrir HU15; recibir el resultado y refrescar el artista correcto |
 | `PerformerAlbumPickerFragment` propuesto | Selector de HU15, render de estados y navegación; no hace peticiones HTTP directamente |
 | `PerformerAlbumPickerViewModel`, `UiState` y `Event` propuestos | Catálogo completo, búsqueda, disponibilidad, selección, sesión y operación de asociación |
-| `PerformerAlbumFlowContract` propuesto | Argumentos y resultado tipados por claves; IDs y tipo, sin objetos completos en el Bundle |
-| `PickerOptionAdapter` y `PickerOption` propuestos en `ui.common` | Presentación reutilizable de opciones: ID de opción, título, metadatos, imagen, selección y motivo de bloqueo; callback de selección |
+| Constantes de `PerformerAlbumPickerViewModel` | Claves de argumentos y resultado: IDs y tipo, sin objetos completos en el Bundle |
+| `PerformerAlbumPickerAdapter` privado y `PerformerAlbumPickerOption` | Presentación específica de HU15; la opción conserva el álbum, selección y motivo de bloqueo |
 | `AlbumRepository` y `AlbumServiceAdapter` existentes, ampliados | Lecturas completas y revalidadas para decidir asociaciones |
 | `PerformerRepository` y `PerformerServiceAdapter` existentes, ampliados | Asociar al músico/banda y recuperar el detalle |
 
-HU11 ya aporta cabecera, búsqueda, estilos de filas, controles de selección, recursos y patrón de carga. Se reutiliza lo compatible y se extrae un componente visual pequeño donde evite duplicar el selector. No se cambia el flujo de precio/estado ni las reglas de HU11. La pantalla de HU15 confirma directamente; no abre la hoja «Precio y estado».
+HU11 ya aporta cabecera, búsqueda, estilos de filas, controles de selección, recursos y patrón de carga. Se reutilizan los recursos compatibles; el adaptador de HU15 permanece privado en su Fragment. No se cambia el flujo de precio/estado ni las reglas de HU11. La pantalla de HU15 confirma directamente; no abre la hoja «Precio y estado».
 
-HU12 y HU10 pueden reutilizar la presentación de opciones, con ViewModels y reglas propios. No se implementa en HU15 su negocio, ni un motor genérico de repositorios, ni un ViewModel que dependa de todas las historias. Los contratos compartidos se comunican a sus responsables antes de integrar.
+El alcance de esta implementación es HU15. No se crea infraestructura compartida para HU12/HU10 ni se modifican sus flujos.
 
 ### Diagrama de componentes
 
@@ -131,7 +131,7 @@ HU12 y HU10 pueden reutilizar la presentación de opciones, con ViewModels y reg
 flowchart TB
     Detail[Detalle de artista HU04] --> Picker[Selector de álbum HU15]
     Picker --> VM[PerformerAlbumPickerViewModel]
-    Picker --> Options[PickerOptionAdapter compartido]
+    Picker --> Options[Adapter privado de HU15]
     VM --> Session[SessionRepository]
     VM --> Albums[AlbumRepository]
     VM --> Artists[PerformerRepository]
@@ -166,7 +166,7 @@ classDiagram
         +role
         +error
     }
-    class PickerOptionAdapter
+    class PerformerAlbumPickerAdapter
     class AlbumRepository {
         +getAlbumsForAssociation()
         +getAlbumForAssociation(albumId)
@@ -177,10 +177,8 @@ classDiagram
     }
     class PerformerServiceAdapter
     class SessionRepository
-    class PerformerAlbumFlowContract
     PerformerAlbumPickerFragment --> PerformerAlbumPickerViewModel
-    PerformerAlbumPickerFragment --> PickerOptionAdapter
-    PerformerAlbumPickerFragment ..> PerformerAlbumFlowContract
+    PerformerAlbumPickerFragment --> PerformerAlbumPickerAdapter
     PerformerAlbumPickerViewModel --> PerformerAlbumPickerUiState
     PerformerAlbumPickerViewModel --> AlbumRepository
     PerformerAlbumPickerViewModel --> PerformerRepository
@@ -316,7 +314,7 @@ Para cerrar la implementación completa, no solo HU15-01:
 - Evidencias visuales comparadas con los mockups identificados en esta página y auditoría de accesibilidad del flujo.
 - Inventario, resultados y limitaciones reales publicados, con PR por tarea según el flujo del repositorio.
 
-**Pendientes explícitos:** validar HTTP en backend aislado; revisar la interpretación de álbumes de otros artistas con el equipo; acordar el pequeño componente compartido con responsables de HU12/HU10; implementar la UI, las pruebas de ViewModel y E2E y publicar sus resultados. El avance de datos no implica que HU15 ya funcione desde la interfaz.
+**Pendientes explícitos:** validar HTTP en backend aislado; revisar la interpretación de álbumes de otros artistas con el equipo; completar la cobertura de ViewModel y las E2E, la auditoría de accesibilidad y publicar sus resultados. Los avances de datos/UI no equivalen a validar HU15 contra el backend real.
 
 ## 10. Avance HU15-02 · Capa de datos
 
@@ -333,3 +331,23 @@ Rama de subtarea: `feature/HU15-02-datos`, creada desde la rama de integración 
 **Pruebas nuevas:** `AlbumAssociationServiceAdapterTest` (11), `PerformerAlbumServiceAdapterTest` (8), `AlbumAssociationRepositoryTest` (8) y `PerformerAlbumRepositoryTest` (9): 36 casos JVM. Incluyen peticiones reales a MockWebServer para rutas, headers, cuerpos, JSON inválido y respuesta perdida; fakes para caché, errores, cancelación y orden concurrente de refresco/escritura. No sustituyen las pruebas HTTP contra BackVynils de HU15-06 ni las pruebas de UI/E2E.
 
 **Validación local de HU15-02 (17/11/2026):** JDK 17; `spotlessCheck`, `detekt`, `lintDebug`, `testDebugUnitTest` y `assembleDebug` correctos. Suite completa: **396 pruebas JVM, 0 fallos, 0 errores y 0 omisiones**, incluidas las 36 nuevas. No se ejecutaron pruebas instrumentadas ni peticiones contra BackVynils como parte de esta subtarea. No se reemplazó el APK de entrega del repositorio.
+
+## 11. Avance HU15-03 · Selector y regreso al detalle
+
+Rama de subtarea: `feature/HU15-03-selector`, creada desde `feature/HU15-agregar-album-artista` después de integrar HU15-02. Issue: [#63](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/issues/63).
+
+- Acción **Agregar álbum** junto al contador de álbumes, disponible únicamente para Coleccionista, tanto en músicos como en bandas. Se conserva la identidad compuesta por ID y tipo durante la navegación.
+- Selector con búsqueda por álbum/artista, selección única, álbumes propios marcados **Ya agregado**, álbumes ocupados bloqueados, estados de carga/error/vacío y reintento. Se conservan búsqueda y selección con `SavedStateHandle`. La selección no depende exclusivamente del color: incluye check y descripción accesible.
+- Implementación específica de HU15, siguiendo el patrón de HU11: adaptador privado dentro del Fragment, opción junto al estado de UI y claves de navegación en el ViewModel. No se introduce un selector genérico ni se modifican HU11/HU12/HU10. Se usa un único estado de operación en curso; las comprobaciones de seguridad permanecen iguales.
+- Antes de escribir se revalida el álbum completo. Una asociación existente al destino regresa sin POST; un álbum ocupado por otro artista se bloquea. Si falta el subtipo en la relación anidada, se consulta el detalle tipado antes de atribuir pertenencia.
+- Doble confirmación y salida durante la operación se bloquean. Después del POST, incluso si devuelve un error de transporte, se comprueba la relación con otra lectura. Un resultado incierto muestra **Comprobar asociación** y no reenvía el POST. Al restaurar un envío pendiente se conserva este bloqueo; nunca se reenvía automáticamente.
+- El éxito confirmado vuelve al detalle original, solicita datos frescos y resalta el álbum. No se incrementa el contador con datos inventados ni se altera localmente la lista de integrantes o premios. Si falla el refresco del detalle, su reintento es solo de lectura y no repite la asociación.
+
+Las comprobaciones previas reducen el riesgo de sobrescribir relaciones existentes, pero no constituyen una operación atómica entre clientes: el backend debe resolver la concurrencia. Sigue pendiente comprobar el contrato real de las rutas de BackVynils en HU15-06.
+
+**Cobertura inicial de UI lógica:** `PerformerAlbumPickerViewModelTest` (11 casos) y `PerformerAlbumDetailResultTest` (3 casos). Incluyen músico/banda, rol, búsqueda, selección, asociación concurrente detectada en preflight, respuesta perdida, resultado incierto, restauración, doble toque e identidad del resultado. HU15-04 ampliará la cobertura y HU15-05 incorporará los escenarios Espresso específicos.
+
+
+**Validación local HU15-03 (17/11/2026):** `spotlessCheck`, `detekt`, `lintDebug`, `testDebugUnitTest`, `assembleDebug` y `assembleDebugAndroidTest` correctos; **410 pruebas JVM, 0 fallos, 0 errores y 0 omisiones**. Revisión visual exploratoria con fixtures HTTP en memoria: músico en emulador API 21 y banda en emulador API 37, selección, confirmación y detalle refrescado con resaltado; un POST por recorrido en el log del simulador. El fixture de banda conservó sus cuatro integrantes. No se ejecutó Espresso específico de HU15, no se validó contra BackVynils real ni se auditó aún con TalkBack/Scanner/fuente ampliada. No se guardaron fotos en el repositorio ni se reemplazó el APK de entrega.
+
+**Simplificación de HU15-03:** se retiraron los tres archivos independientes del modelo genérico, adaptador compartido y contrato de claves. La presentación queda específica de esta HU, sin anticipar infraestructura para otras historias. Después de simplificar se repitieron los controles de compilación, análisis y las 410 pruebas JVM; la revisión visual exploratoria anterior no se volvió a ejecutar.

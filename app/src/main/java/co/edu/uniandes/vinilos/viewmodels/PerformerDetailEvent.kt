@@ -15,6 +15,14 @@ sealed interface PerformerDetailEvent {
         val detail: PerformerDetail,
     ) : PerformerDetailEvent
 
+    data class OpenAlbumPicker(
+        val detail: PerformerDetail,
+    ) : PerformerDetailEvent
+
+    data class AlbumAssociated(
+        val alreadyAssociated: Boolean,
+    ) : PerformerDetailEvent
+
     data object PrizeAssigned : PerformerDetailEvent
 
     data object OpenRoleSelector : PerformerDetailEvent
