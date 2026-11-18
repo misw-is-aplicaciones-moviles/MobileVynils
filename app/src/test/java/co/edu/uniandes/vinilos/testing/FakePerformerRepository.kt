@@ -4,6 +4,7 @@ import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.Performer
 import co.edu.uniandes.vinilos.models.PerformerDetail
+import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.repositories.PerformerRepository
 import kotlinx.coroutines.CompletableDeferred
@@ -48,4 +49,19 @@ internal class FakePerformerRepository(
     }
 
     override suspend fun hasCachedPerformers(): Boolean = hasCache
+
+    /** Answer of [addMusicianToBand]; null answers the requested musician as a generic member. */
+    var addResult: DataResult<PerformerSummary, DataError>? = null
+    var addGate: CompletableDeferred<Unit>? = null
+    val addRequests = mutableListOf<Pair<Int, Int>>()
+
+    override suspend fun addMusicianToBand(
+        bandId: Int,
+        musicianId: Int,
+    ): DataResult<PerformerSummary, DataError> {
+        addRequests += bandId to musicianId
+        addGate?.await()
+        return addResult
+            ?: DataResult.Success(PerformerSummary(musicianId, "Musician $musicianId", null, PerformerType.MUSICIAN))
+    }
 }

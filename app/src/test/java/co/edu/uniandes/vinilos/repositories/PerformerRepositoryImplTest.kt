@@ -6,6 +6,7 @@ import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.Performer
 import co.edu.uniandes.vinilos.models.PerformerDetail
+import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.testing.FakePerformerDao
 import co.edu.uniandes.vinilos.testing.FakePerformerServiceAdapter
@@ -318,5 +319,123 @@ class PerformerRepositoryImplTest {
             assertTrue(error is CancellationException)
             assertEquals(listOf(ruben.toEntity()), dao.getAll())
             assertEquals(0, dao.writeCount)
+        }
+
+    private val adam = musician(id = 104, name = "Adam Lambert", year = 1982)
+    private val adamMember = PerformerSummary(104, "Adam Lambert", null, PerformerType.MUSICIAN)
+
+    private fun cachedBandAndFreeMusician() = FakePerformerDao(listOf(queen.toEntity(), adam.toEntity()))
+
+    @Test
+    fun `added musician updates the band and the musician in Room`() =
+        runTest {
+            val dao = cachedBandAndFreeMusician()
+            val adapter = FakePerformerServiceAdapter().apply { addedMember = adamMember }
+
+            val result = repository(dao, adapter).addMusicianToBand(101, 104)
+
+            assertEquals(DataResult.Success(adamMember), result)
+            assertEquals(listOf(101 to 104), adapter.addRequests)
+            assertEquals(101, dao.row(104)?.bandId)
+            assertEquals(3, dao.row(101)?.memberCount)
+        }
+
+    @Test
+    fun `applying the same membership twice counts the member once`() =
+        runTest {
+            val dao = cachedBandAndFreeMusician()
+            val repository = repository(dao, FakePerformerServiceAdapter().apply { addedMember = adamMember })
+
+            repository.addMusicianToBand(101, 104)
+            repository.addMusicianToBand(101, 104)
+
+            assertEquals(3, dao.row(101)?.memberCount)
+        }
+
+    @Test
+    fun `Room failure after the POST still reports success`() =
+        runTest {
+            val dao = cachedBandAndFreeMusician().apply { writeFailure = SQLiteException("disk full") }
+            val adapter = FakePerformerServiceAdapter().apply { addedMember = adamMember }
+
+            val result = repository(dao, adapter).addMusicianToBand(101, 104)
+
+            assertEquals(DataResult.Success(adamMember), result)
+        }
+
+    @Test
+    fun `not found returns HTTP 404 and leaves Room intact`() =
+        runTest {
+            val dao = cachedBandAndFreeMusician()
+            val adapter =
+                FakePerformerServiceAdapter().apply {
+                    addFailure = HttpException(Response.error<Any>(404, "".toResponseBody()))
+                }
+
+            val result = repository(dao, adapter).addMusicianToBand(101, 104)
+
+            assertEquals(DataResult.Failure(DataError.Http(404)), result)
+            assertEquals(0, dao.writeCount)
+            assertEquals(null, dao.row(104)?.bandId)
+        }
+
+    @Test
+    fun `IO failure returns a network error and leaves Room intact`() =
+        runTest {
+            val dao = cachedBandAndFreeMusician()
+            val adapter = FakePerformerServiceAdapter().apply { addFailure = IOException("offline") }
+
+            val result = repository(dao, adapter).addMusicianToBand(101, 104)
+
+            assertEquals(DataResult.Failure(DataError.Network), result)
+            assertEquals(0, dao.writeCount)
+        }
+
+    @Test
+    fun `unexpected musician identity is a serialization error`() =
+        runTest {
+            val dao = cachedBandAndFreeMusician()
+            val adapter =
+                FakePerformerServiceAdapter().apply { addFailure = JsonParseException("Unexpected musician identity") }
+
+            val result = repository(dao, adapter).addMusicianToBand(101, 104)
+
+            assertEquals(DataResult.Failure(DataError.Serialization), result)
+            assertEquals(0, dao.writeCount)
+        }
+
+    @Test
+    fun `non positive ids are rejected before the network`() =
+        runTest {
+            val adapter = FakePerformerServiceAdapter()
+            val repository = repository(FakePerformerDao(), adapter)
+            listOf(0 to 104, -1 to 104, 101 to 0, 101 to -1).forEach { (bandId, musicianId) ->
+                val error = runCatching { repository.addMusicianToBand(bandId, musicianId) }.exceptionOrNull()
+                assertTrue(error is IllegalArgumentException)
+            }
+            assertTrue(adapter.addRequests.isEmpty())
+        }
+
+    @Test
+    fun `refresh fetched before the POST does not undo the membership`() =
+        runTest {
+            val gate = CompletableDeferred<Unit>()
+            val dao = cachedBandAndFreeMusician()
+            val adapter =
+                FakePerformerServiceAdapter(performers = listOf(queen, adam), gate = gate).apply {
+                    addedMember = adamMember
+                }
+            val repository = repository(dao, adapter)
+
+            val refresh = async { repository.getPerformers(forceRefresh = true) }
+            runCurrent()
+            val add = async { repository.addMusicianToBand(101, 104) }
+            runCurrent()
+            gate.complete(Unit)
+            refresh.await()
+            add.await()
+
+            assertEquals(101, dao.row(104)?.bandId)
+            assertEquals(3, dao.row(101)?.memberCount)
         }
 }
