@@ -4,6 +4,7 @@ import co.edu.uniandes.vinilos.models.AlbumStatus
 import co.edu.uniandes.vinilos.models.Collector
 import co.edu.uniandes.vinilos.models.CollectorAlbum
 import co.edu.uniandes.vinilos.models.CollectorDetail
+import co.edu.uniandes.vinilos.models.CommentAuthor
 import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
 
@@ -74,3 +75,13 @@ private fun albumStatus(value: String?): AlbumStatus =
         "Inactive" -> AlbumStatus.INACTIVE
         else -> missing("collector album status")
     }
+
+/** Pairs each comment id of this collector with the collector as its author. */
+internal fun CollectorDto.toCommentAuthors(): List<Pair<Int, CommentAuthor>> {
+    val author =
+        CommentAuthor(
+            collectorId = id ?: missing("collector id"),
+            name = name ?: missing("collector name"),
+        )
+    return comments.orEmpty().map { (it.id ?: missing("collector comment id")) to author }
+}

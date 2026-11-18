@@ -9,6 +9,8 @@ internal data class CollectorDto(
     val email: String? = null,
     val collectorAlbums: List<RelatedIdDto>? = null,
     val favoritePerformers: List<FavoritePerformerDto?>? = null,
+    // Only the ids: they tell who wrote each comment, which `GET /albums/:id` leaves out (HU09).
+    val comments: List<RelatedIdDto>? = null,
 )
 
 /** A record nested in a collector: only its id is declared, because the list only counts them. */

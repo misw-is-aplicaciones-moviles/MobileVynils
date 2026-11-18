@@ -38,9 +38,13 @@ curl http://localhost:3000/collectors/100/albums -o app/src/test/resources/api/c
 | `bands.json` | `GET /bands` con la semilla (Queen, id 101, sin integrantes); capturado el 2026-11-03 | HU03: contrato de `GET /bands` |
 | `musicians_with_band.json` | `GET /musicians` tras crear a Freddie Mercury, Brian May, Roger Taylor y John Deacon con `POST /musicians` y asociarlos a Queen con `POST /bands/101/musicians/:id`; capturado el 2026-11-03 | HU03: aun asociados, los músicos no traen su banda |
 | `bands_with_members.json` | `GET /bands` en ese mismo estado; capturado el 2026-11-03 | HU03: `musicians[]` de Queen con los cuatro integrantes, de donde se deriva la pertenencia |
-| `collectors.json` | `GET /collectors` con la semilla (Manolo Bellon, id 100, y Jaime Monsalve, id 101); capturado del backend local el 2026-11-04 | HU05: contrato de `GET /collectors`; conteos de `collectorAlbums` y `favoritePerformers` |
+| `collectors.json` | `GET /collectors` con la semilla (Manolo Bellon, id 100, y Jaime Monsalve, id 101); capturado del backend local el 2026-11-04 | HU05: contrato de `GET /collectors`; conteos de `collectorAlbums` y `favoritePerformers`. HU09: `comments[]` de cada coleccionista (100 y 101), de donde sale el autor de cada comentario |
 | `collector_100.json` | `GET /collectors/100` con la semilla; capturado del backend local el 2026-11-04 | HU06: Manolo, teléfono y favorito músico. `collectorAlbums` no trae el álbum anidado |
 | `collector_100_albums.json` | `GET /collectors/100/albums` con la semilla; capturado del backend local el 2026-11-04 | HU06: vínculo con precio, estado y álbum anidado "Buscando América" |
+| `comment_created.json` | POST /albums/100/comments, capturado del backend local el 2026-11-17 (HTTP 200, Jaime Monsalve, valoración 4) | HU09: el comentario guardado con `collector` completo y `album` sin listas; de ahí sale el autor |
+| `comment_collector_not_found.json` | POST /albums/100/comments, capturado del backend local el 2026-11-17 (HTTP 404, coleccionista inexistente) | HU09: coleccionista inexistente |
+| `comment_album_not_found.json` | POST /albums/:id/comments con un álbum inexistente, capturado del backend local el 2026-11-17 (HTTP 404) | HU09: álbum inexistente |
+| `comment_rating_out_of_range.json` | POST /albums/100/comments, capturado del backend local el 2026-11-17 (HTTP 400, `rating` 6) | HU09: valoración fuera de rango |
 
 Los casos de HTTP 500, desconexión, JSON inválido, campo requerido ausente,
 JSON `null` y HTTP 204 se generan en MockWebServer; no son respuestas capturadas

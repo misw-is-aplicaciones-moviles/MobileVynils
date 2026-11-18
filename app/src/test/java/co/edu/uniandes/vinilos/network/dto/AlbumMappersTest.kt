@@ -1,6 +1,7 @@
 package co.edu.uniandes.vinilos.network.dto
 
 import co.edu.uniandes.vinilos.models.Comment
+import co.edu.uniandes.vinilos.models.CommentAuthor
 import co.edu.uniandes.vinilos.models.Genre
 import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.Track
@@ -146,6 +147,48 @@ class AlbumMappersTest {
         }
     }
 
+    @Test
+    fun `album detail comments have no author because the backend does not send it`() {
+        assertNull(
+            fullDto
+                .toModel()
+                .comments
+                .single()
+                .author,
+        )
+    }
+
+    @Test
+    fun `created comment maps its collector as the author`() {
+        val comment = createdComment.toCreatedCommentModel()
+
+        assertEquals(Comment(1, "Una obra que no envejece.", 4, CommentAuthor(101, "Jaime Monsalve")), comment)
+    }
+
+    @Test
+    fun `created comment keeps a zero rating as sent`() {
+        assertEquals(0, createdComment.copy(rating = 0).toCreatedCommentModel().rating)
+    }
+
+    @Test
+    fun `created comment without a required field is a JSON error`() {
+        listOf(
+            createdComment.copy(id = null),
+            createdComment.copy(description = null),
+            createdComment.copy(rating = null),
+            createdComment.copy(collector = null),
+            createdComment.copy(collector = CommentCollectorDto(name = "Jaime Monsalve")),
+            createdComment.copy(collector = CommentCollectorDto(id = 101)),
+        ).forEach { dto ->
+            try {
+                dto.toCreatedCommentModel()
+                fail("Expected JsonParseException for $dto")
+            } catch (_: JsonParseException) {
+                // Expected: the screen would show a comment without its author or text.
+            }
+        }
+    }
+
     private companion object {
         val fullDto =
             AlbumDto(
@@ -159,6 +202,15 @@ class AlbumMappersTest {
                 tracks = listOf(TrackDto(1, "Decisiones", "5:05")),
                 performers = listOf(PerformerDto(7, "Rubén"), PerformerDto(8, "Otro")),
                 comments = listOf(CommentDto(3, "Great", 5)),
+            )
+
+        val createdComment =
+            CommentDto(
+                id = 1,
+                description = "Una obra que no envejece.",
+                rating = 4,
+                collector = CommentCollectorDto(id = 101, name = "Jaime Monsalve"),
+                album = RelatedIdDto(100),
             )
     }
 }
