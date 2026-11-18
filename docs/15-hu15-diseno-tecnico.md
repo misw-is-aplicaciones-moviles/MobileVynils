@@ -345,7 +345,7 @@ Rama de subtarea: `feature/HU15-03-selector`, creada desde `feature/HU15-agregar
 
 Las comprobaciones previas reducen el riesgo de sobrescribir relaciones existentes, pero no constituyen una operación atómica entre clientes: el backend debe resolver la concurrencia. Sigue pendiente comprobar el contrato real de las rutas de BackVynils en HU15-06.
 
-**Cobertura inicial de UI lógica:** `PerformerAlbumPickerViewModelTest` (11 casos) y `PerformerAlbumDetailResultTest` (3 casos). Incluyen músico/banda, rol, búsqueda, selección, asociación concurrente detectada en preflight, respuesta perdida, resultado incierto, restauración, doble toque e identidad del resultado. La cobertura se amplía en HU15-04 (sección 12); HU15-05 incorporará los escenarios Espresso específicos.
+**Cobertura inicial de UI lógica:** `PerformerAlbumPickerViewModelTest` (11 casos) y `PerformerAlbumDetailResultTest` (3 casos). Incluyen músico/banda, rol, búsqueda, selección, asociación concurrente detectada en preflight, respuesta perdida, resultado incierto, restauración, doble toque e identidad del resultado. La cobertura se amplía en HU15-04 (sección 12); HU15-05 incorpora los escenarios Espresso específicos (sección 13).
 
 
 **Validación local HU15-03 (17/11/2026):** `spotlessCheck`, `detekt`, `lintDebug`, `testDebugUnitTest`, `assembleDebug` y `assembleDebugAndroidTest` correctos; **410 pruebas JVM, 0 fallos, 0 errores y 0 omisiones**. Revisión visual exploratoria con fixtures HTTP en memoria: músico en emulador API 21 y banda en emulador API 37, selección, confirmación y detalle refrescado con resaltado; un POST por recorrido en el log del simulador. El fixture de banda conservó sus cuatro integrantes. No se ejecutó Espresso específico de HU15, no se validó contra BackVynils real ni se auditó aún con TalkBack/Scanner/fuente ampliada. No se guardaron fotos en el repositorio ni se reemplazó el APK de entrega.
@@ -361,4 +361,39 @@ Rama: `feature/HU15-04-unitarias`, desde `feature/HU15-agregar-album-artista` co
 - Se amplía `PerformerAlbumDetailResultTest` de 3 a 5 casos: refresco de músico y banda con datos remotos, resaltado y conservación de integrantes/premios; asociación ya existente y consumo único del evento.
 - El único cambio auxiliar es una compuerta suspendible en `FakePerformerRepository`. No se añadieron archivos ni se modificaron clases de producción.
 
-**Validación (17/11/2026):** JDK 17; `spotlessCheck`, `detekt`, `lintDebug` y `testDebugUnitTest` correctos. Suite completa: **421 casos, 0 fallos, 0 errores y 0 omisiones**; 25 casos de ViewModel de HU15, 11 nuevos respecto a HU15-03. Con las 36 pruebas de datos existentes, HU15 cuenta con 61 casos JVM. No se ejecutaron pruebas instrumentadas ni se consultó BackVynils real; HU15-05/HU15-06 y la auditoría de accesibilidad continúan pendientes.
+**Validación (17/11/2026):** JDK 17; `spotlessCheck`, `detekt`, `lintDebug` y `testDebugUnitTest` correctos. Suite completa: **421 casos, 0 fallos, 0 errores y 0 omisiones**; 25 casos de ViewModel de HU15, 11 nuevos respecto a HU15-03. Con las 36 pruebas de datos existentes, HU15 cuenta con 61 casos JVM. No se ejecutaron pruebas instrumentadas ni se consultó BackVynils real; El estado posterior de las E2E figura en la sección 13; HU15-06 y la auditoría de accesibilidad continúan pendientes.
+
+
+## 13. Avance HU15-05 · E2E y regresión
+
+Rama: `feature/HU15-05-e2e`, desde la integración de HU15-04 (`635cc2a`). Issue: [#65](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/issues/65).
+
+Se añadieron `PerformerAlbumPickerScreenTest` (8 escenarios) y su robot. Se amplió `BackendPerformers` para crear álbumes libres, preparar asociaciones exclusivamente entre fixtures propios y leer relaciones por HTTP. No se modificó código de producción. El inventario y los comandos están en [06-pruebas.md](06-pruebas.md#hu15-05--espresso-del-selector-de-álbumes-de-artista).
+
+**Entorno:** BackVynils real en contenedores exclusivos `vinilos-hu15-05-web`/`vinilos-hu15-05-db`, red propia y datos PostgreSQL 17 en `tmpfs`, sin montar `BackVynils/pgdata`. Imagen local `backvynils-web:latest`, ID `7eadb19c9c01`, con TypeORM `0.2.21`; no se atribuye un commit a la construcción de esa imagen. Se inspeccionó su servicio compilado de asociación de bandas. APK debug conectado mediante `adb reverse tcp:3000 tcp:3000`. La base desechable se recreó entre las corridas de API 21 y API 37 para comenzar con la misma semilla; no se corrigieron secuencias ni se cambió el backend compartido.
+
+**Alcance:** éxito para músico/banda, detalle actualizado y resaltado; propios/ajenos bloqueados; búsqueda y selección tras recreación; cancelación; Visitante; cambio de disponibilidad entre carga y confirmación; fallo de guardado y fallo de carga. Se contrastan las relaciones con GET reales, no solo con el estado de la pantalla. La banda tiene integrantes y un álbum anterior; sus premios están vacíos. Conservar premios no vacíos está probado en JVM, no en este fixture E2E.
+
+**Ajuste durante el desarrollo del test:** el piloto de API 21 dio 7/8. El `doubleClick` de Espresso podía enviar el segundo toque a la pestaña Artistas después de que la asociación ya hubiera regresado al detalle; fallaba la expectativa de permanecer en ese detalle. El caso final de éxito usa una confirmación y comprueba la relación única. No se presenta como validación del gesto físico de doble toque; los envíos repetidos y respuestas perdidas mantienen su cobertura JVM de HU15-03/04.
+
+**Pendientes:** consolidar el contrato y las comprobaciones faltantes en HU15-06, y realizar la auditoría de accesibilidad. Estas E2E sí consultan BackVynils real; no sustituyen pruebas de atomicidad entre clientes ni una auditoría con TalkBack/Scanner/fuente ampliada.
+
+
+### Resultados finales HU15-05 · 17/11/2026
+
+| Clase | API 21 · Android 5.0 | API 37 · Android 17 |
+|---|---:|---:|
+| `PerformerAlbumPickerScreenTest` (HU15) | 8/8 | 8/8 |
+| `PerformerListScreenTest` (HU03) | 11/11 | 11/11 |
+| `PerformerDetailScreenTest` (HU04) | 6/6 | 6/6 |
+| `CollectorAlbumPickerScreenTest` (HU11) | 8/8 | 8/8 |
+| `PrizePickerScreenTest` (HU14) | 5/5 | 5/5 |
+| **Total** | **38/38, 0 fallos** | **38/38, 0 fallos** |
+
+Emuladores: `HU14_API_21` (`emulator-5554`) y `Medium_Phone_API_37.0` (`emulator-5556`). Se ejecutó `am instrument` con ambas APK instaladas, datos de app limpiados antes de cada corrida y animaciones desactivadas. Duración informada por el runner: 143.354 s / 164.849 s; es duración de la selección de 38 tests, **no una medición de desempeño de la app**. No es una ejecución de toda la suite instrumentada del proyecto.
+
+`spotlessCheck`, `detekt`, `lintDebug`, `testDebugUnitTest`, `assembleDebug` y `assembleDebugAndroidTest`: correctos; **421 JVM, 0 fallos, 0 errores, 0 omisiones**. APK debug verificado: SHA-256 `2b3a670aaa154d47c4aaca18f69a1cf97ade506c3d42043346207d49b87104d6`. No se reemplazó el APK de entrega.
+
+La consulta final de cada backend desechable mostró los cuatro álbumes, los dos artistas y los cuatro vínculos de álbumes de la semilla, sin fixtures restantes en esas tablas. Se eliminaron únicamente los contenedores/red creados para esta corrida; el backend compartido y su `pgdata` no se modificaron.
+
+Resultados originales conservados localmente en `reports/hu15-05/`: `api21-instrumentacion.txt`, `api37-instrumentacion.txt`, `resumen.json`, `calidad-compilacion.txt`, consultas finales del backend y hash del APK. El piloto fallido se conserva como `api21-piloto.txt`. **`reports/` está ignorado por Git**: estas rutas no son enlaces públicos ni evidencias publicadas en la Wiki. La tabla anterior sí queda versionada con esta documentación; para compartir los logs originales debe usarse el mecanismo de evidencias del equipo.
