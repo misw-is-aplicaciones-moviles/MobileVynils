@@ -121,8 +121,9 @@ class BandMemberPickerScreenTest {
         openBandAsCollector()
 
         picker.openFromBandDetail().search(free).scrollTo(free)
-        // Rubén Blades siempre está en la semilla: la búsqueda debe dejarlo fuera.
-        onView(allOf(withId(R.id.musicianName), withText(SEED_MUSICIAN))).check(doesNotExist())
+        // Rubén Blades siempre está en la semilla: la búsqueda debe dejarlo fuera. El filtro corre fuera del hilo
+        // principal, así que se espera a que su fila desaparezca en vez de comprobarlo una sola vez.
+        waitUntilGone(allOf(withId(R.id.musicianName), withText(SEED_MUSICIAN)))
         picker.search("E2E sin coincidencias $unique").assertNoResults()
     }
 
