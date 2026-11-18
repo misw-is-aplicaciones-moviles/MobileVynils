@@ -16,6 +16,7 @@ import co.edu.uniandes.vinilos.databinding.ItemAlbumDetailMessageBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerAlbumBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerDetailHeaderBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerMemberBinding
+import co.edu.uniandes.vinilos.databinding.ItemPerformerMembersActionBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerPrizeActionBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerPrizeBinding
 import co.edu.uniandes.vinilos.models.Album
@@ -23,6 +24,7 @@ import co.edu.uniandes.vinilos.models.ArtistPrize
 import co.edu.uniandes.vinilos.models.PerformerDetail
 import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
+import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.viewmodels.PerformerDetailUiState
 import com.bumptech.glide.Glide
 import java.time.format.DateTimeFormatter
@@ -56,6 +58,13 @@ internal sealed interface PerformerDetailRow {
 
     data class Members(
         val members: List<PerformerSummary>,
+        val highlightedMemberId: Int?,
+    ) : PerformerDetailRow
+
+    /** Members heading; [canEdit] shows the add member button. */
+    data class MembersAction(
+        val count: Int,
+        val canEdit: Boolean,
     ) : PerformerDetailRow
 }
 
@@ -65,6 +74,7 @@ internal class PerformerDetailAdapter(
     private val onMemberClick: (Int) -> Unit,
     private val onAddPrize: () -> Unit,
     private val onRetryPrizes: () -> Unit,
+    private val onAddMember: () -> Unit,
 ) : ListAdapter<PerformerDetailRow, RecyclerView.ViewHolder>(Rows) {
     init {
         stateRestorationPolicy = StateRestorationPolicy.PREVENT_WHEN_EMPTY
@@ -79,11 +89,11 @@ internal class PerformerDetailAdapter(
             buildList {
                 add(PerformerDetailRow.Header(detail))
                 if (detail.performer.type == PerformerType.BAND) {
-                    add(PerformerDetailRow.Text(R.string.artist_detail_members, detail.members.size))
+                    add(PerformerDetailRow.MembersAction(detail.members.size, state.role == UserRole.COLLECTOR))
                     if (detail.members.isEmpty()) {
                         add(PerformerDetailRow.Text(R.string.artist_detail_no_members))
                     } else {
-                        add(PerformerDetailRow.Members(detail.members))
+                        add(PerformerDetailRow.Members(detail.members, state.highlightedMemberId))
                     }
                 }
                 add(PerformerDetailRow.Text(R.string.artist_detail_albums, detail.albums.size))
@@ -92,7 +102,7 @@ internal class PerformerDetailAdapter(
                 add(
                     PerformerDetailRow.PrizeAction(
                         count = if (state.isLoadingPrizes || state.prizeError != null) null else state.prizes.size,
-                        canEdit = state.role == co.edu.uniandes.vinilos.models.UserRole.COLLECTOR,
+                        canEdit = state.role == UserRole.COLLECTOR,
                         canRetry = state.prizeError != null,
                         loading = state.isLoadingPrizes,
                     ),
@@ -132,6 +142,7 @@ internal class PerformerDetailAdapter(
             is PerformerDetailRow.Text -> TEXT
             is PerformerDetailRow.Record -> ALBUM
             is PerformerDetailRow.Members -> MEMBERS
+            is PerformerDetailRow.MembersAction -> MEMBERS_ACTION
         }
 
     override fun onCreateViewHolder(
@@ -177,6 +188,10 @@ internal class PerformerDetailAdapter(
                 )
             }
 
+            MEMBERS_ACTION -> {
+                MembersActionHolder(ItemPerformerMembersActionBinding.inflate(inflater, parent, false))
+            }
+
             else -> {
                 error("Unknown artist detail row")
             }
@@ -193,7 +208,23 @@ internal class PerformerDetailAdapter(
             is PerformerDetailRow.Header -> (holder as HeaderHolder).bind(row.detail)
             is PerformerDetailRow.Text -> (holder as TextHolder).bind(row)
             is PerformerDetailRow.Record -> (holder as AlbumHolder).bind(row.album)
-            is PerformerDetailRow.Members -> (holder as MembersHolder).bind(row.members)
+            is PerformerDetailRow.Members -> (holder as MembersHolder).bind(row)
+            is PerformerDetailRow.MembersAction -> (holder as MembersActionHolder).bind(row)
+        }
+    }
+
+    private inner class MembersActionHolder(
+        private val binding: ItemPerformerMembersActionBinding,
+    ) : RecyclerView.ViewHolder(binding.root) {
+        init {
+            ViewCompat.setAccessibilityHeading(binding.membersLabel, true)
+            binding.addMemberButton.setOnClickListener { onAddMember() }
+        }
+
+        fun bind(row: PerformerDetailRow.MembersAction) {
+            binding.membersLabel.text =
+                binding.root.context.getString(R.string.artist_detail_members, row.count)
+            binding.addMemberButton.isVisible = row.canEdit
         }
     }
 
@@ -305,21 +336,31 @@ internal class PerformerDetailAdapter(
         }
     }
 
+    /**
+     * The strip keeps one adapter for the life of the holder: a new member is diffed in instead of inflating
+     * every member again, and the strip scrolls to the member that was just added.
+     */
     private class MembersHolder(
         private val list: RecyclerView,
-        private val onClick: (Int) -> Unit,
+        onClick: (Int) -> Unit,
     ) : RecyclerView.ViewHolder(list) {
-        fun bind(members: List<PerformerSummary>) {
-            list.adapter = MemberAdapter(members, onClick)
+        private val adapter = MemberAdapter(onClick)
+
+        init {
+            list.adapter = adapter
+        }
+
+        fun bind(row: PerformerDetailRow.Members) {
+            adapter.submitList(row.members) {
+                val position = row.members.indexOfFirst { it.id == row.highlightedMemberId }
+                if (position >= 0) list.scrollToPosition(position)
+            }
         }
     }
 
     private class MemberAdapter(
-        private val members: List<PerformerSummary>,
         private val onClick: (Int) -> Unit,
-    ) : RecyclerView.Adapter<MemberHolder>() {
-        override fun getItemCount(): Int = members.size
-
+    ) : ListAdapter<PerformerSummary, MemberHolder>(Members) {
         override fun onCreateViewHolder(
             parent: ViewGroup,
             viewType: Int,
@@ -331,19 +372,44 @@ internal class PerformerDetailAdapter(
         override fun onBindViewHolder(
             holder: MemberHolder,
             position: Int,
-        ) = holder.bind(members[position])
+        ) = holder.bind(getItem(position))
+
+        override fun onViewRecycled(holder: MemberHolder) = holder.unbind()
     }
 
     private class MemberHolder(
         private val binding: ItemPerformerMemberBinding,
-        private val onClick: (Int) -> Unit,
+        onClick: (Int) -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
+        private var memberId: Int? = null
+
+        init {
+            binding.root.setOnClickListener { memberId?.let(onClick) }
+        }
+
         fun bind(member: PerformerSummary) {
+            memberId = member.id
             binding.memberName.text = member.name
             binding.memberArtwork.performerImage.loadPerformerImage(member.imageUrl)
             binding.root.contentDescription = binding.root.context.getString(R.string.artist_open_detail, member.name)
-            binding.root.setOnClickListener { onClick(member.id) }
         }
+
+        fun unbind() {
+            memberId = null
+            Glide.with(binding.memberArtwork.performerImage).clear(binding.memberArtwork.performerImage)
+        }
+    }
+
+    private object Members : DiffUtil.ItemCallback<PerformerSummary>() {
+        override fun areItemsTheSame(
+            oldItem: PerformerSummary,
+            newItem: PerformerSummary,
+        ) = oldItem.id == newItem.id
+
+        override fun areContentsTheSame(
+            oldItem: PerformerSummary,
+            newItem: PerformerSummary,
+        ) = oldItem == newItem
     }
 
     private object Rows : DiffUtil.ItemCallback<PerformerDetailRow>() {
@@ -355,6 +421,7 @@ internal class PerformerDetailAdapter(
                 is PerformerDetailRow.Text -> "text-${row.label}"
                 is PerformerDetailRow.Record -> "album-${row.album.id}"
                 is PerformerDetailRow.Members -> "members"
+                is PerformerDetailRow.MembersAction -> "members-action"
             }
 
         override fun areItemsTheSame(
@@ -375,6 +442,7 @@ internal class PerformerDetailAdapter(
         const val MEMBERS = 3
         const val PRIZE_ACTION = 4
         const val AWARD = 5
+        const val MEMBERS_ACTION = 6
     }
 }
 
