@@ -433,6 +433,19 @@ internal class PerformerDetailAdapter(
             oldItem: PerformerDetailRow,
             newItem: PerformerDetailRow,
         ) = oldItem == newItem
+
+        // With a payload the animator rebinds the same holder instead of cross-fading a new one: the members strip
+        // keeps its adapter, only the new member is animated, and no second copy of the row exists meanwhile.
+        override fun getChangePayload(
+            oldItem: PerformerDetailRow,
+            newItem: PerformerDetailRow,
+        ): Any? =
+            when (newItem) {
+                is PerformerDetailRow.Members, is PerformerDetailRow.MembersAction -> IN_PLACE
+                else -> null
+            }
+
+        private val IN_PLACE = Any()
     }
 
     private companion object {
