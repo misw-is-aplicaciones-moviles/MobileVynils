@@ -15,4 +15,5 @@ data class PerformerDetailUiState(
     val isLoadingPrizes: Boolean = true,
     val prizeError: DataError? = null,
     val highlightedAssignmentId: Int? = null,
+    val highlightedAlbumId: Int? = null,
 )
