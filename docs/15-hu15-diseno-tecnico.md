@@ -64,7 +64,7 @@ Esta lectura reduce el riesgo de sobrescritura, pero no es una garantía transac
 | Músico | `POST /musicians/{performerId}/albums/{albumId}` | Sin cuerpo | HTTP 200, álbum guardado |
 | Banda | `POST /bands/{performerId}/albums/{albumId}` | Sin cuerpo | HTTP 200, álbum guardado |
 
-Los controladores usan `@HttpCode(200)` y no reciben `@Body`. El interceptor convierte la ausencia del artista o álbum en HTTP 404. No se presupone que repetir un POST sea idempotente ni que las respuestas remotas coincidan con el checkout hasta ejecutar HU15-06.
+Los controladores usan `@HttpCode(200)` y no reciben `@Body`. El interceptor convierte la ausencia del artista o álbum en HTTP 404. HU15-06 confirma HTTP 200 y el álbum devuelto en la imagen ensayada (sección 14). No se presupone que repetir un POST sea idempotente ni se extrapola el resultado a otro despliegue.
 
 ### Lecturas
 
@@ -72,13 +72,13 @@ Los controladores usan `@HttpCode(200)` y no reciben `@Body`. El interceptor con
 - `GET /albums/{albumId}`: comprobación de asociaciones antes/después de escribir.
 - `GET /musicians/{performerId}` o `GET /bands/{performerId}`: refresco del detalle y comprobación de la asociación por ID de álbum.
 
-### Hallazgos de código, no reproducciones HTTP
+### Comportamiento del backend y hallazgos de código
 
 - `MusicianAlbumService.addMusicianAlbum()` añade el músico a la lista de intérpretes existente.
 - `BandAlbumService.addBandAlbum()` asigna `album.performers = [band]`: puede sustituir asociaciones existentes. Se evita ofrecer álbumes de otros artistas, pero la carrera entre clientes permanece como limitación.
 - `deleteAlbumToMusician()` y `deleteAlbumToBand()` usan un `filter` con bloque sin `return`. Su resultado sería una lista vacía en lugar de conservar las asociaciones ajenas. Las E2E de HU15 no deben limpiar datos compartidos mediante estos métodos sin haber validado su corrección.
 
-Estos hallazgos requieren verificación en una base aislada. No se modificó el backend, no se crearon nuevos issues y no se confirma con esta revisión un borrado o una sobrescritura en un despliegue real.
+HU15-06 confirmó por HTTP, únicamente con fixtures propios de una base aislada, la adición de músicos y la sustitución por banda (sección 14). Los hallazgos de DELETE continúan siendo de código: no se ejecutaron esas rutas. No se modificó BackVynils ni se crearon issues nuevos como parte de HU15.
 
 ## 4. Datos completos para el selector
 
@@ -107,7 +107,7 @@ suspend fun addAlbum(
 ): DataResult<Unit, DataError>
 ```
 
-`PerformerServiceAdapter` elige el endpoint por el tipo explícito y comprueba la respuesta HTTP y la identidad del álbum cuando exista cuerpo. El Repository convierte los errores esperados mediante `networkRequest`. Un error posterior a enviar no demuestra que el servidor no haya escrito: la UI entra en comprobación, no en reenvío automático.
+`PerformerServiceAdapter` elige el endpoint por el tipo explícito y comprueba la respuesta HTTP, exige cuerpo de respuesta y valida la identidad del álbum. El Repository convierte los errores esperados mediante `networkRequest`. Un error posterior a enviar no demuestra que el servidor no haya escrito: la UI entra en comprobación, no en reenvío automático.
 
 ## 5. Componentes y reutilización
 
@@ -314,7 +314,7 @@ Para cerrar la implementación completa, no solo HU15-01:
 - Evidencias visuales comparadas con los mockups identificados en esta página y auditoría de accesibilidad del flujo.
 - Inventario, resultados y limitaciones reales publicados, con PR por tarea según el flujo del repositorio.
 
-**Pendientes explícitos:** validar HTTP en backend aislado; revisar la interpretación de álbumes de otros artistas con el equipo; completar las E2E y la auditoría de accesibilidad y publicar sus resultados. Los avances de datos/UI no equivalen a validar HU15 contra el backend real.
+**Pendientes explícitos:** revisar la interpretación de álbumes de otros artistas con el equipo; completar las E2E y la auditoría de accesibilidad y publicar sus resultados. Los avances de datos/UI no equivalen a validar HU15 contra el backend real.
 
 ## 10. Avance HU15-02 · Capa de datos
 
@@ -361,7 +361,7 @@ Rama: `feature/HU15-04-unitarias`, desde `feature/HU15-agregar-album-artista` co
 - Se amplía `PerformerAlbumDetailResultTest` de 3 a 5 casos: refresco de músico y banda con datos remotos, resaltado y conservación de integrantes/premios; asociación ya existente y consumo único del evento.
 - El único cambio auxiliar es una compuerta suspendible en `FakePerformerRepository`. No se añadieron archivos ni se modificaron clases de producción.
 
-**Validación (17/11/2026):** JDK 17; `spotlessCheck`, `detekt`, `lintDebug` y `testDebugUnitTest` correctos. Suite completa: **421 casos, 0 fallos, 0 errores y 0 omisiones**; 25 casos de ViewModel de HU15, 11 nuevos respecto a HU15-03. Con las 36 pruebas de datos existentes, HU15 cuenta con 61 casos JVM. No se ejecutaron pruebas instrumentadas ni se consultó BackVynils real; El estado posterior de las E2E figura en la sección 13; HU15-06 y la auditoría de accesibilidad continúan pendientes.
+**Validación (17/11/2026):** JDK 17; `spotlessCheck`, `detekt`, `lintDebug` y `testDebugUnitTest` correctos. Suite completa: **421 casos, 0 fallos, 0 errores y 0 omisiones**; 25 casos de ViewModel de HU15, 11 nuevos respecto a HU15-03. Con las 36 pruebas de datos existentes, HU15 cuenta con 61 casos JVM. No se ejecutaron pruebas instrumentadas ni se consultó BackVynils real; El estado posterior de las E2E figura en la sección 13; La verificación de HU15-06 figura en la sección 14; la auditoría de accesibilidad continúa pendiente.
 
 
 ## 13. Avance HU15-05 · E2E y regresión
@@ -376,7 +376,7 @@ Se añadieron `PerformerAlbumPickerScreenTest` (8 escenarios) y su robot. Se amp
 
 **Ajuste durante el desarrollo del test:** el piloto de API 21 dio 7/8. El `doubleClick` de Espresso podía enviar el segundo toque a la pestaña Artistas después de que la asociación ya hubiera regresado al detalle; fallaba la expectativa de permanecer en ese detalle. El caso final de éxito usa una confirmación y comprueba la relación única. No se presenta como validación del gesto físico de doble toque; los envíos repetidos y respuestas perdidas mantienen su cobertura JVM de HU15-03/04.
 
-**Pendientes:** consolidar el contrato y las comprobaciones faltantes en HU15-06, y realizar la auditoría de accesibilidad. Estas E2E sí consultan BackVynils real; no sustituyen pruebas de atomicidad entre clientes ni una auditoría con TalkBack/Scanner/fuente ampliada.
+**Seguimiento:** contrato HTTP documentado en HU15-06 (sección 14); auditoría de accesibilidad pendiente. Estas E2E sí consultan BackVynils real; no sustituyen pruebas de atomicidad entre clientes ni una auditoría con TalkBack/Scanner/fuente ampliada.
 
 
 ### Resultados finales HU15-05 · 17/11/2026
@@ -397,3 +397,28 @@ Emuladores: `HU14_API_21` (`emulator-5554`) y `Medium_Phone_API_37.0` (`emulator
 La consulta final de cada backend desechable mostró los cuatro álbumes, los dos artistas y los cuatro vínculos de álbumes de la semilla, sin fixtures restantes en esas tablas. Se eliminaron únicamente los contenedores/red creados para esta corrida; el backend compartido y su `pgdata` no se modificaron.
 
 Resultados originales conservados localmente en `reports/hu15-05/`: `api21-instrumentacion.txt`, `api37-instrumentacion.txt`, `resumen.json`, `calidad-compilacion.txt`, consultas finales del backend y hash del APK. El piloto fallido se conserva como `api21-piloto.txt`. **`reports/` está ignorado por Git**: estas rutas no son enlaces públicos ni evidencias publicadas en la Wiki. La tabla anterior sí queda versionada con esta documentación; para compartir los logs originales debe usarse el mecanismo de evidencias del equipo.
+
+
+## 14. Avance HU15-06 · Verificación de API real
+
+Rama: `feature/HU15-06-api`, desde HU15-05 integrada (`50baff9`). Issue: [#66](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/issues/66).
+
+Una clase nueva, `PerformerAlbumApiTest`, y la URL opcional de `BackendPerformers` permiten ensayar el cliente/DTO/adaptadores reales contra una instancia independiente, sin cambiar `BuildConfig`, producción ni las E2E existentes. Se comprueban ambas rutas POST sin cuerpo, HTTP 200/ID del álbum, lecturas posteriores completas, errores 404 por artista/álbum ausente y relaciones conservadas ante esos errores. El caso de banda usa un álbum anterior y un integrante; sus premios están vacíos, por lo que no acredita premios no vacíos en esta integración.
+
+**Validación (18/11/2026): 5/5 en API 21 y 5/5 en API 37**, con `am instrument` y `hu15ApiBaseUrl=http://127.0.0.1:3001/`. BackVynils real, imagen `7eadb19c9c01`, TypeORM 0.2.21 y PostgreSQL 17 en contenedores/red exclusivos `vinilos-hu15-06-*`, almacenamiento `tmpfs`. No se atribuye un commit de compilación a la imagen. La base propia del puerto 3001 se conservó entre las dos ejecuciones, con fixtures nuevos por caso y limpieza comprobada; el entorno manual del puerto 3000 no se reinició ni se modificó.
+
+| Comprobación | API 21 | API 37 |
+|---|---:|---:|
+| Músico: HTTP 200, cuerpo e identidad; GET de catálogo/álbum/detalle | Pasa | Pasa |
+| Banda: HTTP 200; álbum anterior e integrante conservados | Pasa | Pasa |
+| Artista inexistente: HTTP 404 en ambas rutas, álbum intacto | Pasa | Pasa |
+| Álbum inexistente: HTTP 404 en ambas rutas, artistas intactos | Pasa | Pasa |
+| Caracterización de asociaciones previas del álbum | Pasa | Pasa |
+
+**Riesgo confirmado del backend:** con un álbum de prueba asociado a un músico, el POST de un segundo músico dejó ambos intérpretes. Un POST posterior a la banda respondió 200 y reemplazó ambos por esa banda; los detalles de los dos músicos quedaron sin ese álbum. Es una prueba de caracterización del comportamiento actual, **no una garantía de seguridad ni un resultado deseable**. Una corrección de BackVynils debe llevar a actualizar esa expectativa, no a revertir la corrección. El bloqueo de álbumes ocupados y el preflight del cliente reducen la exposición; la carrera entre clientes sigue necesitando protección atómica del backend. No se probaron los DELETE de asociaciones ni se corrigió el backend.
+
+`spotlessCheck`, `detekt`, `lintDebug`, `testDebugUnitTest`, `assembleDebug` y `assembleDebugAndroidTest`: correctos. **421 JVM sin fallos, errores ni omisiones**, más las cinco pruebas de API real por dispositivo. No se repitió la selección de 38 E2E de HU15-05; sus resultados siguen documentados en la sección 13.
+
+La consulta final del backend mostró únicamente los cuatro álbumes, los dos artistas y los cuatro vínculos de álbumes de la semilla, sin fixtures restantes en esas tablas. Se cerraron los recursos exclusivos de HU15-06; se mantuvo el entorno manual. Logs y resumen en `reports/hu15-06/` (ignorados por Git, no publicados en la Wiki). Inventario y comando reproducible en [06-pruebas.md](06-pruebas.md#hu15-06--contrato-http-real-de-los-dos-endpoints). Sin cambios en producción ni en el APK de entrega.
+
+**Cierre de subtareas:** HU15-01 a HU15-06 cuentan con implementación y validación automatizada documentada. Quedan para la consolidación de entrega la auditoría con TalkBack/Scanner/fuente ampliada, la publicación de evidencias y el seguimiento del riesgo de backend; no se marcan como ejecutados por estas pruebas de API.

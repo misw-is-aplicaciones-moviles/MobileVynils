@@ -570,7 +570,7 @@ Validación local del 17/11/2026: `spotlessCheck`, `detekt`, `lintDebug`, `testD
 
 Revisión visual exploratoria mediante ADB en emuladores API 21 y API 37, usando exclusivamente un servidor HTTP simulado con fixtures en memoria: músico en API 21 y banda en API 37. Se verificó selector, confirmación, regreso al destino, incremento del contador obtenido del servidor y resaltado. El log del servidor simulado registró un POST por recorrido, seguido de GET de comprobación y refresco. En banda se conservaron los cuatro integrantes del fixture. No se modificó PostgreSQL ni se probó BackVynils real. Las capturas temporales de revisión no forman parte del entregable ni sustituyen las evidencias E2E.
 
-**Seguimiento:** HU15-04 amplía la cobertura en la sección siguiente. HU15-05 incorpora Espresso y regresión en su sección. Pendiente: HU15-06 consolida la verificación del contrato de ambas rutas. TalkBack, Accessibility Scanner y fuente ampliada siguen pendientes de auditoría.
+**Seguimiento:** HU15-04 amplía la cobertura en la sección siguiente. HU15-05 incorpora Espresso y regresión en su sección. HU15-06 verifica el contrato de ambas rutas en su sección. TalkBack, Accessibility Scanner y fuente ampliada siguen pendientes de auditoría.
 
 ### HU15-04 · Ampliación de pruebas unitarias
 
@@ -585,7 +585,7 @@ Además, el caso existente de identidad inválida cubre ID cero/negativo y tipo 
 
 Trazabilidad al diseño: CP-HU15-03/04 (bloqueos), 05 (búsqueda y vacío), 06 (rol/identidad), 07 (restauración/cierre), 08 (carga/reintento), 09 (resultado incierto y reintento explícito), 11 (refresco y conservación del detalle). Esta cobertura complementa las 36 pruebas de datos de HU15-02; **no acredita los escenarios E2E ni la auditoría de accesibilidad**.
 
-**Validación local (17/11/2026):** JDK 17; `spotlessCheck`, `detekt`, `lintDebug` y `testDebugUnitTest` correctos. **421 pruebas JVM, 0 fallos, 0 errores y 0 omisiones**; 25 pertenecen a las dos clases de ViewModel de HU15 (11 nuevas en esta subtarea). Reporte generado: `app/build/reports/tests/testDebugUnitTest/index.html` (local, no publicado). No se ejecutaron peticiones a BackVynils ni pruebas instrumentadas. Los resultados de HU15-05 figuran en la sección siguiente; HU15-06 continúa pendiente.
+**Validación local (17/11/2026):** JDK 17; `spotlessCheck`, `detekt`, `lintDebug` y `testDebugUnitTest` correctos. **421 pruebas JVM, 0 fallos, 0 errores y 0 omisiones**; 25 pertenecen a las dos clases de ViewModel de HU15 (11 nuevas en esta subtarea). Reporte generado: `app/build/reports/tests/testDebugUnitTest/index.html` (local, no publicado). No se ejecutaron peticiones a BackVynils ni pruebas instrumentadas. Los resultados de HU15-05 figuran en la sección siguiente; La verificación de HU15-06 figura en su sección.
 
 ### HU15-05 · Espresso del selector de álbumes de artista
 
@@ -619,6 +619,34 @@ adb -s SERIAL shell am instrument -w -r \
 Sustituir `SERIAL` por el emulador/dispositivo. Desactivar las tres escalas de animación del emulador antes de usar `am instrument`; la tarea Gradle no las configura en una invocación directa. Para la regresión pertinente, seleccionar además `PerformerListScreenTest`, `PerformerDetailScreenTest`, `CollectorAlbumPickerScreenTest` y `PrizePickerScreenTest` (38 pruebas en total con HU15). No se debe dar por correcta una corrida que ejecuta cero pruebas.
 
 **Resultados (17/11/2026):** HU15 **8/8 en API 21 y 8/8 en API 37**. Con regresión HU03/HU04/HU11/HU14: **38/38 en cada API, sin fallos**. Corridas finales con BackVynils real aislado y base nueva por API. Controles de calidad y 421 unitarias correctos. La matriz por clase, el ajuste del piloto y los límites están en [el diseño técnico, sección 13](15-hu15-diseno-tecnico.md#13-avance-hu15-05--e2e-y-regresión). Logs originales en `reports/hu15-05/` (locales, ignorados por Git y no publicados en la Wiki). No se ejecutó la suite instrumentada completa ni se reemplazó el APK de entrega.
+
+### HU15-06 · Contrato HTTP real de los dos endpoints
+
+`app/src/androidTest/java/co/edu/uniandes/vinilos/network/PerformerAlbumApiTest.kt` usa `NetworkClient`, `VinilosApiService` y los Service Adapters de producción, sin abrir pantallas. `BackendPerformers` acepta una URL de pruebas opcional, manteniendo su valor predeterminado para las E2E existentes. Cada test crea y elimina exclusivamente sus artistas y álbumes.
+
+| Caso | Resultado comprobado | API 21 | API 37 |
+|---|---|---:|---:|
+| `musician_returns_200_album_id_and_complete_relationships_without_a_body` | POST sin cuerpo/Content-Type, HTTP 200, ID y relaciones en catálogo/álbum/detalle | Pasa | Pasa |
+| `band_returns_200_and_refresh_preserves_its_other_album_and_member` | HTTP 200; conserva álbum anterior e integrante; relación nueva visible | Pasa | Pasa |
+| `unknown_artists_return_404_for_both_routes_and_leave_the_album_free` | Ambas rutas devuelven 404, convertido a `DataError.Http(404)`; álbum sin cambios | Pasa | Pasa |
+| `unknown_album_returns_404_for_both_routes_without_changing_the_artists` | Ambas rutas devuelven 404; artistas sin cambios | Pasa | Pasa |
+| `occupied_album_appends_musicians_but_band_replaces_the_existing_relationships` | Caracterización del riesgo: músico añade, banda sustituye las asociaciones previas | Pasa | Pasa |
+
+**Resultado (18/11/2026): 5/5 en cada API**, contra otra instancia real de BackVynils en el puerto 3001, con PostgreSQL desechable y sin modificar el entorno manual del puerto 3000. El último caso caracteriza un comportamiento peligroso del backend, **no un criterio deseable**: si BackVynils lo corrige habrá que actualizar esa expectativa. El selector impide elegir álbumes ocupados, pero no puede garantizar atomicidad frente a otro cliente entre GET y POST.
+
+Construir/instalar las dos APK como en HU15-05 y ejecutar:
+
+```bash
+adb -s SERIAL reverse tcp:3001 tcp:3001
+adb -s SERIAL shell am instrument -w -r \
+  -e class co.edu.uniandes.vinilos.network.PerformerAlbumApiTest \
+  -e hu15ApiBaseUrl http://127.0.0.1:3001/ \
+  co.edu.uniandes.vinilos.test/co.edu.uniandes.vinilos.testing.VinilosTestRunner
+```
+
+Sin `hu15ApiBaseUrl`, se utiliza `BuildConfig.BASE_URL`; la clase exige host local. Usar una base de pruebas aislada: no ejecutar el caso de caracterización sobre datos compartidos. No se invocan DELETE de asociaciones; la limpieza elimina solo entidades propias.
+
+Controles `spotlessCheck`, `detekt`, `lintDebug`, `testDebugUnitTest`, `assembleDebug` y `assembleDebugAndroidTest` correctos. Las **421 JVM** siguen sin fallos, errores ni omisiones; estas cinco son instrumentadas y no aumentan ese total. Logs, resumen por caso y consulta final de la base en `reports/hu15-06/` (locales e ignorados por Git; no publicados en la Wiki). No se repitieron las 38 E2E/regresión de HU15-05 ni se reemplazó el APK de entrega.
 
 ## 6. Reportes de defectos
 
