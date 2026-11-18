@@ -139,7 +139,8 @@ class PrizePickerScreenTest {
         capture("hu14-fecha-restaurada.png")
         onView(withId(R.id.closeSheet)).perform(clickListener())
         waitUntilGone(withId(R.id.savePrize))
-        waitForPickerFocus().perform(click())
+        // Tras recrear, el centro de Continuar queda bajo la barra de navegación del Nexus 5.
+        waitForPickerFocus().perform(clickListener())
         waitForDisplayed(withId(R.id.savePrize)).check(matches(isEnabled()))
         onView(withId(R.id.closeSheet)).perform(clickListener())
         waitUntilGone(withId(R.id.savePrize))

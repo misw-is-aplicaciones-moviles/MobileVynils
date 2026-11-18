@@ -3,6 +3,7 @@ package co.edu.uniandes.vinilos.network
 import co.edu.uniandes.vinilos.models.Collector
 import co.edu.uniandes.vinilos.models.CollectorDetail
 import co.edu.uniandes.vinilos.models.NewCollectorAlbum
+import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.network.dto.CollectorAlbumDto
 import co.edu.uniandes.vinilos.network.dto.toDetail
 import co.edu.uniandes.vinilos.network.dto.toModel
@@ -37,6 +38,16 @@ internal interface CollectorServiceAdapter {
         albumId: Int,
         draft: NewCollectorAlbum,
     ): CollectorAlbumDto
+
+    /**
+     * Associates [performerId] as a favorite of [collectorId].
+     * A 2xx succeeds without reading the artist JSON, so a parse problem cannot hide a link that was already stored.
+     */
+    suspend fun addFavorite(
+        collectorId: Int,
+        performerId: Int,
+        type: PerformerType,
+    )
 }
 
 internal class CollectorServiceAdapterImpl(
@@ -81,5 +92,23 @@ internal class CollectorServiceAdapterImpl(
         val request = draft.toRequest()
         val response = withContext(ioDispatcher) { api.addAlbumToCollector(collectorId, albumId, request) }
         return response.requiredBody()
+    }
+
+    override suspend fun addFavorite(
+        collectorId: Int,
+        performerId: Int,
+        type: PerformerType,
+    ) {
+        require(collectorId > 0) { "collectorId must be positive" }
+        require(performerId > 0) { "performerId must be positive" }
+        val response =
+            withContext(ioDispatcher) {
+                when (type) {
+                    PerformerType.MUSICIAN -> api.addMusicianToCollector(collectorId, performerId)
+                    PerformerType.BAND -> api.addBandToCollector(collectorId, performerId)
+                }
+            }
+        if (!response.isSuccessful) throw HttpException(response)
+        response.body()?.close()
     }
 }

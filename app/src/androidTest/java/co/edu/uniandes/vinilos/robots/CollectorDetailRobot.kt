@@ -16,6 +16,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayingAtLeast
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import co.edu.uniandes.vinilos.R
@@ -83,8 +84,8 @@ class CollectorDetailRobot {
         return this
     }
 
-    fun assertFavoriteDisabledAndAlbumEnabled(): CollectorDetailRobot {
-        assertAction(R.string.action_add_favorite, displayed = true, enabled = false)
+    fun assertAddActionsEnabled(): CollectorDetailRobot {
+        assertAction(R.string.action_add_favorite, displayed = true, enabled = true)
         assertAction(R.string.action_add_album, displayed = true, enabled = true)
         onView(withId(R.id.headerTitle)).check(matches(withText(R.string.collector_detail_title)))
         return this
@@ -92,6 +93,13 @@ class CollectorDetailRobot {
 
     fun tapAddAlbum(): CollectorDetailRobot {
         val label = context.getString(R.string.action_add_album)
+        scrollTo(label)
+        onView(allOf(withText(label), isEnabled(), isDisplayed())).perform(click())
+        return this
+    }
+
+    fun tapAddFavorite(): CollectorDetailRobot {
+        val label = context.getString(R.string.action_add_favorite)
         scrollTo(label)
         onView(allOf(withText(label), isEnabled(), isDisplayed())).perform(click())
         return this
@@ -237,21 +245,16 @@ class CollectorDetailRobot {
         )
     }
 
-    private fun typeOf(favorite: FavoriteSnapshot) = allOf(withId(R.id.favoriteType), inFavoriteRow(favorite.name))
+    /** El tipo de esa ficha. Un ancestro más alto también contiene las otras fichas. */
+    private fun typeOf(favorite: FavoriteSnapshot) =
+        allOf(
+            withId(R.id.favoriteType),
+            withParent(hasDescendant(allOf(withId(R.id.favoriteName), withText(favorite.name)))),
+        )
 
     private fun priceOf(album: AlbumSnapshot) = allOf(withId(R.id.albumPrice), inAlbumRow(album.name))
 
     private fun statusOf(album: AlbumSnapshot) = allOf(withId(R.id.albumStatus), inAlbumRow(album.name))
-
-    /** La fila del favorito, no la lista horizontal ni el detalle completo: ambos también contienen el nombre. */
-    private fun inFavoriteRow(name: String) =
-        isDescendantOfA(
-            allOf(
-                hasDescendant(allOf(withId(R.id.favoriteName), withText(name))),
-                not(withId(R.id.collectorFavorites)),
-                not(withId(R.id.detailList)),
-            ),
-        )
 
     /** La fila del álbum. Un ancestro más alto también contiene los otros álbumes y haría ambiguo el precio. */
     private fun inAlbumRow(name: String) =

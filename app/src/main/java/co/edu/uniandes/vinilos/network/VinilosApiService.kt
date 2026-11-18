@@ -13,6 +13,7 @@ import co.edu.uniandes.vinilos.network.dto.PrizeAssignmentDto
 import co.edu.uniandes.vinilos.network.dto.PrizeAssignmentRequest
 import co.edu.uniandes.vinilos.network.dto.PrizeDto
 import co.edu.uniandes.vinilos.network.dto.TrackDto
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -104,4 +105,16 @@ internal interface VinilosApiService {
         @Path("albumId") albumId: Int,
         @Body body: NewCollectorAlbumRequest,
     ): Response<CollectorAlbumDto>
+
+    @POST("collectors/{collectorId}/musicians/{musicianId}")
+    suspend fun addMusicianToCollector(
+        @Path("collectorId") collectorId: Int,
+        @Path("musicianId") musicianId: Int,
+    ): Response<ResponseBody>
+
+    @POST("collectors/{collectorId}/bands/{bandId}")
+    suspend fun addBandToCollector(
+        @Path("collectorId") collectorId: Int,
+        @Path("bandId") bandId: Int,
+    ): Response<ResponseBody>
 }

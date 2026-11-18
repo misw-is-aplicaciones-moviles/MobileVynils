@@ -8,6 +8,7 @@ import co.edu.uniandes.vinilos.models.CollectorDetail
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.NewCollectorAlbum
+import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.network.CollectorServiceAdapter
 import co.edu.uniandes.vinilos.network.networkRequest
 import com.google.gson.JsonParseException
@@ -66,6 +67,19 @@ internal class CollectorRepositoryImpl(
         require(albumId > 0) { "albumId must be positive" }
         return networkRequest {
             serviceAdapter.addAlbum(collectorId, albumId, draft)
+            Unit
+        }
+    }
+
+    override suspend fun addFavorite(
+        collectorId: Int,
+        performerId: Int,
+        type: PerformerType,
+    ): DataResult<Unit, DataError> {
+        require(collectorId > 0) { "collectorId must be positive" }
+        require(performerId > 0) { "performerId must be positive" }
+        return networkRequest {
+            serviceAdapter.addFavorite(collectorId, performerId, type)
             Unit
         }
     }

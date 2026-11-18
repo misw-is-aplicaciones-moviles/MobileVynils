@@ -100,4 +100,12 @@
         android:label="@string/collector_album_picker_title">
         <argument android:name="collectorId" app:argType="integer" />
     </fragment>
+
+    <!-- Elegir artista favorito (HU10). -->
+    <fragment
+        android:id="@+id/collectorFavoritePickerFragment"
+        android:name="co.edu.uniandes.vinilos.ui.collectors.CollectorFavoritePickerFragment"
+        android:label="@string/collector_favorite_picker_title">
+        <argument android:name="collectorId" app:argType="integer" />
+    </fragment>
 </navigation>

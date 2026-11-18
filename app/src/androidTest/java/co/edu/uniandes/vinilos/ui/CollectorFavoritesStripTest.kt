@@ -183,6 +183,7 @@ private class FavoritesStrip(
                 onAlbumClick = {},
                 onFavoriteClick = { favoriteId -> onFavoriteClick(favoriteId) },
                 onAddAlbumClick = {},
+                onAddFavoriteClick = {},
             )
         detailList.adapter = adapter
         (activity.window.decorView as ViewGroup).addView(detailList)

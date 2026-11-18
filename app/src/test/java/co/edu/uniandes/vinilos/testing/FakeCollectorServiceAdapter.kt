@@ -3,6 +3,7 @@ package co.edu.uniandes.vinilos.testing
 import co.edu.uniandes.vinilos.models.Collector
 import co.edu.uniandes.vinilos.models.CollectorDetail
 import co.edu.uniandes.vinilos.models.NewCollectorAlbum
+import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.network.CollectorServiceAdapter
 import co.edu.uniandes.vinilos.network.dto.CollectorAlbumDto
 
@@ -54,4 +55,18 @@ internal class FakeCollectorServiceAdapter(
     var lastAddAlbumRequest: Triple<Int, Int, NewCollectorAlbum>? = null
         private set
     var addAlbumResponse: CollectorAlbumDto = CollectorAlbumDto(price = 0, status = "Active", album = null)
+
+    override suspend fun addFavorite(
+        collectorId: Int,
+        performerId: Int,
+        type: PerformerType,
+    ) {
+        addFavoriteCalls++
+        lastAddFavorite = Triple(collectorId, performerId, type)
+    }
+
+    var addFavoriteCalls = 0
+        private set
+    var lastAddFavorite: Triple<Int, Int, PerformerType>? = null
+        private set
 }
