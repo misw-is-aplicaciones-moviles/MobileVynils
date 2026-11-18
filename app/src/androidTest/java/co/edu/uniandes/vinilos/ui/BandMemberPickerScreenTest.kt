@@ -81,7 +81,11 @@ class BandMemberPickerScreenTest {
         waitForDisplayed(withText(R.string.band_member_added_message))
 
         pressBack()
-        artists.waitForList().tapRow(band)
+        artists
+            .waitForList()
+            .waitForRow(band, overline = "Banda · desde 1970", summary = "0 álbumes · 1 integrante")
+            .waitForRow(free, overline = "Músico · 1947", summary = "Integrante de $band")
+            .tapRow(band)
 
         waitForDisplayed(allOf(withId(R.id.performerName), withText(band)))
         picker.assertMemberInBand(free, count = 1)
