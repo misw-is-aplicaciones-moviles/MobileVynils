@@ -223,6 +223,7 @@ class MainActivity :
                 R.id.collectorFavoritePickerFragment,
                 R.id.prizePickerFragment,
                 R.id.prizeCreateFragment,
+                R.id.bandMemberPickerFragment,
             )
     }
 }

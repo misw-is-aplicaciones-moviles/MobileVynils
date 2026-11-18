@@ -40,6 +40,9 @@ curl http://localhost:3000/collectors/100/albums -o app/src/test/resources/api/c
 | `bands_with_members.json` | `GET /bands` en ese mismo estado; capturado el 2026-11-03 | HU03: `musicians[]` de Queen con los cuatro integrantes, de donde se deriva la pertenencia |
 | `collectors.json` | `GET /collectors` con la semilla (Manolo Bellon, id 100, y Jaime Monsalve, id 101); capturado del backend local el 2026-11-04 | HU05: contrato de `GET /collectors`; conteos de `collectorAlbums` y `favoritePerformers` |
 | `collector_100.json` | `GET /collectors/100` con la semilla; capturado del backend local el 2026-11-04 | HU06: Manolo, teléfono y favorito músico. `collectorAlbums` no trae el álbum anidado |
+| `band_musician_added.json` | Ejemplo sintético con la forma de la respuesta 200 de `POST /bands/101/musicians/100`: el músico guardado con su `band`, sin `albums`; sintético para no mover músicos en la base local | HU12, POST válido |
+| `band_musician_band_not_found.json` | `POST /bands/2147483647/musicians/100`, HTTP 404; capturado del backend local el 2026-11-17 sin escribir en la base | HU12, banda inexistente |
+| `band_musician_musician_not_found.json` | `POST /bands/101/musicians/2147483647`, HTTP 404; capturado del backend local el 2026-11-17 sin escribir en la base | HU12, músico inexistente |
 | `collector_100_albums.json` | `GET /collectors/100/albums` con la semilla; capturado del backend local el 2026-11-04 | HU06: vínculo con precio, estado y álbum anidado "Buscando América" |
 
 Los casos de HTTP 500, desconexión, JSON inválido, campo requerido ausente,

@@ -99,6 +99,27 @@ class PerformerListRobot {
         return this
     }
 
+    /** Como [assertRow], pero espera a que la fila muestre esos textos. */
+    fun waitForRow(
+        name: String,
+        overline: String,
+        summary: String,
+    ): PerformerListRobot {
+        val deadline = System.currentTimeMillis() + ROW_TIMEOUT_MILLIS
+        while (true) {
+            scrollTo(name)
+            try {
+                onView(withId(R.id.performerList))
+                    .withFailureHandler(rethrow)
+                    .check(matches(hasRow(name, overline, summary)))
+                return this
+            } catch (error: AssertionError) {
+                if (System.currentTimeMillis() > deadline) fail("La fila \"$name\" no llegó a \"$summary\": $error")
+                Thread.sleep(POLL_MILLIS)
+            }
+        }
+    }
+
     /** Solo comprueba la sobrelínea: para filas de la semilla cuyas cuentas dependen de otros datos. */
     fun assertOverline(
         name: String,
