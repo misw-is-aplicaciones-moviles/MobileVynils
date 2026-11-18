@@ -59,7 +59,7 @@ internal class AlbumRepositoryImpl(
             if (cached.isNotEmpty()) {
                 DataResult.Success(cached)
             } else {
-                when (val result = networkRequest { serviceAdapter.getAlbums() }) {
+                when (val result = networkRequest { serviceAdapter.getAlbums(forceRefresh) }) {
                     is DataResult.Success -> {
                         DataResult.Success(store(result.value))
                     }
@@ -71,6 +71,21 @@ internal class AlbumRepositoryImpl(
                 }
             }
         }
+
+    override suspend fun getAlbumsForAssociation(): DataResult<List<Album>, DataError> =
+        networkRequest {
+            val albums = serviceAdapter.getAlbumsForAssociation()
+            withContext(defaultDispatcher) { albums.sortedWith(ROOM_ORDER) }
+        }
+
+    override suspend fun getAlbumForAssociation(albumId: Int): DataResult<Album, DataError> {
+        require(albumId > 0) { "albumId must be positive" }
+        return networkRequest {
+            serviceAdapter.getAlbumForAssociation(albumId).also {
+                if (it.id != albumId) throw JsonParseException("Unexpected association album id")
+            }
+        }
+    }
 
     private suspend fun readCacheOrEmpty(): List<Album> =
         try {

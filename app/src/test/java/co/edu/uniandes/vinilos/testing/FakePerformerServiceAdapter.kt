@@ -16,6 +16,20 @@ internal class FakePerformerServiceAdapter(
         private set
 
     var detail: PerformerDetail? = null
+    val catalogRefreshRequests = mutableListOf<Boolean>()
+    val addedAlbumRequests = mutableListOf<Triple<Int, PerformerType, Int>>()
+    var addAlbumGate: CompletableDeferred<Unit>? = null
+
+    override suspend fun addAlbum(
+        performerId: Int,
+        type: PerformerType,
+        albumId: Int,
+    ) {
+        addedAlbumRequests += Triple(performerId, type, albumId)
+        addAlbumGate?.await()
+        failure?.let { throw it }
+    }
+
     val detailRequests = mutableListOf<Triple<Int, PerformerType, Boolean>>()
 
     override suspend fun getPerformer(
@@ -29,8 +43,9 @@ internal class FakePerformerServiceAdapter(
         return checkNotNull(detail) { "Configure the fake performer detail" }
     }
 
-    override suspend fun getPerformers(): List<Performer> {
+    override suspend fun getPerformers(forceRefresh: Boolean): List<Performer> {
         callCount++
+        catalogRefreshRequests += forceRefresh
         gate?.await()
         failure?.let { throw it }
         return performers

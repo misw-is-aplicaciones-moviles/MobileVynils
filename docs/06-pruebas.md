@@ -541,6 +541,22 @@ E2E en `TabNavigationTest`, contra BackVynils local. Los coleccionistas se leen 
 | CP-NAV-09 | Botón de acción al cambiar de pestaña | Como coleccionista, salir de un álbum a Artistas, volver a Álbumes y salir de otro álbum a Coleccionistas | Sin botón en Artistas ni Coleccionistas; aparece en el catálogo | E2E | `TabNavigationTest.primary_action_follows_the_screen_when_leaving_an_album_as_collector` | Pasa en API 21 y API 37 (2026-11-06) |
 
 
+### HU15 — Capa de datos (HU15-02)
+
+Los siguientes casos de datos complementan el [diseño técnico de HU15](15-hu15-diseno-tecnico.md). Son pruebas JVM con MockWebServer/fakes; no se han ejecutado como validación de un backend BackVynils activo ni como recorridos E2E.
+
+| Grupo | Casos | Qué verifica | Implementación |
+|---|---:|---|---|
+| Lecturas completas de asociación | 11 | Relaciones preservadas, `performers` ausente/nulo/inválido, catálogo vacío, identidad, revalidación HTTP, error HTTP y red sin reintento, compatibilidad del catálogo histórico | `AlbumAssociationServiceAdapterTest` |
+| Escritura por tipo de artista | 8 | Rutas de músico/banda con iguales IDs, POST sin cuerpo, respuesta inconsistente, HTTP/red sin reenvío automático, refresco de detalle preservando integrantes/premios, ejecución en IO | `PerformerAlbumServiceAdapterTest` |
+| Repositorio de álbumes | 8 | Datos completos aunque Room tenga un resumen, orden NOCASE/id, errores y cancelación, identidad y ausencia de cambios en Room | `AlbumAssociationRepositoryTest` |
+| Repositorio de artistas | 9 | Asociación, invalidación tras éxito/error/cancelación, revalidación de detalle/lista, caché ilegible por escritura fallida e interacción concurrente entre refresco y POST | `PerformerAlbumRepositoryTest` |
+| **Total nuevo** | **36** | **Cobertura de HU15-02** | **`src/test`** |
+
+**Validación local (17/11/2026):** JDK 17; `spotlessCheck detekt lintDebug testDebugUnitTest assembleDebug` correctos. Suite JVM completa: **396 pruebas, 0 fallos, 0 errores y 0 omisiones**.
+
+No se marca ningún caso E2E CP-HU15 como aprobado por estas pruebas de datos. Las pruebas de ViewModel, UI, accesibilidad y dispositivos quedan en sus respectivas subtareas.
+
 ## 6. Reportes de defectos
 
 Los defectos son issues de GitHub con la etiqueta `bug`:
