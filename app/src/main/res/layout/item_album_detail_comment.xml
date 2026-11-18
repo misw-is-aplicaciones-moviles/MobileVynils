@@ -5,11 +5,13 @@
     android:layout_marginBottom="@dimen/space_l"
     app:cardBackgroundColor="@color/vinilos_card_fill" app:cardElevation="0dp"
     app:cardCornerRadius="@dimen/album_detail_comment_radius"
-    app:strokeColor="@color/vinilos_line" app:strokeWidth="@dimen/list_divider_thickness">
+    app:strokeColor="@color/vinilos_line" app:strokeWidth="@dimen/list_divider_thickness"
+    android:focusable="true" android:importantForAccessibility="yes">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:padding="@dimen/space_l">
+        android:padding="@dimen/space_l"
+        android:importantForAccessibility="noHideDescendants">
 
         <TextView android:id="@+id/commentAvatar"
             android:layout_width="@dimen/album_detail_avatar_size"
@@ -30,7 +32,7 @@
         <RatingBar android:id="@+id/commentRating" style="?android:attr/ratingBarStyleSmall"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:isIndicator="true" android:numStars="5" android:stepSize="1"
-            android:progressTint="@color/vinilos_charcoal" android:progressBackgroundTint="@color/vinilos_line"
+            android:progressTint="@color/vinilos_charcoal" android:progressBackgroundTint="@color/vinilos_ash" android:progressBackgroundTintMode="src_in"
             app:layout_constraintTop_toTopOf="parent" app:layout_constraintEnd_toEndOf="parent" />
 
         <androidx.constraintlayout.widget.Barrier android:id="@+id/commentHeaderBottom"
