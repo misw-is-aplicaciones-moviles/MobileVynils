@@ -18,7 +18,9 @@ private const val TIMEOUT_MILLIS = 10_000
  * Cada prueba usa nombres únicos, así que no depende de cuántos artistas haya además de la semilla.
  * Los errores de preparación y de limpieza fallan la prueba: no se reintentan ni se ignoran.
  */
-class BackendPerformers : ExternalResource() {
+class BackendPerformers(
+    private val baseUrl: String = BuildConfig.BASE_URL,
+) : ExternalResource() {
     private val albums = mutableListOf<Int>()
     private val musicians = mutableListOf<Int>()
     private val bands = mutableListOf<Int>()
@@ -129,7 +131,7 @@ class BackendPerformers : ExternalResource() {
         body: JSONObject?,
         expectedCode: Int,
     ): JSONObject {
-        val connection = URL("${BuildConfig.BASE_URL}$path").openConnection() as HttpURLConnection
+        val connection = URL("$baseUrl$path").openConnection() as HttpURLConnection
         try {
             connection.requestMethod = method
             connection.connectTimeout = TIMEOUT_MILLIS
