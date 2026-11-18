@@ -12,6 +12,12 @@ interface AlbumRepository {
     /** Returns the albums from Room, or from the backend when Room is empty or [forceRefresh] is true. */
     suspend fun getAlbums(forceRefresh: Boolean = false): DataResult<List<Album>, DataError>
 
+    /** Reads a revalidated catalog with complete relationships; missing relationships are a serialization error. */
+    suspend fun getAlbumsForAssociation(): DataResult<List<Album>, DataError>
+
+    /** Revalidates the requested album and its relationships; never uses the Room summary. */
+    suspend fun getAlbumForAssociation(albumId: Int): DataResult<Album, DataError>
+
     /** Tells whether Room already holds albums, so the screen can show them before the network answers. */
     suspend fun hasCachedAlbums(): Boolean
 

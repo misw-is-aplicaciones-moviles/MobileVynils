@@ -17,6 +17,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.Path
 
@@ -46,7 +47,13 @@ internal interface VinilosApiService {
     ): Response<PrizeAssignmentDto>
 
     @GET("albums")
-    suspend fun getAlbums(): List<AlbumDto>
+    suspend fun getAlbums(
+        @Header("Cache-Control") cacheControl: String? = null,
+    ): List<AlbumDto>
+
+    @Headers("Cache-Control: no-cache")
+    @GET("albums")
+    suspend fun getAlbumsForAssociation(): Response<List<AlbumDto?>>
 
     @GET("albums/{id}")
     suspend fun getAlbum(
@@ -65,11 +72,27 @@ internal interface VinilosApiService {
         @Body body: NewTrackRequest,
     ): TrackDto
 
+    @POST("musicians/{performerId}/albums/{albumId}")
+    suspend fun addAlbumToMusician(
+        @Path("performerId") performerId: Int,
+        @Path("albumId") albumId: Int,
+    ): Response<AlbumDto>
+
+    @POST("bands/{performerId}/albums/{albumId}")
+    suspend fun addAlbumToBand(
+        @Path("performerId") performerId: Int,
+        @Path("albumId") albumId: Int,
+    ): Response<AlbumDto>
+
     @GET("musicians")
-    suspend fun getMusicians(): List<MusicianDto>
+    suspend fun getMusicians(
+        @Header("Cache-Control") cacheControl: String? = null,
+    ): List<MusicianDto>
 
     @GET("bands")
-    suspend fun getBands(): List<BandDto>
+    suspend fun getBands(
+        @Header("Cache-Control") cacheControl: String? = null,
+    ): List<BandDto>
 
     @GET("musicians/{id}")
     suspend fun getMusician(

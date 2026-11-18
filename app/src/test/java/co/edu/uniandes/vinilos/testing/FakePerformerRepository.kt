@@ -47,5 +47,17 @@ internal class FakePerformerRepository(
         return remoteResult
     }
 
+    var addAlbumResult: DataResult<Unit, DataError> = DataResult.Success(Unit)
+    val addedAlbumRequests = mutableListOf<Triple<Int, PerformerType, Int>>()
+
+    override suspend fun addAlbum(
+        performerId: Int,
+        type: PerformerType,
+        albumId: Int,
+    ): DataResult<Unit, DataError> {
+        addedAlbumRequests += Triple(performerId, type, albumId)
+        return addAlbumResult
+    }
+
     override suspend fun hasCachedPerformers(): Boolean = hasCache
 }

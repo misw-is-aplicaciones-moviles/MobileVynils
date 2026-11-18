@@ -43,6 +43,24 @@ internal class FakeAlbumRepository(
         return remoteResult
     }
 
+    var associationCatalogResult: DataResult<List<Album>, DataError> = DataResult.Success(emptyList())
+    var associationDetailResult: DataResult<Album, DataError> = DataResult.Failure(DataError.Http(404))
+    var associationCatalogCalls = 0
+        private set
+    val associationDetailRequests = mutableListOf<Int>()
+
+    override suspend fun getAlbumsForAssociation(): DataResult<List<Album>, DataError> {
+        associationCatalogCalls++
+        remoteGate?.await()
+        return associationCatalogResult
+    }
+
+    override suspend fun getAlbumForAssociation(albumId: Int): DataResult<Album, DataError> {
+        associationDetailRequests += albumId
+        detailGate?.await()
+        return associationDetailResult
+    }
+
     override suspend fun hasCachedAlbums(): Boolean = hasCache
 
     override suspend fun getAlbum(

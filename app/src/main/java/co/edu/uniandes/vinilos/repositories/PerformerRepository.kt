@@ -14,7 +14,17 @@ interface PerformerRepository {
      */
     suspend fun getPerformers(forceRefresh: Boolean = false): DataResult<List<Performer>, DataError>
 
-    /** Tells whether Room already holds artists, so the screen can show them before the network answers. */
+    /**
+     * Sends one association POST and makes subsequent artist reads revalidate their data.
+     * A failure after sending does not prove that the association was not saved; check before retrying.
+     */
+    suspend fun addAlbum(
+        performerId: Int,
+        type: PerformerType,
+        albumId: Int,
+    ): DataResult<Unit, DataError>
+
+    /** Tells whether a usable artist list is cached; false after an association attempt until revalidated. */
     suspend fun hasCachedPerformers(): Boolean
 
     /** Reads one remote detail, without replacing the cached list; retries revalidate HTTP. */

@@ -4,7 +4,7 @@
 
 > Como coleccionista quiero agregar un álbum a un artista para actualizar su información.
 
-**Estado:** diseño propuesto para implementación. Se revisaron la app en `3f0106b`, los mockups v2 y el código local de BackVynils en `7178f83662022904dc9e88b8a2292568954b56cf`. No se implementó la funcionalidad ni se ejecutaron pruebas de escritura. El 17/11 la consulta a `http://127.0.0.1:3000/albums` no pudo conectarse y no había contenedores BackVynils ejecutándose. El contrato HTTP queda pendiente de validación en HU15-06; la inspección del checkout no identifica un despliegue activo.
+**Estado:** diseño de HU15-01 con avance de capa de datos en HU15-02 (sección 10). Se revisaron inicialmente la app en `3f0106b`, los mockups v2 y el código local de BackVynils en `7178f83662022904dc9e88b8a2292568954b56cf`. La interfaz y el flujo completo no están implementados. Las pruebas de datos usan fakes y MockWebServer, sin escrituras a BackVynils. El 17/11 la consulta a `http://127.0.0.1:3000/albums` no pudo conectarse y no había contenedores BackVynils ejecutándose. El contrato HTTP queda pendiente de validación en HU15-06; la inspección del checkout no identifica un despliegue activo.
 
 ## 1. Alcance y referencias
 
@@ -87,19 +87,19 @@ La ruta actual `AlbumRepository.getAlbums(forceRefresh = true)` tampoco basta: d
 Se propone añadir operaciones específicas en `AlbumRepository` y su Service Adapter:
 
 ```kotlin
-// Propuestas; todavía no implementadas.
+// Contratos implementados en HU15-02.
 suspend fun getAlbumsForAssociation(): DataResult<List<Album>, DataError>
 suspend fun getAlbumForAssociation(albumId: Int): DataResult<Album, DataError>
 ```
 
 Ambas leen la red con `Cache-Control: no-cache`, validan que `performers` esté presente y sea una colección válida y conservan sus relaciones en memoria. La primera ordena fuera del hilo principal y no pasa por el resumen de Room; la segunda comprueba que el ID devuelto coincida con el solicitado. Se reutilizan DTO, modelos y mappers existentes, añadiendo validación estricta solo para la decisión de asociación. No se endurecen silenciosamente las lecturas históricas del catálogo ni se interpreta un dato ausente como ausencia de intérpretes.
 
-En `VinilosApiService.getAlbums()` se puede añadir un header opcional con valor predeterminado `null`, para conservar los llamadores existentes. Los Fragments y ViewModels no acceden al Service Adapter ni a DTO directamente.
+En HU15-02 se añadió un header opcional con valor predeterminado `null` a `VinilosApiService.getAlbums()`, conservando los llamadores existentes. La lectura estricta del selector usa un método específico `getAlbumsForAssociation()` con `Response<List<AlbumDto?>>` y `Cache-Control: no-cache`, para detectar explícitamente un cuerpo ausente o elementos nulos sin cambiar el contrato tolerante del catálogo anterior. Los Fragments y ViewModels no acceden al Service Adapter ni a DTO directamente.
 
 La escritura se propone en el repositorio del artista:
 
 ```kotlin
-// Propuesta; todavía no implementada.
+// Contrato implementado en HU15-02.
 suspend fun addAlbum(
     performerId: Int,
     type: PerformerType,
@@ -316,4 +316,20 @@ Para cerrar la implementación completa, no solo HU15-01:
 - Evidencias visuales comparadas con los mockups identificados en esta página y auditoría de accesibilidad del flujo.
 - Inventario, resultados y limitaciones reales publicados, con PR por tarea según el flujo del repositorio.
 
-**Pendientes explícitos:** validar HTTP en backend aislado; revisar la interpretación de álbumes de otros artistas con el equipo; acordar el pequeño componente compartido con responsables de HU12/HU10; implementar, ejecutar y publicar las pruebas. Este diseño no cierra los issues de implementación ni afirma que HU15 ya funciona.
+**Pendientes explícitos:** validar HTTP en backend aislado; revisar la interpretación de álbumes de otros artistas con el equipo; acordar el pequeño componente compartido con responsables de HU12/HU10; implementar la UI, las pruebas de ViewModel y E2E y publicar sus resultados. El avance de datos no implica que HU15 ya funcione desde la interfaz.
+
+## 10. Avance HU15-02 · Capa de datos
+
+Rama de subtarea: `feature/HU15-02-datos`, creada desde la rama de integración `feature/HU15-agregar-album-artista` después de integrar HU15-01. Issue: [#62](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/issues/62).
+
+- Implementados los POST sin cuerpo para músico y banda. El Service Adapter usa `PerformerType`, exige IDs positivos y valida el ID del álbum devuelto. La frontera de errores sigue siendo el Repository; se propagan las cancelaciones.
+- Implementadas las lecturas completas del selector y la comprobación individual, siempre revalidadas y sin leer ni escribir el resumen de Room. `performers` ausente, nulo o malformado produce error de serialización; no se confunde con una lista explícitamente vacía. Un intérprete con ID y nombre válidos pero tipo desconocido se conserva como asociación existente.
+- El catálogo de asociación conserva el orden de Room (`name COLLATE NOCASE, id`) sin perder intérpretes. Se mantiene el comportamiento tolerante del catálogo histórico en sus lecturas normales.
+- El catálogo ordinario de álbumes y las listas de artistas aceptan revalidación HTTP al solicitar un refresco forzado. Esto permite que el próximo paso de UI refresque los resúmenes afectados después de asociar.
+- `PerformerRepository.addAlbum()` marca el resumen de artistas como pendiente de revalidación antes de enviar, incluso si la respuesta se pierde. La siguiente lectura de detalle o lista no reutiliza la caché HTTP sin revalidar; `hasCachedPerformers()` devuelve falso hasta completar la actualización del resumen local.
+- La escritura y el refresco de lista comparten el mutex existente. Un refresco iniciado antes del POST no puede terminar después y borrar la marca de revalidación. Un fallo de Room mantiene la marca y devuelve la respuesta remota; no revierte ni repite la escritura.
+- `addAlbum()` no ejecuta lecturas ni reenvíos ocultos. La comprobación de disponibilidad antes de escribir, el estado de resultado incierto y la actualización visible del detalle se conectarán en HU15-03. La capa de datos no afirma que una respuesta perdida signifique ausencia de asociación.
+
+**Pruebas nuevas:** `AlbumAssociationServiceAdapterTest` (11), `PerformerAlbumServiceAdapterTest` (8), `AlbumAssociationRepositoryTest` (8) y `PerformerAlbumRepositoryTest` (9): 36 casos JVM. Incluyen peticiones reales a MockWebServer para rutas, headers, cuerpos, JSON inválido y respuesta perdida; fakes para caché, errores, cancelación y orden concurrente de refresco/escritura. No sustituyen las pruebas HTTP contra BackVynils de HU15-06 ni las pruebas de UI/E2E.
+
+**Validación local de HU15-02 (17/11/2026):** JDK 17; `spotlessCheck`, `detekt`, `lintDebug`, `testDebugUnitTest` y `assembleDebug` correctos. Suite completa: **396 pruebas JVM, 0 fallos, 0 errores y 0 omisiones**, incluidas las 36 nuevas. No se ejecutaron pruebas instrumentadas ni peticiones contra BackVynils como parte de esta subtarea. No se reemplazó el APK de entrega del repositorio.

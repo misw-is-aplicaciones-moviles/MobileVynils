@@ -35,10 +35,30 @@ internal class FakeAlbumServiceAdapter(
         }
     }
 
+    var associationCatalogCalls = 0
+        private set
+    val associationDetailRequests = mutableListOf<Int>()
+    val catalogRefreshRequests = mutableListOf<Boolean>()
+
+    override suspend fun getAlbumsForAssociation(): List<Album> {
+        associationCatalogCalls++
+        gate?.await()
+        failure?.let { throw it }
+        return albums
+    }
+
+    override suspend fun getAlbumForAssociation(albumId: Int): Album {
+        associationDetailRequests += albumId
+        gate?.await()
+        failure?.let { throw it }
+        return checkNotNull(detailResult ?: albums.firstOrNull { it.id == albumId })
+    }
+
     val createdDrafts = mutableListOf<NewAlbum>()
 
-    override suspend fun getAlbums(): List<Album> {
+    override suspend fun getAlbums(forceRefresh: Boolean): List<Album> {
         callCount++
+        catalogRefreshRequests += forceRefresh
         gate?.await()
         failure?.let { throw it }
         return albums
