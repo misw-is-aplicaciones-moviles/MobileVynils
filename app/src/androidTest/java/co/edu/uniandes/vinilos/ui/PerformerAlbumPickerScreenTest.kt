@@ -19,12 +19,14 @@ import co.edu.uniandes.vinilos.BuildConfig
 import co.edu.uniandes.vinilos.MainActivity
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.models.PerformerType
+import co.edu.uniandes.vinilos.robots.BandMemberPickerRobot
 import co.edu.uniandes.vinilos.robots.PerformerAlbumPickerRobot
 import co.edu.uniandes.vinilos.robots.PerformerDetailRobot
 import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.testing.BackendPerformers
 import co.edu.uniandes.vinilos.testing.clickVisible
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
+import co.edu.uniandes.vinilos.testing.waitUntilGone
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
 import org.json.JSONObject
@@ -190,6 +192,35 @@ class PerformerAlbumPickerScreenTest {
         waitForDisplayed(withText(R.string.artist_album_picker_error))
         onView(withId(R.id.headerClose)).perform(clickVisible())
         waitForDisplayed(allOf(withId(R.id.headerTitle), withText(R.string.artist_musician)))
+    }
+
+    @Test
+    fun band_keeps_new_member_and_album_when_both_pickers_are_used() {
+        val first = data.createMusician("$name inicial")
+        val addedName = "$name nuevo integrante"
+        val added = data.createMusician(addedName)
+        val id = data.createBand(name, albumCount = 1, members = listOf(first))
+        val albumName = "$name nuevo álbum"
+        val albumId = data.createAlbum(albumName)
+        val before = ids(data.artist(id, PerformerType.BAND), "albums")
+        openArtist()
+        BandMemberPickerRobot().openFromBandDetail().select(addedName).tapAdd()
+        waitForDisplayed(withText(R.string.band_member_added_message))
+        BandMemberPickerRobot().assertMemberInBand(addedName, count = 2)
+        waitUntilGone(withText(R.string.band_member_added_message))
+        picker.open()
+        picker.select(albumName)
+        waitForDisplayed(allOf(withId(R.id.confirmButton), isEnabled())).perform(clickVisible())
+        assertReturned(albumName, 2)
+        val after = data.artist(id, PerformerType.BAND)
+        assertEquals(before + albumId, ids(after, "albums"))
+        assertEquals(setOf(first, added), ids(after, "musicians"))
+        pressBack()
+        waitForDisplayed(allOf(withId(R.id.headerTitle), withText(R.string.artist_list_title)))
+        artists.tapRow(name)
+        waitForDisplayed(allOf(withId(R.id.performerName), withText(name)))
+        PerformerDetailRobot().scrollToText(context.getString(R.string.artist_detail_albums, 2))
+        BandMemberPickerRobot().assertMemberInBand(addedName, count = 2)
     }
 
     private fun openArtist() {

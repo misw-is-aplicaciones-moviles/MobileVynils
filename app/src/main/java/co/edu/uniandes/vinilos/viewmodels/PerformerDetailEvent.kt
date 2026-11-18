@@ -25,5 +25,11 @@ sealed interface PerformerDetailEvent {
 
     data object PrizeAssigned : PerformerDetailEvent
 
+    data class OpenMemberPicker(
+        val detail: PerformerDetail,
+    ) : PerformerDetailEvent
+
+    data object MemberAdded : PerformerDetailEvent
+
     data object OpenRoleSelector : PerformerDetailEvent
 }

@@ -22,16 +22,16 @@ internal fun BandDto.toDetailModel(): PerformerDetail =
         description = description.orEmpty(),
         albums = albums.toDetailAlbums(),
         prizeAssignments = performerPrizes.orEmpty().map { it?.toModel() ?: missing("artist prize assignment") },
-        members =
-            musicians.orEmpty().map { member ->
-                val dto = member ?: missing("band musician")
-                PerformerSummary(
-                    id = positiveId(dto.id, "band musician id"),
-                    name = dto.name?.takeIf { it.isNotBlank() } ?: missing("band musician name"),
-                    imageUrl = dto.image,
-                    type = PerformerType.MUSICIAN,
-                )
-            },
+        members = musicians.orEmpty().map { member -> (member ?: missing("band musician")).toMemberSummary() },
+    )
+
+/** A band member as the detail shows it, read from `bands[].musicians` or from the add member answer. */
+internal fun MusicianDto.toMemberSummary(): PerformerSummary =
+    PerformerSummary(
+        id = positiveId(id, "band musician id"),
+        name = name?.takeIf { it.isNotBlank() } ?: missing("band musician name"),
+        imageUrl = image,
+        type = PerformerType.MUSICIAN,
     )
 
 private fun Performer.validatedDetail(): Performer =

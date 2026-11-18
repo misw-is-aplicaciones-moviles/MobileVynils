@@ -56,6 +56,17 @@ class PerformerListViewModel(
         viewModelScope.launch { publish(performerRepository.getPerformers(forceRefresh = true)) }
     }
 
+    /** Reads Room again, without network, to show what a detail changed in the cache. */
+    fun onListShown() {
+        val state = currentState()
+        if (loaded.isEmpty() || state.isLoading || state.isRefreshing) return
+        viewModelScope.launch {
+            if (!performerRepository.hasCachedPerformers()) return@launch
+            val cached = performerRepository.getPerformers(forceRefresh = false)
+            if (cached is DataResult.Success) publish(cached)
+        }
+    }
+
     fun onFilterSelected(filter: PerformerFilter) {
         if (filter == currentState().filter) return
         update { copy(filter = filter, performers = visibleFor(filter)) }

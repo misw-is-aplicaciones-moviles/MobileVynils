@@ -21,6 +21,7 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.Path
 
+@Suppress("TooManyFunctions") // Central Retrofit contract: HU12 and HU15 together add the twentieth endpoint.
 internal interface VinilosApiService {
     @GET("prizes")
     suspend fun getPrizes(
@@ -105,6 +106,13 @@ internal interface VinilosApiService {
         @Path("id") id: Int,
         @Header("Cache-Control") cacheControl: String? = null,
     ): Response<BandDto>
+
+    /** Answers the musician with its new band. The backend moves a musician that already had another band. */
+    @POST("bands/{bandId}/musicians/{musicianId}")
+    suspend fun addMusicianToBand(
+        @Path("bandId") bandId: Int,
+        @Path("musicianId") musicianId: Int,
+    ): Response<MusicianDto>
 
     @GET("collectors")
     suspend fun getCollectors(): List<CollectorDto>

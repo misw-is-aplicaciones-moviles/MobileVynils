@@ -9,6 +9,7 @@ import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.Performer
 import co.edu.uniandes.vinilos.models.PerformerDetail
+import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.network.PerformerServiceAdapter
 import co.edu.uniandes.vinilos.network.networkRequest
@@ -56,6 +57,27 @@ internal class PerformerRepositoryImpl(
                 }
             }
         }
+    }
+
+    override suspend fun addMusicianToBand(
+        bandId: Int,
+        musicianId: Int,
+    ): DataResult<PerformerSummary, DataError> {
+        require(bandId > 0) { "bandId must be positive" }
+        require(musicianId > 0) { "musicianId must be positive" }
+        val result = networkRequest { serviceAdapter.addMusicianToBand(bandId, musicianId) }
+        if (result is DataResult.Success) {
+            // The POST runs outside the mutex; the cache update waits for a refresh in progress, so a list fetched
+            // before the POST is stored first and this change is applied on top of it instead of being undone.
+            mutex.withLock {
+                try {
+                    performerDao.applyMembership(musicianId, bandId)
+                } catch (_: SQLiteException) {
+                    // Room is only a cache: the next refresh brings the membership from the backend.
+                }
+            }
+        }
+        return result
     }
 
     override suspend fun getPerformers(forceRefresh: Boolean): DataResult<List<Performer>, DataError> =

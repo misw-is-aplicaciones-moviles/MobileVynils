@@ -86,6 +86,22 @@ class BackendPerformers(
 
     private fun collection(type: PerformerType): String = if (type == PerformerType.MUSICIAN) "musicians" else "bands"
 
+    /** Asocia por API un músico propio a una banda propia; la limpieza deshace el vínculo. */
+    fun addMember(
+        bandId: Int,
+        musicianId: Int,
+    ) {
+        require(bandId in bands && musicianId in musicians) { "Only owned test artists can be linked" }
+        send("POST", "bands/$bandId/musicians/$musicianId", null, HTTP_OK)
+        memberships += bandId to musicianId
+    }
+
+    /** Ids de los integrantes que el backend tiene ahora para la banda [bandId]. */
+    fun memberIds(bandId: Int): Set<Int> {
+        val members = send("GET", "bands/$bandId", null, HTTP_OK).optJSONArray("musicians") ?: return emptySet()
+        return (0 until members.length()).mapTo(mutableSetOf()) { members.getJSONObject(it).getInt("id") }
+    }
+
     override fun after() {
         memberships.forEach { (bandId, musicianId) ->
             send("DELETE", "bands/$bandId/musicians/$musicianId", null, HTTP_NO_CONTENT)

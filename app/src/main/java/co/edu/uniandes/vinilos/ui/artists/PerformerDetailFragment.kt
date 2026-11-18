@@ -18,6 +18,8 @@ import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.FragmentAlbumDetailBinding
 import co.edu.uniandes.vinilos.models.ArtistPrize
 import co.edu.uniandes.vinilos.models.DataError
+import co.edu.uniandes.vinilos.models.PerformerDetail
+import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.models.Prize
 import co.edu.uniandes.vinilos.models.UserRole
@@ -25,6 +27,7 @@ import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.ui.common.showConfirmationSnackbar
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailViewModel
+import co.edu.uniandes.vinilos.viewmodels.BandMemberFlowContract
 import co.edu.uniandes.vinilos.viewmodels.PerformerAlbumPickerViewModel
 import co.edu.uniandes.vinilos.viewmodels.PerformerDetailEvent
 import co.edu.uniandes.vinilos.viewmodels.PerformerDetailUiState
@@ -63,6 +66,7 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
                 viewModel::onAddPrizeClicked,
                 viewModel::retry,
                 viewModel::onAddAlbumClicked,
+                viewModel::onAddMemberClicked,
             )
         binding.detailList.layoutManager = LinearLayoutManager(requireContext())
         binding.detailList.adapter = adapter
@@ -76,6 +80,7 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
         viewModel.events.observe(viewLifecycleOwner) { it.getContentIfNotHandled()?.let(::handle) }
         observePrizeResults()
         observeAlbumResults()
+        observeMemberResults()
     }
 
     override fun onStart() {
@@ -225,6 +230,28 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
         }
     }
 
+    // The musician picker leaves the new member, or asks for a reload when the POST result is unknown.
+    private fun observeMemberResults() {
+        val handle = findNavController().currentBackStackEntry?.savedStateHandle ?: return
+        handle.getLiveData<Boolean>(BandMemberFlowContract.REFRESH_REQUESTED).observe(viewLifecycleOwner) { refresh ->
+            handle.remove<Boolean>(BandMemberFlowContract.REFRESH_REQUESTED)
+            if (refresh == true) viewModel.retry()
+        }
+        handle.getLiveData<Bundle>(BandMemberFlowContract.MEMBER_ADDED).observe(viewLifecycleOwner) { result ->
+            handle.remove<Bundle>(BandMemberFlowContract.MEMBER_ADDED)
+            val name = result.getString(BandMemberFlowContract.MEMBER_NAME) ?: return@observe
+            viewModel.onMemberAdded(
+                result.getInt(BandMemberFlowContract.BAND_ID),
+                PerformerSummary(
+                    id = result.getInt(BandMemberFlowContract.MEMBER_ID),
+                    name = name,
+                    imageUrl = result.getString(BandMemberFlowContract.MEMBER_IMAGE),
+                    type = PerformerType.MUSICIAN,
+                ),
+            )
+        }
+    }
+
     private fun handle(event: PerformerDetailEvent) {
         when (event) {
             is PerformerDetailEvent.OpenAlbumPicker -> {
@@ -236,12 +263,7 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
 
             is PerformerDetailEvent.AlbumAssociated -> {
                 revealAddedAlbumOnNextList = true
-                showConfirmationSnackbar(
-                    binding.root,
-                    (activity as? PrimaryActionHost)?.snackbarAnchor,
-                    if (event.alreadyAssociated) R.string.artist_album_already else R.string.artist_album_added,
-                    Snackbar.LENGTH_LONG,
-                )
+                showNotice(if (event.alreadyAssociated) R.string.artist_album_already else R.string.artist_album_added)
             }
 
             is PerformerDetailEvent.OpenAlbum -> {
@@ -277,18 +299,43 @@ class PerformerDetailFragment : Fragment(R.layout.fragment_album_detail) {
 
             PerformerDetailEvent.PrizeAssigned -> {
                 revealAssignedPrizeOnNextList = true
-                showConfirmationSnackbar(
-                    binding.root,
-                    (activity as? PrimaryActionHost)?.snackbarAnchor,
-                    R.string.prize_assigned_message,
-                    Snackbar.LENGTH_LONG,
-                )
+                showNotice(R.string.prize_assigned_message)
             }
 
             PerformerDetailEvent.OpenRoleSelector -> {
                 findNavController().navigateToRoleSelector()
             }
+
+            is PerformerDetailEvent.OpenMemberPicker -> {
+                openMemberPicker(event.detail)
+            }
+
+            PerformerDetailEvent.MemberAdded -> {
+                showNotice(R.string.band_member_added_message)
+            }
         }
+    }
+
+    private fun showNotice(message: Int) {
+        showConfirmationSnackbar(
+            binding.root,
+            (activity as? PrimaryActionHost)?.snackbarAnchor,
+            message,
+            Snackbar.LENGTH_LONG,
+        )
+    }
+
+    private fun openMemberPicker(detail: PerformerDetail) {
+        // Two taps before the transition ends must not stack two pickers.
+        findNavController().navigate(
+            R.id.bandMemberPickerFragment,
+            BandMemberPickerFragment.argumentsFor(
+                detail.performer.id,
+                detail.performer.name,
+                detail.members.map { it.id }.toIntArray(),
+            ),
+            navOptions { launchSingleTop = true },
+        )
     }
 
     private companion object {
