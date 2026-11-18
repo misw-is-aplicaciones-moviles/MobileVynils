@@ -524,6 +524,107 @@ La entrada desde HU03 se comprobará con la copia incorporada a nuestra base loc
 
 **Cobertura inicial HU04-02 (04/11/2026):** 18 pruebas nuevas aprobadas (11 en `PerformerDetailServiceAdapterTest`, 4 añadidas a `PerformerRepositoryImplTest` y 3 en `PerformerSummaryMappersTest`). Se reutilizan los JSON, fakes y reglas de HU03. La tabla distingue esa cobertura de datos de los estados y recorridos de UI pendientes; ningún escenario mixto se marca como totalmente aprobado por una prueba de API. Controles: `spotlessCheck detekt lintDebug testDebugUnitTest assembleDebugAndroidTest`, BUILD SUCCESSFUL con JDK 17, 212 pruebas JVM sin fallos, errores ni omisiones. Compilar las instrumentadas no equivale a ejecutarlas. No se ejecutaron E2E de HU04 ni se implementó todavía su pantalla. Ver métodos y contratos en [el avance HU04-02](13-hu04-diseno-tecnico.md#9-implementación-hu04-02--04112026).
 
+### HU12 — Agregar músicos a una banda
+
+Diseño: [15-hu12-diseno-tecnico.md](15-hu12-diseno-tecnico.md). **Tipo**: *Positivo* verifica el comportamiento esperado con datos válidos; *Negativo* evalúa la respuesta ante datos inválidos o errores. **Ejecución**: *Automatizada* (JVM con `testDebugUnitTest`, o instrumentada con `connectedDebugAndroidTest`) o *Manual* (pasos y captura en la wiki).
+
+Datos de los ejemplos: Queen con Brian May y Freddie Mercury; Adam Lambert sin banda; Ringo Starr de The Beatles. Las pruebas E2E crean su propia banda y sus músicos con nombres únicos y nunca usan Queen de la semilla. **BackVynils mueve al músico si ya tiene banda**, por eso la regla la aplica la app (CP-HU12-09, 44 y 49).
+
+Ejecución del 17/11/2026 con BackVynils reiniciado como indica el README, emulador Medium_Phone API 37 arrancado en frío, app desinstalada antes y `./gradlew clean spotlessCheck detekt lintDebug testDebugUnitTest connectedDebugAndroidTest`: **BUILD SUCCESSFUL**, **398 pruebas JVM y 142 instrumentadas, 0 fallos ni omisiones**. Incluye `BandMemberPickerScreenTest` 14/14, `BandMusicianBackendTest` 1/1 y `PerformerDaoTest` 9/9. El backend quedó sin datos de prueba. API 21 pendiente.
+
+**Límite de artistas por corrida completa.** Con las secuencias en 1 (README), los ids 100 y 101 de la semilla quedan libres solo hasta que una corrida cree 99 artistas; el siguiente `POST /musicians` o `POST /bands` responde 500 "duplicate key". Una primera versión de estas E2E creaba 5 artistas por caso y llevó la suite por encima del límite (fallaron dos casos de `PerformerListScreenTest` al preparar datos); ahora cada caso crea solo lo que usa y la corrida completa llega a **96 artistas** (`SELECT last_value FROM performer_id_seq`). Quedan 3 de margen: una HU nueva que cree artistas en sus E2E debe revisar este número.
+
+**Inestabilidad observada en otra HU.** `PrizePickerScreenTest.required_date_and_selection_survive_recreation_and_cancel_does_not_write` (HU14) falla de forma intermitente en API 37 con `RootViewWithoutFocusException` justo después de `recreate()`: 2 de 8 corridas en `develop` y 1 de 8 en esta rama, así que no la introduce HU12. En la corrida final pasó.
+
+#### Unitarias (HU12-04) — JVM, automatizadas
+
+| ID | Nivel | Caso | Precondición → pasos | Resultado esperado | Tipo | Ejecución | Clase y método | Estado |
+|---|---|---|---|---|---|---|---|---|
+| CP-HU12-01 | ViewModel | Cargar la lista de músicos | Coleccionista; repo con 4 músicos y 2 bandas → abrir el selector de Queen | Solo músicos; Brian y Freddie como integrantes; Ringo con "The Beatles"; deja de cargar; lista forzada a red | Positivo | Automatizada | `BandMemberPickerViewModelTest.loads only musicians and marks current members` | Pasa (2026-11-17) |
+| CP-HU12-02 | ViewModel | No hay músicos | Repo solo con bandas → abrir | Estado vacío; botón deshabilitado | Positivo | Automatizada | `…without musicians shows the empty state` | Pasa (2026-11-17) |
+| CP-HU12-03 | ViewModel | Falla la carga y se reintenta | Repo responde sin red y luego la lista → abrir; `retry()` | Error sin filas; después la lista | Negativo | Automatizada | `…failed load shows the error and retry loads the list` | Pasa (2026-11-17) |
+| CP-HU12-04 | ViewModel | Buscar | Lista cargada → `"  ADAM "` | Solo Adam Lambert; sin texto vuelven todos | Positivo | Automatizada | `…search ignores case and surrounding spaces` | Pasa (2026-11-17) |
+| CP-HU12-05 | ViewModel | Búsqueda sin coincidencias | Lista cargada → `"zzz"` | Filas vacías y "sin resultados", no "no hay músicos" | Negativo | Automatizada | `…search without matches shows no results` | Pasa (2026-11-17) |
+| CP-HU12-06 | ViewModel | Escribir rápido | Lista cargada → "a" y enseguida "ad" | Solo se publica "ad" | Positivo | Automatizada | `…a newer search cancels the previous one` | Pasa (2026-11-17) |
+| CP-HU12-07 | ViewModel | Seleccionar músico libre | Lista cargada → Adam | Seleccionado y botón habilitado | Positivo | Automatizada | `…selecting a free musician enables the add button` | Pasa (2026-11-17) |
+| CP-HU12-08 | ViewModel | Seleccionar integrante o id inexistente | Lista cargada → Brian; id 999 | La selección no cambia | Negativo | Automatizada | `…members and unknown ids cannot be selected` | Pasa (2026-11-17) |
+| CP-HU12-09 | ViewModel | Músico de otra banda | Lista cargada → Ringo → Agregar | Aviso con "The Beatles"; **0 llamadas** al repositorio | Negativo | Automatizada | `…musician of another band shows the notice and sends nothing` | Pasa (2026-11-17) |
+| CP-HU12-10 | ViewModel | El aviso se quita | Aviso visible → elegir Adam | Sin aviso | Positivo | Automatizada | `…choosing another musician clears the notice` | Pasa (2026-11-17) |
+| CP-HU12-11 | ViewModel | Agregar con éxito | Adam elegido; repo con éxito → Agregar | Una llamada (Queen, Adam); `Added` una vez; termina el envío | Positivo | Automatizada | `…successful add emits the new member once` | Pasa (2026-11-17) |
+| CP-HU12-12 | ViewModel | Doble toque | Repo en pausa → Agregar dos veces | Una sola llamada y un solo `Added` | Negativo | Automatizada | `…double tap sends a single request` | Pasa (2026-11-17) |
+| CP-HU12-13 | ViewModel | Interactuar durante el envío | Envío en curso → buscar, elegir otro, chip de rol | Se ignoran (la X la bloquea el Fragment con `isSubmitting`) | Negativo | Automatizada | `…search selection and role chip are blocked while submitting` | Pasa (2026-11-17) |
+| CP-HU12-14 | ViewModel | Banda o músico inexistente | Repo responde 404 → Agregar | Error definitivo, no incierto; se puede elegir otro | Negativo | Automatizada | `…not found is a definite error` | Pasa (2026-11-17) |
+| CP-HU12-15 | ViewModel | Sin red o 500 al agregar | Repo responde Network o 500 → Agregar | Incierto, guardado en SavedState; el botón emite `ReviewBand` sin reenviar | Negativo | Automatizada | `…network failure leaves the write uncertain` | Pasa (2026-11-17) |
+| CP-HU12-16 | ViewModel | Abrir como Visitante | Rol Visitante → crear | `OpenRoleSelector`; no consulta | Negativo | Automatizada | `…visitor is sent to the role selector` | Pasa (2026-11-17) |
+| CP-HU12-17 | ViewModel | Cambiar de rol mientras carga | Carga en pausa → Visitante | Carga cancelada y `OpenRoleSelector` | Negativo | Automatizada | `…role change cancels the load` | Pasa (2026-11-17) |
+| CP-HU12-18 | ViewModel | Argumentos inválidos | `bandId = 0` o nombre en blanco | `Close`; no consulta | Negativo | Automatizada | `…invalid band arguments close the picker` | Pasa (2026-11-17) |
+| CP-HU12-19 | ViewModel | Restaurar tras recreación | SavedState con "ad", Adam y envío pendiente | Se recuperan; el botón emite `ReviewBand` | Positivo | Automatizada | `…restores search selection and pending write` | Pasa (2026-11-17) |
+| CP-HU12-20 | ViewModel | Selección restaurada que ya no vale | SavedState con Adam, que al recargar ya es integrante | Selección descartada | Negativo | Automatizada | `…restored selection that became a member is dropped` | Pasa (2026-11-17) |
+| CP-HU12-21 | ViewModel | Abrir el selector desde la banda | Detalle de banda, Coleccionista → tocar dos veces | Un solo `OpenMemberPicker`; tras volver se puede abrir otra vez | Positivo | Automatizada | `PerformerDetailViewModelTest.add member opens the picker once with the band members` | Pasa (2026-11-17) |
+| CP-HU12-22 | ViewModel | Quien no debe agregar | Visitante en banda; Coleccionista en músico | Sin evento | Negativo | Automatizada | `…visitors and musicians cannot add members` | Pasa (2026-11-17) |
+| CP-HU12-23 | ViewModel | Recibir el integrante | Banda con 1 integrante → `onMemberAdded` | Al final de la tira, resaltado y `MemberAdded` una vez | Positivo | Automatizada | `…added member is appended and confirmed once` | Pasa (2026-11-17) |
+| CP-HU12-24 | ViewModel | Resultado repetido o ajeno | Integrante repetido, otra banda o id 0 | Nada cambia y sin evento | Negativo | Automatizada | `…duplicate or foreign results are ignored` | Pasa (2026-11-17) |
+| CP-HU12-25 | Repository | Éxito actualiza la caché | Room con Queen (2) y Adam libre | `Success`; Adam en Queen y Queen con 3; aplicarlo dos veces cuenta uno | Positivo | Automatizada | `PerformerRepositoryImplTest.added musician updates the band and the musician in Room`; `…applying the same membership twice counts the member once` | Pasa (2026-11-17) |
+| CP-HU12-26 | Repository | Falla Room tras el POST | DAO lanza `SQLiteException` | Sigue `Success` | Negativo | Automatizada | `…Room failure after the POST still reports success` | Pasa (2026-11-17) |
+| CP-HU12-27 | Repository | 404 | Adapter lanza 404 | `Http(404)`; Room intacto | Negativo | Automatizada | `…not found returns HTTP 404 and leaves Room intact` | Pasa (2026-11-17) |
+| CP-HU12-28 | Repository | Sin red | Adapter lanza `IOException` | `Network`; Room intacto | Negativo | Automatizada | `…IO failure returns a network error and leaves Room intact` | Pasa (2026-11-17) |
+| CP-HU12-29 | Repository | Otro músico en la respuesta | Adapter lanza `JsonParseException` | `Serialization`; Room intacto | Negativo | Automatizada | `…unexpected musician identity is a serialization error` | Pasa (2026-11-17) |
+| CP-HU12-30 | Repository | Ids no positivos | 0 o negativos | `IllegalArgumentException`; adapter sin llamadas | Negativo | Automatizada | `…non positive ids are rejected before the network` | Pasa (2026-11-17) |
+| CP-HU12-31 | Repository | Recarga simultánea | Recarga forzada en pausa con la lista vieja → agregar → liberar | Room conserva la pertenencia (`mutex`) | Negativo | Automatizada | `…refresh fetched before the POST does not undo the membership` | Pasa (2026-11-17) |
+| CP-HU12-32 | Room (instrumentada) | Guardar la pertenencia | Tabla con banda y músico → `applyMembership` dos veces | Músico con banda; conteo +1 una sola vez; otras filas intactas | Positivo | Automatizada | `PerformerDaoTest.apply_membership_updates_the_musician_and_the_band_count` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+| CP-HU12-33 | Room (instrumentada) | Ids desconocidos | Músico o banda inexistentes; banda como músico | No falla; no toca otras filas | Negativo | Automatizada | `PerformerDaoTest.apply_membership_with_unknown_ids_changes_nothing` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+
+#### API (HU12-06)
+
+Automatizadas con MockWebServer (Repository, Retrofit y adaptador reales; sin backend). Fixtures en [api/README.md](../app/src/test/resources/api/README.md).
+
+| ID | Caso | Precondición → pasos | Resultado esperado | Tipo | Ejecución | Clase y método | Estado |
+|---|---|---|---|---|---|---|---|
+| CP-HU12-34 | Petición y 200 | `band_musician_added.json` → `addMusicianToBand(101, 100)` | `POST /bands/101/musicians/100` sin cuerpo, una petición; integrante mapeado; Room actualizado | Positivo | Automatizada | `BandMemberServiceAdapterTest.add musician to band posts to the band route and maps the musician` | Pasa (2026-11-17) |
+| CP-HU12-35 | Banda inexistente | 404 real de banda | `Http(404)`; Room intacto | Negativo | Automatizada | `…unknown band becomes HTTP 404` | Pasa (2026-11-17) |
+| CP-HU12-36 | Músico inexistente | 404 real de músico | `Http(404)`; Room intacto | Negativo | Automatizada | `…unknown musician becomes HTTP 404` | Pasa (2026-11-17) |
+| CP-HU12-37 | Error del backend | 500 | `Http(500)` | Negativo | Automatizada | `…server error becomes HTTP 500` | Pasa (2026-11-17) |
+| CP-HU12-38 | Conexión cortada | Corte tras recibir el POST | `Network`; una sola petición (sin reintento) | Negativo | Automatizada | `…connection cut becomes a network error` | Pasa (2026-11-17) |
+| CP-HU12-39 | Respuesta dañada | JSON malformado, vacío, sin `id` u otro músico | `Serialization` | Negativo | Automatizada | `…malformed or incomplete body becomes a serialization error` | Pasa (2026-11-17) |
+| CP-HU12-40 | Origen de "Integrante de …" | `musicians_with_band.json` y `bands_with_members.json` | Los músicos de Queen traen `bandId` y `bandName` | Positivo | Automatizada | `PerformerServiceAdapterTest.members of a band are joined from the band list, not from the musician list` (HU03) | Pasa (2026-11-17) |
+| CP-HU12-42 | Banda inexistente (backend real) | `POST /bands/2147483647/musicians/100`, sin escribir en la base | 404 "The band with the given id was not found"; se guarda como fixture de CP-HU12-35 | Negativo | Manual | curl | Pasa (2026-11-17, captura del fixture) |
+| CP-HU12-43 | Músico inexistente (backend real) | `POST /bands/101/musicians/2147483647`, sin escribir en la base | 404 "The musician with the given id was not found"; se guarda como fixture de CP-HU12-36 | Negativo | Manual | curl | Pasa (2026-11-17, captura del fixture) |
+| CP-HU12-44 | Músico con otra banda (backend real) | La prueba crea un músico en una banda y otra banda vacía → `POST` del músico a la segunda | 200 y el músico se **mueve**: sale de la primera. Justifica el bloqueo en la app | Negativo | Automatizada (instrumentada) | `BandMusicianBackendTest.adding_a_musician_of_another_band_moves_it_instead_of_rejecting_it` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+
+CP-HU12-41 (POST válido con Postman) y CP-HU12-45 (id no numérico) se retiraron: el primero lo cubre CP-HU12-46 contra el backend real y el segundo no puede ocurrir, porque la app solo envía ids positivos (CP-HU12-30). Ninguna prueba requiere cargar datos a mano.
+
+#### E2E (HU12-05) — Espresso contra BackVynils local
+
+`BandMemberPickerScreenTest` con `BandMemberPickerRobot` y `BackendPerformers` (crea una banda con un integrante, un músico libre y uno ocupado en otra banda, todos con nombre único).
+
+| ID | Caso | Precondición → pasos | Resultado esperado | Tipo | Ejecución | Clase y método | Estado |
+|---|---|---|---|---|---|---|---|
+| CP-HU12-46 | Agregar y verlo en el detalle | Coleccionista → banda → "Agregar integrante" → músico libre → "Agregar a …" | Aviso "Integrante agregado a la banda"; integrante en la tira; "Integrantes · 2"; backend con los dos | Positivo | Automatizada | `BandMemberPickerScreenTest.collector_adds_a_free_musician_and_sees_it_in_the_band` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+| CP-HU12-47 | El cambio persiste | Tras agregar → Atrás → abrir la banda otra vez | El integrante sigue | Positivo | Automatizada | `…added_member_is_still_there_after_reopening_the_band` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+| CP-HU12-48 | Integrantes no elegibles | Abrir el selector → tocar el integrante | "YA INTEGRANTE"; no se selecciona; botón deshabilitado | Negativo | Automatizada | `…current_members_are_labelled_and_cannot_be_selected` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+| CP-HU12-49 | Músico de otra banda | Elegir el ocupado → Agregar | "Integrante de …"; aviso; sigue en el selector; backend sin cambios | Negativo | Automatizada | `…musician_of_another_band_shows_the_notice_and_is_not_added` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+| CP-HU12-50 | Buscar | Buscar el libre; luego un texto sin coincidencias | Solo ese músico; luego "sin resultados" | Positivo | Automatizada | `…search_filters_musicians_and_shows_no_results` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+| CP-HU12-51 | Salir sin agregar | Elegir → X; repetir con Atrás | Detalle sin aviso; backend sin cambios | Positivo | Automatizada | `…closing_the_picker_adds_nothing` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+| CP-HU12-52 | Visitante | Visitante → banda | Sin "Agregar integrante" | Negativo | Automatizada | `…visitor_does_not_see_add_member` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+| CP-HU12-53 | Detalle de músico | Coleccionista → músico | Sin sección ni botón de integrantes | Negativo | Automatizada | `…musician_detail_has_no_add_member` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+| CP-HU12-54 | Banda vacía | Banda sin integrantes → agregar el libre | "sin integrantes" se reemplaza por "Integrantes · 1" | Positivo | Automatizada | `…empty_band_gets_its_first_member` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+| CP-HU12-55 | Recrear | Búsqueda y selección → `recreate()` | Se conservan búsqueda, selección y botón | Positivo | Automatizada | `…recreating_keeps_search_and_selection` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+| CP-HU12-56 | Cambiar de rol | Chip "Coleccionista" en el selector | Selector de rol | Positivo | Automatizada | `…role_chip_opens_the_role_selector` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+| CP-HU12-57 | Sin conexión y reintento | `BackendFirewall` al abrir → restaurar → Reintentar | Error con Reintentar; luego la lista | Negativo | Automatizada | `…load_failure_offers_retry` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+| CP-HU12-58 | Se corta la red al agregar | Elegir el libre → `BackendFirewall` → Agregar → restaurar → "Revisar banda" | Aviso de resultado incierto y botón "Revisar banda"; el detalle se recarga con "Integrantes · 1", sin aviso de éxito ni duplicados | Negativo | Automatizada | `…network_failure_while_adding_asks_to_review_the_band` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+| CP-HU12-59 | El músico se borra con el selector abierto | Elegir el libre → la prueba lo borra por API → Agregar | Aviso de 404; sigue en el selector con el botón habilitado; backend sin cambios | Negativo | Automatizada | `…musician_deleted_while_choosing_shows_not_found` | Pasa en API 37 (2026-11-17); API 21 pendiente |
+
+#### No funcionales — manuales
+
+Se hacen con la app y los datos que ya estén en el backend; no hay que cargar nada ni apagar el backend.
+
+| ID | Caso | Pasos | Resultado esperado | Tipo | Ejecución | Estado |
+|---|---|---|---|---|---|---|
+| CP-HU12-60 | Sin fugas de memoria | Abrir y cerrar el selector 10 veces; GC; heap dump (Profiler) | Sin instancias retenidas de `BandMemberPickerFragment`, su binding ni su adaptador | Positivo | Manual | Pendiente |
+| CP-HU12-61 | Búsqueda fluida | Con los músicos que ya tenga el backend, escribir rápido en "Buscar músico" con el Profiler de CPU | Filtrado fuera del hilo principal, sin saltos visibles | Positivo | Manual | Pendiente |
+| CP-HU12-62 | StrictMode | Recorrer todo el flujo en debug | Sin violaciones en Logcat | Negativo | Manual | Pendiente |
+| CP-HU12-63 | TalkBack | Recorrer botón, filas, "YA INTEGRANTE", aviso y confirmación | Se anuncian nombre, estado y el aviso al aparecer | Positivo | Manual | Pendiente |
+
 ### Navegación entre pestañas
 
 E2E en `TabNavigationTest`, contra BackVynils local. Los coleccionistas se leen del backend sin escribir; los artistas y sus álbumes los crea cada prueba y los borra al terminar. Requieren un coleccionista de nombre único con álbumes y favoritos: si no existe, la prueba falla con ese mensaje, no se omite.
