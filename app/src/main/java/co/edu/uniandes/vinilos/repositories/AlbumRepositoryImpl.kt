@@ -34,11 +34,19 @@ internal class AlbumRepositoryImpl(
 ) : AlbumRepository {
     private val mutex = Mutex()
 
+    private var catalogNeedsRefresh = false
+
+    override suspend fun invalidateCatalog() {
+        mutex.withLock { catalogNeedsRefresh = true }
+    }
+
     override suspend fun hasCachedAlbums(): Boolean =
-        try {
-            albumDao.hasAlbums()
-        } catch (_: SQLiteException) {
-            false
+        mutex.withLock {
+            try {
+                !catalogNeedsRefresh && albumDao.hasAlbums()
+            } catch (_: SQLiteException) {
+                false
+            }
         }
 
     override suspend fun getAlbum(
@@ -55,11 +63,12 @@ internal class AlbumRepositoryImpl(
 
     override suspend fun getAlbums(forceRefresh: Boolean): DataResult<List<Album>, DataError> =
         mutex.withLock {
-            val cached = if (forceRefresh) emptyList() else readCacheOrEmpty()
+            val revalidate = forceRefresh || catalogNeedsRefresh
+            val cached = if (revalidate) emptyList() else readCacheOrEmpty()
             if (cached.isNotEmpty()) {
                 DataResult.Success(cached)
             } else {
-                when (val result = networkRequest { serviceAdapter.getAlbums(forceRefresh) }) {
+                when (val result = networkRequest { serviceAdapter.getAlbums(revalidate) }) {
                     is DataResult.Success -> {
                         DataResult.Success(store(result.value))
                     }
@@ -99,7 +108,7 @@ internal class AlbumRepositoryImpl(
     private suspend fun store(albums: List<Album>): List<Album> =
         try {
             albumDao.replaceAll(withContext(defaultDispatcher) { albums.map { it.toEntity() } })
-            readAll()
+            readAll().also { catalogNeedsRefresh = false }
         } catch (_: SQLiteException) {
             withContext(defaultDispatcher) { albums.sortedWith(ROOM_ORDER) }
         }

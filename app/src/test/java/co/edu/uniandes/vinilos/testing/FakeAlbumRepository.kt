@@ -62,6 +62,14 @@ internal class FakeAlbumRepository(
         return associationDetailResults.removeFirstOrNull() ?: associationDetailResult
     }
 
+    var invalidationCount = 0
+        private set
+
+    override suspend fun invalidateCatalog() {
+        invalidationCount++
+        hasCache = false
+    }
+
     override suspend fun hasCachedAlbums(): Boolean = hasCache
 
     override suspend fun getAlbum(

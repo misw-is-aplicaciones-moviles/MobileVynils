@@ -6,6 +6,7 @@ import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.PerformerDetail
 import co.edu.uniandes.vinilos.models.PerformerType
+import co.edu.uniandes.vinilos.testing.FakeAlbumRepository
 import co.edu.uniandes.vinilos.testing.FakePerformerDao
 import co.edu.uniandes.vinilos.testing.FakePerformerServiceAdapter
 import co.edu.uniandes.vinilos.testing.band
@@ -30,6 +31,25 @@ import java.io.IOException
 
 @Suppress("MagicNumber") // Fixture identities, counts and HTTP codes.
 class PerformerAlbumRepositoryTest {
+    @Test
+    fun `album catalog is invalidated after successful failed and cancelled association writes`() =
+        runTest {
+            for (failure in listOf(null, IOException("lost response"), CancellationException("cancelled"))) {
+                val albums = FakeAlbumRepository(hasCache = true)
+                val adapter = FakePerformerServiceAdapter(failure = failure)
+                val repository =
+                    PerformerRepositoryImpl(
+                        FakePerformerDao(),
+                        adapter,
+                        StandardTestDispatcher(testScheduler),
+                        albums,
+                    )
+                runCatching { repository.addAlbum(73, PerformerType.MUSICIAN, 100) }
+                assertEquals(1, albums.invalidationCount)
+                assertFalse(albums.hasCachedAlbums())
+            }
+        }
+
     @Test
     fun `association forwards the exact identity for either type without overwriting the list cache`() =
         runTest {
@@ -191,5 +211,5 @@ class PerformerAlbumRepositoryTest {
     private fun TestScope.repository(
         dao: FakePerformerDao,
         adapter: FakePerformerServiceAdapter,
-    ) = PerformerRepositoryImpl(dao, adapter, StandardTestDispatcher(testScheduler))
+    ) = PerformerRepositoryImpl(dao, adapter, StandardTestDispatcher(testScheduler), FakeAlbumRepository())
 }

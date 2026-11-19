@@ -15,6 +15,7 @@ import co.edu.uniandes.vinilos.network.PerformerServiceAdapter
 import co.edu.uniandes.vinilos.network.networkRequest
 import com.google.gson.JsonParseException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -28,6 +29,7 @@ internal class PerformerRepositoryImpl(
     private val performerDao: PerformerDao,
     private val serviceAdapter: PerformerServiceAdapter,
     private val defaultDispatcher: CoroutineDispatcher,
+    private val albumRepository: AlbumRepository,
 ) : PerformerRepository {
     private val mutex = Mutex()
 
@@ -110,7 +112,12 @@ internal class PerformerRepositoryImpl(
         return mutex.withLock {
             // A lost response may still have changed the backend: the next read must revalidate.
             associationNeedsRefresh = true
-            networkRequest { serviceAdapter.addAlbum(performerId, type, albumId) }
+            try {
+                networkRequest { serviceAdapter.addAlbum(performerId, type, albumId) }
+            } finally {
+                // Waits for any older album refresh, then invalidates even after cancellation or a lost response.
+                withContext(NonCancellable) { albumRepository.invalidateCatalog() }
+            }
         }
     }
 

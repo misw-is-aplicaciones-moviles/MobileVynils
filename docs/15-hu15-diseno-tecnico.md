@@ -170,6 +170,7 @@ classDiagram
     class AlbumRepository {
         +getAlbumsForAssociation()
         +getAlbumForAssociation(albumId)
+        +invalidateCatalog()
     }
     class PerformerRepository {
         +getPerformer(id, type, forceRefresh)
@@ -422,3 +423,13 @@ Una clase nueva, `PerformerAlbumApiTest`, y la URL opcional de `BackendPerformer
 La consulta final del backend mostró únicamente los cuatro álbumes, los dos artistas y los cuatro vínculos de álbumes de la semilla, sin fixtures restantes en esas tablas. Se cerraron los recursos exclusivos de HU15-06; se mantuvo el entorno manual. Logs y resumen en `reports/hu15-06/` (ignorados por Git, no publicados en la Wiki). Inventario y comando reproducible en [06-pruebas.md](06-pruebas.md#hu15-06--contrato-http-real-de-los-dos-endpoints). Sin cambios en producción ni en el APK de entrega.
 
 **Cierre de subtareas:** HU15-01 a HU15-06 cuentan con implementación y validación automatizada documentada. Quedan para la consolidación de entrega la auditoría con TalkBack/Scanner/fuente ampliada, la publicación de evidencias y el seguimiento del riesgo de backend; no se marcan como ejecutados por estas pruebas de API.
+
+
+## 15. Correcciones de la revisión de HU15 · 18/11/2026
+
+- `PerformerListViewModel.onListShown()` relee `getPerformers(false)` sin usar `hasCachedPerformers()` como barrera: una asociación pendiente hace que el repositorio revalide, en lugar de impedir la actualización de la fila. Si esa lectura falla, la lista visible se conserva.
+- `PerformerRepositoryImpl` recibe `AlbumRepository` desde `AppContainer`. Al terminar el intento de asociación llama a `invalidateCatalog()`, también ante respuesta perdida o cancelación. La invalidación se completa en `NonCancellable` y usa el mutex del catálogo de álbumes; así un refresco anterior no puede dejar el resumen viejo marcado como vigente.
+- `AlbumRepositoryImpl` conserva Room, pero evita reutilizar sus resúmenes y la caché HTTP mientras estén invalidados. Solo una actualización completa guardada y releída correctamente permite reutilizarlos. HU11 ya lee `getAlbums(false)` al abrir su selector; HU01 ahora lo relee al volver a su vista. No se reenvía el POST para actualizar una pantalla.
+- Se reducen fixtures redundantes de HU03/HU15 sin retirar escenarios. `PerformerAlbumApiTest` requiere el argumento explícito `hu15ApiBaseUrl`; sus cinco contratos se ejecutan aparte de la suite completa, sobre otra base limpia. No se añaden scripts ni se modifican el backend o sus secuencias.
+
+Las E2E de HU15 comprueban ahora el resumen de la fila al regresar de la asociación, la composición con HU12 y el artista mostrado por HU01/HU11. Resultados y presupuesto de IDs en [06-pruebas.md](06-pruebas.md). Las validaciones anteriores de esta página corresponden a sus commits históricos.

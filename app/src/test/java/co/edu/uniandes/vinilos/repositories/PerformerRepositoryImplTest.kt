@@ -8,6 +8,7 @@ import co.edu.uniandes.vinilos.models.Performer
 import co.edu.uniandes.vinilos.models.PerformerDetail
 import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
+import co.edu.uniandes.vinilos.testing.FakeAlbumRepository
 import co.edu.uniandes.vinilos.testing.FakePerformerDao
 import co.edu.uniandes.vinilos.testing.FakePerformerServiceAdapter
 import co.edu.uniandes.vinilos.testing.band
@@ -41,7 +42,7 @@ class PerformerRepositoryImplTest {
     private fun TestScope.repository(
         dao: FakePerformerDao,
         adapter: FakePerformerServiceAdapter,
-    ) = PerformerRepositoryImpl(dao, adapter, StandardTestDispatcher(testScheduler))
+    ) = PerformerRepositoryImpl(dao, adapter, StandardTestDispatcher(testScheduler), FakeAlbumRepository())
 
     private suspend fun TestScope.loadFromNetwork(performers: List<Performer>) =
         repository(FakePerformerDao(), FakePerformerServiceAdapter(performers = performers)).getPerformers()

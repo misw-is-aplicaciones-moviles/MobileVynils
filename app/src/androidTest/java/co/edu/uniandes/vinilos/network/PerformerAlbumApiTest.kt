@@ -15,6 +15,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -38,6 +39,10 @@ class PerformerAlbumApiTest {
 
     @Before
     fun openClient() {
+        assumeTrue(
+            "Requires explicit hu15ApiBaseUrl and a fresh isolated backend",
+            InstrumentationRegistry.getArguments().getString("hu15ApiBaseUrl") != null,
+        )
         val uri = URI(baseUrl)
         check(uri.host in setOf("127.0.0.1", "localhost", "10.0.2.2") && baseUrl.endsWith("/")) {
             "HU15 API requires a local test backend with a trailing slash"
