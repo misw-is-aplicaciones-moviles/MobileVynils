@@ -6,6 +6,7 @@ import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.repositories.PerformerRepositoryImpl
+import co.edu.uniandes.vinilos.testing.FakeAlbumRepository
 import co.edu.uniandes.vinilos.testing.FakePerformerDao
 import co.edu.uniandes.vinilos.testing.MockWebServerRule
 import co.edu.uniandes.vinilos.testing.band
@@ -153,6 +154,7 @@ class BandMemberServiceAdapterTest {
             dao,
             PerformerServiceAdapterImpl({ client.create(VinilosApiService::class.java) }, dispatcher, dispatcher),
             dispatcher,
+            FakeAlbumRepository(),
         )
     }
 }

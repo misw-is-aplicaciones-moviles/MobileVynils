@@ -64,6 +64,28 @@ class PerformerDetailViewModel(
         _events.value = Event(PerformerDetailEvent.OpenMember(memberId))
     }
 
+    fun onAddAlbumClicked() {
+        val state = current()
+        val detail = state.detail ?: return
+        if (navigationPending || state.role != UserRole.COLLECTOR || state.isLoading) return
+        navigationPending = true
+        _events.value = Event(PerformerDetailEvent.OpenAlbumPicker(detail))
+    }
+
+    fun onAlbumAssociated(
+        id: Int,
+        type: PerformerType?,
+        albumId: Int,
+        alreadyAssociated: Boolean,
+    ) {
+        if (id != performerId || type != performerType || albumId <= 0) return
+        loadJob?.cancel()
+        loadJob = null
+        update { copy(highlightedAlbumId = albumId) }
+        load(forceRefresh = true)
+        _events.value = Event(PerformerDetailEvent.AlbumAssociated(alreadyAssociated))
+    }
+
     fun onAddPrizeClicked() {
         val state = current()
         val detail = state.detail ?: return

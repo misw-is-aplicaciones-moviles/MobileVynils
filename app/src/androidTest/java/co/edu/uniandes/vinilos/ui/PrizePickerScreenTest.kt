@@ -3,10 +3,13 @@ package co.edu.uniandes.vinilos.ui
 import android.graphics.Bitmap
 import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -29,7 +32,6 @@ import co.edu.uniandes.vinilos.robots.PerformerDetailRobot
 import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.BackendPrizes
-import co.edu.uniandes.vinilos.testing.clickListener
 import co.edu.uniandes.vinilos.testing.clickVisible
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import co.edu.uniandes.vinilos.testing.waitUntilGone
@@ -137,12 +139,12 @@ class PrizePickerScreenTest {
             ),
         )
         capture("hu14-fecha-restaurada.png")
-        onView(withId(R.id.closeSheet)).perform(clickListener())
+        onView(withId(R.id.closeSheet)).perform(clickVisible())
         waitUntilGone(withId(R.id.savePrize))
         // Tras recrear, el centro de Continuar queda bajo la barra de navegación del Nexus 5.
         waitForPickerFocus().perform(clickListener())
         waitForDisplayed(withId(R.id.savePrize)).check(matches(isEnabled()))
-        onView(withId(R.id.closeSheet)).perform(clickListener())
+        onView(withId(R.id.closeSheet)).perform(clickVisible())
         waitUntilGone(withId(R.id.savePrize))
         waitForPickerFocus()
         onView(withId(R.id.headerClose)).perform(click())
@@ -227,20 +229,31 @@ class PrizePickerScreenTest {
         assertEquals("${date}T00:00:00.000Z", saved.getJSONObject(0).getString("premiationDate"))
     }
 
-    private fun waitForPickerFocus() =
-        waitForDisplayed(
+    private fun waitForPickerFocus(): ViewInteraction {
+        val ready =
             allOf(
                 withId(R.id.continuePrize),
                 isEnabled(),
                 object : TypeSafeMatcher<View>() {
                     override fun describeTo(description: Description) {
-                        description.appendText("ventana del selector con foco después de cerrar la hoja")
+                        description.appendText("selector con foco y teclado oculto después de cerrar la hoja")
                     }
 
-                    override fun matchesSafely(view: View) = view.hasWindowFocus()
+                    override fun matchesSafely(view: View): Boolean {
+                        val insets = ViewCompat.getRootWindowInsets(view) ?: return false
+                        return view.hasWindowFocus() && !insets.isVisible(WindowInsetsCompat.Type.ime())
+                    }
                 },
-            ),
-        )
+            )
+        // The date view can disappear before WindowManager finishes returning input to the activity.
+        // Wait for window events to settle, dismiss any restored IME, then verify focus and insets again.
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        instrumentation.waitForIdleSync()
+        instrumentation.uiAutomation.waitForIdle(WINDOW_IDLE_MILLIS, WINDOW_TIMEOUT_MILLIS)
+        closeSoftKeyboard()
+        instrumentation.uiAutomation.waitForIdle(WINDOW_IDLE_MILLIS, WINDOW_TIMEOUT_MILLIS)
+        return waitForDisplayed(ready)
+    }
 
     private fun fixture(type: PerformerType) = prizes.open(type)
 
@@ -289,6 +302,8 @@ class PrizePickerScreenTest {
     }
 
     private companion object {
+        const val WINDOW_IDLE_MILLIS = 100L
+        const val WINDOW_TIMEOUT_MILLIS = 5_000L
         const val PNG_QUALITY = 100
         const val SCREENSHOT_IDLE_MILLIS = 100L
         const val SCREENSHOT_TIMEOUT_MILLIS = 3_000L

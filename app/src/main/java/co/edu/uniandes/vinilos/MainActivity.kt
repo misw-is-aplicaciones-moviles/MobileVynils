@@ -222,6 +222,7 @@ class MainActivity :
                 R.id.collectorAlbumPickerFragment,
                 R.id.collectorFavoritePickerFragment,
                 R.id.prizePickerFragment,
+                R.id.performerAlbumPickerFragment,
                 R.id.prizeCreateFragment,
                 R.id.bandMemberPickerFragment,
             )

@@ -98,6 +98,7 @@ class AppContainer(
                 defaultDispatcher = Dispatchers.Default,
             ),
             defaultDispatcher = Dispatchers.Default,
+            albumRepository = albumRepository,
         )
     }
 

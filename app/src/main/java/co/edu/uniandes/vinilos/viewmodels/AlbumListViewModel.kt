@@ -50,6 +50,16 @@ class AlbumListViewModel(
         viewModelScope.launch { publish(albumRepository.getAlbums(forceRefresh = true)) }
     }
 
+    /** Re-reads the catalog when returning; stale relationship summaries are revalidated by the repository. */
+    fun onListShown() {
+        val state = currentState()
+        if (state.albums.isEmpty() || state.isLoading || state.isRefreshing) return
+        viewModelScope.launch {
+            val result = albumRepository.getAlbums(forceRefresh = false)
+            if (result is DataResult.Success) publish(result)
+        }
+    }
+
     fun onAlbumClicked(albumId: Int) {
         _events.value = Event(AlbumListEvent.OpenDetail(albumId))
     }

@@ -17,6 +17,20 @@ internal class FakePerformerServiceAdapter(
         private set
 
     var detail: PerformerDetail? = null
+    val catalogRefreshRequests = mutableListOf<Boolean>()
+    val addedAlbumRequests = mutableListOf<Triple<Int, PerformerType, Int>>()
+    var addAlbumGate: CompletableDeferred<Unit>? = null
+
+    override suspend fun addAlbum(
+        performerId: Int,
+        type: PerformerType,
+        albumId: Int,
+    ) {
+        addedAlbumRequests += Triple(performerId, type, albumId)
+        addAlbumGate?.await()
+        failure?.let { throw it }
+    }
+
     val detailRequests = mutableListOf<Triple<Int, PerformerType, Boolean>>()
 
     override suspend fun getPerformer(
@@ -33,7 +47,7 @@ internal class FakePerformerServiceAdapter(
     /** Answer of [addMusicianToBand]; when null it answers the requested musician with a generic name. */
     var addedMember: PerformerSummary? = null
 
-    /** Thrown by [addMusicianToBand]; independent of [failure] and [gate], which only affect the reads. */
+    /** Thrown by [addMusicianToBand], independently of the read and album-association failures. */
     var addFailure: Throwable? = null
     val addRequests = mutableListOf<Pair<Int, Int>>()
 
@@ -46,8 +60,9 @@ internal class FakePerformerServiceAdapter(
         return addedMember ?: PerformerSummary(musicianId, "Musician $musicianId", null, PerformerType.MUSICIAN)
     }
 
-    override suspend fun getPerformers(): List<Performer> {
+    override suspend fun getPerformers(forceRefresh: Boolean): List<Performer> {
         callCount++
+        catalogRefreshRequests += forceRefresh
         gate?.await()
         failure?.let { throw it }
         return performers
