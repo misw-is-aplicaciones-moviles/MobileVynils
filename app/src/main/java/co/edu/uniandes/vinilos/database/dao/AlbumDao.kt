@@ -6,6 +6,7 @@ import androidx.room.Transaction
 import androidx.room.Upsert
 import co.edu.uniandes.vinilos.database.entities.AlbumEntity
 import co.edu.uniandes.vinilos.database.entities.AlbumWithTracks
+import co.edu.uniandes.vinilos.database.staleIdChunks
 
 // Upsert y no Insert(REPLACE): REPLACE borra la fila y el CASCADE se llevaría sus canciones.
 @Dao
@@ -27,13 +28,17 @@ internal interface AlbumDao {
     @Upsert
     suspend fun upsertAll(albums: List<AlbumEntity>)
 
-    @Query("DELETE FROM albums WHERE id NOT IN (:ids)")
-    suspend fun deleteAllExcept(ids: List<Int>)
+    @Query("SELECT id FROM albums")
+    suspend fun getIds(): List<Int>
+
+    // Recibe a lo sumo MAX_IDS_PER_STATEMENT ids: Room crea una variable por id (#139).
+    @Query("DELETE FROM albums WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Int>)
 
     /** Deja en la tabla exactamente los álbumes recibidos, sin perder las canciones de los que siguen. */
     @Transaction
     suspend fun replaceAll(albums: List<AlbumEntity>) {
-        deleteAllExcept(albums.map { it.id })
+        staleIdChunks(getIds(), albums.map { it.id }).forEach { deleteByIds(it) }
         upsertAll(albums)
     }
 }

@@ -34,9 +34,11 @@ internal class FakeCollectorDao(
         collectors.forEach { rows[it.id] = it }
     }
 
-    override suspend fun deleteAllExcept(ids: List<Int>) {
+    override suspend fun getIds(): List<Int> = rows.keys.toList()
+
+    override suspend fun deleteByIds(ids: List<Int>) {
         writeFailure?.let { throw it }
         writeCount++
-        rows.keys.retainAll(ids.toSet())
+        rows.keys.removeAll(ids.toSet())
     }
 }
