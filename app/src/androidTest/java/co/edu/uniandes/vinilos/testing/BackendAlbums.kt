@@ -12,8 +12,9 @@ private const val TIMEOUT_MILLIS = 10_000
 /**
  * Crea un álbum en BackVynils local con `POST /albums`, como dato de una prueba E2E. El backend no asocia intérpretes
  * al crear, así que el álbum queda sin artista. Cada prueba usa un nombre único para poder repetirse.
+ * Devuelve el id que asignó el backend.
  */
-fun createAlbumOnBackend(name: String) {
+fun createAlbumOnBackend(name: String): Int {
     val body =
         JSONObject()
             .put("name", name)
@@ -32,6 +33,8 @@ fun createAlbumOnBackend(name: String) {
         connection.setRequestProperty("Content-Type", "application/json")
         connection.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
         assertEquals("POST /albums para preparar \"$name\"", HTTP_OK, connection.responseCode)
+        val response = connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+        return JSONObject(response).getInt("id")
     } finally {
         connection.disconnect()
     }

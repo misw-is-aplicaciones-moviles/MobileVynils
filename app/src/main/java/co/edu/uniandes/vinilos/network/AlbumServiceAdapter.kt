@@ -1,9 +1,12 @@
 package co.edu.uniandes.vinilos.network
 
 import co.edu.uniandes.vinilos.models.Album
+import co.edu.uniandes.vinilos.models.Comment
 import co.edu.uniandes.vinilos.models.NewAlbum
+import co.edu.uniandes.vinilos.models.NewComment
 import co.edu.uniandes.vinilos.models.NewTrack
 import co.edu.uniandes.vinilos.models.Track
+import co.edu.uniandes.vinilos.network.dto.toCreatedCommentModel
 import co.edu.uniandes.vinilos.network.dto.toCreatedTrackModel
 import co.edu.uniandes.vinilos.network.dto.toModel
 import co.edu.uniandes.vinilos.network.dto.toRequest
@@ -30,6 +33,12 @@ internal interface AlbumServiceAdapter {
         albumId: Int,
         draft: NewTrack,
     ): Track
+
+    /** Publishes [draft] on [albumId] and returns the saved comment with its author; throws like [getAlbums]. */
+    suspend fun addComment(
+        albumId: Int,
+        draft: NewComment,
+    ): Comment
 }
 
 internal class AlbumServiceAdapterImpl(
@@ -73,5 +82,20 @@ internal class AlbumServiceAdapterImpl(
             if (responseAlbumId != albumId) throw JsonParseException("Unexpected track album id")
         }
         return withContext(defaultDispatcher) { dto.toCreatedTrackModel() }
+    }
+
+    override suspend fun addComment(
+        albumId: Int,
+        draft: NewComment,
+    ): Comment {
+        val request = draft.toRequest()
+        val dto = withContext(ioDispatcher) { api.addComment(albumId, request) }
+        dto.album?.let { album ->
+            val responseAlbumId = album.id ?: throw JsonParseException("Missing comment album id")
+            if (responseAlbumId != albumId) throw JsonParseException("Unexpected comment album id")
+        }
+        val comment = withContext(defaultDispatcher) { dto.toCreatedCommentModel() }
+        if (comment.author?.collectorId != draft.collectorId) throw JsonParseException("Unexpected comment collector")
+        return comment
     }
 }

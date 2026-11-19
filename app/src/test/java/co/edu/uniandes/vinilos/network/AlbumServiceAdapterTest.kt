@@ -1,17 +1,22 @@
 package co.edu.uniandes.vinilos.network
 
+import co.edu.uniandes.vinilos.models.Comment
+import co.edu.uniandes.vinilos.models.CommentAuthor
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.Genre
 import co.edu.uniandes.vinilos.models.NewAlbum
+import co.edu.uniandes.vinilos.models.NewComment
 import co.edu.uniandes.vinilos.models.NewTrack
 import co.edu.uniandes.vinilos.models.RecordLabel
 import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.repositories.AlbumRepositoryImpl
 import co.edu.uniandes.vinilos.testing.FakeAlbumDao
+import co.edu.uniandes.vinilos.testing.FakeCommentAuthorDao
 import co.edu.uniandes.vinilos.testing.FakeTrackDao
 import co.edu.uniandes.vinilos.testing.MockWebServerRule
 import co.edu.uniandes.vinilos.testing.readResource
+import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -202,6 +207,7 @@ class AlbumServiceAdapterTest {
                     dao,
                     FakeTrackDao(),
                     newAdapter(testScheduler),
+                    FakeCommentAuthorDao(),
                     defaultDispatcher = StandardTestDispatcher(testScheduler),
                 )
 
@@ -221,6 +227,7 @@ class AlbumServiceAdapterTest {
                     dao,
                     FakeTrackDao(),
                     newAdapter(testScheduler),
+                    FakeCommentAuthorDao(),
                     defaultDispatcher = StandardTestDispatcher(testScheduler),
                 )
 
@@ -240,6 +247,7 @@ class AlbumServiceAdapterTest {
                     dao,
                     FakeTrackDao(),
                     newAdapter(testScheduler),
+                    FakeCommentAuthorDao(),
                     defaultDispatcher = StandardTestDispatcher(testScheduler),
                 )
 
@@ -434,6 +442,97 @@ class AlbumServiceAdapterTest {
             )
         }
 
+    @Test
+    fun `add comment posts only description rating and collector id and maps the real response`() =
+        runTest {
+            serverRule.enqueueJson("api/comment_created.json")
+
+            val comment = newAdapter(testScheduler).addComment(100, commentDraft)
+
+            assertEquals(
+                Comment(1, "Una obra que no envejece.", 4, CommentAuthor(collectorId = 101, name = "Jaime Monsalve")),
+                comment,
+            )
+            val request = serverRule.server.takeRequest()
+            assertEquals("POST", request.method)
+            assertEquals("/albums/100/comments", request.path)
+            assertEquals("application/json; charset=UTF-8", request.getHeader("Content-Type"))
+            val body = JsonParser.parseString(request.body.readUtf8()).asJsonObject
+            assertEquals(setOf("description", "rating", "collector"), body.keySet())
+            assertEquals("Una obra que no envejece.", body.get("description").asString)
+            assertEquals(4, body.get("rating").asInt)
+            val collector = body.getAsJsonObject("collector")
+            assertEquals(setOf("id"), collector.keySet())
+            assertEquals(101, collector.get("id").asInt)
+        }
+
+    @Test
+    fun `add comment maps the real 404 and 400 answers to HTTP errors`() =
+        runTest {
+            val answers =
+                listOf(
+                    "api/comment_collector_not_found.json" to HTTP_NOT_FOUND,
+                    "api/comment_album_not_found.json" to HTTP_NOT_FOUND,
+                    "api/comment_rating_out_of_range.json" to HTTP_BAD_REQUEST,
+                )
+            val adapter = newAdapter(testScheduler)
+            for ((fixture, code) in answers) {
+                serverRule.enqueueJson(fixture, code)
+
+                assertEquals(
+                    fixture,
+                    DataResult.Failure(DataError.Http(code)),
+                    networkRequest { adapter.addComment(100, commentDraft) },
+                )
+                assertEquals("/albums/100/comments", serverRule.server.takeRequest().path)
+            }
+        }
+
+    @Test
+    fun `add comment rejects a response for a different album`() =
+        runTest {
+            enqueueCreatedComment { getAsJsonObject("album").addProperty("id", 101) }
+            val adapter = newAdapter(testScheduler)
+
+            assertEquals(
+                DataResult.Failure(DataError.Serialization),
+                networkRequest { adapter.addComment(100, commentDraft) },
+            )
+        }
+
+    @Test
+    fun `add comment response without collector is a serialization error`() =
+        runTest {
+            enqueueCreatedComment { remove("collector") }
+            val adapter = newAdapter(testScheduler)
+
+            assertEquals(
+                DataResult.Failure(DataError.Serialization),
+                networkRequest { adapter.addComment(100, commentDraft) },
+            )
+        }
+
+    @Test
+    fun `add comment rejects a response for a different collector`() =
+        runTest {
+            serverRule.enqueueJson("api/comment_created.json")
+            val adapter = newAdapter(testScheduler)
+
+            assertEquals(
+                DataResult.Failure(DataError.Serialization),
+                networkRequest { adapter.addComment(100, commentDraft.copy(collectorId = 100)) },
+            )
+        }
+
+    private fun enqueueCreatedComment(change: JsonObject.() -> Unit) {
+        val body = JsonParser.parseString(readResource("api/comment_created.json")).asJsonObject.apply(change)
+        serverRule.server.enqueue(
+            MockResponse()
+                .setHeader("Content-Type", "application/json")
+                .setBody(body.toString()),
+        )
+    }
+
     private fun enqueueDetail() {
         serverRule.enqueueJson("api/album_100.json")
     }
@@ -477,6 +576,7 @@ class AlbumServiceAdapterTest {
                 genre = Genre.ROCK,
                 recordLabel = RecordLabel.EMI,
             )
+        val commentDraft = NewComment(description = "Una obra que no envejece.", rating = 4, collectorId = 101)
         const val IO_THREAD_NAME = "io-test"
         const val ALBUM_WITHOUT_NAME = "[{\"id\":1,\"releaseDate\":\"1984-08-01T00:00:00.000Z\"}]"
         const val TRACK_RESPONSE_FOR_OTHER_ALBUM =

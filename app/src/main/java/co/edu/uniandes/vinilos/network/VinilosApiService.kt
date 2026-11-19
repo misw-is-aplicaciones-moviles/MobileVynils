@@ -4,9 +4,11 @@ import co.edu.uniandes.vinilos.network.dto.AlbumDto
 import co.edu.uniandes.vinilos.network.dto.BandDto
 import co.edu.uniandes.vinilos.network.dto.CollectorAlbumDto
 import co.edu.uniandes.vinilos.network.dto.CollectorDto
+import co.edu.uniandes.vinilos.network.dto.CommentDto
 import co.edu.uniandes.vinilos.network.dto.MusicianDto
 import co.edu.uniandes.vinilos.network.dto.NewAlbumRequest
 import co.edu.uniandes.vinilos.network.dto.NewCollectorAlbumRequest
+import co.edu.uniandes.vinilos.network.dto.NewCommentRequest
 import co.edu.uniandes.vinilos.network.dto.NewPrizeRequest
 import co.edu.uniandes.vinilos.network.dto.NewTrackRequest
 import co.edu.uniandes.vinilos.network.dto.PrizeAssignmentDto
@@ -65,6 +67,13 @@ internal interface VinilosApiService {
         @Path("id") albumId: Int,
         @Body body: NewTrackRequest,
     ): TrackDto
+
+    // Responds 200 with the saved comment, its collector and its album.
+    @POST("albums/{id}/comments")
+    suspend fun addComment(
+        @Path("id") albumId: Int,
+        @Body body: NewCommentRequest,
+    ): CommentDto
 
     @GET("musicians")
     suspend fun getMusicians(): List<MusicianDto>

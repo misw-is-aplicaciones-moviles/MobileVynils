@@ -154,4 +154,24 @@
     <string name="track_create_network_error">No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.</string>
     <string name="track_create_error">No se pudo guardar la canción. Inténtalo de nuevo.</string>
     <string name="snack_track_added">Canción agregada al álbum</string>
+
+    <!-- HU09: comentar un álbum (docs/10, sección 8). -->
+    <string name="album_action_comment">Comentar</string>
+    <string name="comment_sheet_title">Comentar álbum</string>
+    <string name="comment_who">¿Quién comenta?</string>
+    <string name="comment_rating">Valoración (0 a 5)</string>
+    <string name="comment_rating_value">Valoración · %1$d de 5</string>
+    <string name="field_comment">Comentario</string>
+    <string name="comment_hint">Escribe tu opinión</string>
+    <string name="action_publish_comment">Publicar comentario</string>
+    <string name="snack_comment_published">Comentario publicado</string>
+    <string name="error_select_collector">Selecciona un coleccionista</string>
+    <string name="error_select_rating">Selecciona una valoración</string>
+    <string name="comment_publishing">Publicando…</string>
+    <string name="comment_create_network_error">No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="comment_create_error">No se pudo publicar el comentario. Inténtalo de nuevo.</string>
+    <string name="comment_collectors_loading">Cargando coleccionistas…</string>
+    <string name="comment_collectors_error">No se pudieron cargar los coleccionistas.</string>
+    <string name="comment_star_description">Valoración %1$d de 5</string>
+    <string name="album_detail_comment_description">%1$s, %2$d de 5 estrellas. %3$s</string>
 </resources>

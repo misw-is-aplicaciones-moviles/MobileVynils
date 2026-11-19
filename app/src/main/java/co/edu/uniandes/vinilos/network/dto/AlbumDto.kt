@@ -33,8 +33,16 @@ internal data class PerformerDto(
     val creationDate: String? = null,
 )
 
+// `GET /albums/:id` sends only id, description and rating. The POST response adds the collector and the album.
 internal data class CommentDto(
     val id: Int? = null,
     val description: String? = null,
     val rating: Int? = null,
+    val collector: CommentCollectorDto? = null,
+    val album: RelatedIdDto? = null,
+)
+
+internal data class CommentCollectorDto(
+    val id: Int? = null,
+    val name: String? = null,
 )

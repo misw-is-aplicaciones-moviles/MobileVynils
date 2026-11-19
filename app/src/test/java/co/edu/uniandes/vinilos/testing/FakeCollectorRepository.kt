@@ -2,6 +2,7 @@ package co.edu.uniandes.vinilos.testing
 
 import co.edu.uniandes.vinilos.models.Collector
 import co.edu.uniandes.vinilos.models.CollectorDetail
+import co.edu.uniandes.vinilos.models.CommentAuthor
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.NewCollectorAlbum
@@ -12,12 +13,18 @@ import kotlinx.coroutines.CompletableDeferred
 /**
  * Repository with configurable answers: [localResult] for `forceRefresh = false` and [remoteResult] for `true`.
  * [remoteGate] suspends the forced calls until it completes. Counts calls per `forceRefresh` value.
+ * [getCommentAuthors] answers [authorsResult] (Room only) or, with `revalidate`, [refreshedAuthorsResult] after
+ * waiting for [refreshGate] if set; a successful map is narrowed to the requested ids, like the real one. Every call
+ * is recorded in [authorsRequests].
  */
 internal class FakeCollectorRepository(
     var hasCache: Boolean = false,
     var localResult: DataResult<List<Collector>, DataError> = DataResult.Success(emptyList()),
     var remoteResult: DataResult<List<Collector>, DataError> = DataResult.Success(emptyList()),
     var remoteGate: CompletableDeferred<Unit>? = null,
+    var authorsResult: DataResult<Map<Int, CommentAuthor>, DataError> = DataResult.Success(emptyMap()),
+    var refreshedAuthorsResult: DataResult<Map<Int, CommentAuthor>, DataError> = DataResult.Success(emptyMap()),
+    var refreshGate: CompletableDeferred<Unit>? = null,
 ) : CollectorRepository {
     var localCalls = 0
         private set
@@ -31,6 +38,7 @@ internal class FakeCollectorRepository(
         private set
     var detailResult: DataResult<CollectorDetail, DataError> = DataResult.Failure(DataError.Network)
     var detailGate: CompletableDeferred<Unit>? = null
+    val authorsRequests = mutableListOf<Pair<Set<Int>, Boolean>>()
 
     override suspend fun getCollectors(forceRefresh: Boolean): DataResult<List<Collector>, DataError> {
         if (!forceRefresh) {
@@ -43,6 +51,18 @@ internal class FakeCollectorRepository(
     }
 
     override suspend fun hasCachedCollectors(): Boolean = hasCache
+
+    override suspend fun getCommentAuthors(
+        commentIds: Set<Int>,
+        revalidate: Boolean,
+    ): DataResult<Map<Int, CommentAuthor>, DataError> {
+        authorsRequests += commentIds to revalidate
+        if (revalidate) refreshGate?.await()
+        return when (val result = if (revalidate) refreshedAuthorsResult else authorsResult) {
+            is DataResult.Success -> DataResult.Success(result.value.filterKeys(commentIds::contains))
+            is DataResult.Failure -> result
+        }
+    }
 
     override suspend fun getCollector(
         id: Int,

@@ -16,11 +16,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.FragmentAlbumDetailBinding
 import co.edu.uniandes.vinilos.models.Album
+import co.edu.uniandes.vinilos.models.Comment
+import co.edu.uniandes.vinilos.models.CommentAuthor
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
+import co.edu.uniandes.vinilos.ui.common.showConfirmationSnackbar
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailEvent
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailUiState
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailViewModel
@@ -46,11 +49,12 @@ class AlbumDetailFragment : Fragment(R.layout.fragment_album_detail) {
         bindingOrNull = FragmentAlbumDetailBinding.bind(view)
         (activity as? PrimaryActionHost)?.hidePrimaryAction()
         bindHeader()
-        val adapter = AlbumDetailAdapter(viewModel::onPerformerClicked)
+        val adapter = AlbumDetailAdapter(viewModel::onPerformerClicked, ::openCommentSheet)
         binding.detailList.layoutManager = LinearLayoutManager(requireContext())
         binding.detailList.adapter = adapter
         binding.errorState.retryButton.setOnClickListener { viewModel.retry() }
         bindTrackCreatedResult()
+        bindCommentCreatedResult()
         viewModel.uiState.observe(viewLifecycleOwner) { render(it, adapter) }
         viewModel.events.observe(viewLifecycleOwner) { event ->
             when (val action = event.getContentIfNotHandled()) {
@@ -116,7 +120,7 @@ class AlbumDetailFragment : Fragment(R.layout.fragment_album_detail) {
         binding.loadingState.root.isVisible = state.isLoading
         binding.errorScroll.isVisible = state.error != null
         binding.detailList.isVisible = state.album != null
-        state.album?.let(adapter::submitAlbum)
+        state.album?.let { adapter.submitAlbum(it, state.canEdit, state.highlightedCommentId, state.commentInitials) }
         renderRole(state.role)
         val notFound = state.error == DataError.Http(NOT_FOUND)
         binding.errorState.errorTitle.setText(
@@ -130,15 +134,15 @@ class AlbumDetailFragment : Fragment(R.layout.fragment_album_detail) {
             },
         )
         binding.errorState.retryButton.isVisible = !notFound
-        renderPrimaryAction(state.album, state.role)
+        renderPrimaryAction(state.album, state.canEdit)
     }
 
     private fun renderPrimaryAction(
         album: Album?,
-        role: UserRole?,
+        canEdit: Boolean,
     ) {
         val host = activity as? PrimaryActionHost ?: return
-        if (album != null && role == UserRole.COLLECTOR) {
+        if (album != null && canEdit) {
             host.showPrimaryAction(R.string.track_sheet_title) { openTrackSheet(album) }
         } else {
             host.hidePrimaryAction()
@@ -148,6 +152,26 @@ class AlbumDetailFragment : Fragment(R.layout.fragment_album_detail) {
     private fun openTrackSheet(album: Album) {
         if (childFragmentManager.findFragmentByTag(TrackCreateBottomSheet.TAG) != null) return
         TrackCreateBottomSheet.newInstance(album).show(childFragmentManager, TrackCreateBottomSheet.TAG)
+    }
+
+    private fun openCommentSheet() {
+        val album = viewModel.uiState.value?.album ?: return
+        if (childFragmentManager.findFragmentByTag(CommentCreateBottomSheet.TAG) != null) return
+        CommentCreateBottomSheet.newInstance(album).show(childFragmentManager, CommentCreateBottomSheet.TAG)
+    }
+
+    private fun bindCommentCreatedResult() {
+        childFragmentManager.setFragmentResultListener(
+            CommentCreateBottomSheet.RESULT_COMMENT_CREATED,
+            viewLifecycleOwner,
+        ) { _, result ->
+            val album = viewModel.uiState.value?.album ?: return@setFragmentResultListener
+            if (result.getInt(CommentCreateBottomSheet.RESULT_ALBUM_ID) != album.id) return@setFragmentResultListener
+            val comment = result.toComment() ?: return@setFragmentResultListener
+            viewModel.onCommentCreated(comment)
+            val anchor = (activity as? PrimaryActionHost)?.snackbarAnchor
+            showConfirmationSnackbar(binding.root, anchor, R.string.snack_comment_published, Snackbar.LENGTH_SHORT)
+        }
     }
 
     private fun bindTrackCreatedResult() {
@@ -186,4 +210,24 @@ class AlbumDetailFragment : Fragment(R.layout.fragment_album_detail) {
         const val TRANSITION_MILLIS = 300L
         const val NOT_FOUND = 404
     }
+}
+
+private fun Bundle.toComment(): Comment? {
+    val id = getInt(CommentCreateBottomSheet.RESULT_COMMENT_ID)
+    val description = getString(CommentCreateBottomSheet.RESULT_DESCRIPTION)
+    val author = toCommentAuthor()
+    if (id <= 0 || description == null || author == null) return null
+    return Comment(
+        id = id,
+        description = description,
+        rating = getInt(CommentCreateBottomSheet.RESULT_RATING),
+        author = author,
+    )
+}
+
+private fun Bundle.toCommentAuthor(): CommentAuthor? {
+    val collectorId = getInt(CommentCreateBottomSheet.RESULT_COLLECTOR_ID)
+    val collectorName = getString(CommentCreateBottomSheet.RESULT_COLLECTOR_NAME)
+    if (collectorId <= 0 || collectorName == null) return null
+    return CommentAuthor(collectorId, collectorName)
 }

@@ -16,7 +16,9 @@
 
         <androidx.recyclerview.widget.RecyclerView android:id="@+id/detailList"
             android:layout_width="match_parent" android:layout_height="match_parent"
-            android:padding="@dimen/album_detail_margin"
+            android:paddingStart="@dimen/album_detail_margin" android:paddingTop="@dimen/album_detail_margin"
+            android:paddingEnd="@dimen/album_detail_margin"
+            android:paddingBottom="@dimen/album_detail_list_bottom"
             android:clipToPadding="false" android:visibility="gone" />
 
         <include android:id="@+id/loadingState" layout="@layout/view_state_loading"
