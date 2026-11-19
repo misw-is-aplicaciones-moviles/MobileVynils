@@ -80,8 +80,9 @@ class AlbumDetailScreenTest {
         onView(withId(R.id.detailList)).perform(
             RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(hasDescendant(withId(R.id.commentAuthor))),
         )
+        // Since HU09 the seed comment shows its author, resolved from `GET /collectors`, instead of "Coleccionista".
         onView(withId(R.id.commentAuthor))
-            .check(matches(withText(R.string.album_detail_comment_author)))
+            .check(matches(withText("Manolo Bellon")))
             .check(matches(isDisplayed()))
         capture("hu02-03-comments.png")
 

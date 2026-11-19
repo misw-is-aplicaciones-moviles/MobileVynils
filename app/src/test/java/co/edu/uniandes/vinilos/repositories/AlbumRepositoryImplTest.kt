@@ -1,20 +1,24 @@
 package co.edu.uniandes.vinilos.repositories
 
 import android.database.sqlite.SQLiteException
+import co.edu.uniandes.vinilos.database.entities.CommentAuthorEntity
 import co.edu.uniandes.vinilos.database.entities.TrackEntity
 import co.edu.uniandes.vinilos.database.toEntity
 import co.edu.uniandes.vinilos.models.Album
 import co.edu.uniandes.vinilos.models.Comment
+import co.edu.uniandes.vinilos.models.CommentAuthor
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.Genre
 import co.edu.uniandes.vinilos.models.NewAlbum
+import co.edu.uniandes.vinilos.models.NewComment
 import co.edu.uniandes.vinilos.models.NewTrack
 import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.RecordLabel
 import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.testing.FakeAlbumDao
 import co.edu.uniandes.vinilos.testing.FakeAlbumServiceAdapter
+import co.edu.uniandes.vinilos.testing.FakeCommentAuthorDao
 import co.edu.uniandes.vinilos.testing.FakeTrackDao
 import com.google.gson.JsonParseException
 import kotlinx.coroutines.CancellationException
@@ -40,7 +44,8 @@ class AlbumRepositoryImplTest {
         dao: FakeAlbumDao,
         tracks: FakeTrackDao,
         adapter: FakeAlbumServiceAdapter,
-    ) = AlbumRepositoryImpl(dao, tracks, adapter, StandardTestDispatcher(testScheduler))
+        authors: FakeCommentAuthorDao = FakeCommentAuthorDao(),
+    ) = AlbumRepositoryImpl(dao, tracks, adapter, authors, StandardTestDispatcher(testScheduler))
 
     private val network =
         listOf(
@@ -411,6 +416,90 @@ class AlbumRepositoryImplTest {
             } finally {
                 assertTrue(adapter.addedTrackRequests.isEmpty())
             }
+        }
+
+    @Test
+    fun `created comment stores its author under the comment id and keeps the other authors`() =
+        runTest {
+            val known = CommentAuthorEntity(commentId = 100, collectorId = 100, collectorName = "Manolo Bellon")
+            val authors = FakeCommentAuthorDao(listOf(known))
+            val comment = Comment(1, "Una obra que no envejece.", 4, CommentAuthor(101, "Jaime Monsalve"))
+            val adapter = FakeAlbumServiceAdapter(createdComment = comment)
+            val draft = NewComment("Una obra que no envejece.", 4, 101)
+
+            val result = repository(FakeAlbumDao(), FakeTrackDao(), adapter, authors).addComment(100, draft)
+
+            assertEquals(DataResult.Success(comment), result)
+            assertEquals(listOf(100 to draft), adapter.addedCommentRequests)
+            assertEquals(
+                mapOf(
+                    100 to known,
+                    1 to CommentAuthorEntity(commentId = 1, collectorId = 101, collectorName = "Jaime Monsalve"),
+                ),
+                authors.stored,
+            )
+        }
+
+    @Test
+    fun `comment remains successful when Room cannot store its author`() =
+        runTest {
+            val comment = Comment(1, "Una obra que no envejece.", 4, CommentAuthor(101, "Jaime Monsalve"))
+            val authors = FakeCommentAuthorDao(writeFailure = SQLiteException("disk full"))
+            val adapter = FakeAlbumServiceAdapter(createdComment = comment)
+
+            val result =
+                repository(FakeAlbumDao(), FakeTrackDao(), adapter, authors)
+                    .addComment(100, NewComment(comment.description, comment.rating, 101))
+
+            assertEquals(DataResult.Success(comment), result)
+            assertEquals(1, authors.writeCount)
+            assertTrue(authors.stored.isEmpty())
+        }
+
+    @Test
+    fun `comment network and HTTP failures are returned and leave the author index untouched`() =
+        runTest {
+            val known = CommentAuthorEntity(commentId = 100, collectorId = 100, collectorName = "Manolo Bellon")
+            val failures =
+                listOf(
+                    IOException("offline") to DataError.Network,
+                    HttpException(Response.error<Any>(404, "".toResponseBody())) to DataError.Http(404),
+                    JsonParseException("Unexpected comment collector") to DataError.Serialization,
+                )
+            for ((failure, expected) in failures) {
+                val authors = FakeCommentAuthorDao(listOf(known))
+                val adapter = FakeAlbumServiceAdapter(failure = failure)
+
+                val result =
+                    repository(FakeAlbumDao(), FakeTrackDao(), adapter, authors)
+                        .addComment(100, NewComment("Texto", 4, 101))
+
+                assertEquals(DataResult.Failure(expected), result)
+                assertEquals(0, authors.writeCount)
+                assertEquals(mapOf(100 to known), authors.stored)
+            }
+        }
+
+    @Test
+    fun `non positive album or collector id is rejected before the adapter`() =
+        runTest {
+            val authors = FakeCommentAuthorDao()
+            val adapter = FakeAlbumServiceAdapter(createdComment = Comment(1, "Texto", 4, CommentAuthor(101, "J")))
+            val repository = repository(FakeAlbumDao(), FakeTrackDao(), adapter, authors)
+            val requests =
+                listOf(
+                    0 to NewComment("Texto", 4, 101),
+                    -1 to NewComment("Texto", 4, 101),
+                    100 to NewComment("Texto", 4, 0),
+                    100 to NewComment("Texto", 4, -1),
+                )
+
+            for ((albumId, draft) in requests) {
+                val error = runCatching { repository.addComment(albumId, draft) }.exceptionOrNull()
+                assertTrue("$albumId $draft", error is IllegalArgumentException)
+            }
+            assertTrue(adapter.addedCommentRequests.isEmpty())
+            assertEquals(0, authors.writeCount)
         }
 
     private companion object {

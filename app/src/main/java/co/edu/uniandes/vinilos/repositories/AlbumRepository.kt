@@ -1,9 +1,11 @@
 package co.edu.uniandes.vinilos.repositories
 
 import co.edu.uniandes.vinilos.models.Album
+import co.edu.uniandes.vinilos.models.Comment
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.NewAlbum
+import co.edu.uniandes.vinilos.models.NewComment
 import co.edu.uniandes.vinilos.models.NewTrack
 import co.edu.uniandes.vinilos.models.Track
 
@@ -29,4 +31,10 @@ interface AlbumRepository {
         albumId: Int,
         draft: NewTrack,
     ): DataResult<Track, DataError>
+
+    /** Publishes [draft] on [albumId] and remembers its author, so the detail can name it without another request. */
+    suspend fun addComment(
+        albumId: Int,
+        draft: NewComment,
+    ): DataResult<Comment, DataError>
 }

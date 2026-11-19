@@ -2,6 +2,7 @@ package co.edu.uniandes.vinilos.network.dto
 
 import co.edu.uniandes.vinilos.models.AlbumStatus
 import co.edu.uniandes.vinilos.models.Collector
+import co.edu.uniandes.vinilos.models.CommentAuthor
 import co.edu.uniandes.vinilos.models.PerformerType
 import com.google.gson.JsonParseException
 import org.junit.Assert.assertEquals
@@ -141,6 +142,32 @@ class CollectorMappersTest {
             link.copy(status = null),
         ).forEach { item ->
             assertThrows(JsonParseException::class.java) { ready.toDetail(listOf(item)) }
+        }
+    }
+
+    @Test
+    fun `each comment id of a collector is paired with the collector as its author`() {
+        val dto = valid.copy(comments = listOf(RelatedIdDto(100), RelatedIdDto(7)))
+        val author = CommentAuthor(collectorId = 100, name = "Manolo Bellon")
+
+        assertEquals(listOf(100 to author, 7 to author), dto.toCommentAuthors())
+    }
+
+    @Test
+    fun `a collector without comments names no author`() {
+        assertTrue(valid.copy(comments = null).toCommentAuthors().isEmpty())
+        assertTrue(valid.copy(comments = emptyList()).toCommentAuthors().isEmpty())
+    }
+
+    @Test
+    fun `a comment author without a required field is a serialization error`() {
+        val comments = listOf(RelatedIdDto(100))
+        listOf(
+            valid.copy(id = null, comments = comments),
+            valid.copy(name = null, comments = comments),
+            valid.copy(comments = listOf(RelatedIdDto(null))),
+        ).forEach { dto ->
+            assertThrows(JsonParseException::class.java) { dto.toCommentAuthors() }
         }
     }
 

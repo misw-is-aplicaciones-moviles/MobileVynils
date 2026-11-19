@@ -1,22 +1,13 @@
 package co.edu.uniandes.vinilos.ui.albums
 
 import android.app.Dialog
-import android.content.Context
-import android.graphics.Color
 import android.graphics.Rect
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
-import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
-import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.viewModels
 import co.edu.uniandes.vinilos.R
@@ -27,7 +18,6 @@ import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.viewmodels.TrackCreateEvent
 import co.edu.uniandes.vinilos.viewmodels.TrackCreateUiState
 import co.edu.uniandes.vinilos.viewmodels.TrackCreateViewModel
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
@@ -39,19 +29,8 @@ class TrackCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_track
 
     override fun getTheme(): Int = R.style.ThemeOverlay_Vinilos_BottomSheet
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val dialog = super.onCreateDialog(savedInstanceState) as BottomSheetDialog
-        dialog.window?.setBackgroundDrawable(
-            ColorDrawable(ContextCompat.getColor(requireContext(), R.color.vinilos_sheet_scrim)),
-        )
-        dialog.window?.setDimAmount(0f)
-        dialog.window?.setSoftInputMode(
-            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE or
-                WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN,
-        )
-        dialog.setOnShowListener { showExpanded(dialog) }
-        return dialog
-    }
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
+        (super.onCreateDialog(savedInstanceState) as BottomSheetDialog).apply { configureAlbumSheet(requireContext()) }
 
     override fun onViewCreated(
         view: View,
@@ -61,7 +40,7 @@ class TrackCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_track
         bindAlbumContext()
         bindKeypad()
         bindFields()
-        bindInsets()
+        bindAlbumSheetInsets(binding.sheetBody)
         viewModel.uiState.observe(viewLifecycleOwner, ::render)
         viewModel.events.observe(viewLifecycleOwner) { event ->
             when (val content = event.getContentIfNotHandled()) {
@@ -123,17 +102,6 @@ class TrackCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_track
             if (!hasFocus) return@setOnFocusChangeListener
             field.requestRectangleOnScreen(Rect(0, 0, field.width, field.height), true)
         }
-    }
-
-    private fun bindInsets() {
-        ViewCompat.setOnApplyWindowInsetsListener(binding.sheetBody) { sheet, insets ->
-            val navigation = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-            val shadow = resources.getDimensionPixelSize(R.dimen.track_sheet_shadow_space)
-            val bottom = resources.getDimensionPixelSize(R.dimen.space_xl)
-            sheet.updatePadding(top = shadow, bottom = navigation + bottom)
-            insets
-        }
-        ViewCompat.requestApplyInsets(binding.sheetBody)
     }
 
     private fun render(state: TrackCreateUiState) {
@@ -213,32 +181,13 @@ class TrackCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_track
     }
 
     private fun onDigitAction(action: () -> Unit) {
-        hideKeyboard()
+        hideKeyboard(binding.root)
         action()
     }
 
     private fun submit() {
-        hideKeyboard()
+        hideKeyboard(binding.root)
         viewModel.onSave()
-    }
-
-    private fun hideKeyboard() {
-        val token = binding.root.windowToken ?: return
-        val manager =
-            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-        manager?.hideSoftInputFromWindow(token, 0)
-    }
-
-    private fun showExpanded(dialog: BottomSheetDialog) {
-        val sheet =
-            dialog.findViewById<ViewGroup>(com.google.android.material.R.id.design_bottom_sheet) ?: return
-        sheet.setBackgroundColor(Color.TRANSPARENT)
-        sheet.clipChildren = false
-        (sheet.parent as? ViewGroup)?.clipChildren = false
-        BottomSheetBehavior.from(sheet).apply {
-            skipCollapsed = true
-            state = BottomSheetBehavior.STATE_EXPANDED
-        }
     }
 
     companion object {

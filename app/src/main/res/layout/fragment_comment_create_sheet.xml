@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hoja de HU09 (mockups v2 32 a 34): misma base que la hoja de canción de HU08. -->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sheetScroll"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clipToPadding="false"
+    android:overScrollMode="never"
+    android:scrollbars="none">
+
+    <co.edu.uniandes.vinilos.ui.albums.TrackSheetLayout
+        android:id="@+id/sheetBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/track_sheet_shadow_space"
+        android:paddingBottom="@dimen/space_xl">
+
+        <ImageButton
+            android:id="@+id/closeSheet"
+            android:layout_width="@dimen/track_close_size"
+            android:layout_height="@dimen/track_close_size"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/track_close_margin_top"
+            android:background="@drawable/bg_track_close"
+            android:contentDescription="@string/action_close"
+            android:padding="@dimen/space_l"
+            android:scaleType="centerInside"
+            app:srcCompat="@drawable/ic_close"
+            app:tint="@color/vinilos_cream" />
+
+        <TextView
+            android:id="@+id/sheetSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_close_content_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.Vinilos.Overline"
+            tools:text="Buscando América" />
+
+        <TextView
+            android:id="@+id/sheetTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_title_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:gravity="center"
+            android:text="@string/comment_sheet_title"
+            android:textAppearance="@style/TextAppearance.Vinilos.SheetTitle" />
+
+        <TextView
+            android:id="@+id/collectorLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_section_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:text="@string/comment_who"
+            android:textAppearance="@style/TextAppearance.Vinilos.Overline" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/collectorChips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_label_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            app:chipSpacingHorizontal="@dimen/comment_chip_gap"
+            app:chipSpacingVertical="@dimen/space_xs"
+            app:selectionRequired="true"
+            app:singleSelection="true" />
+
+        <LinearLayout
+            android:id="@+id/collectorsNotice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_label_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:accessibilityLiveRegion="polite"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/collectorsStatus"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textAppearance="@style/TextAppearance.Vinilos.AlbumDetailBody"
+                tools:text="@string/comment_collectors_error" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/retryCollectors"
+                style="@style/Widget.Vinilos.Button.Secondary.Compact"
+                android:minHeight="@dimen/comment_action_height"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_s"
+                android:text="@string/action_retry" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/collectorError"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_label_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:accessibilityLiveRegion="polite"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="@dimen/track_field_error_icon"
+                android:layout_height="@dimen/track_field_error_icon"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/ic_field_error" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/track_field_error_gap"
+                android:includeFontPadding="false"
+                android:text="@string/error_select_collector"
+                android:textAppearance="@style/TextAppearance.Vinilos.FieldError" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/ratingLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_section_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:text="@string/comment_rating"
+            android:textAppearance="@style/TextAppearance.Vinilos.Overline" />
+
+        <!-- Cinco estrellas de 48 dp: cada una es un objetivo táctil propio. El Fragment les pone su descripción
+             única ("Valoración 3 de 5"), que lleva el número y no se puede escribir aquí. -->
+        <LinearLayout
+            android:id="@+id/ratingStars"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_l"
+            android:layout_marginTop="@dimen/space_xs"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/star1"
+                style="@style/Widget.Vinilos.RatingStar"
+                tools:ignore="ContentDescription" />
+
+            <ImageButton
+                android:id="@+id/star2"
+                style="@style/Widget.Vinilos.RatingStar"
+                tools:ignore="ContentDescription" />
+
+            <ImageButton
+                android:id="@+id/star3"
+                style="@style/Widget.Vinilos.RatingStar"
+                tools:ignore="ContentDescription" />
+
+            <ImageButton
+                android:id="@+id/star4"
+                style="@style/Widget.Vinilos.RatingStar"
+                tools:ignore="ContentDescription" />
+
+            <ImageButton
+                android:id="@+id/star5"
+                style="@style/Widget.Vinilos.RatingStar"
+                tools:ignore="ContentDescription" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ratingError"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/space_xs"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:accessibilityLiveRegion="polite"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="@dimen/track_field_error_icon"
+                android:layout_height="@dimen/track_field_error_icon"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/ic_field_error" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/track_field_error_gap"
+                android:includeFontPadding="false"
+                android:text="@string/error_select_rating"
+                android:textAppearance="@style/TextAppearance.Vinilos.FieldError" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/commentLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_section_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:labelFor="@+id/commentField"
+            android:text="@string/field_comment"
+            android:textAppearance="@style/TextAppearance.Vinilos.Overline" />
+
+        <!-- La etiqueta "Comentario" lo nombra con labelFor (guía de accesibilidad del curso) y el mockup pide además el
+             texto de ayuda "Escribe tu opinión"; TalkBack lee la etiqueta y luego la ayuda. -->
+        <EditText
+            android:id="@+id/commentField"
+            tools:ignore="LabelFor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_label_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:background="@drawable/bg_comment_field"
+            android:gravity="top|start"
+            android:hint="@string/comment_hint"
+            android:importantForAutofill="no"
+            android:inputType="textCapSentences|textMultiLine"
+            android:minHeight="@dimen/comment_field_min_height"
+            android:padding="@dimen/comment_field_padding"
+            android:textAppearance="@style/TextAppearance.Vinilos.Field"
+            android:textColor="@color/vinilos_charcoal"
+            android:textColorHint="@color/vinilos_graphite" />
+
+        <LinearLayout
+            android:id="@+id/descriptionError"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_label_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:accessibilityLiveRegion="polite"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="@dimen/track_field_error_icon"
+                android:layout_height="@dimen/track_field_error_icon"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/ic_field_error" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/track_field_error_gap"
+                android:includeFontPadding="false"
+                android:text="@string/error_required"
+                android:textAppearance="@style/TextAppearance.Vinilos.FieldError" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/submitError"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_label_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:accessibilityLiveRegion="polite"
+            android:textAppearance="@style/TextAppearance.Vinilos.FieldError"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/track_sheet_margin"
+            android:layout_marginTop="@dimen/track_actions_gap"
+            android:layout_marginEnd="@dimen/track_sheet_margin"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cancelComment"
+                style="@style/Widget.Vinilos.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/track_actions_button_gap"
+                android:layout_weight="1"
+                android:text="@string/action_cancel" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/publishComment"
+                style="@style/Widget.Vinilos.Button.Primary.Medium.Fit"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/action_publish_comment" />
+        </LinearLayout>
+    </co.edu.uniandes.vinilos.ui.albums.TrackSheetLayout>
+</androidx.core.widget.NestedScrollView>

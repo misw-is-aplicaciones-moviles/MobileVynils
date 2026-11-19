@@ -2,9 +2,11 @@ package co.edu.uniandes.vinilos.network
 
 import co.edu.uniandes.vinilos.models.Performer
 import co.edu.uniandes.vinilos.models.PerformerDetail
+import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.network.dto.mergePerformers
 import co.edu.uniandes.vinilos.network.dto.toDetailModel
+import co.edu.uniandes.vinilos.network.dto.toMemberSummary
 import com.google.gson.JsonParseException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
@@ -27,6 +29,15 @@ internal interface PerformerServiceAdapter {
         type: PerformerType,
         forceRefresh: Boolean = false,
     ): PerformerDetail
+
+    /**
+     * Sends `POST /bands/:bandId/musicians/:musicianId` and returns the musician as the band's new member.
+     * The backend does not check that the musician is free: the one-band rule is applied before calling this.
+     */
+    suspend fun addMusicianToBand(
+        bandId: Int,
+        musicianId: Int,
+    ): PerformerSummary
 }
 
 internal class PerformerServiceAdapterImpl(
@@ -63,6 +74,20 @@ internal class PerformerServiceAdapterImpl(
             PerformerType.BAND -> {
                 val response = withContext(ioDispatcher) { api.getBand(id, cacheControl) }
                 withContext(defaultDispatcher) { response.requiredBody().toDetailModel() }
+            }
+        }
+    }
+
+    override suspend fun addMusicianToBand(
+        bandId: Int,
+        musicianId: Int,
+    ): PerformerSummary {
+        require(bandId > 0) { "bandId must be positive" }
+        require(musicianId > 0) { "musicianId must be positive" }
+        val response = withContext(ioDispatcher) { api.addMusicianToBand(bandId, musicianId) }
+        return withContext(defaultDispatcher) {
+            response.requiredBody().toMemberSummary().also {
+                if (it.id != musicianId) throw JsonParseException("Unexpected musician identity")
             }
         }
     }

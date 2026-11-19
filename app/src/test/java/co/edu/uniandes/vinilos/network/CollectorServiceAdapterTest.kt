@@ -1,6 +1,7 @@
 package co.edu.uniandes.vinilos.network
 
 import co.edu.uniandes.vinilos.models.AlbumStatus
+import co.edu.uniandes.vinilos.models.CommentAuthor
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.PerformerType
@@ -47,7 +48,7 @@ class CollectorServiceAdapterTest {
         runTest {
             serverRule.enqueueJson("api/collectors.json")
 
-            val collectors = newAdapter(testScheduler).getCollectors()
+            val collectors = newAdapter(testScheduler).getCollectors().collectors
 
             val request = serverRule.server.takeRequest()
             assertEquals("GET", request.method)
@@ -58,6 +59,36 @@ class CollectorServiceAdapterTest {
             assertEquals("manollo@caracol.com.co", manolo.email)
             assertEquals(1, manolo.albumCount)
             assertEquals(1, manolo.favoriteCount)
+        }
+
+    @Test
+    fun `GET collectors names the author of each seed comment from the same response`() =
+        runTest {
+            serverRule.enqueueJson("api/collectors.json")
+
+            val directory = newAdapter(testScheduler).getCollectors()
+
+            assertEquals(
+                mapOf(
+                    100 to CommentAuthor(collectorId = 100, name = "Manolo Bellon"),
+                    101 to CommentAuthor(collectorId = 101, name = "Jaime Monsalve"),
+                ),
+                directory.commentAuthors,
+            )
+            assertEquals(1, serverRule.server.requestCount)
+        }
+
+    @Test
+    fun `a collector comment without id is a serialization error`() =
+        runTest {
+            serverRule.server.enqueue(
+                MockResponse()
+                    .setHeader("Content-Type", "application/json")
+                    .setBody(COLLECTOR_WITH_COMMENT_WITHOUT_ID),
+            )
+            val adapter = newAdapter(testScheduler)
+
+            assertEquals(DataResult.Failure(DataError.Serialization), networkRequest { adapter.getCollectors() })
         }
 
     @Test
@@ -395,5 +426,7 @@ class CollectorServiceAdapterTest {
          */
         const val DUPLICATE_STATUS = 200
         const val UNPARSED_BODY = "not-json"
+        const val COLLECTOR_WITH_COMMENT_WITHOUT_ID =
+            """[{"id":100,"name":"Manolo Bellon","email":"m@example.com","comments":[{"description":"Sin id"}]}]"""
     }
 }

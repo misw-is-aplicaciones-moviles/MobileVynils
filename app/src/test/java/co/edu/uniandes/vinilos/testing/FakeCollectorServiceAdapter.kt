@@ -2,17 +2,25 @@ package co.edu.uniandes.vinilos.testing
 
 import co.edu.uniandes.vinilos.models.Collector
 import co.edu.uniandes.vinilos.models.CollectorDetail
+import co.edu.uniandes.vinilos.models.CommentAuthor
 import co.edu.uniandes.vinilos.models.NewCollectorAlbum
 import co.edu.uniandes.vinilos.models.PerformerType
+import co.edu.uniandes.vinilos.network.CollectorDirectory
 import co.edu.uniandes.vinilos.network.CollectorServiceAdapter
 import co.edu.uniandes.vinilos.network.dto.CollectorAlbumDto
+import kotlinx.coroutines.CompletableDeferred
 
-/** Adapter that returns [collectors] or throws [failure], and counts its calls. */
+/**
+ * Adapter that returns [collectors] and [commentAuthors] or throws [failure], after waiting for [gate] if set, and
+ * counts its calls.
+ */
 internal class FakeCollectorServiceAdapter(
     var collectors: List<Collector> = emptyList(),
     var failure: Throwable? = null,
     var detail: CollectorDetail? = null,
     var detailFailure: Throwable? = null,
+    var commentAuthors: Map<Int, CommentAuthor> = emptyMap(),
+    var gate: CompletableDeferred<Unit>? = null,
 ) : CollectorServiceAdapter {
     var callCount = 0
         private set
@@ -23,10 +31,11 @@ internal class FakeCollectorServiceAdapter(
     var lastDetailRefresh: Boolean? = null
         private set
 
-    override suspend fun getCollectors(): List<Collector> {
+    override suspend fun getCollectors(): CollectorDirectory {
         callCount++
+        gate?.await()
         failure?.let { throw it }
-        return collectors
+        return CollectorDirectory(collectors, commentAuthors)
     }
 
     override suspend fun getCollector(

@@ -206,4 +206,17 @@
     <dimen name="track_key_icon">26dp</dimen>
     <dimen name="track_actions_gap">18dp</dimen>
     <dimen name="track_actions_button_gap">12dp</dimen>
+
+    <!-- HU09: hoja "Comentar álbum" y encabezado de comentarios. -->
+    <dimen name="comment_field_radius">24dp</dimen>
+    <dimen name="comment_field_min_height">112dp</dimen>
+    <dimen name="comment_field_padding">20dp</dimen>
+    <dimen name="comment_chip_gap">8dp</dimen>
+    <dimen name="comment_chip_icon">32dp</dimen>
+    <dimen name="comment_chip_initials">8sp</dimen>
+    <dimen name="comment_button_text_max">15sp</dimen>
+    <dimen name="comment_star_target">48dp</dimen>
+    <dimen name="comment_action_height">48dp</dimen>
+    <dimen name="comment_action_inset">4dp</dimen>
+    <dimen name="comment_card_stroke_highlight">1.5dp</dimen>
 </resources>
