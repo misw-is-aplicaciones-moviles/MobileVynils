@@ -2,6 +2,7 @@ package co.edu.uniandes.vinilos.network.dto
 
 import co.edu.uniandes.vinilos.models.Album
 import co.edu.uniandes.vinilos.models.Comment
+import co.edu.uniandes.vinilos.models.CommentAuthor
 import co.edu.uniandes.vinilos.models.Genre
 import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
@@ -57,3 +58,21 @@ internal fun CommentDto.toModel(): Comment =
         description = description.orEmpty(),
         rating = rating ?: 0,
     )
+
+/**
+ * The comment the backend saved after a POST. Unlike the album detail, the response names its collector, so the
+ * author is required here and the screen can show it without another request.
+ */
+internal fun CommentDto.toCreatedCommentModel(): Comment {
+    val collector = collector ?: missing("comment collector")
+    return Comment(
+        id = id ?: missing("comment id"),
+        description = description ?: missing("comment description"),
+        rating = rating ?: missing("comment rating"),
+        author =
+            CommentAuthor(
+                collectorId = collector.id ?: missing("comment collector id"),
+                name = collector.name ?: missing("comment collector name"),
+            ),
+    )
+}

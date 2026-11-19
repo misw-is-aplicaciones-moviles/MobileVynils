@@ -54,16 +54,28 @@ data class AlbumSnapshot(
     val status: String,
 )
 
+/** Un comentario de `GET /albums/:id`. El backend no dice quién lo escribió: eso sale de [BackendCollectors]. */
+data class BackendComment(
+    val id: Int,
+    val description: String,
+    val rating: Int,
+)
+
 /**
  * Datos de una prueba E2E del listado de coleccionistas: los crea en BackVynils y, al terminar la prueba, los borra.
  * Cada prueba usa nombres únicos, así que no depende de quién más esté en la lista.
  *
  * Solo crea coleccionistas sin álbumes a propósito: `DELETE /collectors/:id/albums/:albumId` no borra el vínculo pedido
  * sino el de id más bajo, que puede ser de la semilla, y sin esa ruta un coleccionista con álbumes no se puede borrar.
- * Los errores de preparación y de limpieza fallan la prueba: no se reintentan ni se ignoran.
+ * Un coleccionista con comentarios tampoco se puede borrar: la llave foránea de `comment` hace que el DELETE responda
+ * 500. Por eso, antes de borrarlos, se borran sus comentarios en los álbumes creados con [createAlbum]
+ * (`DELETE /albums/:albumId/comments/:commentId` sí borra el comentario pedido). Los álbumes quedan en el backend, como
+ * los de [createAlbumOnBackend]. Los errores de preparación y de limpieza fallan la prueba: no se reintentan ni se
+ * ignoran.
  */
 class BackendCollectors : ExternalResource() {
     private val collectors = mutableListOf<Int>()
+    private val albums = mutableListOf<Int>()
 
     /** Crea un coleccionista sin álbumes ni favoritos. Devuelve su id. */
     fun createCollector(
@@ -132,8 +144,66 @@ class BackendCollectors : ExternalResource() {
         }
     }
 
+    /** Crea un álbum sin artista con [createAlbumOnBackend]. Sus comentarios se borran al terminar. Devuelve su id. */
+    fun createAlbum(name: String): Int = createAlbumOnBackend(name).also { albums += it }
+
+    /** Publica un comentario directo en el backend, sin pasar por la app, como si lo hubiera escrito otro usuario. */
+    fun addComment(
+        albumId: Int,
+        collectorId: Int,
+        description: String,
+        rating: Int,
+    ): Int {
+        check(albumId in albums) { "El álbum $albumId no lo creó esta prueba" }
+        check(collectorId in collectors) { "El coleccionista $collectorId no lo creó esta prueba" }
+        val body =
+            JSONObject()
+                .put("description", description)
+                .put("rating", rating)
+                .put("collector", JSONObject().put("id", collectorId))
+        return JSONObject(send("POST", "albums/$albumId/comments", body, HTTP_OK)).getInt("id")
+    }
+
+    /** Los comentarios de `GET /albums/:id`, en el orden del backend. */
+    fun commentsOn(albumId: Int): List<BackendComment> {
+        val album = JSONObject(send("GET", "albums/$albumId", null, HTTP_OK))
+        val comments = album.optJSONArray("comments") ?: return emptyList()
+        return List(comments.length()) { index ->
+            val item = comments.optJSONObject(index) ?: error("Comentario nulo en la posición $index")
+            BackendComment(
+                id = item.getInt("id"),
+                description = item.getString("description"),
+                rating = item.getInt("rating"),
+            )
+        }
+    }
+
+    /** Ids de los comentarios que `GET /collectors/:id` atribuye a ese coleccionista. */
+    fun commentIdsOf(collectorId: Int): Set<Int> {
+        val comments = JSONObject(send("GET", "collectors/$collectorId", null, HTTP_OK)).optJSONArray("comments")
+        if (comments == null) return emptySet()
+        return List(comments.length()) { index -> comments.getJSONObject(index).getInt("id") }.toSet()
+    }
+
     override fun after() {
+        removeOwnComments()
         collectors.forEach { send("DELETE", "collectors/$it", null, HTTP_NO_CONTENT) }
+    }
+
+    // Only comments that are both on an album and by a collector of this rule; anything else fails the cleanup.
+    private fun removeOwnComments() {
+        if (albums.isEmpty()) return
+        val own = collectors.flatMap { commentIdsOf(it) }.toSet()
+        albums.forEach { albumId ->
+            commentsOn(albumId)
+                .filter { it.id in own }
+                .forEach { send("DELETE", "albums/$albumId/comments/${it.id}", null, HTTP_NO_CONTENT) }
+        }
+        collectors.forEach { collectorId ->
+            check(commentIdsOf(collectorId).isEmpty()) {
+                "El coleccionista $collectorId conserva comentarios fuera de los álbumes de esta prueba"
+            }
+        }
     }
 
     private fun favoritesOf(array: JSONArray?): List<FavoriteSnapshot> {
