@@ -56,6 +56,50 @@ class AlbumRepositoryImplTest {
         )
 
     @Test
+    fun `invalidated album summaries revalidate HTTP and only become usable after a successful Room write`() =
+        runTest {
+            val old = album(9, "Album")
+            val updated = old.copy(performerName = "New artist")
+            val dao = FakeAlbumDao(listOf(old.toEntity()))
+            val adapter = FakeAlbumServiceAdapter(albums = listOf(updated))
+            val repository = repository(dao, FakeTrackDao(), adapter)
+            repository.invalidateCatalog()
+            assertFalse(repository.hasCachedAlbums())
+            adapter.failure = IOException("offline")
+            assertEquals(DataResult.Failure(DataError.Network), repository.getAlbums())
+            assertFalse(repository.hasCachedAlbums())
+
+            adapter.failure = null
+            dao.writeFailure = SQLiteException("full")
+            assertEquals(listOf(updated), (repository.getAlbums() as DataResult.Success).value)
+            assertFalse(repository.hasCachedAlbums())
+
+            dao.writeFailure = null
+            assertEquals(listOf(updated), (repository.getAlbums() as DataResult.Success).value)
+            assertTrue(repository.hasCachedAlbums())
+            repository.getAlbums()
+            assertEquals(listOf(true, true, true), adapter.catalogRefreshRequests)
+        }
+
+    @Test
+    fun `an album refresh begun before invalidation cannot leave stale cache eligible`() =
+        runTest {
+            val gate = CompletableDeferred<Unit>()
+            val adapter = FakeAlbumServiceAdapter(albums = network, gate = gate)
+            val repository = repository(FakeAlbumDao(), FakeTrackDao(), adapter)
+            val refresh = async { repository.getAlbums(true) }
+            runCurrent()
+            val invalidation = async { repository.invalidateCatalog() }
+            runCurrent()
+            gate.complete(Unit)
+            refresh.await()
+            invalidation.await()
+            assertFalse(repository.hasCachedAlbums())
+            repository.getAlbums()
+            assertEquals(listOf(true, true), adapter.catalogRefreshRequests)
+        }
+
+    @Test
     fun `filled Room without force refresh does not call the adapter`() =
         runTest {
             val adapter = FakeAlbumServiceAdapter(albums = network)

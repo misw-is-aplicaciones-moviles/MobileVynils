@@ -478,23 +478,32 @@ class PerformerListViewModelTest {
         }
 
     @Test
-    fun `showing the list again keeps it when Room is empty or fails`() =
+    fun `showing the list again revalidates an invalidated cache and keeps rows on failure`() =
         runTest {
             val repository = FakePerformerRepository(hasCache = false, localResult = DataResult.Success(performers))
             val viewModel = viewModel(repository)
             val states = viewModel.recordStates()
             advanceUntilIdle()
 
+            repository.localResult = DataResult.Success(listOf(queen.copy(albumCount = 3)))
             viewModel.onListShown()
             advanceUntilIdle()
-            assertEquals("Without cache it must not fall back to the backend", 1, repository.localCalls)
+            assertEquals(2, repository.localCalls)
+            assertEquals(
+                PerformerSummaryLine.BandCounts(albums = 3, members = 4),
+                states
+                    .last()
+                    .performers
+                    .single()
+                    .summary,
+            )
 
             repository.hasCache = true
             repository.localResult = DataResult.Failure(DataError.Network)
             viewModel.onListShown()
             advanceUntilIdle()
 
-            assertEquals(3, states.last().performers.size)
+            assertEquals(1, states.last().performers.size)
             assertNull(states.last().error)
             assertNull(viewModel.events.value)
             assertEquals(0, repository.remoteCalls)

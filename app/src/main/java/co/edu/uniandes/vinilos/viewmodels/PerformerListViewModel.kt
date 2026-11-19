@@ -56,12 +56,11 @@ class PerformerListViewModel(
         viewModelScope.launch { publish(performerRepository.getPerformers(forceRefresh = true)) }
     }
 
-    /** Reads Room again, without network, to show what a detail changed in the cache. */
+    /** Reads the catalog again; the repository revalidates relationships invalidated by a detail write. */
     fun onListShown() {
         val state = currentState()
         if (loaded.isEmpty() || state.isLoading || state.isRefreshing) return
         viewModelScope.launch {
-            if (!performerRepository.hasCachedPerformers()) return@launch
             val cached = performerRepository.getPerformers(forceRefresh = false)
             if (cached is DataResult.Success) publish(cached)
         }

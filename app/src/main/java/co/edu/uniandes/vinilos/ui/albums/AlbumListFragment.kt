@@ -51,6 +51,7 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
         viewModel.events.observe(viewLifecycleOwner) { event ->
             event.getContentIfNotHandled()?.let(::handle)
         }
+        viewModel.onListShown()
         observeAlbumCreated()
         ViewCompat.requestApplyInsets(binding.headerBar.header)
     }

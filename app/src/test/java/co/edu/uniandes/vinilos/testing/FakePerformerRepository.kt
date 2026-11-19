@@ -48,6 +48,20 @@ internal class FakePerformerRepository(
         return remoteResult
     }
 
+    var addAlbumGate: CompletableDeferred<Unit>? = null
+    var addAlbumResult: DataResult<Unit, DataError> = DataResult.Success(Unit)
+    val addedAlbumRequests = mutableListOf<Triple<Int, PerformerType, Int>>()
+
+    override suspend fun addAlbum(
+        performerId: Int,
+        type: PerformerType,
+        albumId: Int,
+    ): DataResult<Unit, DataError> {
+        addedAlbumRequests += Triple(performerId, type, albumId)
+        addAlbumGate?.await()
+        return addAlbumResult
+    }
+
     override suspend fun hasCachedPerformers(): Boolean = hasCache
 
     /** Answer of [addMusicianToBand]; null answers the requested musician as a generic member. */

@@ -43,7 +43,7 @@ class PerformerListScreenTest {
 
     @Test
     fun visitor_sees_musicians_and_bands_by_name_without_the_create_button() {
-        val seed = createCast()
+        val seed = createCast(includeSolo = true)
         artists.enterAs(R.string.role_visitor)
 
         artists
@@ -92,7 +92,7 @@ class PerformerListScreenTest {
 
     @Test
     fun musicians_filter_shows_only_musicians() {
-        val seed = createCast()
+        val seed = createCast(includeSolo = true)
         artists.enterAs(R.string.role_visitor).scrollTo(seed.band)
 
         artists
@@ -180,8 +180,8 @@ class PerformerListScreenTest {
 
     @Test
     fun pull_to_refresh_shows_a_performer_added_on_the_backend() {
-        val seed = createCast()
-        artists.enterAs(R.string.role_visitor).scrollTo(seed.band)
+        // A seeded row is sufficient before the write; only the newly added musician needs a fixture.
+        artists.enterAs(R.string.role_visitor).scrollTo("Queen")
         val added = "E2E Nuevo $unique"
         data.createMusician(added, birthDate = "1985-03-03T00:00:00.000Z")
 
@@ -192,35 +192,36 @@ class PerformerListScreenTest {
 
     @Test
     fun tapping_a_row_opens_the_detail_with_its_id_and_type() {
-        val seed = createCast()
-        artists.enterAs(R.string.role_visitor).tapRow(seed.band)
+        val name = "E2E Banda $unique"
+        val bandId = data.createBand(name)
+        artists.enterAs(R.string.role_visitor).tapRow(name)
 
-        waitForDisplayed(allOf(withId(R.id.performerName), withText(seed.band)))
+        waitForDisplayed(allOf(withId(R.id.performerName), withText(name)))
         activityRule.scenario.onActivity { activity ->
             val navController = navController(activity)
             val arguments = checkNotNull(navController.currentBackStackEntry?.arguments)
             assertEquals(R.id.performerDetailFragment, navController.currentDestination?.id)
-            assertEquals(seed.bandId, arguments.getInt("performerId"))
+            assertEquals(bandId, arguments.getInt("performerId"))
             assertEquals("BAND", arguments.getString("type"))
         }
     }
 
-    /** Un músico solo con un álbum, un integrante y su banda con dos álbumes, todos con nombres únicos. */
-    private fun createCast(): Cast {
-        data.createMusician("E2E Solo $unique", birthDate = "1960-06-06T00:00:00.000Z", albumCount = 1)
+    /** Un integrante y su banda; crea además el solista solo cuando el caso comprueba su fila. */
+    private fun createCast(includeSolo: Boolean = false): Cast {
+        if (includeSolo) {
+            data.createMusician("E2E Solo $unique", birthDate = "1960-06-06T00:00:00.000Z", albumCount = 1)
+        }
         val member = data.createMusician("E2E Miembro $unique")
-        val bandId =
-            data.createBand(
-                name = "E2E Banda $unique",
-                creationDate = "1991-05-05T00:00:00.000Z",
-                albumCount = 2,
-                members = listOf(member),
-            )
+        data.createBand(
+            name = "E2E Banda $unique",
+            creationDate = "1991-05-05T00:00:00.000Z",
+            albumCount = 2,
+            members = listOf(member),
+        )
         return Cast(
             solo = "E2E Solo $unique",
             member = "E2E Miembro $unique",
             band = "E2E Banda $unique",
-            bandId = bandId,
         )
     }
 
@@ -238,6 +239,5 @@ class PerformerListScreenTest {
         val solo: String,
         val member: String,
         val band: String,
-        val bandId: Int,
     )
 }

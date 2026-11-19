@@ -674,6 +674,131 @@ E2E en `TabNavigationTest`, contra BackVynils local. Los coleccionistas se leen 
 | CP-NAV-09 | Botón de acción al cambiar de pestaña | Como coleccionista, salir de un álbum a Artistas, volver a Álbumes y salir de otro álbum a Coleccionistas | Sin botón en Artistas ni Coleccionistas; aparece en el catálogo | E2E | `TabNavigationTest.primary_action_follows_the_screen_when_leaving_an_album_as_collector` | Pasa en API 21 y API 37 (2026-11-06) |
 
 
+### HU15 — Capa de datos (HU15-02)
+
+Los siguientes casos de datos complementan el [diseño técnico de HU15](15-hu15-diseno-tecnico.md). Son pruebas JVM con MockWebServer/fakes; no se han ejecutado como validación de un backend BackVynils activo ni como recorridos E2E.
+
+| Grupo | Casos | Qué verifica | Implementación |
+|---|---:|---|---|
+| Lecturas completas de asociación | 11 | Relaciones preservadas, `performers` ausente/nulo/inválido, catálogo vacío, identidad, revalidación HTTP, error HTTP y red sin reintento, compatibilidad del catálogo histórico | `AlbumAssociationServiceAdapterTest` |
+| Escritura por tipo de artista | 8 | Rutas de músico/banda con iguales IDs, POST sin cuerpo, respuesta inconsistente, HTTP/red sin reenvío automático, refresco de detalle preservando integrantes/premios, ejecución en IO | `PerformerAlbumServiceAdapterTest` |
+| Repositorio de álbumes | 8 | Datos completos aunque Room tenga un resumen, orden NOCASE/id, errores y cancelación, identidad y ausencia de cambios en Room | `AlbumAssociationRepositoryTest` |
+| Repositorio de artistas | 9 | Asociación, invalidación tras éxito/error/cancelación, revalidación de detalle/lista, caché ilegible por escritura fallida e interacción concurrente entre refresco y POST | `PerformerAlbumRepositoryTest` |
+| **Total nuevo** | **36** | **Cobertura de HU15-02** | **`src/test`** |
+
+**Validación local (17/11/2026):** JDK 17; `spotlessCheck detekt lintDebug testDebugUnitTest assembleDebug` correctos. Suite JVM completa: **396 pruebas, 0 fallos, 0 errores y 0 omisiones**.
+
+No se marca ningún caso E2E CP-HU15 como aprobado por estas pruebas de datos. La cobertura inicial de ViewModel y la revisión visual se incorporan en HU15-03; su ampliación, Espresso y la auditoría de accesibilidad continúan en las subtareas correspondientes.
+
+### HU15-03 · Pruebas iniciales del selector
+
+La subtarea de interfaz añade 14 pruebas JVM, sin depender del backend real:
+
+| Clase | Casos | Cobertura |
+|---|---:|---|
+| `PerformerAlbumPickerViewModelTest` | 11 | Disponibilidad, búsqueda/selección, músico/banda, rol e identidad, preflight, doble toque, respuesta perdida, resultado incierto y restauración sin repetir POST |
+| `PerformerAlbumDetailResultTest` | 3 | Navegación solo para Coleccionista, identidad del resultado y refresco fallido sin repetir la asociación |
+
+Validación local del 17/11/2026: `spotlessCheck`, `detekt`, `lintDebug`, `testDebugUnitTest`, `assembleDebug` y `assembleDebugAndroidTest`. Suite JVM completa: **410 casos, 0 fallos, 0 errores, 0 omisiones**. Compilar el APK instrumentado no equivale a ejecutar Espresso.
+
+Revisión visual exploratoria mediante ADB en emuladores API 21 y API 37, usando exclusivamente un servidor HTTP simulado con fixtures en memoria: músico en API 21 y banda en API 37. Se verificó selector, confirmación, regreso al destino, incremento del contador obtenido del servidor y resaltado. El log del servidor simulado registró un POST por recorrido, seguido de GET de comprobación y refresco. En banda se conservaron los cuatro integrantes del fixture. No se modificó PostgreSQL ni se probó BackVynils real. Las capturas temporales de revisión no forman parte del entregable ni sustituyen las evidencias E2E.
+
+**Seguimiento:** HU15-04 amplía la cobertura en la sección siguiente. HU15-05 incorpora Espresso y regresión en su sección. HU15-06 verifica el contrato de ambas rutas en su sección. TalkBack, Accessibility Scanner y fuente ampliada siguen pendientes de auditoría.
+
+### HU15-04 · Ampliación de pruebas unitarias
+
+Rama: `feature/HU15-04-unitarias`, desde la integración de HU15-03. Issue: [#64](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/issues/64). Se amplían las dos clases existentes, sin nuevas clases ni cambios en producción.
+
+| Clase | Casos antes → ahora | Cobertura añadida |
+|---|---:|---|
+| `PerformerAlbumPickerViewModelTest` | 11 → 20 | Fallo de catálogo/detalle y recuperación; catálogo vacío y búsqueda por artista; IDs ocupados/desconocidos; restauración y selección que pasa a estar ocupada; pérdida de rol antes/después de enviar; reintento explícito tras ausencia confirmada; pertenencia sin subtipo; cancelación y restauración sin repetir POST |
+| `PerformerAlbumDetailResultTest` | 3 → 5 | Refresco de músico/banda con álbum resaltado, integrantes y premios conservados; resultado de asociación ya existente consumido una sola vez |
+
+Además, el caso existente de identidad inválida cubre ID cero/negativo y tipo desconocido/ausente, sin lecturas ni escrituras. `FakePerformerRepository.addAlbumGate` permite detener un envío de forma determinista para comprobar pérdida de rol y cancelación, sin esperas temporizadas.
+
+Trazabilidad al diseño: CP-HU15-03/04 (bloqueos), 05 (búsqueda y vacío), 06 (rol/identidad), 07 (restauración/cierre), 08 (carga/reintento), 09 (resultado incierto y reintento explícito), 11 (refresco y conservación del detalle). Esta cobertura complementa las 36 pruebas de datos de HU15-02; **no acredita los escenarios E2E ni la auditoría de accesibilidad**.
+
+**Validación local (17/11/2026):** JDK 17; `spotlessCheck`, `detekt`, `lintDebug` y `testDebugUnitTest` correctos. **421 pruebas JVM, 0 fallos, 0 errores y 0 omisiones**; 25 pertenecen a las dos clases de ViewModel de HU15 (11 nuevas en esta subtarea). Reporte generado: `app/build/reports/tests/testDebugUnitTest/index.html` (local, no publicado). No se ejecutaron peticiones a BackVynils ni pruebas instrumentadas. Los resultados de HU15-05 figuran en la sección siguiente; La verificación de HU15-06 figura en su sección.
+
+### HU15-05 · Espresso del selector de álbumes de artista
+
+Implementación: `app/src/androidTest/java/co/edu/uniandes/vinilos/ui/PerformerAlbumPickerScreenTest.kt`, con `robots/PerformerAlbumPickerRobot.kt`. Usa `BackendPerformers` para crear artistas/álbumes propios y consultar las relaciones reales por HTTP. El helper solo permite preparar asociaciones entre sus propios fixtures; no usa DELETE de asociaciones de álbumes, sino eliminación de los artistas/álbumes que creó.
+
+| Escenario automatizado | Trazabilidad | Comprobación |
+|---|---|---|
+| `musician_association_returns_to_updated_detail_with_one_album_link` | CP-HU15-01 | Confirmación, regreso al músico, contador y álbum resaltado; relación en ambas lecturas HTTP |
+| `band_association_preserves_members_and_existing_albums` | CP-HU15-02 | Asociación a banda; conserva álbum anterior, integrantes y referencias de premios del fixture |
+| `own_and_foreign_albums_are_blocked_and_do_not_change_relations` | CP-HU15-03/04 | Propios con chip; ajenos sin radio; CTA deshabilitado y relaciones intactas |
+| `search_selection_and_cancel_survive_recreation_without_writing` | CP-HU15-05/07 | Búsqueda sin resultados, selección y consulta conservadas tras recreación; cerrar no escribe |
+| `visitor_cannot_open_the_album_picker` | CP-HU15-06 | Visitante no dispone de la acción de asociación |
+| `availability_is_rechecked_before_writing_and_another_artist_is_preserved` | CP-HU15-09 | Otro artista ocupa el álbum tras cargar el selector; se bloquea al confirmar y conserva el vínculo ajeno |
+| `removed_artist_returns_failed_save_without_false_success` | CP-HU15-10 | Artista eliminado después de cargar: POST falla, el álbum sigue libre y no se anuncia éxito |
+| `load_failure_can_be_retried_and_closed_without_a_write` | CP-HU15-08 | Error al cargar el artista, reintento y cierre del selector |
+
+Los casos usan nombres únicos, sin depender de IDs ni cantidades de la semilla. En banda el fixture tiene integrantes y un álbum anterior; sus referencias de premios están vacías, por lo que **no acredita conservar un premio existente en E2E** (ese caso está cubierto con datos no vacíos en las unitarias). Catálogo vacío, pérdida de respuesta y restauración de envío pendiente siguen cubiertos en JVM; la auditoría TalkBack/Scanner/fuente ampliada sigue pendiente.
+
+Ejecución en backend local aislado, con el APK apuntando a `http://127.0.0.1:3000/` y `adb reverse`. Construir con JDK 17:
+
+```bash
+./gradlew spotlessCheck detekt lintDebug testDebugUnitTest assembleDebug assembleDebugAndroidTest
+adb -s SERIAL install -r app/build/outputs/apk/debug/app-debug.apk
+adb -s SERIAL install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb -s SERIAL reverse tcp:3000 tcp:3000
+adb -s SERIAL shell am instrument -w -r \
+  -e class co.edu.uniandes.vinilos.ui.PerformerAlbumPickerScreenTest \
+  co.edu.uniandes.vinilos.test/co.edu.uniandes.vinilos.testing.VinilosTestRunner
+```
+
+Sustituir `SERIAL` por el emulador/dispositivo. Desactivar las tres escalas de animación del emulador antes de usar `am instrument`; la tarea Gradle no las configura en una invocación directa. Para la regresión pertinente, seleccionar además `PerformerListScreenTest`, `PerformerDetailScreenTest`, `CollectorAlbumPickerScreenTest` y `PrizePickerScreenTest` (38 pruebas en total con HU15). No se debe dar por correcta una corrida que ejecuta cero pruebas.
+
+**Resultados (17/11/2026):** HU15 **8/8 en API 21 y 8/8 en API 37**. Con regresión HU03/HU04/HU11/HU14: **38/38 en cada API, sin fallos**. Corridas finales con BackVynils real aislado y base nueva por API. Controles de calidad y 421 unitarias correctos. La matriz por clase, el ajuste del piloto y los límites están en [el diseño técnico, sección 13](15-hu15-diseno-tecnico.md#13-avance-hu15-05--e2e-y-regresión). Logs originales en `reports/hu15-05/` (locales, ignorados por Git y no publicados en la Wiki). No se ejecutó la suite instrumentada completa ni se reemplazó el APK de entrega.
+
+### HU15-06 · Contrato HTTP real de los dos endpoints
+
+`app/src/androidTest/java/co/edu/uniandes/vinilos/network/PerformerAlbumApiTest.kt` usa `NetworkClient`, `VinilosApiService` y los Service Adapters de producción, sin abrir pantallas. `BackendPerformers` acepta una URL de pruebas opcional, manteniendo su valor predeterminado para las E2E existentes. Cada test crea y elimina exclusivamente sus artistas y álbumes.
+
+| Caso | Resultado comprobado | API 21 | API 37 |
+|---|---|---:|---:|
+| `musician_returns_200_album_id_and_complete_relationships_without_a_body` | POST sin cuerpo/Content-Type, HTTP 200, ID y relaciones en catálogo/álbum/detalle | Pasa | Pasa |
+| `band_returns_200_and_refresh_preserves_its_other_album_and_member` | HTTP 200; conserva álbum anterior e integrante; relación nueva visible | Pasa | Pasa |
+| `unknown_artists_return_404_for_both_routes_and_leave_the_album_free` | Ambas rutas devuelven 404, convertido a `DataError.Http(404)`; álbum sin cambios | Pasa | Pasa |
+| `unknown_album_returns_404_for_both_routes_without_changing_the_artists` | Ambas rutas devuelven 404; artistas sin cambios | Pasa | Pasa |
+| `occupied_album_appends_musicians_but_band_replaces_the_existing_relationships` | Caracterización del riesgo: músico añade, banda sustituye las asociaciones previas | Pasa | Pasa |
+
+**Resultado (18/11/2026): 5/5 en cada API**, contra otra instancia real de BackVynils en el puerto 3001, con PostgreSQL desechable y sin modificar el entorno manual del puerto 3000. El último caso caracteriza un comportamiento peligroso del backend, **no un criterio deseable**: si BackVynils lo corrige habrá que actualizar esa expectativa. El selector impide elegir álbumes ocupados, pero no puede garantizar atomicidad frente a otro cliente entre GET y POST.
+
+Construir/instalar las dos APK como en HU15-05 y ejecutar:
+
+```bash
+adb -s SERIAL reverse tcp:3001 tcp:3001
+adb -s SERIAL shell am instrument -w -r \
+  -e class co.edu.uniandes.vinilos.network.PerformerAlbumApiTest \
+  -e hu15ApiBaseUrl http://127.0.0.1:3001/ \
+  co.edu.uniandes.vinilos.test/co.edu.uniandes.vinilos.testing.VinilosTestRunner
+```
+
+Sin `hu15ApiBaseUrl`, los cinco casos se omiten mediante `assumeTrue`, antes de crear datos o abrir el cliente. Para ejecutarlos, indicar ese argumento y seleccionar solo esta clase sobre otra base recién sembrada; no añadirlos a la suite completa. La clase exige host local. Usar una base de pruebas aislada: no ejecutar el caso de caracterización sobre datos compartidos. No se invocan DELETE de asociaciones; la limpieza elimina solo entidades propias.
+
+Controles `spotlessCheck`, `detekt`, `lintDebug`, `testDebugUnitTest`, `assembleDebug` y `assembleDebugAndroidTest` correctos. Las **421 JVM** siguen sin fallos, errores ni omisiones; estas cinco son instrumentadas y no aumentan ese total. Logs, resumen por caso y consulta final de la base en `reports/hu15-06/` (locales e ignorados por Git; no publicados en la Wiki). No se repitieron las 38 E2E/regresión de HU15-05 ni se reemplazó el APK de entrega.
+
+### Integración de HU12 y HU15 · 18/11/2026
+
+Validación de la fusión de `develop` (`6c263d5`, HU12) en `feature/HU15-agregar-album-artista` (base `14475e6`, HU15). Se conservaron ambos contratos de API, los dos selectores, acciones del detalle, resultados y estados resaltados. Los tipos de fila de las acciones de álbum/integrante usan valores distintos para no reutilizar un ViewHolder incompatible. El índice de documentación conserva las páginas de ambas historias.
+
+Se añadió a `PerformerAlbumPickerScreenTest` el caso `band_keeps_new_member_and_album_when_both_pickers_are_used`: agrega un integrante, luego un álbum, verifica ambas relaciones por HTTP y reabre el detalle para comprobar que siguen presentes. La clase pasa de ocho a nueve casos; los resultados anteriores de HU15-05 corresponden a su versión de ocho.
+
+| Clase | API 21 | API 37 |
+|---|---:|---:|
+| `PerformerAlbumPickerScreenTest` | 9/9 | 9/9 |
+| `BandMemberPickerScreenTest` | 14/14 | 14/14 |
+| `PerformerDetailScreenTest` | 6/6 | 6/6 |
+| `PrizePickerScreenTest` | 5/5 | 5/5 |
+| **Selección de regresión** | **34/34, sin fallos** | **34/34, sin fallos** |
+
+`spotlessCheck`, `detekt`, `lintDebug`, `testDebugUnitTest`, `assembleDebug` y `assembleDebugAndroidTest`: correctos. **462 JVM, 0 fallos, 0 errores y 0 omisiones**. La interfaz Retrofit central llega a 20 operaciones y tiene una excepción local documentada a `TooManyFunctions`; no se cambió la configuración global de detekt. Se extrajo la presentación común de avisos para mantener el manejador de eventos dentro del límite de longitud.
+
+Corridas con backend real desechable en el puerto 3002 y base nueva por API; se verificaron después los álbumes/artistas/vínculos de la semilla. La URL temporal de compilación se restauró a la original y se recompilaron las APK. El backend manual del puerto 3000 y su base no se modificaron. No es la suite instrumentada completa; la auditoría manual de accesibilidad sigue pendiente. Logs y resumen originales en `reports/hu15-integracion-develop/` (locales e ignorados por Git).
+
 ## 6. Reportes de defectos
 
 Los defectos son issues de GitHub con la etiqueta `bug`:
@@ -769,7 +894,7 @@ Para reproducir las E2E en otro equipo se necesita BackVynils con su semilla, Do
 
 #### Backend para las E2E
 
-Antes de cada corrida completa se reinicia BackVynils desde cero y se carga la semilla, según el `GETTING_STARTED.md` de BackVynils (Git Bash):
+Antes de cada corrida completa se reinicia **una instancia exclusiva de BackVynils para pruebas** desde cero y se carga la semilla, según el `GETTING_STARTED.md` de BackVynils (Git Bash). Los comandos siguientes eliminan sus datos: no ejecutarlos en una instancia compartida, manual o de producción. Confirmar primero el directorio y los contenedores de pruebas:
 
 ```bash
 cd BackVynils
@@ -782,7 +907,7 @@ docker compose exec -T db psql -U postgres -d vinyls < sql/data.sql
 
 Se verifica que `collector_album` y `performer_prize` tengan solo los ids 100 y 101 y que `GET /albums/100` muestre "Buscando América" con tilde. No se adelantan secuencias con `setval`, no se interrumpe una corrida a la mitad (deja vínculos huérfanos) y se repite el reinicio si se interrumpe. Las pruebas se ejecutan directamente con `./gradlew connectedDebugAndroidTest`, sin scripts.
 
-Con las secuencias en 1, una corrida completa puede crear como máximo 99 artistas: el siguiente `POST /musicians` o `POST /bands` choca con los ids 100 y 101 de la semilla y responde 500 "duplicate key". Hoy la suite crea 96 (`SELECT last_value FROM performer_id_seq` al terminar). Una E2E nueva que cree artistas debe crear solo los que usa y revisar este número.
+Con las secuencias en 1, una corrida completa puede crear como máximo 99 artistas: el siguiente `POST /musicians` o `POST /bands` choca con los ids 100 y 101 de la semilla y responde 500 "duplicate key". La ejecución previa a la corrección de HU15 llegó a 116 y falló por colisiones. Se retiraron creaciones redundantes de HU03 y HU15 sin quitar escenarios: HU03 crea el solista adicional únicamente cuando se comprueba su fila; el refresco parte de una fila de la semilla y crea solo el músico nuevo; la navegación por ID crea únicamente su banda. HU15 conserva un integrante previo en el caso de preservación, mientras que el caso combinado agrega el primero. Los cinco contratos reales de `PerformerAlbumApiTest` requieren ejecución explícita aparte. La validación del 18/11/2026 terminó en **98** (`is_called=true`) en API 21 y API 37. Queda un ID disponible antes del primer reservado (100): medir `SELECT last_value, is_called FROM performer_id_seq` al terminar cada suite completa y revisar el presupuesto al añadir casos. Repetir la suite requiere restaurar otra vez la base de pruebas.
 
 Hasta el 2026-11-08 existían `scripts/run_e2e.sh`, `scripts/preparar_backend_e2e.sql` y `scripts/limpiar_premios_e2e.sql`, que adelantaban las secuencias hasta el máximo id real. Se retiraron porque ese `setval` deja las secuencias por encima de la semilla y, con el `DELETE` de vínculos de BackVynils, las pruebas de premios borraban los vínculos 100 y 101 de la semilla y fallaban en cadena. Validación sin scripts (2026-11-08, backend recién reiniciado): 119 pruebas instrumentadas, 0 fallos, en API 21 y API 37.
 
@@ -844,3 +969,50 @@ Todos los casos unitarios usan MockWebServer o excepciones controladas, sin depe
 | 2026-11-08 | Se retiran `scripts/run_e2e.sh`, `scripts/preparar_backend_e2e.sql` y `scripts/limpiar_premios_e2e.sql`. Su `setval` dejaba las secuencias por encima de la semilla y, con el `DELETE` de vínculos de BackVynils (borra el de id más bajo), las pruebas de premios borraban los vínculos 100 y 101 de la semilla y fallaban en cadena. Ahora el backend se reinicia antes de cada corrida completa con las secuencias en 1 y las pruebas se ejecutan con `./gradlew connectedDebugAndroidTest`. Validado en API 21 y API 37: 119 pruebas, 0 fallos. HU11: micro-optimizaciones sin cambio de comportamiento; `CollectorAlbumPickerRobot.select` espera la fila porque las filas se calculan fuera del hilo principal. |
 | 2026-11-17 | HU12: inventario CP-HU12-01 a 63 (41 y 45 retirados). Las E2E crean solo los artistas que usan para no pasar de 99 por corrida (sección 10). En API 21 el detalle de banda mostraba dos tiras de integrantes durante la animación al agregar uno; `PerformerDetailAdapter` ahora actualiza esa fila en su lugar. Pasan en API 37 y API 21. |
 | 2026-11-18 | HU12, revisión del PR: al volver del detalle la lista de Artistas no mostraba el integrante nuevo, porque cargaba una sola vez. Ahora vuelve a leer Room al mostrarse otra vez, sin llamar a la red. CP-HU12-47 comprueba la línea de resumen de la banda y del músico; CP-HU12-64 a 66 cubren el ViewModel de la lista. |
+
+
+### Correcciones de revisión HU15 · 18/11/2026
+
+**Ejecución anterior al ajuste de sincronización HU14.** Los resultados posteriores figuran en la sección siguiente, «Estabilización de la interacción HU14».
+
+Se reprodujeron localmente las colisiones de IDs y los resúmenes desactualizados. Se corrigieron la relectura de Artistas, la invalidación del catálogo de álbumes tras HU15 (también si el resultado es incierto) y la relectura de HU01 al regresar. Se mantienen todos los escenarios, con menos fixtures; los cinco contratos reales de HU15 se ejecutan explícitamente aparte.
+
+| Comprobación final | API 21 | API 37 |
+|---|---:|---:|
+| Suite completa: exitosas | 150 | 151 |
+| Suite completa: fallidas | 1 | 0 |
+| Contratos HU15 omitidos por falta de argumento explícito | 5 | 5 |
+| Contratos HU15 ejecutados aparte, con `hu15ApiBaseUrl` | 5/5 | 5/5 |
+| `performer_id_seq.last_value` al cerrar la suite completa | 98 | 98 |
+
+**Calidad:** Spotless, detekt y Lint correctos; **467 unitarias JVM sin fallos, errores ni omisiones**. Mismos APK instalados en ambos emuladores, con un backend real aislado y semilla nueva por API. Sin `setval`, cambios de backend ni scripts nuevos.
+
+**Único fallo de la suite final:** en API 21, `PrizePickerScreenTest.required_date_and_selection_survive_recreation_and_cancel_does_not_write` falló al inyectar un toque sobre `continuePrize`, con `InjectEventSecurityException`. La clase completa pasó después **5/5**, sin modificar código y con otra base limpia. No se presenta la suite completa de API 21 como totalmente verde ni la repetición aislada como sustituto de esa ejecución.
+
+Las nueve E2E HU15 pasan en ambas APIs. El caso del músico verifica detalle y backend, contador actualizado al regresar a Artistas, artista visible en el selector HU11 y catálogo HU01 al volver; el caso combinado verifica el resumen de banda y pertenencia del integrante tras HU12+HU15.
+
+Los pilotos iniciales todavía alcanzaron la secuencia 101 y fallaron en dos pruebas finales de navegación; la reducción adicional de fixtures en refresco/navegación HU03 permitió cerrar en 98. Se conservan los pilotos, las suites finales, los contratos y la repetición HU14 en `reports/hu15-correcciones-pr/` (local, ignorado por Git; no publicado). No se reemplazó el APK de entrega.
+
+El workflow actual de Actions continúa ejecutando calidad, unitarias y compilación; no ejecuta las E2E. Estos resultados corresponden a ejecuciones locales, no a un run de Actions.
+
+
+### Estabilización de la interacción HU14 · 18/11/2026
+
+Se conserva `PrizePickerScreenTest.required_date_and_selection_survive_recreation_and_cancel_does_not_write`, con las mismas aserciones de fecha obligatoria, restauración de fecha/selección y cero asociaciones después de cancelar. No se omite ni se reintenta automáticamente.
+
+El cierre de la hoja usa ahora `clickVisible()` (toque inyectado), en lugar de invocar directamente su listener. Antes del siguiente toque se espera inactividad de eventos de ventana, se cierra cualquier teclado restaurado y se comprueban foco y teclado oculto mediante `WindowInsetsCompat`. La espera anterior solo verificaba desaparición del contenido y foco. No se atribuye el error original a una ventana concreta sin evidencia adicional; el ajuste refuerza las condiciones observables antes de interactuar. Solo cambia la sincronización de la prueba, sin cambios adicionales de producción para HU14.
+
+| Verificación posterior al ajuste | API 21 | API 37 |
+|---|---:|---:|
+| Caso conflictivo, repeticiones consecutivas sin reintentos | 10/10 | Incluido en suite |
+| Suite completa: exitosas | 151 | 151 |
+| Suite completa: fallidas | 0 | 0 |
+| Contratos HU15 opcionales omitidos en la suite general | 5 | 5 |
+| Contratos HU15 ejecutados explícitamente aparte | 5/5 | 5/5 |
+| Secuencia de artistas al terminar la suite completa | 98 | 98 |
+
+Cada suite descubrió 156 pruebas: 151 pasaron y las cinco opcionales se ejecutaron aparte, con base nueva y `hu15ApiBaseUrl`. HU14 pasó sus cinco casos en ambas suites, incluido el que había fallado en API 21. Las diez repeticiones se ejecutaron antes de la suite completa y se restauró la base de API 21 después, para no consumir su presupuesto de IDs.
+
+Spotless, detekt y Lint correctos; **467 unitarias JVM sin fallos, errores ni omisiones**. Mismos APK de pruebas en ambos emuladores, con hashes comprobados sobre los APK instalados. Backend real aislado por API, semilla nueva antes de cada suite, sin cambios de backend ni ajustes de secuencias. No se añadieron scripts ni se cambió el workflow de Actions.
+
+Logs, resumen por caso y hashes: `reports/hu14-sincronizacion/` (local, ignorado por Git; no publicado). Esta validación posterior sustituye el estado pendiente de la interacción HU14 indicado en la sección anterior; los registros de la ejecución fallida se conservan como antecedente. No se reemplazó el APK de entrega ni se hicieron commits como parte de esta comprobación.

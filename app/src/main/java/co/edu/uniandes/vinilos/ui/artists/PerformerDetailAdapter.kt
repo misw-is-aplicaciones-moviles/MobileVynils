@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.ItemAlbumDetailMessageBinding
+import co.edu.uniandes.vinilos.databinding.ItemPerformerAlbumActionBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerAlbumBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerDetailHeaderBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerMemberBinding
@@ -31,6 +32,11 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 internal sealed interface PerformerDetailRow {
+    data class AlbumAction(
+        val count: Int,
+        val canEdit: Boolean,
+    ) : PerformerDetailRow
+
     data class PrizeAction(
         val count: Int?,
         val canEdit: Boolean,
@@ -54,6 +60,7 @@ internal sealed interface PerformerDetailRow {
 
     data class Record(
         val album: Album,
+        val highlighted: Boolean,
     ) : PerformerDetailRow
 
     data class Members(
@@ -74,6 +81,7 @@ internal class PerformerDetailAdapter(
     private val onMemberClick: (Int) -> Unit,
     private val onAddPrize: () -> Unit,
     private val onRetryPrizes: () -> Unit,
+    private val onAddAlbum: () -> Unit,
     private val onAddMember: () -> Unit,
 ) : ListAdapter<PerformerDetailRow, RecyclerView.ViewHolder>(Rows) {
     init {
@@ -96,8 +104,13 @@ internal class PerformerDetailAdapter(
                         add(PerformerDetailRow.Members(detail.members, state.highlightedMemberId))
                     }
                 }
-                add(PerformerDetailRow.Text(R.string.artist_detail_albums, detail.albums.size))
-                detail.albums.forEach { add(PerformerDetailRow.Record(it)) }
+                add(
+                    PerformerDetailRow.AlbumAction(
+                        detail.albums.size,
+                        state.role == UserRole.COLLECTOR,
+                    ),
+                )
+                detail.albums.forEach { add(PerformerDetailRow.Record(it, it.id == state.highlightedAlbumId)) }
                 if (detail.albums.isEmpty()) add(PerformerDetailRow.Text(R.string.artist_detail_no_albums))
                 add(
                     PerformerDetailRow.PrizeAction(
@@ -134,8 +147,11 @@ internal class PerformerDetailAdapter(
     /** Position of the prize that was just assigned, or -1. */
     fun highlightedPosition(): Int = currentList.indexOfFirst { it is PerformerDetailRow.Award && it.highlighted }
 
+    fun highlightedAlbumPosition(): Int = currentList.indexOfFirst { it is PerformerDetailRow.Record && it.highlighted }
+
     override fun getItemViewType(position: Int): Int =
         when (getItem(position)) {
+            is PerformerDetailRow.AlbumAction -> ALBUM_ACTION
             is PerformerDetailRow.PrizeAction -> PRIZE_ACTION
             is PerformerDetailRow.Award -> AWARD
             is PerformerDetailRow.Header -> HEADER
@@ -151,6 +167,10 @@ internal class PerformerDetailAdapter(
     ): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
+            ALBUM_ACTION -> {
+                AlbumActionHolder(ItemPerformerAlbumActionBinding.inflate(inflater, parent, false))
+            }
+
             PRIZE_ACTION -> {
                 PrizeActionHolder(ItemPerformerPrizeActionBinding.inflate(inflater, parent, false))
             }
@@ -203,11 +223,12 @@ internal class PerformerDetailAdapter(
         position: Int,
     ) {
         when (val row = getItem(position)) {
+            is PerformerDetailRow.AlbumAction -> (holder as AlbumActionHolder).bind(row)
             is PerformerDetailRow.PrizeAction -> (holder as PrizeActionHolder).bind(row)
             is PerformerDetailRow.Award -> (holder as AwardHolder).bind(row)
             is PerformerDetailRow.Header -> (holder as HeaderHolder).bind(row.detail)
             is PerformerDetailRow.Text -> (holder as TextHolder).bind(row)
-            is PerformerDetailRow.Record -> (holder as AlbumHolder).bind(row.album)
+            is PerformerDetailRow.Record -> (holder as AlbumHolder).bind(row)
             is PerformerDetailRow.Members -> (holder as MembersHolder).bind(row)
             is PerformerDetailRow.MembersAction -> (holder as MembersActionHolder).bind(row)
         }
@@ -225,6 +246,18 @@ internal class PerformerDetailAdapter(
             binding.membersLabel.text =
                 binding.root.context.getString(R.string.artist_detail_members, row.count)
             binding.addMemberButton.isVisible = row.canEdit
+        }
+    }
+
+    private inner class AlbumActionHolder(
+        private val binding: ItemPerformerAlbumActionBinding,
+    ) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(row: PerformerDetailRow.AlbumAction) {
+            ViewCompat.setAccessibilityHeading(binding.albumLabel, true)
+            binding.albumLabel.text = binding.root.context.getString(R.string.artist_detail_albums, row.count)
+            binding.addArtistAlbumButton.isVisible = row.canEdit
+            binding.addArtistAlbumButton.isEnabled = row.canEdit
+            binding.addArtistAlbumButton.setOnClickListener { onAddAlbum() }
         }
     }
 
@@ -316,7 +349,10 @@ internal class PerformerDetailAdapter(
         private val binding: ItemPerformerAlbumBinding,
         private val onClick: (Int) -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(album: Album) {
+        fun bind(row: PerformerDetailRow.Record) {
+            val album = row.album
+            binding.root.isSelected = row.highlighted
+            binding.root.setBackgroundResource(R.drawable.bg_picker_option)
             binding.albumTitle.text = album.name
             binding.albumYear.text = album.releaseDate.year.toString()
             binding.root.contentDescription =
@@ -415,6 +451,7 @@ internal class PerformerDetailAdapter(
     private object Rows : DiffUtil.ItemCallback<PerformerDetailRow>() {
         private fun key(row: PerformerDetailRow): String =
             when (row) {
+                is PerformerDetailRow.AlbumAction -> "album-action"
                 is PerformerDetailRow.PrizeAction -> "prize-action"
                 is PerformerDetailRow.Award -> "award-${row.assignment.id}"
                 is PerformerDetailRow.Header -> "header"
@@ -455,7 +492,8 @@ internal class PerformerDetailAdapter(
         const val MEMBERS = 3
         const val PRIZE_ACTION = 4
         const val AWARD = 5
-        const val MEMBERS_ACTION = 6
+        const val ALBUM_ACTION = 6
+        const val MEMBERS_ACTION = 7
     }
 }
 

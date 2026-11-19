@@ -114,7 +114,6 @@ fun clickVisible(): ViewAction =
 
 /**
  * Llama al OnClickListener de la vista.
- * Tras recrear la actividad, el toque inyectado no cierra la hoja de fecha en API 21.
  */
 fun clickListener(): ViewAction =
     object : ViewAction {

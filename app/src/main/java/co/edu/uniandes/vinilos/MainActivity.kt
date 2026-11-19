@@ -215,6 +215,7 @@ class MainActivity :
                 R.id.albumCreateFragment,
                 R.id.collectorAlbumPickerFragment,
                 R.id.prizePickerFragment,
+                R.id.performerAlbumPickerFragment,
                 R.id.prizeCreateFragment,
                 R.id.bandMemberPickerFragment,
             )
