@@ -22,7 +22,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.testing.bringIntoView
-import co.edu.uniandes.vinilos.testing.clickVisible
+import co.edu.uniandes.vinilos.testing.clickListener
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
@@ -47,7 +47,8 @@ class CommentCreateRobot {
 
     /** Espera el chip de [name]: los coleccionistas llegan después de abrir la hoja. */
     fun chooseCollector(name: String): CommentCreateRobot {
-        awaitChip(name).perform(clickVisible())
+        // En API 21 el toque sobre el centro visible del chip no lo marca.
+        awaitChip(name).perform(clickListener())
         onView(chip(name)).check(matches(isChecked()))
         return this
     }
@@ -66,7 +67,7 @@ class CommentCreateRobot {
     }
 
     fun chooseRating(rating: Int): CommentCreateRobot {
-        onView(withId(starId(rating))).perform(bringIntoView(), clickVisible())
+        onView(withId(starId(rating))).perform(bringIntoView(), clickListener())
         return this
     }
 
@@ -147,7 +148,8 @@ class CommentCreateRobot {
     private fun tap(
         @IdRes viewId: Int,
     ): CommentCreateRobot {
-        onView(withId(viewId)).perform(bringIntoView(), clickVisible())
+        // En API 21 el centro visible del botón puede quedar fuera del toque de Espresso.
+        onView(withId(viewId)).perform(bringIntoView(), clickListener())
         return this
     }
 

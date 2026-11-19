@@ -5,6 +5,7 @@ import android.view.View
 import android.widget.RatingBar
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.FailureHandler
 import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
@@ -78,7 +79,7 @@ class CommentCreateScreenTest {
             .typeComment("Una obra que no envejece.")
             .tapPublish()
 
-        waitForDisplayed(withText(R.string.snack_comment_published))
+        awaitNoticeOrComment("Una obra que no envejece.")
         waitUntilGone(withId(R.id.sheetTitle))
         assertComment(author, initials = "AP", rating = 4, text = "Una obra que no envejece.")
         assertLastComment(author, rating = 4, text = "Una obra que no envejece.")
@@ -329,6 +330,35 @@ class CommentCreateScreenTest {
         onView(allOf(withId(R.id.sectionAction), withText(R.string.album_action_comment))).perform(click())
         sheet.assertOpen(albumName)
     }
+
+    /**
+     * El aviso dura poco y en API 21 puede cerrarse antes de que Espresso lo mire. Sirve el aviso o la tarjeta,
+     * que ya está en el detalle cuando el aviso se fue.
+     */
+    private fun awaitNoticeOrComment(text: String) {
+        val deadline = System.currentTimeMillis() + AWAIT_MILLIS
+        val quiet = FailureHandler { error, _ -> throw error }
+        val notice = withText(R.string.snack_comment_published)
+        val comment = allOf(withId(R.id.commentBody), withText(text))
+        while (System.currentTimeMillis() < deadline) {
+            if (isShown(notice, quiet) || isShown(comment, quiet)) return
+            Thread.sleep(POLL_MILLIS)
+        }
+        onView(comment).check(matches(isDisplayed()))
+    }
+
+    private fun isShown(
+        matcher: Matcher<View>,
+        quiet: FailureHandler,
+    ): Boolean =
+        try {
+            onView(matcher).withFailureHandler(quiet).check(matches(isDisplayed()))
+            true
+        } catch (_: NoMatchingViewException) {
+            false
+        } catch (_: AssertionError) {
+            false
+        }
 
     /**
      * Espera la tarjeta del comentario publicado, que va al final de la lista y no desaparece. El aviso "Comentario

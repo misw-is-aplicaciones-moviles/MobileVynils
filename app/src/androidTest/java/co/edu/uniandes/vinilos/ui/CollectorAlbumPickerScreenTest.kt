@@ -80,7 +80,7 @@ class CollectorAlbumPickerScreenTest {
         data.createAlbum(album)
         openCollector(name, album)
 
-        detail.assertFavoriteDisabledAndAlbumEnabled().tapAddAlbum()
+        detail.assertAddActionsEnabled().tapAddAlbum()
         picker
             .waitUntilOpen(name)
             .assertRow(album, genreMeta(ROCK))

@@ -21,6 +21,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import co.edu.uniandes.vinilos.R
+import co.edu.uniandes.vinilos.testing.clickListener
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
@@ -159,7 +160,8 @@ class BandMemberPickerRobot {
     }
 
     fun tapRetry(): BandMemberPickerRobot {
-        onView(allOf(withId(R.id.retryButton), isDescendantOfA(withId(R.id.errorState)))).perform(click())
+        // En API 21 el botón queda cortado y el clic de Espresso exige el 90 % del área.
+        onView(allOf(withId(R.id.retryButton), isDescendantOfA(withId(R.id.errorState)))).perform(clickListener())
         return this
     }
 

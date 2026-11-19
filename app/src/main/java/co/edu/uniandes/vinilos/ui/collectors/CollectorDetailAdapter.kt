@@ -64,6 +64,7 @@ internal class CollectorDetailAdapter(
     private val onAlbumClick: (Int) -> Unit,
     private val onFavoriteClick: (Int) -> Unit,
     private val onAddAlbumClick: () -> Unit,
+    private val onAddFavoriteClick: () -> Unit,
 ) : ListAdapter<CollectorDetailRow, RecyclerView.ViewHolder>(Rows) {
     init {
         stateRestorationPolicy = StateRestorationPolicy.PREVENT_WHEN_EMPTY
@@ -90,13 +91,37 @@ internal class CollectorDetailAdapter(
     ): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
-            HEADER -> HeaderHolder(ItemCollectorDetailHeaderBinding.inflate(inflater, parent, false))
-            CONTACT -> ContactHolder(ItemCollectorContactBinding.inflate(inflater, parent, false))
-            SECTION -> SectionHolder(ItemCollectorSectionBinding.inflate(inflater, parent, false), onAddAlbumClick)
-            FAVORITES -> FavoritesHolder(favoriteList(parent), onFavoriteClick)
-            ALBUM -> AlbumHolder(ItemCollectorAlbumBinding.inflate(inflater, parent, false), onAlbumClick)
-            MESSAGE -> MessageHolder(ItemAlbumDetailMessageBinding.inflate(inflater, parent, false))
-            else -> error("Unknown collector detail row")
+            HEADER -> {
+                HeaderHolder(ItemCollectorDetailHeaderBinding.inflate(inflater, parent, false))
+            }
+
+            CONTACT -> {
+                ContactHolder(ItemCollectorContactBinding.inflate(inflater, parent, false))
+            }
+
+            SECTION -> {
+                SectionHolder(
+                    ItemCollectorSectionBinding.inflate(inflater, parent, false),
+                    onAddAlbumClick,
+                    onAddFavoriteClick,
+                )
+            }
+
+            FAVORITES -> {
+                FavoritesHolder(favoriteList(parent), onFavoriteClick)
+            }
+
+            ALBUM -> {
+                AlbumHolder(ItemCollectorAlbumBinding.inflate(inflater, parent, false), onAlbumClick)
+            }
+
+            MESSAGE -> {
+                MessageHolder(ItemAlbumDetailMessageBinding.inflate(inflater, parent, false))
+            }
+
+            else -> {
+                error("Unknown collector detail row")
+            }
         }
     }
 
@@ -136,15 +161,23 @@ internal class CollectorDetailAdapter(
     private class SectionHolder(
         private val binding: ItemCollectorSectionBinding,
         private val onAddAlbumClick: () -> Unit,
+        private val onAddFavoriteClick: () -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(row: CollectorDetailRow.Section) {
             binding.sectionTitle.text = binding.root.context.getString(row.title, row.count)
             ViewCompat.setAccessibilityHeading(binding.sectionTitle, true)
             binding.sectionAction.isVisible = row.canEdit
             binding.sectionAction.setText(row.action)
-            val canAddAlbum = row.canEdit && row.action == R.string.action_add_album
-            binding.sectionAction.isEnabled = canAddAlbum
-            binding.sectionAction.setOnClickListener { if (canAddAlbum) onAddAlbumClick() }
+            binding.sectionAction.isEnabled = row.canEdit
+            binding.sectionAction.setOnClickListener { openAction(row) }
+        }
+
+        private fun openAction(row: CollectorDetailRow.Section) {
+            if (!row.canEdit) return
+            when (row.action) {
+                R.string.action_add_album -> onAddAlbumClick()
+                R.string.action_add_favorite -> onAddFavoriteClick()
+            }
         }
     }
 

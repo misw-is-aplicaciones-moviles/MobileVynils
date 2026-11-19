@@ -62,7 +62,18 @@ class CollectorDetailViewModel(
         _events.value = Event(CollectorDetailEvent.OpenAlbumPicker(collectorId))
     }
 
+    fun onAddFavoriteClicked() {
+        val state = current()
+        if (navigationPending || state.role != UserRole.COLLECTOR || state.detail == null) return
+        navigationPending = true
+        _events.value = Event(CollectorDetailEvent.OpenFavoritePicker(collectorId))
+    }
+
     fun refreshAfterAlbumAdded() {
+        load(forceRefresh = true)
+    }
+
+    fun refreshAfterFavoriteAdded() {
         load(forceRefresh = true)
     }
 

@@ -26,6 +26,7 @@ import co.edu.uniandes.vinilos.viewmodels.CollectorAlbumPickerViewModel
 import co.edu.uniandes.vinilos.viewmodels.CollectorDetailEvent
 import co.edu.uniandes.vinilos.viewmodels.CollectorDetailUiState
 import co.edu.uniandes.vinilos.viewmodels.CollectorDetailViewModel
+import co.edu.uniandes.vinilos.viewmodels.CollectorFavoritePickerViewModel
 import co.edu.uniandes.vinilos.viewmodels.PerformerListViewModel
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
@@ -54,6 +55,7 @@ class CollectorDetailFragment : Fragment(R.layout.fragment_album_detail) {
                 onAlbumClick = viewModel::onAlbumClicked,
                 onFavoriteClick = viewModel::onFavoriteClicked,
                 onAddAlbumClick = viewModel::onAddAlbumClicked,
+                onAddFavoriteClick = viewModel::onAddFavoriteClicked,
             )
         binding.detailList.layoutManager = LinearLayoutManager(requireContext())
         // Con la escala de animación en 0 la cabecera anterior no se retira y quedan dos «Agregar álbum».
@@ -65,6 +67,7 @@ class CollectorDetailFragment : Fragment(R.layout.fragment_album_detail) {
             event.getContentIfNotHandled()?.let(::handle)
         }
         observeSelectedAlbum()
+        observeAddedFavorite()
     }
 
     override fun onResume() {
@@ -147,6 +150,13 @@ class CollectorDetailFragment : Fragment(R.layout.fragment_album_detail) {
                 )
             }
 
+            is CollectorDetailEvent.OpenFavoritePicker -> {
+                findNavController().navigate(
+                    R.id.collectorFavoritePickerFragment,
+                    bundleOf(CollectorFavoritePickerViewModel.ARG_COLLECTOR_ID to event.collectorId),
+                )
+            }
+
             is CollectorDetailEvent.OpenAlbum -> {
                 findNavController().navigate(
                     R.id.albumDetailFragment,
@@ -186,6 +196,27 @@ class CollectorDetailFragment : Fragment(R.layout.fragment_album_detail) {
                     Snackbar.make(
                         binding.root,
                         getString(R.string.collector_album_selected, albumName),
+                        Snackbar.LENGTH_SHORT,
+                    )
+                (activity as? PrimaryActionHost)?.let { snackbar.setAnchorView(it.snackbarAnchor) }
+                snackbar.show()
+            }
+    }
+
+    private fun observeAddedFavorite() {
+        val handle = findNavController().currentBackStackEntry?.savedStateHandle ?: return
+        handle
+            .getLiveData<Bundle>(CollectorFavoritePickerViewModel.RESULT_FAVORITE_ADDED)
+            .observe(viewLifecycleOwner) { result ->
+                handle.remove<Bundle>(CollectorFavoritePickerViewModel.RESULT_FAVORITE_ADDED)
+                val detail = viewModel.uiState.value?.detail ?: return@observe
+                val resultCollectorId = result.getInt(CollectorFavoritePickerViewModel.RESULT_COLLECTOR_ID)
+                if (resultCollectorId != detail.collector.id) return@observe
+                viewModel.refreshAfterFavoriteAdded()
+                val snackbar =
+                    Snackbar.make(
+                        binding.root,
+                        getString(R.string.collector_favorite_added),
                         Snackbar.LENGTH_SHORT,
                     )
                 (activity as? PrimaryActionHost)?.let { snackbar.setAnchorView(it.snackbarAnchor) }

@@ -15,11 +15,13 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.junit.runners.model.Statement
 import retrofit2.Response
 import java.io.File
 import java.net.URI
@@ -29,7 +31,20 @@ import java.net.URI
 class PerformerAlbumApiTest {
     private val baseUrl = InstrumentationRegistry.getArguments().getString("hu15ApiBaseUrl") ?: BuildConfig.BASE_URL
 
-    @get:Rule val data = BackendPerformers(baseUrl)
+    private val data = BackendPerformers(baseUrl)
+
+    // Assume dentro del runner queda en el reporte como fallo. Sin el argumento, no se toca el backend compartido.
+    private val optIn =
+        TestRule { base, _ ->
+            object : Statement() {
+                override fun evaluate() {
+                    if (InstrumentationRegistry.getArguments().getString("hu15ApiBaseUrl") == null) return
+                    base.evaluate()
+                }
+            }
+        }
+
+    @get:Rule val rules: TestRule = RuleChain.outerRule(optIn).around(data)
     private val mark = "HU15 API ${System.nanoTime()}"
     private lateinit var client: NetworkClient
     private lateinit var cacheDirectory: File
@@ -39,10 +54,6 @@ class PerformerAlbumApiTest {
 
     @Before
     fun openClient() {
-        assumeTrue(
-            "Requires explicit hu15ApiBaseUrl and a fresh isolated backend",
-            InstrumentationRegistry.getArguments().getString("hu15ApiBaseUrl") != null,
-        )
         val uri = URI(baseUrl)
         check(uri.host in setOf("127.0.0.1", "localhost", "10.0.2.2") && baseUrl.endsWith("/")) {
             "HU15 API requires a local test backend with a trailing slash"

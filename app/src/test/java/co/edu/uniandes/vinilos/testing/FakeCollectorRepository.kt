@@ -6,6 +6,7 @@ import co.edu.uniandes.vinilos.models.CommentAuthor
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.NewCollectorAlbum
+import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.repositories.CollectorRepository
 import kotlinx.coroutines.CompletableDeferred
 
@@ -89,4 +90,22 @@ internal class FakeCollectorRepository(
     var lastAddAlbumRequest: Triple<Int, Int, NewCollectorAlbum>? = null
         private set
     var addAlbumResult: DataResult<Unit, DataError> = DataResult.Success(Unit)
+
+    override suspend fun addFavorite(
+        collectorId: Int,
+        performerId: Int,
+        type: PerformerType,
+    ): DataResult<Unit, DataError> {
+        addFavoriteCalls++
+        lastAddFavorite = Triple(collectorId, performerId, type)
+        addFavoriteGate?.await()
+        return addFavoriteResult
+    }
+
+    var addFavoriteCalls = 0
+        private set
+    var lastAddFavorite: Triple<Int, Int, PerformerType>? = null
+        private set
+    var addFavoriteResult: DataResult<Unit, DataError> = DataResult.Success(Unit)
+    var addFavoriteGate: CompletableDeferred<Unit>? = null
 }

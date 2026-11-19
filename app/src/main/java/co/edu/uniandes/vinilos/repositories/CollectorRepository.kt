@@ -6,6 +6,7 @@ import co.edu.uniandes.vinilos.models.CommentAuthor
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.NewCollectorAlbum
+import co.edu.uniandes.vinilos.models.PerformerType
 
 /** Source of collector data; the list is cached in Room and expected remote failures are returned as values. */
 interface CollectorRepository {
@@ -43,5 +44,15 @@ interface CollectorRepository {
         collectorId: Int,
         albumId: Int,
         draft: NewCollectorAlbum,
+    ): DataResult<Unit, DataError>
+
+    /**
+     * Adds a musician or a band to the collector's favorites.
+     * Does not read or write the list cache.
+     */
+    suspend fun addFavorite(
+        collectorId: Int,
+        performerId: Int,
+        type: PerformerType,
     ): DataResult<Unit, DataError>
 }
