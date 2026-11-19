@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- HU09: estilos de la hoja "Comentar álbum" y del encabezado de comentarios. -->
+<resources>
+    <!-- Estrella de la valoración: 48 dp de toque con un ícono de 32 dp centrado. -->
+    <style name="Widget.Vinilos.RatingStar" parent="">
+        <item name="android:layout_width">@dimen/comment_star_target</item>
+        <item name="android:layout_height">@dimen/comment_star_target</item>
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:padding">@dimen/space_s</item>
+        <item name="srcCompat">@drawable/ic_star_outline</item>
+    </style>
+
+    <!-- Nombre en el chip: medido en el mockup 32 (dos chips por fila en 360 dp de contenido). -->
+    <style name="TextAppearance.Vinilos.CollectorChip" parent="TextAppearance.Vinilos.FieldInput">
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <!-- Chip de "¿Quién comenta?": el de selección del formulario, con el avatar de iniciales a la izquierda. -->
+    <style name="Widget.Vinilos.Chip.Collector" parent="Widget.Vinilos.Chip">
+        <item name="android:textAppearance">@style/TextAppearance.Vinilos.CollectorChip</item>
+        <item name="chipIconVisible">true</item>
+        <item name="chipIconSize">@dimen/comment_chip_icon</item>
+        <item name="chipStartPadding">@dimen/space_xs</item>
+        <item name="iconStartPadding">@dimen/space_xs</item>
+        <item name="textStartPadding">@dimen/space_s</item>
+        <item name="textEndPadding">@dimen/space_m</item>
+    </style>
+
+    <!-- Botón "Comentar" del encabezado: 40 dp visibles dentro de un objetivo táctil de 48 dp. -->
+    <!-- "Publicar comentario" es más largo que los demás botones de hoja: menos relleno y, si aun así no cabe, la
+         letra se reduce en lugar de cortar el texto. -->
+    <style name="Widget.Vinilos.Button.Primary.Medium.Fit" parent="Widget.Vinilos.Button.Primary.Medium">
+        <item name="android:paddingStart">@dimen/space_s</item>
+        <item name="android:paddingEnd">@dimen/space_s</item>
+        <item name="android:paddingLeft">@dimen/space_s</item>
+        <item name="android:paddingRight">@dimen/space_s</item>
+        <item name="android:maxLines">1</item>
+        <item name="autoSizeTextType">uniform</item>
+        <item name="autoSizeMinTextSize">12sp</item>
+        <item name="autoSizeMaxTextSize">@dimen/comment_button_text_max</item>
+    </style>
+
+    <style name="Widget.Vinilos.Button.Primary.SectionAction" parent="Widget.Vinilos.Button.Primary.Medium">
+        <item name="android:minHeight">@dimen/comment_action_height</item>
+        <item name="android:insetTop">@dimen/comment_action_inset</item>
+        <item name="android:insetBottom">@dimen/comment_action_inset</item>
+    </style>
+</resources>

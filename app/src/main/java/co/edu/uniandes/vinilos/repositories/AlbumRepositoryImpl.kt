@@ -2,14 +2,17 @@ package co.edu.uniandes.vinilos.repositories
 
 import android.database.sqlite.SQLiteException
 import co.edu.uniandes.vinilos.database.dao.AlbumDao
+import co.edu.uniandes.vinilos.database.dao.CommentAuthorDao
 import co.edu.uniandes.vinilos.database.dao.TrackDao
 import co.edu.uniandes.vinilos.database.nocaseKey
 import co.edu.uniandes.vinilos.database.toEntity
 import co.edu.uniandes.vinilos.database.toModel
 import co.edu.uniandes.vinilos.models.Album
+import co.edu.uniandes.vinilos.models.Comment
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.NewAlbum
+import co.edu.uniandes.vinilos.models.NewComment
 import co.edu.uniandes.vinilos.models.NewTrack
 import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.network.AlbumServiceAdapter
@@ -30,6 +33,7 @@ internal class AlbumRepositoryImpl(
     private val albumDao: AlbumDao,
     private val trackDao: TrackDao,
     private val serviceAdapter: AlbumServiceAdapter,
+    private val commentAuthorDao: CommentAuthorDao,
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : AlbumRepository {
     private val mutex = Mutex()
@@ -152,6 +156,26 @@ internal class AlbumRepositoryImpl(
             }
             result
         }
+    }
+
+    // Comments are not in the catalog tables, so this does not take the catalog mutex. Saving the author lets the
+    // detail name it next time without asking `GET /collectors`; a refresh of that list may replace it, which is fine.
+    override suspend fun addComment(
+        albumId: Int,
+        draft: NewComment,
+    ): DataResult<Comment, DataError> {
+        require(albumId > 0) { "albumId must be positive" }
+        require(draft.collectorId > 0) { "collectorId must be positive" }
+        val result = networkRequest { serviceAdapter.addComment(albumId, draft) }
+        if (result is DataResult.Success) {
+            val author = result.value.author
+            try {
+                if (author != null) commentAuthorDao.upsert(author.toEntity(result.value.id))
+            } catch (_: SQLiteException) {
+                // The backend already saved it: reporting a failure would make the user publish it twice.
+            }
+        }
+        return result
     }
 
     private companion object {

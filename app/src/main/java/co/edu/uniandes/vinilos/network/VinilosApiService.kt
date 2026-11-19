@@ -4,9 +4,11 @@ import co.edu.uniandes.vinilos.network.dto.AlbumDto
 import co.edu.uniandes.vinilos.network.dto.BandDto
 import co.edu.uniandes.vinilos.network.dto.CollectorAlbumDto
 import co.edu.uniandes.vinilos.network.dto.CollectorDto
+import co.edu.uniandes.vinilos.network.dto.CommentDto
 import co.edu.uniandes.vinilos.network.dto.MusicianDto
 import co.edu.uniandes.vinilos.network.dto.NewAlbumRequest
 import co.edu.uniandes.vinilos.network.dto.NewCollectorAlbumRequest
+import co.edu.uniandes.vinilos.network.dto.NewCommentRequest
 import co.edu.uniandes.vinilos.network.dto.NewPrizeRequest
 import co.edu.uniandes.vinilos.network.dto.NewTrackRequest
 import co.edu.uniandes.vinilos.network.dto.PrizeAssignmentDto
@@ -21,7 +23,7 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.Path
 
-@Suppress("TooManyFunctions") // Central Retrofit contract: HU12 and HU15 together add the twentieth endpoint.
+@Suppress("TooManyFunctions") // Shared Retrofit contract for albums, artists, collectors and prizes.
 internal interface VinilosApiService {
     @GET("prizes")
     suspend fun getPrizes(
@@ -84,6 +86,13 @@ internal interface VinilosApiService {
         @Path("performerId") performerId: Int,
         @Path("albumId") albumId: Int,
     ): Response<AlbumDto>
+
+    // Responds 200 with the saved comment, its collector and its album.
+    @POST("albums/{id}/comments")
+    suspend fun addComment(
+        @Path("id") albumId: Int,
+        @Body body: NewCommentRequest,
+    ): CommentDto
 
     @GET("musicians")
     suspend fun getMusicians(

@@ -8,6 +8,7 @@ import co.edu.uniandes.vinilos.models.Genre
 import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.testing.FakeAlbumDao
 import co.edu.uniandes.vinilos.testing.FakeAlbumServiceAdapter
+import co.edu.uniandes.vinilos.testing.FakeCommentAuthorDao
 import co.edu.uniandes.vinilos.testing.FakeTrackDao
 import com.google.gson.JsonParseException
 import kotlinx.coroutines.CancellationException
@@ -137,7 +138,7 @@ class AlbumAssociationRepositoryTest {
     private fun TestScope.repository(
         dao: FakeAlbumDao,
         adapter: FakeAlbumServiceAdapter,
-    ) = AlbumRepositoryImpl(dao, FakeTrackDao(), adapter, StandardTestDispatcher(testScheduler))
+    ) = AlbumRepositoryImpl(dao, FakeTrackDao(), adapter, FakeCommentAuthorDao(), StandardTestDispatcher(testScheduler))
 
     private fun album(
         id: Int,

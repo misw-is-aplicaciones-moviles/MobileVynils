@@ -1,7 +1,9 @@
 package co.edu.uniandes.vinilos.testing
 
 import co.edu.uniandes.vinilos.models.Album
+import co.edu.uniandes.vinilos.models.Comment
 import co.edu.uniandes.vinilos.models.NewAlbum
+import co.edu.uniandes.vinilos.models.NewComment
 import co.edu.uniandes.vinilos.models.NewTrack
 import co.edu.uniandes.vinilos.models.Track
 import co.edu.uniandes.vinilos.network.AlbumServiceAdapter
@@ -10,6 +12,7 @@ import kotlinx.coroutines.CompletableDeferred
 /**
  * Adapter that returns [albums] or throws [failure], after waiting for [gate] if set, and counts its calls.
  * [createAlbum] returns [createdAlbum] or throws [failure], and records every draft in [createdDrafts].
+ * [addComment] returns [createdComment] or throws [failure], and records every request in [addedCommentRequests].
  */
 internal class FakeAlbumServiceAdapter(
     var albums: List<Album> = emptyList(),
@@ -17,6 +20,7 @@ internal class FakeAlbumServiceAdapter(
     var gate: CompletableDeferred<Unit>? = null,
     var createdAlbum: Album? = null,
     var createdTrack: Track? = null,
+    var createdComment: Comment? = null,
 ) : AlbumServiceAdapter {
     var callCount = 0
         private set
@@ -79,5 +83,16 @@ internal class FakeAlbumServiceAdapter(
         addedTrackRequests += albumId to draft
         failure?.let { throw it }
         return checkNotNull(createdTrack) { "Set createdTrack before calling addTrack" }
+    }
+
+    val addedCommentRequests = mutableListOf<Pair<Int, NewComment>>()
+
+    override suspend fun addComment(
+        albumId: Int,
+        draft: NewComment,
+    ): Comment {
+        addedCommentRequests += albumId to draft
+        failure?.let { throw it }
+        return checkNotNull(createdComment) { "Set createdComment before calling addComment" }
     }
 }

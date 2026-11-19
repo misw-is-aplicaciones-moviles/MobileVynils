@@ -5,9 +5,11 @@ import androidx.room.Room
 import co.edu.uniandes.vinilos.BuildConfig
 import co.edu.uniandes.vinilos.database.MIGRATION_2_3
 import co.edu.uniandes.vinilos.database.MIGRATION_3_4
+import co.edu.uniandes.vinilos.database.MIGRATION_4_5
 import co.edu.uniandes.vinilos.database.VinilosDatabase
 import co.edu.uniandes.vinilos.database.dao.AlbumDao
 import co.edu.uniandes.vinilos.database.dao.CollectorDao
+import co.edu.uniandes.vinilos.database.dao.CommentAuthorDao
 import co.edu.uniandes.vinilos.database.dao.PerformerDao
 import co.edu.uniandes.vinilos.database.dao.TrackDao
 import co.edu.uniandes.vinilos.network.AlbumServiceAdapterImpl
@@ -47,8 +49,8 @@ class AppContainer(
     private val database: VinilosDatabase by lazy {
         Room
             .databaseBuilder(appContext, VinilosDatabase::class.java, VinilosDatabase.NAME)
-            // Las versiones 3 y 4 solo agregan tablas (artistas y coleccionistas): se migra para conservar lo guardado.
-            .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+            // Las versiones 3, 4 y 5 solo agregan tablas (artistas, coleccionistas y autores de comentarios): se migra para conservar lo guardado.
+            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             // Es una caché del backend: ante un cambio de esquema sin migración se recrea en vez de cerrar la app.
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
@@ -58,6 +60,7 @@ class AppContainer(
     internal val trackDao: TrackDao by lazy { database.trackDao() }
     internal val performerDao: PerformerDao by lazy { database.performerDao() }
     internal val collectorDao: CollectorDao by lazy { database.collectorDao() }
+    internal val commentAuthorDao: CommentAuthorDao by lazy { database.commentAuthorDao() }
 
     val sessionRepository: SessionRepository by lazy { SessionRepositoryImpl() }
 
@@ -81,6 +84,7 @@ class AppContainer(
                 ioDispatcher = Dispatchers.IO,
                 defaultDispatcher = Dispatchers.Default,
             ),
+            commentAuthorDao,
         )
     }
 
@@ -108,6 +112,7 @@ class AppContainer(
                 defaultDispatcher = Dispatchers.Default,
             ),
             defaultDispatcher = Dispatchers.Default,
+            commentAuthorDao = commentAuthorDao,
         )
     }
 }
