@@ -24,8 +24,10 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.Path
 
-// Los POST de favoritos viven en CollectorFavoriteApi: esta interfaz ya está en el tope de detekt.
-internal interface VinilosApiService : CollectorFavoriteApi {
+// Favoritos y álbumes de intérprete viven en otras interfaces: detekt corta en 20 funciones.
+internal interface VinilosApiService :
+    CollectorFavoriteApi,
+    PerformerAlbumApi {
     @GET("prizes")
     suspend fun getPrizes(
         @Header("Cache-Control") cacheControl: String? = null,
@@ -75,18 +77,6 @@ internal interface VinilosApiService : CollectorFavoriteApi {
         @Path("id") albumId: Int,
         @Body body: NewTrackRequest,
     ): TrackDto
-
-    @POST("musicians/{performerId}/albums/{albumId}")
-    suspend fun addAlbumToMusician(
-        @Path("performerId") performerId: Int,
-        @Path("albumId") albumId: Int,
-    ): Response<AlbumDto>
-
-    @POST("bands/{performerId}/albums/{albumId}")
-    suspend fun addAlbumToBand(
-        @Path("performerId") performerId: Int,
-        @Path("albumId") albumId: Int,
-    ): Response<AlbumDto>
 
     // Responds 200 with the saved comment, its collector and its album.
     @POST("albums/{id}/comments")
@@ -145,6 +135,21 @@ internal interface VinilosApiService : CollectorFavoriteApi {
         @Path("albumId") albumId: Int,
         @Body body: NewCollectorAlbumRequest,
     ): Response<CollectorAlbumDto>
+}
+
+/** POST para asociar un álbum a un músico o a una banda. */
+internal interface PerformerAlbumApi {
+    @POST("musicians/{performerId}/albums/{albumId}")
+    suspend fun addAlbumToMusician(
+        @Path("performerId") performerId: Int,
+        @Path("albumId") albumId: Int,
+    ): Response<AlbumDto>
+
+    @POST("bands/{performerId}/albums/{albumId}")
+    suspend fun addAlbumToBand(
+        @Path("performerId") performerId: Int,
+        @Path("albumId") albumId: Int,
+    ): Response<AlbumDto>
 }
 
 /** POST para asociar un músico o una banda a un coleccionista. El cuerpo va vacío. */
