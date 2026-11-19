@@ -23,7 +23,8 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 
-internal interface VinilosApiService {
+// Los POST de favoritos viven en CollectorFavoriteApi: esta interfaz ya está en el tope de detekt.
+internal interface VinilosApiService : CollectorFavoriteApi {
     @GET("prizes")
     suspend fun getPrizes(
         @Header("Cache-Control") cacheControl: String? = null,
@@ -121,7 +122,10 @@ internal interface VinilosApiService {
         @Path("albumId") albumId: Int,
         @Body body: NewCollectorAlbumRequest,
     ): Response<CollectorAlbumDto>
+}
 
+/** POST para asociar un músico o una banda a un coleccionista. El cuerpo va vacío. */
+internal interface CollectorFavoriteApi {
     @POST("collectors/{collectorId}/musicians/{musicianId}")
     suspend fun addMusicianToCollector(
         @Path("collectorId") collectorId: Int,
