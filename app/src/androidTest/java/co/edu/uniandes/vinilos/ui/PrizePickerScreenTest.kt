@@ -32,6 +32,7 @@ import co.edu.uniandes.vinilos.robots.PerformerDetailRobot
 import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.BackendPrizes
+import co.edu.uniandes.vinilos.testing.clickListener
 import co.edu.uniandes.vinilos.testing.clickVisible
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import co.edu.uniandes.vinilos.testing.waitUntilGone
@@ -139,12 +140,12 @@ class PrizePickerScreenTest {
             ),
         )
         capture("hu14-fecha-restaurada.png")
-        onView(withId(R.id.closeSheet)).perform(clickVisible())
+        onView(withId(R.id.closeSheet)).perform(clickListener())
         waitUntilGone(withId(R.id.savePrize))
         // Tras recrear, el centro de Continuar queda bajo la barra de navegación del Nexus 5.
         waitForPickerFocus().perform(clickListener())
         waitForDisplayed(withId(R.id.savePrize)).check(matches(isEnabled()))
-        onView(withId(R.id.closeSheet)).perform(clickVisible())
+        onView(withId(R.id.closeSheet)).perform(clickListener())
         waitUntilGone(withId(R.id.savePrize))
         waitForPickerFocus()
         onView(withId(R.id.headerClose)).perform(click())
