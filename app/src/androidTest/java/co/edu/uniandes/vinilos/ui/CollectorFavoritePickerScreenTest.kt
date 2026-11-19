@@ -147,9 +147,9 @@ class CollectorFavoritePickerScreenTest {
             .assertSubmitNetworkError()
             .waitUntilOpen(name)
             .assertAdd(musician)
-        assertFavoriteIds(collector)
-
+        // El GET sale por HttpURLConnection y el firewall también lo desvía.
         firewall.restore()
+        assertFavoriteIds(collector)
         picker.tapAdd()
         awaitSaved(count = 1)
         dismissNotice()
