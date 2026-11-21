@@ -12,6 +12,7 @@ import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.FragmentAlbumCreateBinding
@@ -51,8 +52,8 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
     private val viewModel: AlbumCreateViewModel by viewModels { AlbumCreateViewModel.Factory }
     private val dateFormatter = DateTimeFormatter.ofPattern(DATE_PATTERN, Locale.ROOT)
 
-    // Last URL sent to Glide, so a redraw that does not change the URL does not reload the cover.
-    private var loadedCoverUrl: String? = null
+    // Waits for a pause in the cover URL before asking Glide for it; one per view, cancelled with it.
+    private var coverPreview: CoverPreviewLoader? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,7 +66,7 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
         savedInstanceState: Bundle?,
     ) {
         bindingOrNull = FragmentAlbumCreateBinding.bind(view)
-        loadedCoverUrl = null
+        coverPreview = CoverPreviewLoader(viewLifecycleOwner.lifecycleScope, show = ::showCover)
         bindHeader()
         bindInputs()
         bindChips()
@@ -81,6 +82,7 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        coverPreview = null
         bindingOrNull = null
     }
 
@@ -173,7 +175,7 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
         binding.dateInput.setTextIfChanged(form.releaseDate?.format(dateFormatter).orEmpty())
         binding.genreChips.checkValue(form.genre)
         binding.recordLabelChips.checkValue(form.recordLabel)
-        renderCover(form.coverUrl.trim())
+        coverPreview?.request(form.coverUrl.trim())
     }
 
     // Writing the same text again would move the cursor and fire the watcher in a loop.
@@ -189,16 +191,15 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
         }
     }
 
-    private fun renderCover(url: String) {
-        if (url == loadedCoverUrl) return
-        loadedCoverUrl = url
+    private fun showCover(url: String) {
+        val cover = bindingOrNull?.coverPreview?.coverView ?: return
         Glide
             .with(this)
             .load(url.ifEmpty { null })
             .placeholder(R.drawable.bg_cover_placeholder)
             .error(R.drawable.bg_cover_placeholder)
             .centerCrop()
-            .into(binding.coverPreview.coverView)
+            .into(cover)
     }
 
     private fun renderErrors(errors: AlbumFormErrors) {
