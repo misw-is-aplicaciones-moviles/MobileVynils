@@ -8,17 +8,11 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.ItemPrizeBinding
-import co.edu.uniandes.vinilos.models.Prize
-
-internal data class PrizeRow(
-    val prize: Prize,
-    val assigned: Boolean,
-    val selected: Boolean,
-)
+import co.edu.uniandes.vinilos.viewmodels.PrizePickerRow
 
 internal class PrizeAdapter(
     private val onSelect: (Int) -> Unit,
-) : ListAdapter<PrizeRow, PrizeAdapter.Holder>(Rows) {
+) : ListAdapter<PrizePickerRow, PrizeAdapter.Holder>(Rows) {
     init {
         stateRestorationPolicy = StateRestorationPolicy.PREVENT_WHEN_EMPTY
     }
@@ -36,7 +30,7 @@ internal class PrizeAdapter(
     inner class Holder(
         private val binding: ItemPrizeBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(row: PrizeRow) {
+        fun bind(row: PrizePickerRow) {
             binding.prizeName.text = row.prize.name
             binding.prizeOrganization.text = row.prize.organization
             binding.alreadyAssigned.isVisible = row.assigned
@@ -54,15 +48,15 @@ internal class PrizeAdapter(
         }
     }
 
-    private object Rows : DiffUtil.ItemCallback<PrizeRow>() {
+    private object Rows : DiffUtil.ItemCallback<PrizePickerRow>() {
         override fun areItemsTheSame(
-            oldItem: PrizeRow,
-            newItem: PrizeRow,
+            oldItem: PrizePickerRow,
+            newItem: PrizePickerRow,
         ) = oldItem.prize.id == newItem.prize.id
 
         override fun areContentsTheSame(
-            oldItem: PrizeRow,
-            newItem: PrizeRow,
+            oldItem: PrizePickerRow,
+            newItem: PrizePickerRow,
         ) = oldItem == newItem
     }
 }

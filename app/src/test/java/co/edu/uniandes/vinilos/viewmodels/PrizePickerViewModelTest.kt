@@ -46,10 +46,23 @@ class PrizePickerViewModelTest {
             val vm = viewModel(repository)
             advanceUntilIdle()
 
+            assertTrue(
+                checkNotNull(
+                    vm.uiState.value
+                        ?.visiblePrizes
+                        ?.first(),
+                ).assigned,
+            )
             vm.onPrizeSelected(72)
             assertNull(vm.uiState.value?.selectedId)
             vm.onQueryChanged("NUEVO")
-            assertEquals(listOf(prize), vm.uiState.value?.visiblePrizes)
+            advanceUntilIdle()
+            assertEquals(
+                listOf(prize),
+                vm.uiState.value
+                    ?.visiblePrizes
+                    ?.map { it.prize },
+            )
             assertEquals(1, repository.loadCalls)
             assertTrue(repository.lastForceRefresh)
             vm.onPrizeSelected(71)
@@ -264,7 +277,8 @@ class PrizePickerViewModelTest {
                 created,
                 vm.uiState.value
                     ?.visiblePrizes
-                    ?.first(),
+                    ?.first()
+                    ?.prize,
             )
             assertEquals("", vm.uiState.value?.query)
         }
@@ -306,6 +320,45 @@ class PrizePickerViewModelTest {
             assertEquals(date, restored.uiState.value?.date)
             assertEquals(0, repository.saveCalls)
         }
+
+    @Test
+    fun `only the latest search is published`() =
+        runTest {
+            val vm = viewModel(repository())
+            advanceUntilIdle()
+            val states = mutableListOf<PrizePickerUiState>()
+            val observer = Observer<PrizePickerUiState> { states += it }
+            vm.uiState.observeForever(observer)
+            try {
+                vm.onQueryChanged("anterior")
+                vm.onQueryChanged("nuevo")
+                advanceUntilIdle()
+
+                assertEquals(
+                    listOf(prize),
+                    vm.uiState.value
+                        ?.visiblePrizes
+                        ?.map { it.prize },
+                )
+                assertFalse(listOf(oldPrize) in states.map { state -> state.visiblePrizes.map { it.prize } })
+            } finally {
+                vm.uiState.removeObserver(observer)
+            }
+        }
+
+    @Test
+    fun `a blank query keeps prize order and the selection survives a search that hides it`() {
+        val assigned = prepareVisiblePrizes(listOf(oldPrize, prize), setOf(oldPrize.id), "   ", selectedId = prize.id)
+        assertEquals(listOf(oldPrize, prize), assigned.rows.map { it.prize })
+        assertTrue(assigned.rows.first().assigned)
+        assertFalse(assigned.rows.first().selected)
+        assertTrue(assigned.rows.last().selected)
+        assertEquals(prize, assigned.selectedPrize)
+
+        val hidden = prepareVisiblePrizes(listOf(oldPrize, prize), setOf(oldPrize.id), " anterior ", prize.id)
+        assertEquals(listOf(oldPrize), hidden.rows.map { it.prize })
+        assertEquals(prize, hidden.selectedPrize)
+    }
 
     private fun repository() = FakePrizeRepository().also { it.catalog = DataResult.Success(listOf(oldPrize, prize)) }
 
@@ -358,5 +411,10 @@ class PrizePickerViewModelTest {
         repository: FakePrizeRepository,
         handle: SavedStateHandle = args(),
         session: FakeSessionRepository = FakeSessionRepository(UserRole.COLLECTOR),
-    ) = PrizePickerViewModel(handle, repository, session)
+    ) = PrizePickerViewModel(
+        handle,
+        repository,
+        session,
+        defaultDispatcher = mainDispatcherRule.testDispatcher,
+    )
 }

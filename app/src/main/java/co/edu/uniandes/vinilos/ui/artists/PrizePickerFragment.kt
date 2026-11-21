@@ -129,10 +129,10 @@ class PrizePickerFragment : Fragment(R.layout.fragment_prize_picker) {
         binding.emptyMessage.setText(if (state.prizes.isEmpty()) R.string.prize_empty else R.string.prize_no_results)
         // Invisible, not gone: it heads the chain that keeps the card right below the rows.
         binding.prizeList.isInvisible = state.prizes.isEmpty()
-        adapter.submitList(
-            state.visiblePrizes.map { PrizeRow(it, it.id in state.assignedIds, it.id == state.selectedId) },
-            ::revealCreatedPrize,
-        )
+        // The ViewModel already built the rows. Submitting the same contents again would scroll too early.
+        if (state.visiblePrizes != adapter.currentList) {
+            adapter.submitList(state.visiblePrizes, ::revealCreatedPrize)
+        }
         binding.continuePrize.isEnabled = state.canContinue || (state.isUncertain && !state.isSubmitting)
         binding.continuePrize.text = state.selectedPrize?.let { getString(R.string.prize_continue_action, it.name) }
             ?: getString(R.string.prize_select_action)
