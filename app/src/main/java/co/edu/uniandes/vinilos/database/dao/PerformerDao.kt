@@ -5,6 +5,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
 import co.edu.uniandes.vinilos.database.entities.PerformerEntity
+import co.edu.uniandes.vinilos.database.staleIdChunks
 
 @Dao
 internal interface PerformerDao {
@@ -18,8 +19,12 @@ internal interface PerformerDao {
     @Upsert
     suspend fun upsertAll(performers: List<PerformerEntity>)
 
-    @Query("DELETE FROM performers WHERE id NOT IN (:ids)")
-    suspend fun deleteAllExcept(ids: List<Int>)
+    @Query("SELECT id FROM performers")
+    suspend fun getIds(): List<Int>
+
+    // Recibe a lo sumo MAX_IDS_PER_STATEMENT ids: Room crea una variable por id (#139).
+    @Query("DELETE FROM performers WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Int>)
 
     /** Pone al músico en la banda si aún no estaba en ella; devuelve cuántas filas cambió (0 o 1). */
     @Query(
@@ -49,7 +54,7 @@ internal interface PerformerDao {
     /** Deja en la tabla exactamente los artistas recibidos, en una sola transacción. */
     @Transaction
     suspend fun replaceAll(performers: List<PerformerEntity>) {
-        deleteAllExcept(performers.map { it.id })
+        staleIdChunks(getIds(), performers.map { it.id }).forEach { deleteByIds(it) }
         upsertAll(performers)
     }
 }

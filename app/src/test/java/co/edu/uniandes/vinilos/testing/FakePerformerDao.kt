@@ -36,10 +36,12 @@ internal class FakePerformerDao(
         performers.forEach { rows[it.id] = it }
     }
 
-    override suspend fun deleteAllExcept(ids: List<Int>) {
+    override suspend fun getIds(): List<Int> = rows.keys.toList()
+
+    override suspend fun deleteByIds(ids: List<Int>) {
         writeCount++
         writeFailure?.let { throw it }
-        rows.keys.retainAll(ids.toSet())
+        rows.keys.removeAll(ids.toSet())
     }
 
     override suspend fun setMusicianBand(

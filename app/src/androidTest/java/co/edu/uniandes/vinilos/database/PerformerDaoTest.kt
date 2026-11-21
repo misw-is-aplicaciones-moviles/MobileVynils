@@ -141,6 +141,19 @@ class PerformerDaoTest {
             assertEquals(998, stored.getValue(1).bandId)
         }
 
+    @Test
+    fun replace_all_handles_more_ids_than_the_sqlite_variable_limit_of_android_11() =
+        runTest {
+            dao.upsertAll((1..ROWS_ABOVE_LIMIT * 2).map { entity(id = it, name = "Artista $it") })
+            val kept = (1..ROWS_ABOVE_LIMIT).map { entity(id = it, name = "Artista $it") }
+
+            dao.replaceAll(kept)
+            assertEquals(kept.map { it.id }.toSet(), dao.getAll().map { it.id }.toSet())
+
+            dao.replaceAll(emptyList())
+            assertEquals(0, dao.count())
+        }
+
     private fun entity(
         id: Int,
         name: String,
@@ -158,4 +171,9 @@ class PerformerDaoTest {
         memberCount = memberCount,
         bandId = bandId,
     )
+
+    private companion object {
+        // Por encima de las 999 variables de SQLite anterior a 3.32 (Android 11 o anterior), #139.
+        const val ROWS_ABOVE_LIMIT = 1_050
+    }
 }

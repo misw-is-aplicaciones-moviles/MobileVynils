@@ -136,7 +136,25 @@ class AlbumDaoTest {
             assertEquals(listOf("Zeta", "Ágape"), albumDao.getAll().map { it.name })
         }
 
+    @Test
+    fun replace_all_handles_more_ids_than_the_sqlite_variable_limit_of_android_11() =
+        runTest {
+            albumDao.upsertAll((1..ROWS_ABOVE_LIMIT * 2).map(::album))
+            val keptTrack = decisiones.copy(albumId = 1)
+            trackDao.upsertAll(listOf(keptTrack, otraCancion.copy(albumId = ROWS_ABOVE_LIMIT * 2)))
+            val kept = (1..ROWS_ABOVE_LIMIT).map(::album)
+
+            albumDao.replaceAll(kept)
+
+            assertEquals(kept.map { it.id }.toSet(), albumDao.getAll().map { it.id }.toSet())
+            assertEquals(listOf(keptTrack), trackDao.getByAlbum(1))
+            assertTrue(trackDao.getByAlbum(ROWS_ABOVE_LIMIT * 2).isEmpty())
+        }
+
     private companion object {
+        // Por encima de las 999 variables de SQLite anterior a 3.32 (Android 11 o anterior), #139.
+        const val ROWS_ABOVE_LIMIT = 1_050
+
         val buscando =
             AlbumEntity(
                 id = 100,
@@ -161,5 +179,7 @@ class AlbumDaoTest {
             )
         val decisiones = TrackEntity(id = 1, name = "Decisiones", duration = "5:05", albumId = 100)
         val otraCancion = TrackEntity(id = 2, name = "Te están buscando", duration = "4:36", albumId = 101)
+
+        fun album(id: Int) = buscando.copy(id = id, name = "Álbum $id")
     }
 }
