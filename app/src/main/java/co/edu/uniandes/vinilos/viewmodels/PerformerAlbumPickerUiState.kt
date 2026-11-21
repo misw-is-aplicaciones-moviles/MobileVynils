@@ -21,8 +21,9 @@ data class PerformerAlbumPickerUiState(
         get() = phase == AlbumPickerPhase.WORKING
     val isLocked: Boolean
         get() = isBusy || phase == AlbumPickerPhase.UNKNOWN_RESULT || phase == AlbumPickerPhase.FINISHED
-    val selectedAlbum: Album?
-        get() = albums.firstOrNull { it.id == selectedAlbumId }
+
+    // Derived once per immutable state; no lazy delegate shared between Main and Default.
+    val selectedAlbum: Album? = albums.firstOrNull { it.id == selectedAlbumId }
     val canConfirm: Boolean
         get() =
             role == UserRole.COLLECTOR && phase == AlbumPickerPhase.CONTENT &&
@@ -44,22 +45,28 @@ enum class AlbumPickerNotice { UNAVAILABLE, NOT_SAVED, CHECK_FAILED, UNCERTAIN, 
 
 internal fun buildArtistAlbumOptions(state: PerformerAlbumPickerUiState): List<PerformerAlbumPickerOption> {
     val term = state.query.trim()
-    return state.albums
-        .filter { album ->
-            term.isEmpty() || album.name.contains(term, true) || album.performers.any { it.name.contains(term, true) }
-        }.map { album ->
-            val block =
-                when {
-                    album.id in state.addedAlbumIds -> AlbumPickerBlock.ALREADY_ADDED
-                    album.performers.isNotEmpty() -> AlbumPickerBlock.ASSIGNED_ELSEWHERE
-                    else -> null
-                }
+    val options = ArrayList<PerformerAlbumPickerOption>()
+    for (album in state.albums) {
+        if (term.isNotEmpty() && !album.name.contains(term, true) &&
+            album.performers.none { it.name.contains(term, true) }
+        ) {
+            continue
+        }
+        val block =
+            when {
+                album.id in state.addedAlbumIds -> AlbumPickerBlock.ALREADY_ADDED
+                album.performers.isNotEmpty() -> AlbumPickerBlock.ASSIGNED_ELSEWHERE
+                else -> null
+            }
+        options.add(
             PerformerAlbumPickerOption(
                 album = album,
                 isSelected = album.id == state.selectedAlbumId && block == null,
                 block = block,
-            )
-        }
+            ),
+        )
+    }
+    return options
 }
 
 data class PerformerAlbumPickerOption(
