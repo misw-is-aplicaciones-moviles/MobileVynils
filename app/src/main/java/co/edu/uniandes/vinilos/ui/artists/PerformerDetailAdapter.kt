@@ -28,6 +28,7 @@ import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.viewmodels.PerformerDetailUiState
 import com.bumptech.glide.Glide
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -50,7 +51,11 @@ internal sealed interface PerformerDetailRow {
     ) : PerformerDetailRow
 
     data class Header(
-        val detail: PerformerDetail,
+        val name: String,
+        val imageUrl: String,
+        val type: PerformerType,
+        val date: LocalDate,
+        val description: String,
     ) : PerformerDetailRow
 
     data class Text(
@@ -95,7 +100,7 @@ internal class PerformerDetailAdapter(
         val detail = state.detail ?: return
         submitList(
             buildList {
-                add(PerformerDetailRow.Header(detail))
+                add(detail.toHeaderRow())
                 if (detail.performer.type == PerformerType.BAND) {
                     add(PerformerDetailRow.MembersAction(detail.members.size, state.role == UserRole.COLLECTOR))
                     if (detail.members.isEmpty()) {
@@ -226,12 +231,17 @@ internal class PerformerDetailAdapter(
             is PerformerDetailRow.AlbumAction -> (holder as AlbumActionHolder).bind(row)
             is PerformerDetailRow.PrizeAction -> (holder as PrizeActionHolder).bind(row)
             is PerformerDetailRow.Award -> (holder as AwardHolder).bind(row)
-            is PerformerDetailRow.Header -> (holder as HeaderHolder).bind(row.detail)
+            is PerformerDetailRow.Header -> (holder as HeaderHolder).bind(row)
             is PerformerDetailRow.Text -> (holder as TextHolder).bind(row)
             is PerformerDetailRow.Record -> (holder as AlbumHolder).bind(row)
             is PerformerDetailRow.Members -> (holder as MembersHolder).bind(row)
             is PerformerDetailRow.MembersAction -> (holder as MembersActionHolder).bind(row)
         }
+    }
+
+    override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
+        if (holder is AlbumHolder) holder.unbind()
+        super.onViewRecycled(holder)
     }
 
     private inner class MembersActionHolder(
@@ -252,20 +262,30 @@ internal class PerformerDetailAdapter(
     private inner class AlbumActionHolder(
         private val binding: ItemPerformerAlbumActionBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(row: PerformerDetailRow.AlbumAction) {
+        init {
             ViewCompat.setAccessibilityHeading(binding.albumLabel, true)
+            binding.addArtistAlbumButton.setOnClickListener { onAddAlbum() }
+        }
+
+        fun bind(row: PerformerDetailRow.AlbumAction) {
             binding.albumLabel.text = binding.root.context.getString(R.string.artist_detail_albums, row.count)
             binding.addArtistAlbumButton.isVisible = row.canEdit
             binding.addArtistAlbumButton.isEnabled = row.canEdit
-            binding.addArtistAlbumButton.setOnClickListener { onAddAlbum() }
         }
     }
 
     private inner class PrizeActionHolder(
         private val binding: ItemPerformerPrizeActionBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(row: PerformerDetailRow.PrizeAction) {
+        private var canRetry = false
+
+        init {
             ViewCompat.setAccessibilityHeading(binding.prizeLabel, true)
+            binding.addPrizeButton.setOnClickListener { if (canRetry) onRetryPrizes() else onAddPrize() }
+        }
+
+        fun bind(row: PerformerDetailRow.PrizeAction) {
+            canRetry = row.canRetry
             binding.prizeLabel.text =
                 if (row.count == null) {
                     binding.root.context.getString(R.string.artist_detail_prizes)
@@ -276,16 +296,17 @@ internal class PerformerDetailAdapter(
             binding.addPrizeButton.isEnabled = !row.loading
             binding.addPrizeButton.setText(if (row.canRetry) R.string.action_retry else R.string.artist_add_prize)
             binding.addPrizeButton.setIconResource(if (row.canRetry) 0 else R.drawable.ic_add)
-            binding.addPrizeButton.setOnClickListener { if (row.canRetry) onRetryPrizes() else onAddPrize() }
         }
     }
 
     private class AwardHolder(
         private val binding: ItemPerformerPrizeBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
+        private val dateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
+
         fun bind(row: PerformerDetailRow.Award) {
             val assignment = row.assignment
-            val date = assignment.premiationDate.format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
+            val date = assignment.premiationDate.format(dateFormatter)
             binding.prizeName.text = assignment.prize.name
             binding.prizeOrganization.text = assignment.prize.organization
             binding.prizeAwardDate.text = date
@@ -303,26 +324,30 @@ internal class PerformerDetailAdapter(
     private class HeaderHolder(
         private val binding: ItemPerformerDetailHeaderBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(detail: PerformerDetail) {
-            val artist = detail.performer
-            val context = binding.root.context
-            binding.performerName.text = artist.name
+        private val dateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())
+
+        init {
             ViewCompat.setAccessibilityHeading(binding.performerName, true)
+        }
+
+        fun bind(row: PerformerDetailRow.Header) {
+            val context = binding.root.context
+            binding.performerName.text = row.name
             binding.performerDate.text =
-                if (artist.type == PerformerType.MUSICIAN) {
+                if (row.type == PerformerType.MUSICIAN) {
                     context.getString(
                         R.string.artist_detail_birth,
-                        artist.date.format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault())),
+                        row.date.format(dateFormatter),
                     )
                 } else {
                     context.getString(
                         R.string.artist_overline,
                         context.getString(R.string.artist_band),
-                        context.getString(R.string.artist_since, artist.date.year),
+                        context.getString(R.string.artist_since, row.date.year),
                     )
                 }
-            binding.performerDescription.text = detail.description
-            binding.artistArtwork.performerImage.loadPerformerImage(artist.imageUrl)
+            binding.performerDescription.text = row.description
+            binding.artistArtwork.performerImage.loadPerformerImage(row.imageUrl)
         }
     }
 
@@ -347,9 +372,20 @@ internal class PerformerDetailAdapter(
 
     private class AlbumHolder(
         private val binding: ItemPerformerAlbumBinding,
-        private val onClick: (Int) -> Unit,
+        onClick: (Int) -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
+        private var albumId: Int? = null
+
+        init {
+            binding.root.setOnClickListener { albumId?.let(onClick) }
+        }
+
+        fun unbind() {
+            albumId = null
+        }
+
         fun bind(row: PerformerDetailRow.Record) {
+            albumId = row.album.id
             val album = row.album
             binding.root.isSelected = row.highlighted
             binding.root.setBackgroundResource(R.drawable.bg_picker_option)
@@ -361,7 +397,6 @@ internal class PerformerDetailAdapter(
                     album.name,
                     album.releaseDate.year,
                 )
-            binding.root.setOnClickListener { onClick(album.id) }
             Glide
                 .with(binding.albumArtwork.coverView)
                 .load(album.coverUrl)
@@ -506,3 +541,7 @@ private fun ImageView.loadPerformerImage(url: String?) {
         .centerCrop()
         .into(this)
 }
+
+/** Only visible header data participates in DiffUtil equality, not albums, members or prize references. */
+internal fun PerformerDetail.toHeaderRow(): PerformerDetailRow.Header =
+    PerformerDetailRow.Header(performer.name, performer.imageUrl, performer.type, performer.date, description)

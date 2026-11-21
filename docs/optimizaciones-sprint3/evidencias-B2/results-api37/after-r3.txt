@@ -1,0 +1,67 @@
+INSTRUMENTATION_STATUS: class=co.edu.uniandes.vinilos.ui.artists.B2MeasurementTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+co.edu.uniandes.vinilos.ui.artists.B2MeasurementTest:
+INSTRUMENTATION_STATUS: test=controlled_before_after
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: stream=
+B2PERF {"header_binds":0,"scenario":"header_relations_20_updates"}
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=
+B2PERF {"wall_ns":55430759,"thread_cpu_ns":54675429,"process_allocated_bytes":1179968,"formatter_creations":2,"listener_installations":3,"header_binds":100,"scenario":"holders_100_rebinds"}
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=
+B2PERF {"wall_ns":66111419,"thread_cpu_ns":63004389,"process_allocated_bytes":1966080,"operations":500,"scenario":"selector_100_all_reads1"}
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=
+B2PERF {"wall_ns":85773456,"thread_cpu_ns":85625488,"process_allocated_bytes":1474560,"operations":500,"scenario":"selector_100_Album9_reads10"}
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=
+B2PERF {"wall_ns":14531587,"thread_cpu_ns":14523441,"process_allocated_bytes":1277952,"operations":500,"scenario":"selector_100_missing_reads1"}
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=
+B2PERF {"wall_ns":4754601,"thread_cpu_ns":4749462,"process_allocated_bytes":1933312,"operations":500,"scenario":"selector_100_all_reads0"}
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=
+B2PERF {"wall_ns":57524476,"thread_cpu_ns":51574055,"process_allocated_bytes":27426816,"operations":500,"scenario":"selector_1000_all_reads1"}
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=
+B2PERF {"wall_ns":199487873,"thread_cpu_ns":193132278,"process_allocated_bytes":15630336,"operations":500,"scenario":"selector_1000_Album9_reads10"}
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=
+B2PERF {"wall_ns":161808178,"thread_cpu_ns":154622597,"process_allocated_bytes":12386304,"operations":500,"scenario":"selector_1000_missing_reads1"}
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=
+B2PERF {"wall_ns":44691940,"thread_cpu_ns":39205559,"process_allocated_bytes":27598848,"operations":500,"scenario":"selector_1000_all_reads0"}
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: stream=
+B2PERF {"value":0,"scenario":"sink"}
+
+INSTRUMENTATION_STATUS_CODE: 2
+INSTRUMENTATION_STATUS: class=co.edu.uniandes.vinilos.ui.artists.B2MeasurementTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=controlled_before_after
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 4.49
+
+OK (1 test)
+
+
+INSTRUMENTATION_CODE: -1
