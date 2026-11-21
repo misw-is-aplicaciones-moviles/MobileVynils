@@ -29,7 +29,7 @@ class AlbumHeaderRowTest {
         )
 
     @Test
-    fun the_header_keeps_only_what_it_draws() {
+    fun `the header keeps only what it draws`() {
         val header = album.toHeaderRow()
 
         assertEquals("Buscando América", header.name)
@@ -45,7 +45,7 @@ class AlbumHeaderRowTest {
     }
 
     @Test
-    fun a_new_comment_leaves_the_header_equal_so_it_is_not_bound_again() {
+    fun `a new comment leaves the header equal so it is not bound again`() {
         val withComment =
             album.copy(comments = album.comments + Comment(2, "Excelente", 4, CommentAuthor(3, "Manolo Bellon")))
 
@@ -53,7 +53,7 @@ class AlbumHeaderRowTest {
     }
 
     @Test
-    fun a_new_track_changes_the_visible_count_so_the_header_is_bound_again() {
+    fun `a new track changes the visible count so the header is bound again`() {
         val withTrack = album.copy(tracks = album.tracks + Track(2, "Todos vuelven", "5:25"))
 
         assertNotEquals(album.toHeaderRow(), withTrack.toHeaderRow())
@@ -61,7 +61,7 @@ class AlbumHeaderRowTest {
     }
 
     @Test
-    fun changing_a_visible_field_changes_the_header() {
+    fun `changing a visible field changes the header`() {
         val header = album.toHeaderRow()
 
         assertNotEquals(header, album.copy(name = "Siembra").toHeaderRow())
@@ -70,7 +70,7 @@ class AlbumHeaderRowTest {
     }
 
     @Test
-    fun an_album_without_performers_has_no_artist_to_open() {
+    fun `an album without performers has no artist to open`() {
         val header = album.copy(performers = emptyList(), performerName = null).toHeaderRow()
 
         assertEquals(null, header.artist)
