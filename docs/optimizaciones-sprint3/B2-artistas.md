@@ -119,11 +119,11 @@ Para cerrar el bloque de desempeño:
 | 2 / por registrar | No medido | No medido | Pendiente |
 | 3 / por registrar | No medido | No medido | Pendiente |
 
-### 4.3. Separación de HU14 y validación de integración
+### 4.3. Corrección de sincronización HU14 incluida para revisión
 
-La corrección de foco de `PrizePickerScreenTest` se retiró de la diferencia de B2 mediante `14e53d2`. Se conserva en la rama independiente `fix/hu14-date-sheet-focus`, commit `dfa4ea1`, para revisión separada de B4 en la [PR #156](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/pull/156). El archivo de HU14 de esta PR coincide con `develop`.
+La corrección de foco de `PrizePickerScreenTest` se mantiene en esta PR para evitar reintroducir el fallo intermitente conocido durante la regresión. Es una excepción explícita al alcance B2: pertenece a HU14/B4 y requiere acuerdo con Jhon y el revisor. No se presenta como una microoptimización de artistas. La PR separada #156 se cerró y la corrección se restauró en esta rama.
 
-Tras integrar B1 se verificaron 587 unitarias y los controles de calidad. La regresión previa a separar HU14 obtuvo 81/81 en API 21 y 80/81 en API 37, con un fallo intermitente de foco de HU14. La corrección separada pasó diez repeticiones del caso en API 37 y la clase completa 5/5 en ambas APIs sobre la rama integrada. Esos resultados no se atribuyen al estado final de B2; no se han repetido las 81 E2E completas tras la separación.
+El parche espera el foco real de la hoja antes y después de recrear la actividad y utiliza toques reales. La validación previa del mismo código de producción y del parche sobre la rama integrada B1+B2 obtuvo 587 unitarias correctas, diez repeticiones del caso en API 37 y 5/5 de la clase HU14 en ambas APIs. La rama separada también obtuvo 5/5 en API 37 antes de cerrarse. No se ha repetido la suite completa de 81 E2E tras restaurar el parche; no se afirma una ejecución completa final en verde.
 
 ## 5. Trazabilidad de entrega
 
