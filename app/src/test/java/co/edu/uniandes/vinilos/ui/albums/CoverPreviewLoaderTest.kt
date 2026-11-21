@@ -17,7 +17,7 @@ class CoverPreviewLoaderTest {
     private fun TestScope.loader() = CoverPreviewLoader(backgroundScope, DELAY) { shown += it }
 
     @Test
-    fun the_first_url_of_a_view_is_shown_without_waiting() =
+    fun `the first url of a view is shown without waiting`() =
         runTest {
             val loader = loader()
 
@@ -27,7 +27,7 @@ class CoverPreviewLoaderTest {
         }
 
     @Test
-    fun typing_a_url_loads_only_the_last_value_after_the_pause() =
+    fun `typing a url loads only the last value after the pause`() =
         runTest {
             val loader = loader()
             loader.request("")
@@ -44,7 +44,7 @@ class CoverPreviewLoaderTest {
         }
 
     @Test
-    fun a_second_url_pasted_during_the_pause_replaces_the_first() =
+    fun `a second url pasted during the pause replaces the first`() =
         runTest {
             val loader = loader()
             loader.request("")
@@ -58,7 +58,7 @@ class CoverPreviewLoaderTest {
         }
 
     @Test
-    fun clearing_the_url_shows_the_placeholder_at_once_and_drops_the_pending_load() =
+    fun `clearing the url shows the placeholder at once and drops the pending load`() =
         runTest {
             val loader = loader()
             loader.request(URL_A)
@@ -73,7 +73,7 @@ class CoverPreviewLoaderTest {
         }
 
     @Test
-    fun repeating_the_url_on_screen_does_not_load_it_again() =
+    fun `repeating the url on screen does not load it again`() =
         runTest {
             val loader = loader()
             loader.request(URL_A)
@@ -87,7 +87,7 @@ class CoverPreviewLoaderTest {
         }
 
     @Test
-    fun a_load_pending_when_the_view_is_destroyed_never_runs() =
+    fun `a load pending when the view is destroyed never runs`() =
         runTest {
             val viewScope = TestScope(testScheduler)
             val loader = CoverPreviewLoader(viewScope, DELAY) { shown += it }
