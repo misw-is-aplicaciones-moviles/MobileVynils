@@ -186,14 +186,15 @@ class CollectorFavoritePickerViewModel(
         rememberSelection(selectedId, selectedType)
         filterJob?.cancel()
         val query = current().query
-        val rows =
+        val (sorted, rows) =
             withContext(defaultDispatcher) {
-                buildVisibleFavorites(performers, favoriteKeys, query, selectedId, selectedType)
+                val sorted = performers.sortedWith(FAVORITE_PICKER_ORDER)
+                sorted to buildVisibleFavorites(sorted, favoriteKeys, query, selectedId, selectedType)
             }
         update {
             copy(
                 collectorName = collectorDetail.collector.name,
-                performers = performers,
+                performers = sorted,
                 selectedId = selectedId,
                 selectedType = selectedType,
                 visiblePerformers = rows,
