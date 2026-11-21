@@ -18,8 +18,10 @@ import co.edu.uniandes.vinilos.databinding.ItemAlbumDetailSectionBinding
 import co.edu.uniandes.vinilos.databinding.ItemAlbumDetailTrackBinding
 import co.edu.uniandes.vinilos.models.Album
 import co.edu.uniandes.vinilos.models.Comment
+import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.Track
 import com.bumptech.glide.Glide
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -41,7 +43,7 @@ internal class AlbumDetailAdapter(
     ) {
         submitList(
             buildList {
-                add(AlbumDetailRow.Header(album))
+                add(album.toHeaderRow())
                 add(AlbumDetailRow.Message(R.string.album_detail_tracks, isHeading = true))
                 album.tracks.forEachIndexed { index, track -> add(AlbumDetailRow.Song(index + 1, track)) }
                 if (album.tracks.isEmpty()) add(AlbumDetailRow.Message(R.string.album_detail_no_tracks))
@@ -81,7 +83,7 @@ internal class AlbumDetailAdapter(
         position: Int,
     ) {
         when (val row = getItem(position)) {
-            is AlbumDetailRow.Header -> (holder as HeaderHolder).bind(row.album)
+            is AlbumDetailRow.Header -> (holder as HeaderHolder).bind(row)
             is AlbumDetailRow.Song -> (holder as TrackHolder).bind(row)
             is AlbumDetailRow.Review -> (holder as CommentHolder).bind(row)
             is AlbumDetailRow.Message -> (holder as MessageHolder).bind(row)
@@ -93,21 +95,23 @@ internal class AlbumDetailAdapter(
         private val binding: ItemAlbumDetailHeaderBinding,
         private val onArtistClick: () -> Unit,
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(album: Album) {
+        // One per holder: a header bind no longer builds its own formatter.
+        private val dateFormatter = DateTimeFormatter.ofPattern(DATE_PATTERN, Locale.getDefault())
+
+        fun bind(header: AlbumDetailRow.Header) {
             val context = binding.root.context
-            binding.albumName.text = album.name
+            binding.albumName.text = header.name
             ViewCompat.setAccessibilityHeading(binding.albumName, true)
             binding.albumGenreYear.text =
-                context.getString(R.string.album_genre_year, album.genre.apiName, album.releaseDate.year)
-            binding.albumArtist.text = album.performerName ?: context.getString(R.string.album_no_artist)
-            binding.albumDescription.text = album.description
-            bindArtistNavigation(album)
-            bindArtwork(album)
-            bindInfo(album)
+                context.getString(R.string.album_genre_year, header.genreName, header.releaseDate.year)
+            binding.albumArtist.text = header.performerName ?: context.getString(R.string.album_no_artist)
+            binding.albumDescription.text = header.description
+            bindArtistNavigation(header.artist)
+            bindArtwork(header)
+            bindInfo(header)
         }
 
-        private fun bindArtistNavigation(album: Album) {
-            val artist = album.performers.firstOrNull()
+        private fun bindArtistNavigation(artist: PerformerSummary?) {
             val canOpen = artist != null && artist.id > 0 && artist.type != null
             binding.artistLink.setOnClickListener(if (canOpen) View.OnClickListener { onArtistClick() } else null)
             binding.artistLink.isClickable = canOpen
@@ -120,34 +124,31 @@ internal class AlbumDetailAdapter(
                 if (canOpen) View.IMPORTANT_FOR_ACCESSIBILITY_NO else View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
         }
 
-        private fun bindArtwork(album: Album) {
+        private fun bindArtwork(header: AlbumDetailRow.Header) {
             Glide
                 .with(binding.albumArtwork.coverView)
-                .load(album.coverUrl)
+                .load(header.coverUrl)
                 .placeholder(R.drawable.ic_nav_albums)
                 .error(R.drawable.ic_nav_albums)
                 .centerCrop()
                 .into(binding.albumArtwork.coverView)
             Glide
                 .with(binding.artistAvatar)
-                .load(album.performers.firstOrNull()?.imageUrl)
+                .load(header.artist?.imageUrl)
                 .placeholder(R.drawable.bg_vinyl_disc)
                 .error(R.drawable.bg_vinyl_disc)
                 .circleCrop()
                 .into(binding.artistAvatar)
         }
 
-        private fun bindInfo(album: Album) {
+        private fun bindInfo(header: AlbumDetailRow.Header) {
             val context = binding.root.context
             binding.labelInfo.infoLabel.setText(R.string.album_detail_label)
-            binding.labelInfo.infoValue.text = album.recordLabel
+            binding.labelInfo.infoValue.text = header.recordLabel
             binding.dateInfo.infoLabel.setText(R.string.album_detail_release)
-            binding.dateInfo.infoValue.text =
-                album.releaseDate.format(
-                    DateTimeFormatter.ofPattern(DATE_PATTERN, Locale.getDefault()),
-                )
+            binding.dateInfo.infoValue.text = header.releaseDate.format(dateFormatter)
             binding.tracksInfo.infoLabel.setText(R.string.album_detail_tracks)
-            binding.tracksInfo.infoValue.text = context.getString(R.string.album_detail_count, album.tracks.size)
+            binding.tracksInfo.infoValue.text = context.getString(R.string.album_detail_count, header.trackCount)
         }
     }
 
@@ -247,8 +248,20 @@ internal class AlbumDetailAdapter(
 internal sealed interface AlbumDetailRow {
     val key: String
 
+    /**
+     * Only what the header draws. A new comment or a highlight leaves it equal, so DiffUtil does not
+     * bind it again; a new track changes [trackCount] and does.
+     */
     data class Header(
-        val album: Album,
+        val name: String,
+        val coverUrl: String,
+        val genreName: String,
+        val releaseDate: LocalDate,
+        val performerName: String?,
+        val description: String,
+        val recordLabel: String,
+        val trackCount: Int,
+        val artist: PerformerSummary?,
     ) : AlbumDetailRow {
         override val key = "header"
     }
@@ -283,6 +296,19 @@ internal sealed interface AlbumDetailRow {
         override val key = "comments-heading"
     }
 }
+
+internal fun Album.toHeaderRow(): AlbumDetailRow.Header =
+    AlbumDetailRow.Header(
+        name = name,
+        coverUrl = coverUrl,
+        genreName = genre.apiName,
+        releaseDate = releaseDate,
+        performerName = performerName,
+        description = description,
+        recordLabel = recordLabel,
+        trackCount = tracks.size,
+        artist = performers.firstOrNull(),
+    )
 
 // The initials arrive computed in the UiState, so building a row only copies values (docs/07).
 private fun Comment.toRow(

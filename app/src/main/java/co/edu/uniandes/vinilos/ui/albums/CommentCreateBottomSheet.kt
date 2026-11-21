@@ -32,6 +32,13 @@ class CommentCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_com
     // The chips are rebuilt only when the list itself changes, not on every selection or keystroke.
     private var renderedCollectors: List<CommentCollectorOption>? = null
 
+    // The five stars, looked up once per view instead of on every render.
+    private var stars: List<ImageButton> = emptyList()
+
+    // Last state drawn in this view. Typing changes only the text, so the stars, the rating label, the errors
+    // and the buttons are redrawn only when their own inputs change. Null means the next render draws everything.
+    private var renderedState: CommentCreateUiState? = null
+
     override fun getTheme(): Int = R.style.ThemeOverlay_Vinilos_BottomSheet
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
@@ -42,6 +49,8 @@ class CommentCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_com
         savedInstanceState: Bundle?,
     ) {
         bindingOrNull = FragmentCommentCreateSheetBinding.bind(view)
+        stars = listOf(binding.star1, binding.star2, binding.star3, binding.star4, binding.star5)
+        renderedState = null
         binding.sheetSubtitle.text = requireArguments().getString(ARG_ALBUM_NAME).orEmpty()
         bindStars()
         bindFields()
@@ -58,11 +67,13 @@ class CommentCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_com
     override fun onDestroyView() {
         super.onDestroyView()
         renderedCollectors = null
+        renderedState = null
+        stars = emptyList()
         bindingOrNull = null
     }
 
     private fun bindStars() {
-        stars().forEachIndexed { index, star ->
+        stars.forEachIndexed { index, star ->
             val rating = index + 1
             star.contentDescription = getString(R.string.comment_star_description, rating)
             star.setOnClickListener {
@@ -86,15 +97,34 @@ class CommentCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_com
     }
 
     private fun render(state: CommentCreateUiState) {
+        val previous = renderedState
+        renderedState = state
+        val redraw = CommentSheetRedraw.between(previous, state)
         renderCollectors(state)
-        renderRating(state)
+        if (redraw.ratingLabel) renderRatingLabel(state)
+        if (redraw.stars) renderStars(state)
         renderDescription(state)
+        if (redraw.errors) renderErrors(state)
+        if (redraw.submitError) renderSubmitError(state.submitError)
+        if (redraw.submitting) renderSubmitting(state.isSubmitting)
+    }
+
+    private fun renderErrors(state: CommentCreateUiState) {
         binding.collectorError.isVisible = state.isCollectorMissing
         binding.ratingError.isVisible = state.isRatingMissing
         binding.descriptionError.isVisible = state.isDescriptionMissing
-        binding.submitError.isVisible = state.submitError != null
-        state.submitError?.let { binding.submitError.setText(submitErrorMessage(it)) }
-        val editable = !state.isSubmitting
+        binding.commentField.setBackgroundResource(
+            if (state.isDescriptionMissing) R.drawable.bg_comment_field_error else R.drawable.bg_comment_field,
+        )
+    }
+
+    private fun renderSubmitError(error: DataError?) {
+        binding.submitError.isVisible = error != null
+        error?.let { binding.submitError.setText(submitErrorMessage(it)) }
+    }
+
+    private fun renderSubmitting(isSubmitting: Boolean) {
+        val editable = !isSubmitting
         binding.publishComment.isEnabled = editable
         binding.publishComment.setText(if (editable) R.string.action_publish_comment else R.string.comment_publishing)
         binding.cancelComment.isEnabled = editable
@@ -137,14 +167,17 @@ class CommentCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_com
         )
     }
 
-    private fun renderRating(state: CommentCreateUiState) {
+    private fun renderRatingLabel(state: CommentCreateUiState) {
         binding.ratingLabel.text =
             if (state.hasRating) {
                 getString(R.string.comment_rating_value, state.rating)
             } else {
                 getString(R.string.comment_rating)
             }
-        stars().forEachIndexed { index, star ->
+    }
+
+    private fun renderStars(state: CommentCreateUiState) {
+        stars.forEachIndexed { index, star ->
             val position = index + 1
             star.setImageResource(if (position <= state.rating) R.drawable.ic_star else R.drawable.ic_star_outline)
             // TalkBack says "seleccionado" on the chosen star; the label above also says the value, not only the color.
@@ -159,13 +192,7 @@ class CommentCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_com
             field.setText(state.description)
             field.setSelection(state.description.length)
         }
-        field.setBackgroundResource(
-            if (state.isDescriptionMissing) R.drawable.bg_comment_field_error else R.drawable.bg_comment_field,
-        )
     }
-
-    private fun stars(): List<ImageButton> =
-        listOf(binding.star1, binding.star2, binding.star3, binding.star4, binding.star5)
 
     private fun submitErrorMessage(error: DataError): Int =
         when (error) {
