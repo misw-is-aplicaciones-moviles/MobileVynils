@@ -12,14 +12,14 @@ class CommentSheetRedrawTest {
     private val nothing = CommentSheetRedraw(false, false, false, false, false)
 
     @Test
-    fun a_new_view_draws_every_part() {
+    fun `a new view draws every part`() {
         val redraw = CommentSheetRedraw.between(null, filled)
 
         assertEquals(CommentSheetRedraw(true, true, true, true, true), redraw)
     }
 
     @Test
-    fun typing_with_a_fixed_rating_redraws_none_of_the_parts() {
+    fun `typing with a fixed rating redraws none of the parts`() {
         var previous = filled
         "eno, lo recomiendo a todos".forEach { letter ->
             val current = previous.copy(description = previous.description + letter)
@@ -30,14 +30,14 @@ class CommentSheetRedrawTest {
     }
 
     @Test
-    fun another_rating_redraws_the_label_and_the_stars_only() {
+    fun `another rating redraws the label and the stars only`() {
         val redraw = CommentSheetRedraw.between(filled, filled.copy(rating = 2))
 
         assertEquals(nothing.copy(ratingLabel = true, stars = true), redraw)
     }
 
     @Test
-    fun starting_and_ending_a_submission_redraws_the_stars_and_the_buttons_with_the_same_rating() {
+    fun `starting and ending a submission redraws the stars and the buttons with the same rating`() {
         val submitting = filled.copy(isSubmitting = true)
 
         assertEquals(nothing.copy(stars = true, submitting = true), CommentSheetRedraw.between(filled, submitting))
@@ -45,7 +45,7 @@ class CommentSheetRedrawTest {
     }
 
     @Test
-    fun a_validation_error_redraws_only_the_errors_and_clearing_it_does_too() {
+    fun `a validation error redraws only the errors and clearing it does too`() {
         val required = CommentCreateErrors(description = CommentFieldError.REQUIRED)
         val missing = filled.copy(description = "", errors = required)
 
@@ -54,7 +54,7 @@ class CommentSheetRedrawTest {
     }
 
     @Test
-    fun a_failed_submission_redraws_the_error_message_and_the_buttons() {
+    fun `a failed submission redraws the error message and the buttons`() {
         val failed = filled.copy(submitError = DataError.Network)
 
         val redraw = CommentSheetRedraw.between(filled.copy(isSubmitting = true), failed)
