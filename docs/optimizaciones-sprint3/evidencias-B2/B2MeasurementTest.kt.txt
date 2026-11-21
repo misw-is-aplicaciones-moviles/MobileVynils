@@ -1,0 +1,126 @@
+package co.edu.uniandes.vinilos.ui.artists
+
+import android.os.Bundle
+import android.os.Debug
+import android.os.SystemClock
+import android.widget.FrameLayout
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.test.core.app.ActivityScenario
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import co.edu.uniandes.vinilos.MainActivity
+import co.edu.uniandes.vinilos.models.*
+import co.edu.uniandes.vinilos.viewmodels.*
+import org.json.JSONObject
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import org.junit.runner.RunWith
+import java.time.LocalDate
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+
+/** Temporary controlled component experiment, not an E2E/backend or physical-device benchmark. */
+@RunWith(AndroidJUnit4::class)
+class B2MeasurementTest {
+    private val instrumentation = InstrumentationRegistry.getInstrumentation()
+    private val date = LocalDate.of(1970, 1, 1)
+    private val album = Album(1, "Album1", "", date, "", Genre.ROCK, "", null, emptyList(), emptyList(), emptyList())
+    private val artist = Performer(1, PerformerType.MUSICIAN, "Artist", "", date, 0, 0, null, null)
+    private val detail = PerformerDetail(artist, "Biography", emptyList(), emptyList())
+    private val prize = ArtistPrize(1, Prize(1, "Prize", "Description", "Organization"), date)
+    private var sink = 0
+
+    @Test fun controlled_before_after() {
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            lateinit var adapter: PerformerDetailAdapter
+            lateinit var parent: FrameLayout
+            scenario.onActivity { activity ->
+                parent = FrameLayout(activity)
+                val list = RecyclerView(activity).apply {
+                    layoutManager = LinearLayoutManager(activity)
+                    itemAnimator = null
+                }
+                adapter = PerformerDetailAdapter({}, {}, {}, {}, {}, {})
+                list.adapter = adapter
+                parent.addView(list, FrameLayout.LayoutParams(-1, -1))
+                activity.setContentView(parent)
+            }
+            fun submit(state: PerformerDetailUiState) {
+                val done = CountDownLatch(1)
+                scenario.onActivity { adapter.submitDetail(state, Runnable { done.countDown() }) }
+                check(done.await(10, TimeUnit.SECONDS)) { "Diff commit timed out" }
+                instrumentation.waitForIdleSync()
+                // Wait for the layout requested by the committed diff, not an arbitrary sleep.
+                val drawn = CountDownLatch(1)
+                scenario.onActivity { parent.postOnAnimation { parent.postOnAnimation { drawn.countDown() } } }
+                check(drawn.await(10, TimeUnit.SECONDS))
+                instrumentation.waitForIdleSync()
+            }
+            val initial = PerformerDetailUiState(detail = detail, role = UserRole.COLLECTOR, isLoading = false,
+                isLoadingPrizes = false, prizes = listOf(prize))
+            submit(initial)
+            scenario.onActivity { B2Probe.reset() }
+            repeat(20) { index ->
+                val albums = List(index + 1) { album.copy(id = it + 1) }
+                submit(initial.copy(detail = detail.copy(performer = artist.copy(albumCount = albums.size), albums = albums)))
+            }
+            report("header_relations_20_updates", mapOf("header_binds" to B2Probe.headerBinds))
+            val expected = if (InstrumentationRegistry.getArguments().getString("b2Variant") == "before") 20 else 0
+            assertEquals(expected, B2Probe.headerBinds)
+
+            // One real holder of each type, all construction costs included, 100 rebinds each.
+            submit(initial.copy(detail = detail.copy(albums = listOf(album))))
+            scenario.onActivity {
+                fun holdersAndBinds(count: Int) {
+                    val holders = adapter.currentList.indices.map { pos ->
+                        pos to adapter.onCreateViewHolder(parent, adapter.getItemViewType(pos))
+                    }
+                    repeat(count) { holders.forEach { (pos, holder) -> adapter.onBindViewHolder(holder, pos) } }
+                    holders.forEach { adapter.onViewRecycled(it.second) }
+                }
+                holdersAndBinds(20) // class loading / resource warm-up, excluded
+                B2Probe.reset()
+                val measurement = measure { holdersAndBinds(100) }
+                report("holders_100_rebinds", measurement + mapOf(
+                    "formatter_creations" to B2Probe.formatters,
+                    "listener_installations" to B2Probe.listeners,
+                    "header_binds" to B2Probe.headerBinds))
+            }
+        }
+        // Runs on the instrumentation thread: CPU time excludes waiting/descheduling.
+        for (size in listOf(100, 1000)) {
+            val albums = List(size) { album.copy(id = it + 1, name = "Album${it + 1}") }
+            for ((query, reads) in listOf("" to 1, "Album9" to 10, "missing" to 1, "" to 0)) {
+                val state = PerformerAlbumPickerUiState(albums = albums,
+                    selectedAlbumId = if (reads == 0) null else size,
+                    phase = AlbumPickerPhase.CONTENT, role = UserRole.COLLECTOR)
+                fun operation() {
+                    val current = state.copy(query = query)
+                    sink = sink xor buildArtistAlbumOptions(current).size
+                    repeat(reads) { sink = sink xor (current.selectedAlbum?.id ?: 0) }
+                }
+                repeat(200) { operation() }
+                val measurement = measure { repeat(500) { operation() } }
+                report("selector_${size}_${if (query.isEmpty()) "all" else query}_reads$reads", measurement + mapOf("operations" to 500))
+            }
+        }
+        report("sink", mapOf("value" to sink))
+    }
+
+    private fun measure(block: () -> Unit): Map<String, Long> {
+        val bytes = Debug.getRuntimeStat("art.gc.bytes-allocated").toLong()
+        val cpu = Debug.threadCpuTimeNanos()
+        val wall = SystemClock.elapsedRealtimeNanos()
+        block()
+        val elapsed = SystemClock.elapsedRealtimeNanos() - wall
+        val cpuElapsed = Debug.threadCpuTimeNanos() - cpu
+        return mapOf("wall_ns" to elapsed, "thread_cpu_ns" to cpuElapsed,
+            "process_allocated_bytes" to Debug.getRuntimeStat("art.gc.bytes-allocated").toLong() - bytes)
+    }
+
+    private fun report(scenario: String, values: Map<String, Number>) {
+        val result = JSONObject(values).put("scenario", scenario)
+        instrumentation.sendStatus(2, Bundle().apply { putString("stream", "\nB2PERF $result\n") })
+    }
+}

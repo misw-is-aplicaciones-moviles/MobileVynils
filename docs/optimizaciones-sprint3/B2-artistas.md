@@ -3,7 +3,7 @@
 **Responsable:** @ManfredAriel91122. **Fecha:** 21/11/2026.
 **Base:** develop `6a8d5c1`. **Rama:** `perf/s3-b2-artistas`.
 **Commit de implementación:** `910011645ddaed28322ac10db2d91cbbbc294f68`.
-**Estado:** implementación y validación funcional; perfilamiento antes/después en tres teléfonos físicos pendiente.
+**Estado:** implementación y validación funcional, con medición controlada antes/después en emulador API 37. Perfilamiento integrado en tres teléfonos físicos pendiente.
 
 ## 1. Cambios implementados
 
@@ -88,7 +88,19 @@ Sin fallos ni omisiones en ambas ejecuciones. No se presenta esta selección com
 
 Los comandos/resultados originales se conservan localmente en `reports/b2-artistas/` (ignorado por Git). Los informes destinados al equipo deben publicarse y enlazarse: una ruta local no es evidencia pública.
 
-## 4. Perfilamiento pendiente y criterio de cierre de desempeño
+## 4. Medición antes/después y perfilamiento físico pendiente
+
+### 4.1. Resultados en emulador API 37
+
+Se publican los scripts y las seis ejecuciones originales en [evidencias-B2/README.md](evidencias-B2/README.md), con las condiciones, valores individuales, medianas, rangos y hashes de APK.
+
+- B2-01: binds reales de cabecera, **20 → 0** al modificar solo las relaciones en 20 actualizaciones.
+- B2-02: formateadores **200 → 2** y listeners **300 → 3** en 100 reenlaces por holder, incluyendo construcción; mediana de CPU del bloque **58,718 → 54,675 ms**.
+- B2-03: **resultado mixto**; diez lecturas de selección mejoran las medianas en los dos tamaños, pero hay regresiones en otros escenarios. No se declara una mejora general del selector.
+
+Es un experimento controlado de componentes con datos sintéticos, no perfilamiento E2E ni evidencia física. Los bytes asignados del proceso no son memoria residente. No permite afirmar menos jank, fugas o ANR.
+
+### 4.2. Cierre pendiente en teléfonos físicos
 
 Esta implementación no se acompaña aún de mediciones físicas. No afirma ahorro de MB, reducción porcentual de CPU, ausencia de fugas ni corrección de un ANR observado.
 
@@ -106,6 +118,12 @@ Para cerrar el bloque de desempeño:
 | 1 / por registrar | No medido | No medido | Pendiente |
 | 2 / por registrar | No medido | No medido | Pendiente |
 | 3 / por registrar | No medido | No medido | Pendiente |
+
+### 4.3. Separación de HU14 y validación de integración
+
+La corrección de foco de `PrizePickerScreenTest` se retiró de la diferencia de B2 mediante `14e53d2`. Se conserva en la rama independiente `fix/hu14-date-sheet-focus`, commit `dfa4ea1`, para revisión separada de B4 en la [PR #156](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/pull/156). El archivo de HU14 de esta PR coincide con `develop`.
+
+Tras integrar B1 se verificaron 587 unitarias y los controles de calidad. La regresión previa a separar HU14 obtuvo 81/81 en API 21 y 80/81 en API 37, con un fallo intermitente de foco de HU14. La corrección separada pasó diez repeticiones del caso en API 37 y la clase completa 5/5 en ambas APIs sobre la rama integrada. Esos resultados no se atribuyen al estado final de B2; no se han repetido las 81 E2E completas tras la separación.
 
 ## 5. Trazabilidad de entrega
 
