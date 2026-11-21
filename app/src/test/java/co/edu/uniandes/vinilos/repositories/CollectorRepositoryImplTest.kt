@@ -1,6 +1,7 @@
 package co.edu.uniandes.vinilos.repositories
 
 import android.database.sqlite.SQLiteException
+import co.edu.uniandes.vinilos.database.MAX_IDS_PER_STATEMENT
 import co.edu.uniandes.vinilos.database.entities.CommentAuthorEntity
 import co.edu.uniandes.vinilos.database.toEntity
 import co.edu.uniandes.vinilos.models.Collector
@@ -391,6 +392,34 @@ class CollectorRepositoryImplTest {
             assertEquals(DataResult.Success(mapOf(9 to CommentAuthor(9, "Guardado"), 100 to manolo)), result)
             assertEquals(1, adapter.callCount)
         }
+
+    @Test
+    fun `authors are read from Room only for the requested ids`() =
+        runTest {
+            val authors = FakeCommentAuthorDao((1..1_000).map { authorRow(commentId = it) })
+            val adapter = FakeCollectorServiceAdapter(collectors = network, commentAuthors = networkAuthors)
+
+            val result = repository(FakeCollectorDao(), adapter, authors).getCommentAuthors(setOf(7), false)
+
+            assertEquals(DataResult.Success(mapOf(7 to manolo)), result)
+            assertEquals(listOf(1), authors.idBatches)
+        }
+
+    @Test
+    fun `thousands of comment ids are read in batches that fit in one statement`() =
+        runTest {
+            val ids = (1..2_000).toSet()
+            val authors = FakeCommentAuthorDao(ids.map { authorRow(commentId = it) })
+            val adapter = FakeCollectorServiceAdapter(collectors = network, commentAuthors = networkAuthors)
+
+            val result = repository(FakeCollectorDao(), adapter, authors).getCommentAuthors(ids, false)
+
+            assertEquals(ids, (result as DataResult.Success).value.keys)
+            assertEquals(listOf(MAX_IDS_PER_STATEMENT, MAX_IDS_PER_STATEMENT, 200), authors.idBatches)
+        }
+
+    private fun authorRow(commentId: Int) =
+        CommentAuthorEntity(commentId = commentId, collectorId = 100, collectorName = "Manolo")
 
     private companion object {
         // NOCASE order is alfa (2), Alfa (5), beta (3), Beta (4): case only folds, the id breaks ties.
