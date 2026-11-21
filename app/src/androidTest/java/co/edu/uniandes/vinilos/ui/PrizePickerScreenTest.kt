@@ -1,10 +1,13 @@
 package co.edu.uniandes.vinilos.ui
 
 import android.graphics.Bitmap
+import android.os.SystemClock
 import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onData
@@ -14,6 +17,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
+import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isDescendantOfA
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -32,10 +36,10 @@ import co.edu.uniandes.vinilos.robots.PerformerDetailRobot
 import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.BackendPrizes
-import co.edu.uniandes.vinilos.testing.clickListener
 import co.edu.uniandes.vinilos.testing.clickVisible
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import co.edu.uniandes.vinilos.testing.waitUntilGone
+import co.edu.uniandes.vinilos.ui.artists.PrizeDateBottomSheet
 import org.hamcrest.Description
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
@@ -123,8 +127,9 @@ class PrizePickerScreenTest {
         waitForDisplayed(withId(R.id.savePrize)).check(matches(not(isEnabled())))
         capture("hu14-fecha-obligatoria.png")
         val selectedDate = chooseDate()
+        waitForDateSheetFocus().check(matches(isEnabled()))
         activityRule.scenario.recreate()
-        waitForDisplayed(withId(R.id.savePrize)).check(matches(isEnabled()))
+        waitForDateSheetFocus().check(matches(isEnabled()))
         onView(withId(R.id.prizeDate)).check(
             matches(
                 withText(
@@ -140,12 +145,12 @@ class PrizePickerScreenTest {
             ),
         )
         capture("hu14-fecha-restaurada.png")
-        onView(withId(R.id.closeSheet)).perform(clickListener())
+        onView(withId(R.id.closeSheet)).perform(clickVisible())
         waitUntilGone(withId(R.id.savePrize))
         // Tras recrear, el centro de Continuar queda bajo la barra de navegación del Nexus 5.
-        waitForPickerFocus().perform(clickListener())
+        waitForPickerFocus().perform(clickVisible())
         waitForDisplayed(withId(R.id.savePrize)).check(matches(isEnabled()))
-        onView(withId(R.id.closeSheet)).perform(clickListener())
+        onView(withId(R.id.closeSheet)).perform(clickVisible())
         waitUntilGone(withId(R.id.savePrize))
         waitForPickerFocus()
         onView(withId(R.id.headerClose)).perform(click())
@@ -228,6 +233,40 @@ class PrizePickerScreenTest {
         val saved = fixture.artist().getJSONArray("performerPrizes")
         assertEquals(1, saved.length())
         assertEquals("${date}T00:00:00.000Z", saved.getJSONObject(0).getString("premiationDate"))
+    }
+
+    private fun waitForDateSheetFocus(): ViewInteraction {
+        // Calendar dismissal and activity recreation finish before WindowManager restores input.
+        // Inspect the actual dialog on the main thread before asking Espresso to select a root.
+        val deadline = SystemClock.uptimeMillis() + WINDOW_TIMEOUT_MILLIS
+        while (SystemClock.uptimeMillis() < deadline) {
+            var ready = false
+            activityRule.scenario.onActivity { activity ->
+                val sheet = findDateSheet(activity.supportFragmentManager)
+                ready = sheet
+                    ?.dialog
+                    ?.window
+                    ?.decorView
+                    ?.hasWindowFocus() == true &&
+                    sheet.view?.findViewById<View>(R.id.savePrize)?.isShown == true &&
+                    sheet.childFragmentManager.fragments.none {
+                        it is DialogFragment && it.dialog?.isShowing == true
+                    }
+            }
+            if (ready) return onView(withId(R.id.savePrize)).inRoot(isDialog())
+            SystemClock.sleep(100)
+        }
+        throw AssertionError(
+            "La hoja de fecha no recuperó el foco después de cerrar el calendario o recrear la actividad",
+        )
+    }
+
+    private fun findDateSheet(manager: FragmentManager): PrizeDateBottomSheet? {
+        for (fragment in manager.fragments) {
+            if (fragment is PrizeDateBottomSheet) return fragment
+            if (fragment.isAdded) findDateSheet(fragment.childFragmentManager)?.let { return it }
+        }
+        return null
     }
 
     private fun waitForPickerFocus(): ViewInteraction {
