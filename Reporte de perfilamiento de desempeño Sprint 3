@@ -181,10 +181,7 @@ La siguiente tabla reúne todas las mediciones. Cada fila es una historia de usu
 
 | Dispositivo | HU | Memoria antes (MB) | Memoria después (MB) | Δ memoria | CPU App antes (%) | CPU App después (%) | Δ CPU | ANR |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| **1 – Redmi Note 13 Pro** | HU02 | Fallos de imágenes remotas de la semilla | P20 / varias HU | Investigación | Por clasificar tras comprobar el efecto visual | Revisar URL y manejo de error; no atribuir a escrituras fallidas |
-| Advertencias UntaggedSocketViolation | P20 / varias HU | Observación | Por revisar | Revisar etiquetado del tráfico; conteos con cobertura comparable |
-| Logcat se interrumpe con EOF | P20 / tercera pasada posterior | Observación de infraestructura | Limitación del registro | Conservar original y recuperación parcial; no informar conteos cero |
-| Pico mediano de CPU aumenta +8.8 % | P20 / HU07 | Investigación | Por determinar | Repetir con más muestras y traza si se investiga causalidad | [COMPLETAR] | [COMPLETAR] |
+| **1 – Redmi Note 13 Pro** | HU02 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
 | | HU04 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
 | | HU05 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
 | | HU07 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
@@ -404,9 +401,10 @@ Estos son los problemas que aparecieron durante el perfilamiento. Se clasificaro
 
 | Hallazgo | Dispositivo / HU | Tipo | Severidad | Siguiente paso |
 |---|---|---|---|---|
-| [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
-| [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
-| [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| Fallos de imágenes remotas de la semilla | P20 / varias HU | Investigación | Por clasificar tras comprobar el efecto visual | Revisar URL y manejo de error; no atribuir a escrituras fallidas |
+| Advertencias UntaggedSocketViolation | P20 / varias HU | Observación | Por revisar | Revisar etiquetado del tráfico; conteos con cobertura comparable |
+| Logcat se interrumpe con EOF | P20 / tercera pasada posterior | Observación de infraestructura | Limitación del registro | Conservar original y recuperación parcial; no informar conteos cero |
+| Pico mediano de CPU aumenta +8.8 % | P20 / HU07 | Investigación | Por determinar | Repetir con más muestras y traza si se investiga causalidad |
 
 **Intentos excluidos del P20:** pilotos de automatización y repeticiones de validación con posiciones de controles o autocorrección diferentes. Se descartaron antes de la captura formal. Las seis pasadas formales completaron las diez HU y se conservaron todas sus métricas, incluidas las desfavorables. La tercera pasada posterior permanece en el cálculo de recursos porque su `.asdb` tiene ambas series completas; solo su Logcat es parcial.
 
