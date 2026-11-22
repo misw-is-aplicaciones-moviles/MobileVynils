@@ -1,0 +1,41 @@
+{
+  "app_logs": {
+    "antes-1": {
+      "glide": 64,
+      "socket": 65,
+      "fatal": 0,
+      "complete": true
+    },
+    "antes-2": {
+      "glide": 62,
+      "socket": 64,
+      "fatal": 0,
+      "complete": true
+    },
+    "antes-3": {
+      "glide": 63,
+      "socket": 64,
+      "fatal": 0,
+      "complete": true
+    },
+    "despues-1": {
+      "glide": 51,
+      "socket": 23,
+      "fatal": 0,
+      "complete": true
+    },
+    "despues-2": {
+      "glide": 51,
+      "socket": 24,
+      "fatal": 0,
+      "complete": true
+    },
+    "despues-3": {
+      "glide": 0,
+      "socket": 0,
+      "fatal": 0,
+      "complete": false
+    }
+  },
+  "package_anr_crash_events": []
+}

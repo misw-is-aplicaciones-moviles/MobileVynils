@@ -1,0 +1,242 @@
+--------- beginning of system
+11-22 10:50:44.434 18746 18746 D ActivityThread: Attach thread to application
+11-22 10:50:45.045 18746 18746 V ActivityThread: callActivityOnCreate
+11-22 10:50:45.389 18746 18746 D ActivityThread: add activity client record, r= ActivityRecord{4450308 token=android.os.BinderProxy@63e44e0 {co.edu.uniandes.vinilos/co.edu.uniandes.vinilos.MainActivity}} token= android.os.BinderProxy@63e44e0
+--------- beginning of main
+11-22 10:57:55.785 18746 18746 I chatty  : uid=10263(co.edu.uniandes.vinilos) expire 12 lines
+11-22 10:57:55.970 18746 18877 I chatty  : uid=10263(co.edu.uniandes.vinilos) RenderThread expire 20 lines
+11-22 10:58:14.879 18746 18764 I chatty  : uid=10263(co.edu.uniandes.vinilos) HeapTaskDaemon expire 2 lines
+11-22 10:58:19.534 18746 21201 I chatty  : uid=10263(co.edu.uniandes.vinilos) expire 2 lines
+11-22 10:58:19.559 18746 18877 I chatty  : uid=10263(co.edu.uniandes.vinilos) RenderThread expire 10 lines
+11-22 10:58:19.607 18746 18746 I chatty  : uid=10263(co.edu.uniandes.vinilos) expire 10 lines
+11-22 10:58:35.026 18746 18746 I chatty  : uid=10263(co.edu.uniandes.vinilos) expire 11 lines
+11-22 10:58:48.444 18746 24809 I chatty  : uid=10263(co.edu.uniandes.vinilos) expire 1 line
+11-22 10:58:48.457 18746 18877 I chatty  : uid=10263(co.edu.uniandes.vinilos) RenderThread expire 2 lines
+11-22 10:58:51.995 18746 24841 I chatty  : uid=10263(co.edu.uniandes.vinilos) expire 1 line
+11-22 10:58:55.371 18746 18746 I chatty  : uid=10263(co.edu.uniandes.vinilos) expire 4 lines
+11-22 10:58:55.409 18746 18746 V AudioManager: querySoundEffectsEnabled...
+11-22 10:58:55.456 18746 18746 I HwViewRootImpl: removeInvalidNode all the node in jank list is out of time
+11-22 10:58:58.892 18746 18746 V AudioManager: querySoundEffectsEnabled...
+11-22 10:58:58.939 18746 18877 W libEGL  : EGLNativeWindowType 0x7273bd26d0 disconnect failed
+11-22 10:58:58.939 18746 18877 D OpenGLRenderer: endAllActiveAnimators on 0x722dc12e00 (RippleDrawable) with handle 0x7273a41cc0
+11-22 10:58:58.971 18746 18746 I HwViewRootImpl: removeInvalidNode all the node in jank list is out of time
+11-22 10:59:02.419 18746 18746 V AudioManager: querySoundEffectsEnabled...
+11-22 10:59:02.443 18746 19170 W niandes.vinilo: Accessing hidden method Lsun/misc/Unsafe;->getObjectVolatile(Ljava/lang/Object;J)Ljava/lang/Object; (greylist, linking, allowed)
+11-22 10:59:02.460 18746 18746 I HwViewRootImpl: removeInvalidNode all the node in jank list is out of time
+11-22 10:59:02.462 18746 21201 I okhttp.OkHttpClient: --> POST http://127.0.0.1:3000/prizes/1/bands/1 (45-byte body)
+11-22 10:59:02.491 18746 21201 I okhttp.OkHttpClient: <-- 200 OK http://127.0.0.1:3000/prizes/1/bands/1 (28ms, 419-byte body)
+11-22 10:59:02.516 18746 18877 W libEGL  : EGLNativeWindowType 0x7273bd1b90 disconnect failed
+11-22 10:59:02.517 18746 18877 D OpenGLRenderer: endAllActiveAnimators on 0x7209268b00 (RippleDrawable) with handle 0x7273a41cc0
+11-22 10:59:02.720 18746 19223 D StrictMode: StrictMode policy violation: android.os.strictmode.UntaggedSocketViolation: Untagged socket detected; use TrafficStats.setThreadSocketTag() to track all network usage
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at android.os.StrictMode.onUntaggedSocket(StrictMode.java:2124)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.android.server.NetworkManagementSocketTagger.tag(NetworkManagementSocketTagger.java:98)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at libcore.io.BlockGuardOs.tagSocket(BlockGuardOs.java:52)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at libcore.io.BlockGuardOs.socket(BlockGuardOs.java:372)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at libcore.io.ForwardingOs.socket(ForwardingOs.java:217)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at libcore.io.IoBridge.socket(IoBridge.java:658)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at java.net.PlainSocketImpl.socketCreate(PlainSocketImpl.java:128)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at java.net.AbstractPlainSocketImpl.create(AbstractPlainSocketImpl.java:128)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at java.net.Socket.createImpl(Socket.java:489)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at java.net.Socket.getImpl(Socket.java:552)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at java.net.Socket.setSoTimeout(Socket.java:1180)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.android.okhttp.internal.io.RealConnection.connectSocket(RealConnection.java:143)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.android.okhttp.internal.io.RealConnection.connect(RealConnection.java:116)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.android.okhttp.internal.http.StreamAllocation.findConnection(StreamAllocation.java:186)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.android.okhttp.internal.http.StreamAllocation.findHealthyConnection(StreamAllocation.java:128)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.android.okhttp.internal.http.StreamAllocation.newStream(StreamAllocation.java:97)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.android.okhttp.internal.http.HttpEngine.connect(HttpEngine.java:289)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.android.okhttp.internal.http.HttpEngine.sendRequest(HttpEngine.java:232)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.execute(HttpURLConnectionImpl.java:465)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.connect(HttpURLConnectionImpl.java:131)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.android.okhttp.internal.huc.DelegatingHttpsURLConnection.connect(DelegatingHttpsURLConnection.java:90)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.android.okhttp.internal.huc.HttpsURLConnectionImpl.connect(HttpsURLConnectionImpl.java:30)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.bumptech.glide.load.data.HttpUrlFetcher.loadDataWithRedirects(HttpUrlFetcher.java:93)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.bumptech.glide.load.data.HttpUrlFetcher.loadData(HttpUrlFetcher.java:58)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.bumptech.glide.load.model.MultiModelLoader$MultiFetcher.loadData(MultiModelLoader.java:100)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.bumptech.glide.load.engine.SourceGenerator.startNextLoad(SourceGenerator.java:95)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.bumptech.glide.load.engine.SourceGenerator.startNext(SourceGenerator.java:88)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.bumptech.glide.load.engine.DecodeJob.runGenerators(DecodeJob.java:311)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.bumptech.glide.load.engine.DecodeJob.runWrapped(DecodeJob.java:280)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.bumptech.glide.load.engine.DecodeJob.run(DecodeJob.java:235)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at java.util.concurrent.ThreadPoolExecutor.processTask(ThreadPoolExecutor.java:1187)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1152)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.bumptech.glide.load.engine.executor.GlideExecutor$DefaultThreadFactory$1.run(GlideExecutor.java:424)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at java.lang.Thread.run(Thread.java:929)
+11-22 10:59:02.720 18746 19223 D StrictMode: 	at com.bumptech.glide.load.engine.executor.GlideExecutor$DefaultPriorityThreadFactory$1.run(GlideExecutor.java:383)
+11-22 10:59:02.749 18746 18746 W Glide   : Load failed for [https://pm1.narvii.com/6724/a8b29909071e9d08517b40c748b6689649372852v2_hq.jpg] with dimensions [148x148]
+11-22 10:59:02.749 18746 18746 W Glide   : class com.bumptech.glide.load.engine.GlideException: Failed to load resource
+11-22 10:59:02.749 18746 18746 W Glide   : There was 1 root cause:
+11-22 10:59:02.749 18746 18746 W Glide   : com.bumptech.glide.load.HttpException(Failed to connect or obtain data, status code: -1)
+11-22 10:59:02.749 18746 18746 W Glide   :  call GlideException#logRootCauses(String) for more detail
+11-22 10:59:02.749 18746 18746 W Glide   :   Cause (1 of 1): class com.bumptech.glide.load.engine.GlideException: Fetching data failed, class java.io.InputStream, REMOTE
+11-22 10:59:02.749 18746 18746 W Glide   : There was 1 root cause:
+11-22 10:59:02.749 18746 18746 W Glide   : com.bumptech.glide.load.HttpException(Failed to connect or obtain data, status code: -1)
+11-22 10:59:02.749 18746 18746 W Glide   :  call GlideException#logRootCauses(String) for more detail
+11-22 10:59:02.749 18746 18746 W Glide   :     Cause (1 of 1): class com.bumptech.glide.load.engine.GlideException: Fetch failed
+11-22 10:59:02.749 18746 18746 W Glide   : There was 1 root cause:
+11-22 10:59:02.749 18746 18746 W Glide   : com.bumptech.glide.load.HttpException(Failed to connect or obtain data, status code: -1)
+11-22 10:59:02.749 18746 18746 W Glide   :  call GlideException#logRootCauses(String) for more detail
+11-22 10:59:02.749 18746 18746 W Glide   :       Cause (1 of 1): class com.bumptech.glide.load.HttpException: Failed to connect or obtain data, status code: -1
+11-22 10:59:02.750 18746 18746 I Glide   : Root cause (1 of 1)
+11-22 10:59:03.162 18746 18746 W Glide   : Load failed for [https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Ruben_Blades_by_Gage_Skidmore.jpg/800px-Ruben_Blades_by_Gage_Skidmore.jpg] with dimensions [77x77]
+11-22 10:59:03.162 18746 18746 W Glide   : class com.bumptech.glide.load.engine.GlideException: Failed to load resource
+11-22 10:59:03.162 18746 18746 W Glide   : There was 1 root cause:
+11-22 10:59:03.162 18746 18746 W Glide   : com.bumptech.glide.load.HttpException(Failed to connect or obtain data, status code: 400)
+11-22 10:59:03.162 18746 18746 W Glide   :  call GlideException#logRootCauses(String) for more detail
+11-22 10:59:03.162 18746 18746 W Glide   :   Cause (1 of 1): class com.bumptech.glide.load.engine.GlideException: Fetching data failed, class java.io.InputStream, REMOTE
+11-22 10:59:03.162 18746 18746 W Glide   : There was 1 root cause:
+11-22 10:59:03.162 18746 18746 W Glide   : com.bumptech.glide.load.HttpException(Failed to connect or obtain data, status code: 400)
+11-22 10:59:03.162 18746 18746 W Glide   :  call GlideException#logRootCauses(String) for more detail
+11-22 10:59:03.162 18746 18746 W Glide   :     Cause (1 of 1): class com.bumptech.glide.load.engine.GlideException: Fetch failed
+11-22 10:59:03.162 18746 18746 W Glide   : There was 1 root cause:
+11-22 10:59:03.162 18746 18746 W Glide   : com.bumptech.glide.load.HttpException(Failed to connect or obtain data, status code: 400)
+11-22 10:59:03.162 18746 18746 W Glide   :  call GlideException#logRootCauses(String) for more detail
+11-22 10:59:03.162 18746 18746 W Glide   :       Cause (1 of 1): class com.bumptech.glide.load.HttpException: Failed to connect or obtain data, status code: 400
+11-22 10:59:03.164 18746 18746 I Glide   : Root cause (1 of 1)
+11-22 10:59:03.164 18746 18746 I Glide   : com.bumptech.glide.load.HttpException: Failed to connect or obtain data, status code: 400
+11-22 10:59:03.164 18746 18746 I Glide   : 	at com.bumptech.glide.load.data.HttpUrlFetcher.loadDataWithRedirects(HttpUrlFetcher.java:98)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at com.bumptech.glide.load.data.HttpUrlFetcher.loadData(HttpUrlFetcher.java:58)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at com.bumptech.glide.load.model.MultiModelLoader$MultiFetcher.loadData(MultiModelLoader.java:100)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at com.bumptech.glide.load.engine.SourceGenerator.startNextLoad(SourceGenerator.java:95)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at com.bumptech.glide.load.engine.SourceGenerator.startNext(SourceGenerator.java:88)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at com.bumptech.glide.load.engine.DecodeJob.runGenerators(DecodeJob.java:311)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at com.bumptech.glide.load.engine.DecodeJob.runWrapped(DecodeJob.java:280)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at com.bumptech.glide.load.engine.DecodeJob.run(DecodeJob.java:235)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at java.util.concurrent.ThreadPoolExecutor.processTask(ThreadPoolExecutor.java:1187)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1152)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at com.bumptech.glide.load.engine.executor.GlideExecutor$DefaultThreadFactory$1.run(GlideExecutor.java:424)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at java.lang.Thread.run(Thread.java:929)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at com.bumptech.glide.load.engine.executor.GlideExecutor$DefaultPriorityThreadFactory$1.run(GlideExecutor.java:383)
+11-22 10:59:03.164 18746 18746 I Glide   : Caused by: java.io.FileNotFoundException: https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Ruben_Blades_by_Gage_Skidmore.jpg/800px-Ruben_Blades_by_Gage_Skidmore.jpg
+11-22 10:59:03.164 18746 18746 I Glide   : 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getInputStream(HttpURLConnectionImpl.java:255)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at com.android.okhttp.internal.huc.DelegatingHttpsURLConnection.getInputStream(DelegatingHttpsURLConnection.java:211)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at com.android.okhttp.internal.huc.HttpsURLConnectionImpl.getInputStream(HttpsURLConnectionImpl.java:30)
+11-22 10:59:03.164 18746 18746 I Glide   : 	at com.bumptech.glide.load.data.HttpUrlFetcher.loadDataWithRedirects(HttpUrlFetcher.java:95)
+11-22 10:59:03.164 18746 18746 I Glide   : 	... 13 more
+11-22 10:59:33.523 18746 18746 V AudioManager: querySoundEffectsEnabled...
+11-22 10:59:33.560 18746 18746 I HwViewRootImpl: removeInvalidNode all the node in jank list is out of time
+11-22 10:59:33.614 18746 21201 I okhttp.OkHttpClient: --> GET http://127.0.0.1:3000/bands/1
+11-22 10:59:33.617 18746 19170 W niandes.vinilo: Accessing hidden method Lsun/misc/Unsafe;->getObjectVolatile(Ljava/lang/Object;J)Ljava/lang/Object; (greylist, linking, allowed)
+11-22 10:59:33.620 18746 25145 I okhttp.OkHttpClient: --> GET http://127.0.0.1:3000/albums
+11-22 10:59:33.630 18746 18877 D mali_winsys: EGLint new_window_surface(egl_winsys_display *, void *, EGLSurface, EGLConfig, egl_winsys_surface **, EGLBoolean) returns 0x3000
+11-22 10:59:33.631 18746 18877 E BufferQueueProducer: [unnamed-18746-50]:164: setMaxDequeuedBufferCount: 2 dequeued buffers would exceed the maxBufferCount (2) (maxAcquired 1 async 0 mDequeuedBufferCannotBlock 0)
+11-22 10:59:33.631 18746 18877 E Surface : IGraphicBufferProducer::setBufferCount(3) returned Invalid argument
+11-22 10:59:33.640 18746 18877 E BufferQueueProducer: [unnamed-18746-50]:1338: disconnect: not connected (req=1)
+11-22 10:59:33.640 18746 18877 W libEGL  : EGLNativeWindowType 0x728e3050d0 disconnect failed
+11-22 10:59:33.650 18746 25145 I okhttp.OkHttpClient: <-- 200 OK http://127.0.0.1:3000/albums (29ms, 5066-byte body)
+11-22 10:59:33.652 18746 18877 D mali_winsys: EGLint new_window_surface(egl_winsys_display *, void *, EGLSurface, EGLConfig, egl_winsys_surface **, EGLBoolean) returns 0x3000
+11-22 10:59:33.652 18746 18877 E BufferQueueProducer: [unnamed-18746-51]:164: setMaxDequeuedBufferCount: 2 dequeued buffers would exceed the maxBufferCount (2) (maxAcquired 1 async 0 mDequeuedBufferCannotBlock 0)
+11-22 10:59:33.652 18746 18877 E Surface : IGraphicBufferProducer::setBufferCount(3) returned Invalid argument
+11-22 10:59:33.664 18746 21201 I okhttp.OkHttpClient: <-- 200 OK http://127.0.0.1:3000/bands/1 (49ms, 615-byte body)
+11-22 10:59:33.666 18746 18877 E BufferQueueProducer: [unnamed-18746-51]:1338: disconnect: not connected (req=1)
+11-22 10:59:33.666 18746 18877 W libEGL  : EGLNativeWindowType 0x727d8bfc90 disconnect failed
+11-22 10:59:37.563 18746 18746 E SpannableStringBuilder: SPAN_EXCLUSIVE_EXCLUSIVE spans cannot have a zero length
+11-22 10:59:37.572 18746 18746 E SpannableStringBuilder: SPAN_EXCLUSIVE_EXCLUSIVE spans cannot have a zero length
+11-22 10:59:37.718 18746 18746 I HwViewRootImpl: removeInvalidNode all the node in jank list is out of time
+11-22 10:59:40.398 18746 18746 E SpannableStringBuilder: SPAN_EXCLUSIVE_EXCLUSIVE spans cannot have a zero length
+11-22 10:59:40.398 18746 18746 E SpannableStringBuilder: SPAN_EXCLUSIVE_EXCLUSIVE spans cannot have a zero length
+11-22 10:59:45.016 18746 18746 I HwViewRootImpl: removeInvalidNode all the node in jank list is out of time
+11-22 10:59:50.029 18746 18746 V AudioManager: querySoundEffectsEnabled...
+11-22 10:59:53.290 18746 18746 V AudioManager: querySoundEffectsEnabled...
+11-22 10:59:53.303 18746 21201 I okhttp.OkHttpClient: --> GET http://127.0.0.1:3000/albums/1
+11-22 10:59:53.359 18746 21201 I okhttp.OkHttpClient: <-- 200 OK http://127.0.0.1:3000/albums/1 (55ms, 286-byte body)
+11-22 10:59:53.381 18746 19170 W niandes.vinilo: Accessing hidden method Lsun/misc/Unsafe;->getObjectVolatile(Ljava/lang/Object;J)Ljava/lang/Object; (greylist, linking, allowed)
+11-22 10:59:53.386 18746 21201 I okhttp.OkHttpClient: --> POST http://127.0.0.1:3000/bands/1/albums/1 (0-byte body)
+11-22 10:59:53.409 18746 21201 I okhttp.OkHttpClient: <-- 200 OK http://127.0.0.1:3000/bands/1/albums/1 (22ms, 493-byte body)
+11-22 10:59:53.419 18746 21201 I okhttp.OkHttpClient: --> GET http://127.0.0.1:3000/albums/1
+11-22 10:59:53.456 18746 21201 I okhttp.OkHttpClient: <-- 200 OK http://127.0.0.1:3000/albums/1 (36ms, 519-byte body)
+11-22 10:59:53.535 18746 18746 I HwViewRootImpl: removeInvalidNode all the node in jank list is out of time
+11-22 10:59:53.573 18746 21201 I okhttp.OkHttpClient: --> GET http://127.0.0.1:3000/bands/1
+11-22 10:59:53.609 18746 21201 I okhttp.OkHttpClient: <-- 200 OK http://127.0.0.1:3000/bands/1 (35ms, 859-byte body)
+11-22 10:59:53.638 18746 21201 I okhttp.OkHttpClient: --> GET http://127.0.0.1:3000/prizes
+11-22 10:59:53.664 18746 21201 I okhttp.OkHttpClient: <-- 200 OK http://127.0.0.1:3000/prizes (25ms, 917-byte body)
+11-22 10:59:53.718 18746 19220 D StrictMode: StrictMode policy violation: android.os.strictmode.UntaggedSocketViolation: Untagged socket detected; use TrafficStats.setThreadSocketTag() to track all network usage
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at android.os.StrictMode.onUntaggedSocket(StrictMode.java:2124)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.android.server.NetworkManagementSocketTagger.tag(NetworkManagementSocketTagger.java:98)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at libcore.io.BlockGuardOs.tagSocket(BlockGuardOs.java:52)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at libcore.io.BlockGuardOs.socket(BlockGuardOs.java:372)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at libcore.io.ForwardingOs.socket(ForwardingOs.java:217)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at libcore.io.IoBridge.socket(IoBridge.java:658)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at java.net.PlainSocketImpl.socketCreate(PlainSocketImpl.java:128)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at java.net.AbstractPlainSocketImpl.create(AbstractPlainSocketImpl.java:128)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at java.net.Socket.createImpl(Socket.java:489)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at java.net.Socket.getImpl(Socket.java:552)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at java.net.Socket.setSoTimeout(Socket.java:1180)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.android.okhttp.internal.io.RealConnection.connectSocket(RealConnection.java:143)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.android.okhttp.internal.io.RealConnection.connect(RealConnection.java:116)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.android.okhttp.internal.http.StreamAllocation.findConnection(StreamAllocation.java:186)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.android.okhttp.internal.http.StreamAllocation.findHealthyConnection(StreamAllocation.java:128)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.android.okhttp.internal.http.StreamAllocation.newStream(StreamAllocation.java:97)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.android.okhttp.internal.http.HttpEngine.connect(HttpEngine.java:289)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.android.okhttp.internal.http.HttpEngine.sendRequest(HttpEngine.java:232)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.execute(HttpURLConnectionImpl.java:465)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.connect(HttpURLConnectionImpl.java:131)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.android.okhttp.internal.huc.DelegatingHttpsURLConnection.connect(DelegatingHttpsURLConnection.java:90)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.android.okhttp.internal.huc.HttpsURLConnectionImpl.connect(HttpsURLConnectionImpl.java:30)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.bumptech.glide.load.data.HttpUrlFetcher.loadDataWithRedirects(HttpUrlFetcher.java:93)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.bumptech.glide.load.data.HttpUrlFetcher.loadData(HttpUrlFetcher.java:58)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.bumptech.glide.load.model.MultiModelLoader$MultiFetcher.loadData(MultiModelLoader.java:100)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.bumptech.glide.load.engine.SourceGenerator.startNextLoad(SourceGenerator.java:95)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.bumptech.glide.load.engine.SourceGenerator.startNext(SourceGenerator.java:88)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.bumptech.glide.load.engine.DecodeJob.runGenerators(DecodeJob.java:311)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.bumptech.glide.load.engine.DecodeJob.runWrapped(DecodeJob.java:280)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.bumptech.glide.load.engine.DecodeJob.run(DecodeJob.java:235)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at java.util.concurrent.ThreadPoolExecutor.processTask(ThreadPoolExecutor.java:1187)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1152)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.bumptech.glide.load.engine.executor.GlideExecutor$DefaultThreadFactory$1.run(GlideExecutor.java:424)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at java.lang.Thread.run(Thread.java:929)
+11-22 10:59:53.718 18746 19220 D StrictMode: 	at com.bumptech.glide.load.engine.executor.GlideExecutor$DefaultPriorityThreadFactory$1.run(GlideExecutor.java:383)
+11-22 10:59:53.755 18746 18746 W Glide   : Load failed for [https://pm1.narvii.com/6724/a8b29909071e9d08517b40c748b6689649372852v2_hq.jpg] with dimensions [148x148]
+11-22 10:59:53.755 18746 18746 W Glide   : class com.bumptech.glide.load.engine.GlideException: Failed to load resource
+11-22 10:59:53.755 18746 18746 W Glide   : There was 1 root cause:
+11-22 10:59:53.755 18746 18746 W Glide   : com.bumptech.glide.load.HttpException(Failed to connect or obtain data, status code: -1)
+11-22 10:59:53.755 18746 18746 W Glide   :  call GlideException#logRootCauses(String) for more detail
+11-22 10:59:53.755 18746 18746 W Glide   :   Cause (1 of 1): class com.bumptech.glide.load.engine.GlideException: Fetching data failed, class java.io.InputStream, REMOTE
+11-22 10:59:53.755 18746 18746 W Glide   : There was 1 root cause:
+11-22 10:59:53.755 18746 18746 W Glide   : com.bumptech.glide.load.HttpException(Failed to connect or obtain data, status code: -1)
+11-22 10:59:53.755 18746 18746 W Glide   :  call GlideException#logRootCauses(String) for more detail
+11-22 10:59:53.755 18746 18746 W Glide   :     Cause (1 of 1): class com.bumptech.glide.load.engine.GlideException: Fetch failed
+11-22 10:59:53.755 18746 18746 W Glide   : There was 1 root cause:
+11-22 10:59:53.755 18746 18746 W Glide   : com.bumptech.glide.load.HttpException(Failed to connect or obtain data, status code: -1)
+11-22 10:59:53.755 18746 18746 W Glide   :  call GlideException#logRootCauses(String) for more detail
+11-22 10:59:53.755 18746 18746 W Glide   :       Cause (1 of 1): class com.bumptech.glide.load.HttpException: Failed to connect or obtain data, status code: -1
+11-22 10:59:53.755 18746 18746 I Glide   : Root cause (1 of 1)
+11-22 10:59:54.188 18746 18746 W Glide   : Load failed for [https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Ruben_Blades_by_Gage_Skidmore.jpg/800px-Ruben_Blades_by_Gage_Skidmore.jpg] with dimensions [77x77]
+11-22 10:59:54.188 18746 18746 W Glide   : class com.bumptech.glide.load.engine.GlideException: Failed to load resource
+11-22 10:59:54.188 18746 18746 W Glide   : There was 1 root cause:
+11-22 10:59:54.188 18746 18746 W Glide   : com.bumptech.glide.load.HttpException(Failed to connect or obtain data, status code: 400)
+11-22 10:59:54.188 18746 18746 W Glide   :  call GlideException#logRootCauses(String) for more detail
+11-22 10:59:54.188 18746 18746 W Glide   :   Cause (1 of 1): class com.bumptech.glide.load.engine.GlideException: Fetching data failed, class java.io.InputStream, REMOTE
+11-22 10:59:54.188 18746 18746 W Glide   : There was 1 root cause:
+11-22 10:59:54.188 18746 18746 W Glide   : com.bumptech.glide.load.HttpException(Failed to connect or obtain data, status code: 400)
+11-22 10:59:54.188 18746 18746 W Glide   :  call GlideException#logRootCauses(String) for more detail
+11-22 10:59:54.188 18746 18746 W Glide   :     Cause (1 of 1): class com.bumptech.glide.load.engine.GlideException: Fetch failed
+11-22 10:59:54.188 18746 18746 W Glide   : There was 1 root cause:
+11-22 10:59:54.188 18746 18746 W Glide   : com.bumptech.glide.load.HttpException(Failed to connect or obtain data, status code: 400)
+11-22 10:59:54.188 18746 18746 W Glide   :  call GlideException#logRootCauses(String) for more detail
+11-22 10:59:54.188 18746 18746 W Glide   :       Cause (1 of 1): class com.bumptech.glide.load.HttpException: Failed to connect or obtain data, status code: 400
+11-22 10:59:54.190 18746 18746 I Glide   : Root cause (1 of 1)
+11-22 10:59:54.190 18746 18746 I Glide   : com.bumptech.glide.load.HttpException: Failed to connect or obtain data, status code: 400
+11-22 10:59:54.190 18746 18746 I Glide   : 	at com.bumptech.glide.load.data.HttpUrlFetcher.loadDataWithRedirects(HttpUrlFetcher.java:98)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at com.bumptech.glide.load.data.HttpUrlFetcher.loadData(HttpUrlFetcher.java:58)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at com.bumptech.glide.load.model.MultiModelLoader$MultiFetcher.loadData(MultiModelLoader.java:100)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at com.bumptech.glide.load.engine.SourceGenerator.startNextLoad(SourceGenerator.java:95)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at com.bumptech.glide.load.engine.SourceGenerator.startNext(SourceGenerator.java:88)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at com.bumptech.glide.load.engine.DecodeJob.runGenerators(DecodeJob.java:311)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at com.bumptech.glide.load.engine.DecodeJob.runWrapped(DecodeJob.java:280)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at com.bumptech.glide.load.engine.DecodeJob.run(DecodeJob.java:235)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at java.util.concurrent.ThreadPoolExecutor.processTask(ThreadPoolExecutor.java:1187)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1152)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at com.bumptech.glide.load.engine.executor.GlideExecutor$DefaultThreadFactory$1.run(GlideExecutor.java:424)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at java.lang.Thread.run(Thread.java:929)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at com.bumptech.glide.load.engine.executor.GlideExecutor$DefaultPriorityThreadFactory$1.run(GlideExecutor.java:383)
+11-22 10:59:54.190 18746 18746 I Glide   : Caused by: java.io.FileNotFoundException: https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Ruben_Blades_by_Gage_Skidmore.jpg/800px-Ruben_Blades_by_Gage_Skidmore.jpg
+11-22 10:59:54.190 18746 18746 I Glide   : 	at com.android.okhttp.internal.huc.HttpURLConnectionImpl.getInputStream(HttpURLConnectionImpl.java:255)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at com.android.okhttp.internal.huc.DelegatingHttpsURLConnection.getInputStream(DelegatingHttpsURLConnection.java:211)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at com.android.okhttp.internal.huc.HttpsURLConnectionImpl.getInputStream(HttpsURLConnectionImpl.java:30)
+11-22 10:59:54.190 18746 18746 I Glide   : 	at com.bumptech.glide.load.data.HttpUrlFetcher.loadDataWithRedirects(HttpUrlFetcher.java:95)
+11-22 10:59:54.190 18746 18746 I Glide   : 	... 13 more

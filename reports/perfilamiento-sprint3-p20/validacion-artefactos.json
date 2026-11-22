@@ -1,0 +1,68 @@
+[
+  {
+    "version": "antes",
+    "pasada": 1,
+    "pid": "13322",
+    "historias": 10,
+    "profiler_captures": 10,
+    "phone_captures": 10,
+    "cpu_samples": 1808,
+    "memory_samples": 724,
+    "asdb_sha256": "65d3e211447efa265286520f8fd403498a93e51d085145f3dfa9d41675ecdbfb"
+  },
+  {
+    "version": "antes",
+    "pasada": 2,
+    "pid": "20375",
+    "historias": 10,
+    "profiler_captures": 10,
+    "phone_captures": 10,
+    "cpu_samples": 1809,
+    "memory_samples": 722,
+    "asdb_sha256": "edba0765c2b9234bb64ac219cafd938181e65126f03fba71dfd4adbf3339323c"
+  },
+  {
+    "version": "antes",
+    "pasada": 3,
+    "pid": "27958",
+    "historias": 10,
+    "profiler_captures": 10,
+    "phone_captures": 10,
+    "cpu_samples": 1812,
+    "memory_samples": 725,
+    "asdb_sha256": "e1f118759e838aeebf121197572c23e761e118b3bbe29c35f84af482c838abc2"
+  },
+  {
+    "version": "despues",
+    "pasada": 1,
+    "pid": "4834",
+    "historias": 10,
+    "profiler_captures": 10,
+    "phone_captures": 10,
+    "cpu_samples": 1802,
+    "memory_samples": 720,
+    "asdb_sha256": "2f14a336293ab250fda11c554e8cc02a15f95bb88ae0e2f1433995bb56bc90b9"
+  },
+  {
+    "version": "despues",
+    "pasada": 2,
+    "pid": "11816",
+    "historias": 10,
+    "profiler_captures": 10,
+    "phone_captures": 10,
+    "cpu_samples": 1807,
+    "memory_samples": 724,
+    "asdb_sha256": "5a25bdfdf989ef4c8a612b06adf60a3d99a7d148f5f86939a59862cb886be29b"
+  },
+  {
+    "version": "despues",
+    "pasada": 3,
+    "pid": "18746",
+    "historias": 10,
+    "profiler_captures": 10,
+    "phone_captures": 10,
+    "cpu_samples": 1805,
+    "memory_samples": 724,
+    "asdb_sha256": "24e968c0f4b1b35d38ef62b47b99f707f02d7100dd33652562038b47b4ce0282"
+  }
+]

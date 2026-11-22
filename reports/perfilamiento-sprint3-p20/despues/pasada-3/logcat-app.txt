@@ -1,0 +1,3 @@
+--------- beginning of system
+11-22 10:50:45.389 18746 18746 D ActivityThread: add activity client record, r= ActivityRecord{4450308 token=android.os.BinderProxy@63e44e0 {co.edu.uniandes.vinilos/co.edu.uniandes.vinilos.MainActivity}} token= android.os.BinderProxy@63e44e0
+read: unexpected EOF!

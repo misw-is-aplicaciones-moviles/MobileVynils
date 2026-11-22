@@ -1,0 +1,585 @@
+# Reporte de perfilamiento de desempeño: Sprint 3
+
+**Antes y después de las optimizaciones · Vinilos (MobileVynils)**
+
+## Tabla de contenidos
+
+- [1. Objetivo](#1-objetivo)
+- [2. Historias de usuario evaluadas](#2-historias-de-usuario-evaluadas)
+- [3. Entorno de pruebas](#3-entorno-de-pruebas)
+   - [3.1. Dispositivos utilizados](#31-dispositivos-utilizados)
+   - [3.2. Herramientas utilizadas](#32-herramientas-utilizadas)
+- [4. Metodología de perfilamiento](#4-metodología-de-perfilamiento)
+   - [4.1. Versiones comparadas](#41-versiones-comparadas)
+   - [4.2. Condiciones de ejecución](#42-condiciones-de-ejecución)
+   - [4.3. Criterio de medición](#43-criterio-de-medición)
+   - [4.4. Comparabilidad y limitaciones](#44-comparabilidad-y-limitaciones)
+- [5. Resultados del perfilamiento](#5-resultados-del-perfilamiento)
+   - [5.1. Resultados consolidados antes y después](#51-resultados-consolidados-antes-y-después)
+   - [5.2. Análisis de consumo de memoria](#52-análisis-de-consumo-de-memoria)
+   - [5.3. Análisis de CPU y tiempos de respuesta](#53-análisis-de-cpu-y-tiempos-de-respuesta)
+   - [5.4. Comparación entre dispositivos (fragmentación)](#54-comparación-entre-dispositivos-fragmentación)
+   - [5.5. Análisis de ANRs y estabilidad](#55-análisis-de-anrs-y-estabilidad)
+- [6. Optimizaciones implementadas](#6-optimizaciones-implementadas)
+   - [6.1. Gestión de memoria](#61-gestión-de-memoria)
+   - [6.2. Prevención de ANRs](#62-prevención-de-anrs)
+   - [6.3. Impacto de las optimizaciones](#63-impacto-de-las-optimizaciones)
+- [7. Problemas identificados](#7-problemas-identificados)
+- [8. Conclusiones](#8-conclusiones)
+   - [8.1. Estabilidad](#81-estabilidad)
+   - [8.2. Efecto de las optimizaciones](#82-efecto-de-las-optimizaciones)
+   - [8.3. Diferencias entre dispositivos](#83-diferencias-entre-dispositivos)
+- [9. Evidencias del perfilamiento](#9-evidencias-del-perfilamiento)
+   - [9.1. Antes de optimizar](#91-antes-de-optimizar)
+   - [9.2. Después de optimizar](#92-después-de-optimizar)
+
+## 1. Objetivo
+
+Evaluar el desempeño de Vinilos durante diez historias de usuario de los sprints 1, 2 y 3. Se observaron el **consumo de memoria**, la **utilización de CPU**, los **tiempos de respuesta disponibles** y la presencia de **errores o indicios de ANR**. El objetivo fue doble:
+
+1. Comparar el comportamiento en tres teléfonos y un emulador con Android 5.0 (API 21), con hardware y versiones de Android distintas (fragmentación).
+2. Comparar cada dispositivo consigo mismo antes y después de aplicar las optimizaciones de memoria, de ANRs y las micro-optimizaciones.
+
+**Estado de consolidación (22/11/2026):** el aporte del Huawei P20 está completo: diez historias, tres repeticiones antes y tres después (60 escenarios de perfilamiento verificados). Los resultados de Redmi, Galaxy y emulador siguen pendientes de incorporación. Las referencias a esos equipos describen el alcance previsto, no ejecuciones acreditadas por este aporte.
+
+**Alcance previsto:** diez historias de usuario (HU02, HU04, HU05, HU07, HU09, HU10, HU12, HU13, HU14 y HU15), tres teléfonos Android físicos, un emulador con Android 5.0 (API 21) y dos versiones de la aplicación. En el Huawei P20 se comparó `develop-bo2`, commit `6a8d5c15d6ff32b2355ecc7c7eb90da147680b65`, con `develop` (referencia local `origin/develop`), commit `e69c12b902b7b6998dfe489a58cc69d1a9056463`. Las versiones de los demás dispositivos se completarán con sus respectivos aportes.
+
+## 2. Historias de usuario evaluadas
+
+Estas son las diez historias incluidas en el perfilamiento. El Huawei P20 completó los diez recorridos; HU05 se considera regresión, sin atribuirle una optimización propia de esta comparación. La tabla describe el recorrido de cada historia: desde qué pantalla se parte, qué acción se realiza y en qué pantalla termina. En el P20 se repitieron los mismos recorridos y datos entre versiones. La equivalencia con los procedimientos de los otros dispositivos queda pendiente de comprobar.
+
+| ID | Historia de usuario | Inicio del escenario | Acción realizada | Fin del escenario |
+|---|---|---|---|---|
+| **HU02** | Consultar el detalle de un álbum | Catálogo de álbumes cargado | Seleccionar un álbum | Detalle del álbum visible (portada, canciones y comentarios) |
+| **HU04** | Consultar el detalle de un artista | Listado de artistas cargado | Seleccionar un músico o una banda | Detalle del artista visible (álbumes, premios e integrantes si es banda) |
+| **HU05** | Consultar el listado de coleccionistas | Catálogo de álbumes cargado | Pulsar **Coleccionistas** | Listado de coleccionistas cargado |
+| **HU07** | Crear un álbum | Catálogo de álbumes cargado (rol Coleccionista) | Pulsar **Crear álbum**, llenar nombre, URL de portada, fecha, descripción, género y sello, y pulsar **Crear álbum** | Confirmación «Álbum creado» |
+| **HU09** | Comentar un álbum | Detalle del álbum cargado | Pulsar **Comentar**, elegir quién comenta, dar valoración (1 a 5), escribir el comentario y pulsar **Publicar comentario** | Confirmación «Comentario publicado» |
+| **HU10** | Agregar artistas favoritos a un coleccionista | Detalle de un coleccionista cargado | Pulsar **Agregar favorito**, seleccionar un artista y pulsar **Agregar «…» a favoritos** | Confirmación «Artista favorito agregado» |
+| **HU12** | Agregar músicos a una banda | Detalle de una banda cargado | Pulsar **Agregar integrante**, seleccionar un músico y pulsar **Agregar a «banda»** | Confirmación «Integrante agregado a la banda» |
+| **HU13** | Crear premios | Selector de premios abierto desde el detalle de un artista | Pulsar **Crear un premio nuevo**, escribir nombre, descripción y organización, y pulsar **Crear premio** | Confirmación «Premio creado» |
+| **HU14** | Agregar un premio a un artista | Detalle de un artista cargado | Pulsar **Agregar premio**, seleccionar un premio, **Continuar con «…»**, elegir la fecha y pulsar **Asignar premio** | Confirmación «Premio asignado al artista» |
+| **HU15** | Agregar un álbum a un artista | Detalle de un artista cargado | Pulsar **Agregar álbum**, seleccionar un álbum y pulsar **Agregar «…»** | Confirmación «Álbum agregado al artista» |
+
+Las mediciones de CPU y memoria de las historias con formulario o selector (HU07, HU09, HU10, HU12, HU13, HU14 y HU15) cubren **todo el flujo**, incluida la escritura y la selección. No miden solamente el intervalo botón final → confirmación.
+
+## 3. Entorno de pruebas
+
+En esta sección se describen los dispositivos y las herramientas con los que se hicieron las mediciones.
+
+### 3.1. Dispositivos utilizados
+
+El alcance previsto incluye tres dispositivos físicos y un emulador; este documento incorpora por ahora las mediciones verificadas del Huawei P20. Se eligieron teléfonos de distinta gama, fabricante y versión de Android, para ver cómo se comporta la app en entornos diferentes. El emulador se añadió para cubrir Android 5.0 (API 21), la versión mínima que soporta la app (`minSdk 21`), porque ningún teléfono disponible tiene esa versión:
+
+| Característica | Dispositivo 1 | Dispositivo 2 | Dispositivo 3 | Dispositivo 4 |
+|---|---|---|---|---|
+| Marca y modelo | **Xiaomi Redmi Note 13 Pro (4G)** | **Samsung Galaxy S24 Ultra** | **HUAWEI P20** | **Emulador Android (AVD `Vinilos_API_21`), perfil Google Pixel 4** |
+| Identificador del modelo | 23117RA68G | SM-S928B | EML-L09 | Imagen de sistema `android-21` · `default` · `x86_64`, sin Play Store |
+| Versión de Android | **Android 15 (API 35)** | **Android 17 (API 37)** | **Android 10 (API 29)** | **Android 5.0 (API 21)** |
+| Memoria RAM | 8 GB | 12 GB | 4 GB | 2 GB (asignada al emulador) |
+| Procesador | MediaTek Helio G99-Ultra (8 núcleos) | Qualcomm Snapdragon 8 Gen 3 (8 núcleos) | Kirin 970 (8 núcleos) | x86_64 virtual (4 núcleos) |
+| Resolución de pantalla | 1080 × 2400 | 1440 × 3120 (600 dpi) | 1080 × 2244 (densidad 480, override 408) | 1080 × 2280 (densidad 440) |
+| Gama | Media | Alta | Media-baja (2018) | Virtual; versión mínima soportada |
+| Equipo físico | Sí | Sí | Sí | No |
+
+Los tres teléfonos cubren **tres generaciones de Android** (10, 15 y 17), **tres fabricantes de chip** (MediaTek, Qualcomm y HiSilicon) y **tres tamaños de RAM** (4, 8 y 12 GB). Esa variedad es la que permite observar el efecto de la fragmentación. El emulador añade la **versión mínima, Android 5.0**. Sus valores dependen del equipo anfitrión y no se comparan directamente con los de los teléfonos físicos.
+
+### 3.2. Herramientas utilizadas
+
+Las herramientas utilizadas fueron las siguientes. Para cada una se indica para qué se usó en estas pruebas:
+
+| Herramienta | Uso en estas pruebas |
+|---|---|
+| Android Studio → **View Live Telemetry** | CPU (serie `App`) y memoria Total del proceso, con su desglose por categoría (Java, Native, Graphics, Stack, Code, Others). Exportación `.asdb` y capturas. |
+| **Logcat** / `adb logcat` | P20: Logcat filtrado por PID de cada pasada; captura separada de eventos `am_anr`/`am_crash`. Ventanas START–END en `ventanas.json` con el reloj del SDK de Profiler. La tercera pasada posterior tiene Logcat incompleto por EOF; se documenta en § 5.5. |
+| Lectura de las exportaciones `.asdb` | P20: extracción de las seis exportaciones originales con los tipos protobuf de Studio. Total = KB/1024; CPU App por diferencias de contadores con la normalización y límites usados por Studio. Se conservan CSV, resultados y SHA-256. |
+| Lecturas del backend | P20: comprobaciones de los registros y asociaciones después de cada ventana; misma base aislada reiniciada por pasada, con datos sintéticos. Las seis pasadas terminaron con los mismos datos de prueba. |
+| System Trace / Heap Dump | P20: no ejecutados. Las curvas de Live Telemetry no demuestran ausencia de fugas ni atribuyen el trabajo a métodos concretos. Otros dispositivos: pendiente de completar. |
+
+## 4. Metodología de perfilamiento
+
+En el Huawei P20 se instalaron ambas versiones y se recorrieron las diez historias con Live Telemetry grabando. Se registraron CPU App y memoria Total por ventana, con comprobaciones funcionales y revisión de los registros conservados. Se hicieron tres pasadas previas y, a continuación, tres posteriores, reiniciando la base y los datos de la app por pasada. Después se compararon los valores de antes y de después en el mismo dispositivo. En esta sección se detallan las versiones comparadas, las condiciones de ejecución, cómo se tomó cada medida y qué limita la comparación.
+
+### 4.1. Versiones comparadas
+
+Esta tabla indica qué versión de la app se midió antes y después de optimizar en cada dispositivo, y cuántas veces se repitió cada historia:
+
+| Dispositivo | Versión antes de optimizar | Versión después de optimizar | Repeticiones por HU |
+|---|---|---|---|
+| 1 – Redmi Note 13 Pro | `[COMPLETAR rama]` · `[COMPLETAR commit]` ([COMPLETAR fecha]) | `[COMPLETAR rama]` · `[COMPLETAR commit]` ([COMPLETAR fecha]) | [COMPLETAR] antes · [COMPLETAR] después |
+| 2 – Galaxy S24 Ultra | `[COMPLETAR rama]` · `[COMPLETAR commit]` (`[COMPLETAR].asdb`, [COMPLETAR fecha y hora]) | `[COMPLETAR rama]` · `[COMPLETAR commit]` (`[COMPLETAR].asdb`, [COMPLETAR fecha y hora]) | [COMPLETAR] |
+| 3 – Huawei P20 | `develop-bo2` · `6a8d5c15d6ff32b2355ecc7c7eb90da147680b65` · 22/11/2026 | `develop` / `origin/develop` · `e69c12b902b7b6998dfe489a58cc69d1a9056463` · 22/11/2026 | **3 antes · 3 después** |
+| 4 – Emulador API 21 | `[COMPLETAR rama]` · `[COMPLETAR commit]` ([COMPLETAR fecha]) | `[COMPLETAR rama]` · `[COMPLETAR commit]` ([COMPLETAR fecha]) | [COMPLETAR] antes · [COMPLETAR] después |
+
+En el P20 se usaron dos APK **debuggable**, ambos con versión visible `3.0.0b` y código 3 para permitir reinstalación; el código funcional corresponde a los commits anteriores. Los metadatos de versión no identifican por sí solos el código medido. SHA-256 antes: `edeb9b4196b37c6ee8c3258fc9e5e430de13f16ed4afea7b78e9fe47ed031541`; después: `d2c9c3639163992e1610f5ba181b31d727bd109ce5db8eafb9584a2d03fa74e4`. También se guardó el hash en el entorno de cada pasada. Otros dispositivos: pendiente de completar.
+
+### 4.2. Condiciones de ejecución
+
+Estas son las condiciones en las que se ejecutó la app en cada dispositivo: cómo se conectó al backend, en qué estado estaba el proceso y qué datos se usaron:
+
+| Condición | Dispositivo 1 | Dispositivo 2 | Dispositivo 3 | Dispositivo 4 |
+|---|---|---|---|---|
+| Conexión | [COMPLETAR: Wi-Fi / `adb reverse tcp:3000 tcp:3000`] | [COMPLETAR] | USB: `adb reverse tcp:3000 tcp:3013`; backend exclusivo en `127.0.0.1:3013`, URL del APK `http://127.0.0.1:3000/`; imágenes remotas no controladas | [COMPLETAR: p. ej. `10.0.2.2:3000` desde el emulador] |
+| Estado del proceso | [COMPLETAR: frío / caliente; si se conservó entre historias; GC manual sí/no] | [COMPLETAR] | App y base reiniciadas por pasada; entrada al catálogo y 10 s de calentamiento; proceso conservado entre HU, sin GC manual | [COMPLETAR] |
+| Datos de prueba | [COMPLETAR] | [COMPLETAR] | Semilla + coleccionista y banda `P20 Perfilamiento`, músico libre, álbum `P20 Album` y premio `P20 Premio`; comentario fijo de 30 dígitos, valoración 4; Queen como favorito. Datos finales equivalentes en las seis pasadas | [COMPLETAR] |
+
+**Automatización del P20:** preparación de cada historia por jerarquía Android fuera de la ventana; espera de 8 s y reproducción del cuerpo mediante ADB. Las ventanas incluyen pausas iguales entre acciones y 10 s de reposo final. Las capturas y comprobaciones del backend se hicieron después de cerrar cada ventana. Las capturas de Studio son originales, no gráficas reconstruidas. Fuente del sistema 0.85, dispositivo conectado por USB; temperatura de batería al inicio de las pasadas registrada entre 31.0 y 33.0 °C.
+
+### 4.3. Criterio de medición
+
+Para que los valores significaran lo mismo en todos los casos, cada métrica se tomó así:
+
+- **Memoria máxima (MB):** valor **Total** del gráfico `MEMORY` de Live Telemetry (Java + Native + Graphics + Stack + Code + Others).
+- **CPU máxima (%):** máximo de la serie verde **App** de `LIVE_CPU`, sin sumar Others. Es la fracción del tiempo de CPU disponible en los 8 núcleos, no la carga de un solo núcleo.
+- **Cómo se obtuvo cada valor:**
+  - Redmi: [COMPLETAR: estimación visual (≈) o exportación].
+  - S24 Ultra: [COMPLETAR].
+  - P20: mediana de los máximos de tres repeticiones por versión, con rango mínimo–máximo. Ventanas delimitadas mediante el reloj del SDK de Profiler y guardadas en `ventanas.json`. CPU fraccionaria derivada de contadores; también se conserva el porcentaje entero representado por Studio.
+  - Emulador API 21: [COMPLETAR].
+- **Ventanas de medición del P20:** duración real del cuerpo del escenario, incluida escritura, selección y 10 s finales de reposo; las pausas son iguales, pero el transporte ADB introduce pequeñas diferencias. Se conservan los límites y duraciones de cada repetición. Medianas de duración (s):
+
+| HU | Antes | Después |
+|---|---:|---:|
+| HU02 | 14.7 | 14.8 |
+| HU04 | 20.6 | 20.6 |
+| HU05 | 14.1 | 14.0 |
+| HU07 | 69.1 | 68.8 |
+| HU09 | 51.9 | 51.8 |
+| HU10 | 32.7 | 32.7 |
+| HU12 | 35.8 | 35.9 |
+| HU13 | 41.9 | 41.8 |
+| HU14 | 45.9 | 45.9 |
+| HU15 | 35.4 | 35.5 |
+
+- **Tiempo de respuesta E2E (ms):** desde la acción del usuario hasta que la pantalla carga o confirma. P20: **no medido**; las duraciones de las ventanas completas no son latencias E2E. Otros dispositivos: pendiente.
+- **Tiempo HTTP (ms):** solo cuando aparece en los registros de OkHttp en Logcat. **No equivale** al tiempo E2E.
+- **ANR y estabilidad:** eventos observados en pantalla o en Logcat dentro del intervalo examinado. "No identificado" no asegura su ausencia en otras ejecuciones.
+
+### 4.4. Comparabilidad y limitaciones
+
+Estas condiciones limitan lo que se puede concluir y deben tenerse en cuenta al leer los resultados:
+
+1. **Procedimientos por dispositivo.** P20: protocolo automatizado documentado. Falta contrastarlo con los otros aportes; no se asume equivalencia ni se comparan sus valores hasta incorporarlos.
+2. **Estado previo del proceso.** P20: un proceso por pasada, conservado entre las diez historias; la memoria puede incluir recursos de pantallas anteriores.
+3. **Arranque en frío vs. caliente.** P20: datos vacíos al inicio de cada pasada, pero grabación iniciada después del calentamiento del catálogo. No es una medición de arranque en frío.
+4. **Datos de prueba.** P20: mismas entradas y estado inicial en las seis pasadas, con resultados finales equivalentes; no se ha comprobado la equivalencia con otros dispositivos. El catálogo es pequeño y varias imágenes de la semilla fallan al cargarse.
+5. **Varios cambios acumulados.** La comparación mide dos versiones de la app, no el efecto aislado de cada optimización.
+6. **Build debuggable bajo Profiler.** El Profiler y la compilación debuggable añaden sobrecarga; los valores no se extrapolan directamente a una build de release.
+7. **Cobertura de versiones.** Los equipos previstos cubren Android 10 a 17 y un emulador API 21. El aporte incorporado acredita únicamente Android 10 / API 29; faltan los resultados de los demás equipos. Las versiones de Android 5.1 a 9 no se perfilaron.
+8. **Emulador.** Los valores del Dispositivo 4 dependen del equipo anfitrión y de la CPU virtual x86_64. Se comparan antes y después en el mismo emulador, no directamente con los teléfonos físicos.
+
+9. **Muestra y orden.** P20: tres repeticiones por versión, primero todas las previas y después las posteriores; los rangos no son intervalos de confianza. No se aísla causalidad ni significancia estadística.
+10. **Registro de estabilidad.** P20: Logcat de la tercera pasada posterior terminó con `unexpected EOF`; sus conteos son N/D. Las diez ventanas de CPU/memoria de esa pasada están completas en el `.asdb`. Se conserva además la captura de eventos ANR/crash y una recuperación parcial de Logcat.
+
+## 5. Resultados del perfilamiento
+
+En esta sección se presentan los resultados obtenidos. Primero se muestra una tabla con todas las mediciones y gráficas que resumen el aporte del P20; las comparaciones entre equipos quedan pendientes. Después se analizan por separado la memoria, la CPU, la comparación entre dispositivos y la estabilidad.
+
+### 5.1. Resultados consolidados antes y después
+
+La siguiente tabla reúne todas las mediciones. Cada fila es una historia de usuario en un dispositivo. Para cada una se muestra la memoria máxima y el pico de CPU antes y después de optimizar, y la columna **Δ** indica cuánto cambió en porcentaje: un valor negativo indica que bajó el máximo mediano observado y uno positivo que subió; esto no demuestra por sí solo mejora perceptible o significancia estadística.
+
+| Dispositivo | HU | Memoria antes (MB) | Memoria después (MB) | Δ memoria | CPU App antes (%) | CPU App después (%) | Δ CPU | ANR |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| **1 – Redmi Note 13 Pro** | HU02 | Fallos de imágenes remotas de la semilla | P20 / varias HU | Investigación | Por clasificar tras comprobar el efecto visual | Revisar URL y manejo de error; no atribuir a escrituras fallidas |
+| Advertencias UntaggedSocketViolation | P20 / varias HU | Observación | Por revisar | Revisar etiquetado del tráfico; conteos con cobertura comparable |
+| Logcat se interrumpe con EOF | P20 / tercera pasada posterior | Observación de infraestructura | Limitación del registro | Conservar original y recuperación parcial; no informar conteos cero |
+| Pico mediano de CPU aumenta +8.8 % | P20 / HU07 | Investigación | Por determinar | Repetir con más muestras y traza si se investiga causalidad | [COMPLETAR] | [COMPLETAR] |
+| | HU04 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU05 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU07 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU09 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU10 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU12 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU13 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU14 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU15 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| **2 – Galaxy S24 Ultra** | HU02 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU04 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU05 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU07 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU09 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU10 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU12 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU13 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU14 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU15 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| **3 – Huawei P20** | HU02 | 212.1 (187.5–217.1) | 187.8 (186.7–191.4) | -11.4% | 26.6 (23.2–27.3) | 24.4 (23.9–26.9) | -8.5% | No identificado en registros conservados¹ |
+|  | HU04 | 180.6 (169.4–183.4) | 165.8 (155.4–175.7) | -8.2% | 23.9 (22.5–24.0) | 23.8 (22.9–27.5) | -0.5% | No identificado en registros conservados¹ |
+|  | HU05 | 178.0 (169.5–185.2) | 171.9 (167.6–188.0) | -3.4% | 25.5 (22.2–27.0) | 22.4 (21.6–25.5) | -11.9% | No identificado en registros conservados¹ |
+|  | HU07 | 194.3 (193.0–197.3) | 188.1 (185.8–188.7) | -3.2% | 23.4 (23.2–25.6) | 25.5 (22.8–29.7) | +8.8% | No identificado en registros conservados¹ |
+|  | HU09 | 203.5 (199.2–217.8) | 211.1 (206.4–214.4) | +3.7% | 20.8 (20.5–24.7) | 19.5 (18.1–20.9) | -6.2% | No identificado en registros conservados¹ |
+|  | HU10 | 217.3 (217.1–221.6) | 201.0 (195.6–227.6) | -7.5% | 26.4 (24.1–33.5) | 24.5 (23.6–25.8) | -7.2% | No identificado en registros conservados¹ |
+|  | HU12 | 197.8 (192.3–197.9) | 198.5 (190.5–206.1) | +0.4% | 25.9 (23.1–26.9) | 24.4 (21.7–26.4) | -6.1% | No identificado en registros conservados¹ |
+|  | HU13 | 188.8 (186.1–197.4) | 192.5 (181.7–192.6) | +2.0% | 21.2 (20.5–22.8) | 21.2 (18.1–21.4) | -0.5% | No identificado en registros conservados¹ |
+|  | HU14 | 192.3 (188.2–193.0) | 188.7 (185.8–189.9) | -1.9% | 28.4 (26.9–32.5) | 26.4 (22.4–27.0) | -7.0% | No identificado en registros conservados¹ |
+|  | HU15 | 200.0 (199.1–200.2) | 194.1 (193.7–199.3) | -2.9% | 30.2 (26.2–35.7) | 27.4 (25.0–28.5) | -9.3% | No identificado en registros conservados¹ |
+| **4 – Emulador API 21** | HU02 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU04 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU05 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU07 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU09 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU10 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU12 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU13 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU14 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| | HU15 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+
+**P20:** mediana (mínimo–máximo) de tres máximos por versión, con las diez ventanas verificadas en cada pasada. Δ = `(después − antes) / antes × 100`. E2E no medido. **¹** Logcat de la tercera pasada posterior es incompleto; no interpretar ausencia de eventos registrados como garantía de ausencia de ANR.
+
+<img width="100%" alt="Huawei P20: memoria máxima antes y después" src="reports/perfilamiento-sprint3-p20/graficas/memoria.png" />
+
+*Gráfica 1. Huawei P20: mediana de tres máximos de memoria Total por historia; barras de rango mínimo–máximo. Los otros dispositivos están pendientes.*
+
+<img width="100%" alt="Huawei P20: CPU App máxima antes y después" src="reports/perfilamiento-sprint3-p20/graficas/cpu.png" />
+
+*Gráfica 2. Huawei P20: mediana de tres máximos de CPU App y rango de las repeticiones.*
+
+<img width="90%" alt="Huawei P20: cambios relativos de memoria y CPU" src="reports/perfilamiento-sprint3-p20/graficas/cambio-relativo.png" />
+
+*Gráfica 3. Huawei P20: cambio relativo de las medianas. Azul: disminución; rojo: aumento. No representa otros dispositivos.*
+
+### 5.2. Análisis de consumo de memoria
+
+En esta parte se explica cómo cambió la memoria en cada dispositivo y qué la explica. La memoria se analiza con el valor Total del Profiler y su desglose por categoría (Java, Native, Graphics, etc.), porque permite ver qué parte de la app ocupa más.
+
+**Dispositivo 1: Redmi Note 13 Pro.** [COMPLETAR: la memoria máxima subió / bajó / fue mixta en X de 10 historias.]
+
+- **Historias de consulta (HU02, HU04, HU05):** [COMPLETAR]
+- **Historias con formulario (HU07, HU09, HU13):** [COMPLETAR]
+- **Historias con selector (HU10, HU12, HU14, HU15):** [COMPLETAR]
+- [COMPLETAR: memoria inicial de cada grabación, categoría dominante en el pico (Graphics / Native / Java).]
+
+**Dispositivo 2: Galaxy S24 Ultra.** [COMPLETAR]
+
+- **Graphics:** [COMPLETAR: rango en los picos]
+- **Native:** [COMPLETAR]
+- **Java:** [COMPLETAR]
+- [COMPLETAR: memoria al arrancar y al final con la sesión quieta]
+
+<img width="90%" alt="Composición de la memoria en el pico, Galaxy S24 Ultra" src="[COMPLETAR URL]" />
+
+*Gráfica 4. Galaxy S24 Ultra: composición de la memoria en el punto máximo de cada historia.*
+
+**Dispositivo 3: Huawei P20.** Resultado mixto: baja la mediana de memoria máxima en siete historias y sube en tres.
+
+- **Bajan:** HU02 −11.4 %, HU04 −8.2 %, HU05 −3.4 %, HU07 −3.2 %, HU10 −7.5 %, HU14 −1.9 % y HU15 −2.9 %. HU05 es regresión, sin atribución a una optimización propia.
+- **Suben:** HU09 +3.7 %, HU12 +0.4 % y HU13 +2.0 %.
+- **Rangos:** en HU07 los tres máximos posteriores (185.8–188.7 MB) son menores que los tres previos (193.0–197.3 MB). En las otras nueve HU se solapan los rangos de memoria; tres muestras no bastan para concluir significancia o causalidad.
+- **Categorías:** Graphics en los máximos de las 30 ventanas previas está entre 30.3 y 79.5 MB; en las posteriores, entre 31.9 y 59.4 MB. El desglose Java, Native, Graphics, Stack, Code y Others de cada máximo está en `resultados.json`. Las imágenes remotas fallidas limitan su interpretación. No se ejecutó Heap Dump.
+
+**Dispositivo 4: Emulador API 21.** [COMPLETAR]
+
+**Síntesis.** [COMPLETAR: qué explica el consumo en los cuatro dispositivos (imágenes, buffers gráficos, heap Java) y si concuerda con las optimizaciones de memoria aplicadas.]
+
+### 5.3. Análisis de CPU y tiempos de respuesta
+
+En esta parte se compara el pico de CPU de la app antes y después de optimizar, y se reportan los tiempos de red que quedaron registrados.
+
+**Dispositivo 1: Redmi Note 13 Pro.** [COMPLETAR]
+
+**Dispositivo 2: Galaxy S24 Ultra.** [COMPLETAR]
+
+- [COMPLETAR: primera pasada vs. pasadas siguientes, si aplica]
+
+**Dispositivo 3: Huawei P20.** La mediana del pico App baja en nueve historias; HU04 y HU13 cambian solo −0.5 %. La mayor reducción relativa de mediana es HU05 (25.5 → 22.4 %, −11.9 %); es un escenario de regresión. HU07 aumenta de 23.4 a 25.5 % (+8.8 % relativo; +2.1 puntos porcentuales). Los rangos de CPU se superponen en las diez HU: no se demuestra una reducción uniforme del peor caso ni que el usuario perciba menor latencia.
+
+<img width="90%" alt="Huawei P20: cambio relativo de medianas de CPU y memoria" src="reports/perfilamiento-sprint3-p20/graficas/cambio-relativo.png" />
+
+<img width="90%" alt="Huawei P20: medianas y rangos de las repeticiones antes y después" src="reports/perfilamiento-sprint3-p20/graficas/medianas-rangos.png" />
+
+*Gráficas 5 y 6. Huawei P20: cambio relativo de las medianas, y medianas con rango de las repeticiones. Las barras de rango no son intervalos de confianza.*
+
+**Dispositivo 4: Emulador API 21.** [COMPLETAR]
+
+**Tiempos de respuesta.** P20: no se midió tiempo E2E ni se consolidó una serie comparable de tiempos HTTP; quedan como no medidos. Las duraciones de las ventanas incluyen escritura y reposo y no son tiempos de respuesta. Otros dispositivos: pendientes; la tabla siguiente queda para sus datos si existen.
+
+| HU | Petición | Antes | Después |
+|---|---|---:|---:|
+| [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+
+Estos tiempos dependen de la red y del servidor, por lo que un cambio entre antes y después **no se atribuye a las optimizaciones** sin más evidencia. Una reducción del pico de CPU tampoco equivale a que la app sea más rápida para el usuario.
+
+### 5.4. Comparación entre dispositivos (fragmentación)
+
+Aquí se comparan los cuatro dispositivos entre sí con la versión optimizada, para ver cómo influyen el hardware y la versión de Android en el comportamiento de la app:
+
+| Aspecto | Redmi Note 13 Pro (Android 15) | Galaxy S24 Ultra (Android 17) | Huawei P20 (Android 10) | Emulador API 21 (Android 5.0) |
+|---|---|---|---|---|
+| Rango de memoria máxima (después) | [COMPLETAR] | [COMPLETAR] | Medianas por HU: 165.8–211.1 MB; máximos individuales: 155.4–227.6 MB | [COMPLETAR] |
+| Graphics en el pico (después) | [COMPLETAR] | [COMPLETAR] | 31.9–59.4 MB en los 30 máximos | [COMPLETAR] |
+| Rango de picos de CPU App (después) | [COMPLETAR] | [COMPLETAR] | Medianas por HU: 19.5–27.4 %; máximos individuales: 18.1–29.7 % | [COMPLETAR] |
+| ANRs o cierres fatales | [COMPLETAR] | [COMPLETAR] | No identificados en registros conservados; Logcat de última pasada parcial | [COMPLETAR] |
+
+- **Memoria.** [COMPLETAR]
+- **CPU.** [COMPLETAR]
+- **Estabilidad.** [COMPLETAR]
+- [COMPLETAR: recordar si la comparación entre dispositivos es cualitativa (§ 4.4).]
+
+### 5.5. Análisis de ANRs y estabilidad
+
+En esta parte se revisa si la app tuvo bloqueos o cierres y qué advertencias aparecieron en Logcat durante las pruebas.
+
+**Huawei P20:** los 60 recorridos completaron sus verificaciones funcionales. No se identificaron eventos del paquete en la captura `am_anr`/`am_crash`. En las cinco capturas completas por PID no aparece `FATAL EXCEPTION`; la tercera posterior terminó con `read: unexpected EOF!` al inicio y no permite evaluar exhaustivamente sus errores. Se conserva una recuperación parcial, sin considerarla sustituto de la captura completa. Estos límites no afectan las muestras CPU/memoria originales. La cobertura de otros dispositivos está pendiente.
+
+| Hallazgo | Antes de optimizar | Después de optimizar | Interpretación |
+|---|---|---|---|
+| `Slow handle traversal` | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| `Slow issue draw commands` / `Slow handle animation` | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| Glide no pudo cargar una imagen remota | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| `UntaggedSocketViolation` (StrictMode) | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| `DiskReadViolation` (StrictMode) | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| [COMPLETAR: otros] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+
+**Conteos del P20 (mensajes, no defectos únicos):**
+
+| Pasada | Fallos de imagen de Glide | UntaggedSocketViolation | FATAL EXCEPTION |
+|---|---:|---:|---:|
+| Antes 1 | 64 | 65 | 0 |
+| Antes 2 | 62 | 64 | 0 |
+| Antes 3 | 63 | 64 | 0 |
+| Después 1 | 51 | 23 | 0 |
+| Después 2 | 51 | 24 | 0 |
+| Después 3 | N/D: Logcat incompleto | N/D | N/D |
+
+[Resumen de estabilidad](reports/perfilamiento-sprint3-p20/estabilidad-resumen.json) · [Eventos ANR/crash conservados](reports/perfilamiento-sprint3-p20/estabilidad-eventos.log). No se comparan tres pasadas previas con dos posteriores como si tuvieran igual cobertura.
+
+## 6. Optimizaciones implementadas
+
+En esta sección se listan los cambios de código que se hicieron para mejorar el desempeño, con el archivo donde se hizo cada uno. La columna **Tipo** indica si el cambio busca reducir memoria, evitar ANRs o es una micro-optimización.
+
+| HU | Tipo | Cambio | Archivo |
+|---|---|---|---|
+| HU02 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| HU04 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| HU05 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| HU07 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| HU09 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| HU10 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| HU12 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| HU13 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| HU14 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| HU15 | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| Transversal | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+
+El detalle de las micro-optimizaciones detectadas con Android Lint está en la página [micro-optimizaciones realizadas](Reporte-de-micro-optimizaciones-realizadas-Sprint-3).
+
+### 6.1. Gestión de memoria
+
+Se aplicaron [COMPLETAR] prácticas:
+
+- [COMPLETAR]
+- [COMPLETAR]
+
+[COMPLETAR: en qué dispositivos se observó el efecto y si se ejecutó Heap Dump o grabación de asignaciones.]
+
+**Evidencia del P20:** se observaron reducciones y aumentos de Total, según § 5.2. No se tomaron Heap Dump ni grabaciones de asignaciones, por lo que no se atribuyen cambios a objetos retenidos ni se demuestra ausencia de fugas.
+
+### 6.2. Prevención de ANRs
+
+[COMPLETAR: qué trabajo se movió fuera del hilo principal (dispatchers usados, cancelación de búsquedas, carga en paralelo) y en qué pantallas.]
+
+[COMPLETAR: si es coherente con los picos de CPU medidos y qué riesgos de ANR quedan.]
+
+**Límite del P20:** Live Telemetry y los registros conservados no sustituyen System Trace ni permiten atribuir los picos a métodos o dispatchers. No se declara demostrada la prevención de ANR a partir de estas seis grabaciones.
+
+### 6.3. Impacto de las optimizaciones
+
+Esta tabla resume, por dispositivo, si las optimizaciones mejoraron la CPU y la memoria:
+
+| Dispositivo | CPU | Memoria |
+|---|---|---|
+| Redmi Note 13 Pro | [COMPLETAR: p. ej. mejora en X/10 historias (rango %)] | [COMPLETAR] |
+| Galaxy S24 Ultra | [COMPLETAR] | [COMPLETAR] |
+| Huawei P20 | Mediana de picos menor en 9/10 HU (−0.5 % a −11.9 %); HU07 +8.8 %. Rangos solapados en todas las HU | Mediana menor en 7/10 HU (−1.9 % a −11.4 %); HU09 +3.7 %, HU12 +0.4 %, HU13 +2.0 % |
+| Emulador API 21 | [COMPLETAR] | [COMPLETAR] |
+
+La tabla compara dos versiones de la aplicación. No aísla el efecto de cada commit ni tiene significancia estadística.
+
+## 7. Problemas identificados
+
+Estos son los problemas que aparecieron durante el perfilamiento. Se clasificaron en tres tipos: **defecto** (un error de la app que hay que corregir), **investigación** (un comportamiento que hay que analizar antes de saber si es un error) y **observación** (una advertencia del sistema o un problema externo a la app, que se deja registrado pero no requiere corrección en la app).
+
+| Hallazgo | Dispositivo / HU | Tipo | Severidad | Siguiente paso |
+|---|---|---|---|---|
+| [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+
+**Intentos excluidos del P20:** pilotos de automatización y repeticiones de validación con posiciones de controles o autocorrección diferentes. Se descartaron antes de la captura formal. Las seis pasadas formales completaron las diez HU y se conservaron todas sus métricas, incluidas las desfavorables. La tercera pasada posterior permanece en el cálculo de recursos porque su `.asdb` tiene ambas series completas; solo su Logcat es parcial.
+
+## 8. Conclusiones
+
+**Conclusión del aporte P20:** se completaron 60 escenarios de perfilamiento verificados. La mediana de memoria máxima bajó en siete historias y aumentó en tres; la de CPU App bajó en nueve y aumentó en HU07. El resultado es mixto y exploratorio. Solo en memoria de HU07 se separan los rangos antes/después; no se demuestra significancia estadística, causalidad por commit ni mejora general de latencia. Las conclusiones de fragmentación quedan pendientes de los otros aportes.
+
+### 8.1. Estabilidad
+
+**P20:** no se identificaron ANR/crash del paquete en la captura de eventos, ni `FATAL EXCEPTION` en las cinco capturas completas por PID. La última captura por PID es incompleta. No se consolidó una métrica de CPU en reposo ni se afirma ausencia exhaustiva de `OutOfMemoryError`.
+
+- Fallos de carga de imágenes remotas.
+- Advertencias de sockets sin etiqueta.
+- Pérdida parcial de Logcat en la última pasada.
+
+### 8.2. Efecto de las optimizaciones
+
+La comparación del P20 abarca los cambios acumulados B1–B4 de las versiones identificadas en § 4.1.
+
+- **CPU:** cambios de mediana entre −11.9 % y +8.8 %; todos los rangos se solapan.
+- **Memoria:** cambios de mediana entre −11.4 % y +3.7 %; solo HU07 muestra rangos sin solapamiento.
+- **StrictMode:** hay menos mensajes de sockets sin etiqueta en las dos capturas posteriores completas, pero la tercera es N/D; no se concluye eliminación del problema.
+
+Hay indicios favorables en varias historias, junto con resultados desfavorables y variación entre repeticiones. Falta incorporar las mediciones de los otros dispositivos.
+
+### 8.3. Diferencias entre dispositivos
+
+**Pendiente:** todavía no están incorporados los resultados de los otros equipos. No se afirma un patrón común de memoria, CPU o estabilidad entre los cuatro dispositivos a partir del único aporte completado.
+
+---
+
+## 9. Evidencias del perfilamiento
+
+En esta sección están las capturas de Live Telemetry de cada historia, en cada dispositivo, antes y después de optimizar. Cada captura va acompañada de una observación con los valores más importantes.
+
+### 9.1. Antes de optimizar
+
+#### Dispositivo 1 – Xiaomi Redmi Note 13 Pro (Android 15) · `[COMPLETAR commit]` · [COMPLETAR fecha]
+
+| HU | Captura | Observación |
+|---|---|---|
+| HU02 | <img width="100%" alt="Redmi antes HU02" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU04 | <img width="100%" alt="Redmi antes HU04" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU05 | <img width="100%" alt="Redmi antes HU05" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU07 | <img width="100%" alt="Redmi antes HU07" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU09 | <img width="100%" alt="Redmi antes HU09" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU10 | <img width="100%" alt="Redmi antes HU10" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU12 | <img width="100%" alt="Redmi antes HU12" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU13 | <img width="100%" alt="Redmi antes HU13" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU14 | <img width="100%" alt="Redmi antes HU14" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU15 | <img width="100%" alt="Redmi antes HU15" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+
+#### Dispositivo 2 – Samsung Galaxy S24 Ultra (Android 17) · `[COMPLETAR commit]` · [COMPLETAR fecha]
+
+| HU | Captura | Observación |
+|---|---|---|
+| HU02 | <img width="100%" alt="S24 antes HU02" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU04 | <img width="100%" alt="S24 antes HU04" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU05 | <img width="100%" alt="S24 antes HU05" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU07 | <img width="100%" alt="S24 antes HU07" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU09 | <img width="100%" alt="S24 antes HU09" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU10 | <img width="100%" alt="S24 antes HU10" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU12 | <img width="100%" alt="S24 antes HU12" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU13 | <img width="100%" alt="S24 antes HU13" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU14 | <img width="100%" alt="S24 antes HU14" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU15 | <img width="100%" alt="S24 antes HU15" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+
+#### Dispositivo 3 – HUAWEI P20 (Android 10) · `6a8d5c15d6ff32b2355ecc7c7eb90da147680b65` · 22/11/2026
+
+Cada fila enlaza las tres capturas originales de Studio; no se interpreta una sola captura como la mediana de las tres repeticiones.
+
+| HU | Capturas originales | Observación: mediana (mínimo–máximo) |
+|---|---|---|
+| HU02 | <a href="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU02/profiler.png">Pasada 1<br><img width="100%" alt="P20 antes HU02, pasada 1" src="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU02/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU02/profiler.png">Pasada 2<br><img width="100%" alt="P20 antes HU02, pasada 2" src="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU02/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU02/profiler.png">Pasada 3<br><img width="100%" alt="P20 antes HU02, pasada 3" src="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU02/profiler.png" /></a> | Total: **212.1 (187.5–217.1) MB**; CPU App: **26.6 (23.2–27.3) %**. |
+| HU04 | <a href="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU04/profiler.png">Pasada 1<br><img width="100%" alt="P20 antes HU04, pasada 1" src="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU04/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU04/profiler.png">Pasada 2<br><img width="100%" alt="P20 antes HU04, pasada 2" src="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU04/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU04/profiler.png">Pasada 3<br><img width="100%" alt="P20 antes HU04, pasada 3" src="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU04/profiler.png" /></a> | Total: **180.6 (169.4–183.4) MB**; CPU App: **23.9 (22.5–24.0) %**. |
+| HU05 | <a href="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU05/profiler.png">Pasada 1<br><img width="100%" alt="P20 antes HU05, pasada 1" src="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU05/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU05/profiler.png">Pasada 2<br><img width="100%" alt="P20 antes HU05, pasada 2" src="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU05/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU05/profiler.png">Pasada 3<br><img width="100%" alt="P20 antes HU05, pasada 3" src="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU05/profiler.png" /></a> | Total: **178.0 (169.5–185.2) MB**; CPU App: **25.5 (22.2–27.0) %**. |
+| HU07 | <a href="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU07/profiler.png">Pasada 1<br><img width="100%" alt="P20 antes HU07, pasada 1" src="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU07/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU07/profiler.png">Pasada 2<br><img width="100%" alt="P20 antes HU07, pasada 2" src="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU07/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU07/profiler.png">Pasada 3<br><img width="100%" alt="P20 antes HU07, pasada 3" src="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU07/profiler.png" /></a> | Total: **194.3 (193.0–197.3) MB**; CPU App: **23.4 (23.2–25.6) %**. |
+| HU09 | <a href="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU09/profiler.png">Pasada 1<br><img width="100%" alt="P20 antes HU09, pasada 1" src="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU09/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU09/profiler.png">Pasada 2<br><img width="100%" alt="P20 antes HU09, pasada 2" src="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU09/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU09/profiler.png">Pasada 3<br><img width="100%" alt="P20 antes HU09, pasada 3" src="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU09/profiler.png" /></a> | Total: **203.5 (199.2–217.8) MB**; CPU App: **20.8 (20.5–24.7) %**. |
+| HU10 | <a href="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU10/profiler.png">Pasada 1<br><img width="100%" alt="P20 antes HU10, pasada 1" src="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU10/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU10/profiler.png">Pasada 2<br><img width="100%" alt="P20 antes HU10, pasada 2" src="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU10/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU10/profiler.png">Pasada 3<br><img width="100%" alt="P20 antes HU10, pasada 3" src="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU10/profiler.png" /></a> | Total: **217.3 (217.1–221.6) MB**; CPU App: **26.4 (24.1–33.5) %**. |
+| HU12 | <a href="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU12/profiler.png">Pasada 1<br><img width="100%" alt="P20 antes HU12, pasada 1" src="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU12/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU12/profiler.png">Pasada 2<br><img width="100%" alt="P20 antes HU12, pasada 2" src="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU12/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU12/profiler.png">Pasada 3<br><img width="100%" alt="P20 antes HU12, pasada 3" src="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU12/profiler.png" /></a> | Total: **197.8 (192.3–197.9) MB**; CPU App: **25.9 (23.1–26.9) %**. |
+| HU13 | <a href="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU13/profiler.png">Pasada 1<br><img width="100%" alt="P20 antes HU13, pasada 1" src="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU13/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU13/profiler.png">Pasada 2<br><img width="100%" alt="P20 antes HU13, pasada 2" src="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU13/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU13/profiler.png">Pasada 3<br><img width="100%" alt="P20 antes HU13, pasada 3" src="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU13/profiler.png" /></a> | Total: **188.8 (186.1–197.4) MB**; CPU App: **21.2 (20.5–22.8) %**. |
+| HU14 | <a href="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU14/profiler.png">Pasada 1<br><img width="100%" alt="P20 antes HU14, pasada 1" src="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU14/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU14/profiler.png">Pasada 2<br><img width="100%" alt="P20 antes HU14, pasada 2" src="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU14/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU14/profiler.png">Pasada 3<br><img width="100%" alt="P20 antes HU14, pasada 3" src="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU14/profiler.png" /></a> | Total: **192.3 (188.2–193.0) MB**; CPU App: **28.4 (26.9–32.5) %**. |
+| HU15 | <a href="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU15/profiler.png">Pasada 1<br><img width="100%" alt="P20 antes HU15, pasada 1" src="reports/perfilamiento-sprint3-p20/antes/pasada-1/HU15/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU15/profiler.png">Pasada 2<br><img width="100%" alt="P20 antes HU15, pasada 2" src="reports/perfilamiento-sprint3-p20/antes/pasada-2/HU15/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU15/profiler.png">Pasada 3<br><img width="100%" alt="P20 antes HU15, pasada 3" src="reports/perfilamiento-sprint3-p20/antes/pasada-3/HU15/profiler.png" /></a> | Total: **200.0 (199.1–200.2) MB**; CPU App: **30.2 (26.2–35.7) %**. |
+
+- **Pasada 1:** [.asdb original](reports/perfilamiento-sprint3-p20/antes/pasada-1/grabacion.asdb), [máximos y categorías](reports/perfilamiento-sprint3-p20/antes/pasada-1/resultados.json), [ventanas](reports/perfilamiento-sprint3-p20/antes/pasada-1/ventanas.json), [entorno y SHA-256](reports/perfilamiento-sprint3-p20/antes/pasada-1/entorno.json), [Logcat](reports/perfilamiento-sprint3-p20/antes/pasada-1/logcat-app.txt).
+- **Pasada 2:** [.asdb original](reports/perfilamiento-sprint3-p20/antes/pasada-2/grabacion.asdb), [máximos y categorías](reports/perfilamiento-sprint3-p20/antes/pasada-2/resultados.json), [ventanas](reports/perfilamiento-sprint3-p20/antes/pasada-2/ventanas.json), [entorno y SHA-256](reports/perfilamiento-sprint3-p20/antes/pasada-2/entorno.json), [Logcat](reports/perfilamiento-sprint3-p20/antes/pasada-2/logcat-app.txt).
+- **Pasada 3:** [.asdb original](reports/perfilamiento-sprint3-p20/antes/pasada-3/grabacion.asdb), [máximos y categorías](reports/perfilamiento-sprint3-p20/antes/pasada-3/resultados.json), [ventanas](reports/perfilamiento-sprint3-p20/antes/pasada-3/ventanas.json), [entorno y SHA-256](reports/perfilamiento-sprint3-p20/antes/pasada-3/entorno.json), [Logcat](reports/perfilamiento-sprint3-p20/antes/pasada-3/logcat-app.txt).
+
+#### Dispositivo 4 – Emulador Android API 21 (Android 5.0) · `[COMPLETAR commit]` · [COMPLETAR fecha]
+
+| HU | Captura | Observación |
+|---|---|---|
+| HU02 | <img width="100%" alt="Emulador API 21 antes HU02" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU04 | <img width="100%" alt="Emulador API 21 antes HU04" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU05 | <img width="100%" alt="Emulador API 21 antes HU05" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU07 | <img width="100%" alt="Emulador API 21 antes HU07" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU09 | <img width="100%" alt="Emulador API 21 antes HU09" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU10 | <img width="100%" alt="Emulador API 21 antes HU10" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU12 | <img width="100%" alt="Emulador API 21 antes HU12" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU13 | <img width="100%" alt="Emulador API 21 antes HU13" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU14 | <img width="100%" alt="Emulador API 21 antes HU14" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU15 | <img width="100%" alt="Emulador API 21 antes HU15" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+
+### 9.2. Después de optimizar
+
+#### Dispositivo 1 – Xiaomi Redmi Note 13 Pro (Android 15) · `[COMPLETAR commit]` · [COMPLETAR fecha]
+
+| HU | Captura | Observación |
+|---|---|---|
+| HU02 | <img width="100%" alt="Redmi después HU02" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU04 | <img width="100%" alt="Redmi después HU04" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU05 | <img width="100%" alt="Redmi después HU05" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU07 | <img width="100%" alt="Redmi después HU07" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU09 | <img width="100%" alt="Redmi después HU09" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU10 | <img width="100%" alt="Redmi después HU10" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU12 | <img width="100%" alt="Redmi después HU12" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU13 | <img width="100%" alt="Redmi después HU13" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU14 | <img width="100%" alt="Redmi después HU14" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU15 | <img width="100%" alt="Redmi después HU15" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+
+#### Dispositivo 2 – Samsung Galaxy S24 Ultra (Android 17) · `[COMPLETAR commit]` · [COMPLETAR fecha]
+
+| HU | Captura | Observación |
+|---|---|---|
+| HU02 | <img width="100%" alt="S24 después HU02" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU04 | <img width="100%" alt="S24 después HU04" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU05 | <img width="100%" alt="S24 después HU05" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU07 | <img width="100%" alt="S24 después HU07" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU09 | <img width="100%" alt="S24 después HU09" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU10 | <img width="100%" alt="S24 después HU10" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU12 | <img width="100%" alt="S24 después HU12" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU13 | <img width="100%" alt="S24 después HU13" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU14 | <img width="100%" alt="S24 después HU14" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU15 | <img width="100%" alt="S24 después HU15" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+
+#### Dispositivo 3 – HUAWEI P20 (Android 10) · `e69c12b902b7b6998dfe489a58cc69d1a9056463` · 22/11/2026
+
+Cada fila enlaza las tres capturas originales de Studio; no se interpreta una sola captura como la mediana de las tres repeticiones.
+
+| HU | Capturas originales | Observación: mediana (mínimo–máximo) |
+|---|---|---|
+| HU02 | <a href="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU02/profiler.png">Pasada 1<br><img width="100%" alt="P20 después HU02, pasada 1" src="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU02/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU02/profiler.png">Pasada 2<br><img width="100%" alt="P20 después HU02, pasada 2" src="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU02/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU02/profiler.png">Pasada 3<br><img width="100%" alt="P20 después HU02, pasada 3" src="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU02/profiler.png" /></a> | Total: **187.8 (186.7–191.4) MB**; CPU App: **24.4 (23.9–26.9) %**. |
+| HU04 | <a href="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU04/profiler.png">Pasada 1<br><img width="100%" alt="P20 después HU04, pasada 1" src="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU04/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU04/profiler.png">Pasada 2<br><img width="100%" alt="P20 después HU04, pasada 2" src="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU04/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU04/profiler.png">Pasada 3<br><img width="100%" alt="P20 después HU04, pasada 3" src="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU04/profiler.png" /></a> | Total: **165.8 (155.4–175.7) MB**; CPU App: **23.8 (22.9–27.5) %**. |
+| HU05 | <a href="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU05/profiler.png">Pasada 1<br><img width="100%" alt="P20 después HU05, pasada 1" src="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU05/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU05/profiler.png">Pasada 2<br><img width="100%" alt="P20 después HU05, pasada 2" src="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU05/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU05/profiler.png">Pasada 3<br><img width="100%" alt="P20 después HU05, pasada 3" src="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU05/profiler.png" /></a> | Total: **171.9 (167.6–188.0) MB**; CPU App: **22.4 (21.6–25.5) %**. |
+| HU07 | <a href="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU07/profiler.png">Pasada 1<br><img width="100%" alt="P20 después HU07, pasada 1" src="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU07/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU07/profiler.png">Pasada 2<br><img width="100%" alt="P20 después HU07, pasada 2" src="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU07/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU07/profiler.png">Pasada 3<br><img width="100%" alt="P20 después HU07, pasada 3" src="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU07/profiler.png" /></a> | Total: **188.1 (185.8–188.7) MB**; CPU App: **25.5 (22.8–29.7) %**. |
+| HU09 | <a href="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU09/profiler.png">Pasada 1<br><img width="100%" alt="P20 después HU09, pasada 1" src="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU09/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU09/profiler.png">Pasada 2<br><img width="100%" alt="P20 después HU09, pasada 2" src="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU09/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU09/profiler.png">Pasada 3<br><img width="100%" alt="P20 después HU09, pasada 3" src="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU09/profiler.png" /></a> | Total: **211.1 (206.4–214.4) MB**; CPU App: **19.5 (18.1–20.9) %**. |
+| HU10 | <a href="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU10/profiler.png">Pasada 1<br><img width="100%" alt="P20 después HU10, pasada 1" src="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU10/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU10/profiler.png">Pasada 2<br><img width="100%" alt="P20 después HU10, pasada 2" src="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU10/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU10/profiler.png">Pasada 3<br><img width="100%" alt="P20 después HU10, pasada 3" src="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU10/profiler.png" /></a> | Total: **201.0 (195.6–227.6) MB**; CPU App: **24.5 (23.6–25.8) %**. |
+| HU12 | <a href="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU12/profiler.png">Pasada 1<br><img width="100%" alt="P20 después HU12, pasada 1" src="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU12/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU12/profiler.png">Pasada 2<br><img width="100%" alt="P20 después HU12, pasada 2" src="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU12/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU12/profiler.png">Pasada 3<br><img width="100%" alt="P20 después HU12, pasada 3" src="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU12/profiler.png" /></a> | Total: **198.5 (190.5–206.1) MB**; CPU App: **24.4 (21.7–26.4) %**. |
+| HU13 | <a href="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU13/profiler.png">Pasada 1<br><img width="100%" alt="P20 después HU13, pasada 1" src="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU13/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU13/profiler.png">Pasada 2<br><img width="100%" alt="P20 después HU13, pasada 2" src="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU13/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU13/profiler.png">Pasada 3<br><img width="100%" alt="P20 después HU13, pasada 3" src="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU13/profiler.png" /></a> | Total: **192.5 (181.7–192.6) MB**; CPU App: **21.2 (18.1–21.4) %**. |
+| HU14 | <a href="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU14/profiler.png">Pasada 1<br><img width="100%" alt="P20 después HU14, pasada 1" src="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU14/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU14/profiler.png">Pasada 2<br><img width="100%" alt="P20 después HU14, pasada 2" src="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU14/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU14/profiler.png">Pasada 3<br><img width="100%" alt="P20 después HU14, pasada 3" src="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU14/profiler.png" /></a> | Total: **188.7 (185.8–189.9) MB**; CPU App: **26.4 (22.4–27.0) %**. |
+| HU15 | <a href="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU15/profiler.png">Pasada 1<br><img width="100%" alt="P20 después HU15, pasada 1" src="reports/perfilamiento-sprint3-p20/despues/pasada-1/HU15/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU15/profiler.png">Pasada 2<br><img width="100%" alt="P20 después HU15, pasada 2" src="reports/perfilamiento-sprint3-p20/despues/pasada-2/HU15/profiler.png" /></a><br><a href="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU15/profiler.png">Pasada 3<br><img width="100%" alt="P20 después HU15, pasada 3" src="reports/perfilamiento-sprint3-p20/despues/pasada-3/HU15/profiler.png" /></a> | Total: **194.1 (193.7–199.3) MB**; CPU App: **27.4 (25.0–28.5) %**. |
+
+- **Pasada 1:** [.asdb original](reports/perfilamiento-sprint3-p20/despues/pasada-1/grabacion.asdb), [máximos y categorías](reports/perfilamiento-sprint3-p20/despues/pasada-1/resultados.json), [ventanas](reports/perfilamiento-sprint3-p20/despues/pasada-1/ventanas.json), [entorno y SHA-256](reports/perfilamiento-sprint3-p20/despues/pasada-1/entorno.json), [Logcat](reports/perfilamiento-sprint3-p20/despues/pasada-1/logcat-app.txt).
+- **Pasada 2:** [.asdb original](reports/perfilamiento-sprint3-p20/despues/pasada-2/grabacion.asdb), [máximos y categorías](reports/perfilamiento-sprint3-p20/despues/pasada-2/resultados.json), [ventanas](reports/perfilamiento-sprint3-p20/despues/pasada-2/ventanas.json), [entorno y SHA-256](reports/perfilamiento-sprint3-p20/despues/pasada-2/entorno.json), [Logcat](reports/perfilamiento-sprint3-p20/despues/pasada-2/logcat-app.txt).
+- **Pasada 3:** [.asdb original](reports/perfilamiento-sprint3-p20/despues/pasada-3/grabacion.asdb), [máximos y categorías](reports/perfilamiento-sprint3-p20/despues/pasada-3/resultados.json), [ventanas](reports/perfilamiento-sprint3-p20/despues/pasada-3/ventanas.json), [entorno y SHA-256](reports/perfilamiento-sprint3-p20/despues/pasada-3/entorno.json), [Logcat incompleto](reports/perfilamiento-sprint3-p20/despues/pasada-3/logcat-app.txt).
+
+#### Dispositivo 4 – Emulador Android API 21 (Android 5.0) · `[COMPLETAR commit]` · [COMPLETAR fecha]
+
+| HU | Captura | Observación |
+|---|---|---|
+| HU02 | <img width="100%" alt="Emulador API 21 después HU02" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU04 | <img width="100%" alt="Emulador API 21 después HU04" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU05 | <img width="100%" alt="Emulador API 21 después HU05" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU07 | <img width="100%" alt="Emulador API 21 después HU07" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU09 | <img width="100%" alt="Emulador API 21 después HU09" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU10 | <img width="100%" alt="Emulador API 21 después HU10" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU12 | <img width="100%" alt="Emulador API 21 después HU12" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU13 | <img width="100%" alt="Emulador API 21 después HU13" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU14 | <img width="100%" alt="Emulador API 21 después HU14" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+| HU15 | <img width="100%" alt="Emulador API 21 después HU15" src="[COMPLETAR URL]" /> | [COMPLETAR] |
+
+### Archivos del aporte Huawei P20
+
+[Consolidado numérico](reports/perfilamiento-sprint3-p20/consolidado.json) · [Tabla CSV](reports/perfilamiento-sprint3-p20/resumen.csv) · [SHA-256 de las seis grabaciones](reports/perfilamiento-sprint3-p20/sha256-grabaciones.json) · [Validación de los 60 escenarios y capturas](reports/perfilamiento-sprint3-p20/validacion-artefactos.json).
+
+Los enlaces son rutas del repositorio. Para llevarlos a la Wiki, publicar las evidencias y reemplazar las rutas por enlaces accesibles al equipo. No se presentan como URLs públicas ya verificadas.

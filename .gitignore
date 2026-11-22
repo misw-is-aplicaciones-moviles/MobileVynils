@@ -21,6 +21,42 @@ local.properties
 /app/release/
 /app/debug/
 reports/
+# Evidencias formales del perfilamiento físico Sprint 3 (Huawei P20).
+# Se conservan ignorados los APK, respaldos privados, pilotos y control temporal del IDE.
+!reports/
+reports/*
+!reports/perfilamiento-sprint3-p20/
+reports/perfilamiento-sprint3-p20/*
+!reports/perfilamiento-sprint3-p20/Reporte-Huawei-P20-Sprint-3.md
+!reports/perfilamiento-sprint3-p20/Reporte-Huawei-P20-Sprint-3.html
+!reports/perfilamiento-sprint3-p20/Reporte-consolidado-Sprint-3.md
+!reports/perfilamiento-sprint3-p20/Reporte-consolidado-Sprint-3.html
+!reports/perfilamiento-sprint3-p20/consolidado.json
+!reports/perfilamiento-sprint3-p20/resumen.csv
+!reports/perfilamiento-sprint3-p20/sha256-grabaciones.json
+!reports/perfilamiento-sprint3-p20/validacion-artefactos.json
+!reports/perfilamiento-sprint3-p20/estabilidad-resumen.json
+!reports/perfilamiento-sprint3-p20/estabilidad-eventos.log
+!reports/perfilamiento-sprint3-p20/graficas/
+!reports/perfilamiento-sprint3-p20/antes/
+!reports/perfilamiento-sprint3-p20/despues/
+reports/perfilamiento-sprint3-p20/antes/*
+reports/perfilamiento-sprint3-p20/despues/*
+!reports/perfilamiento-sprint3-p20/antes/pasada-[123]/
+!reports/perfilamiento-sprint3-p20/despues/pasada-[123]/
+reports/perfilamiento-sprint3-p20/*/pasada-[123]/*
+!reports/perfilamiento-sprint3-p20/*/pasada-[123]/*.asdb
+!reports/perfilamiento-sprint3-p20/*/pasada-[123]/*.csv
+!reports/perfilamiento-sprint3-p20/*/pasada-[123]/resultados.json
+!reports/perfilamiento-sprint3-p20/*/pasada-[123]/ventanas.json
+!reports/perfilamiento-sprint3-p20/*/pasada-[123]/entorno.json
+!reports/perfilamiento-sprint3-p20/*/pasada-[123]/completa.json
+!reports/perfilamiento-sprint3-p20/*/pasada-[123]/backend-final.json
+!reports/perfilamiento-sprint3-p20/*/pasada-[123]/logcat*.txt
+!reports/perfilamiento-sprint3-p20/*/pasada-[123]/HU??/
+reports/perfilamiento-sprint3-p20/*/pasada-[123]/HU??/*
+!reports/perfilamiento-sprint3-p20/*/pasada-[123]/HU??/profiler.png
+!reports/perfilamiento-sprint3-p20/*/pasada-[123]/HU??/telefono.png
 lint-results*.html
 lint-results*.xml
 

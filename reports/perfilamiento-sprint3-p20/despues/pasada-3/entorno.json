@@ -1,0 +1,22 @@
+{
+  "stage": "despues",
+  "repetition": 3,
+  "pilot": false,
+  "pid": 18746,
+  "apk_sha256": "d2c9c3639163992e1610f5ba181b31d727bd109ce5db8eafb9584a2d03fa74e4",
+  "battery": "Current Battery Service state:\n  AC powered: false\n  USB powered: true\n  Wireless powered: false\n  Max charging current: 512000\n  Max charging voltage: 4800000\n  Charge counter: 1008000\n  status: 2\n  health: 2\n  present: true\n  level: 72\n  scale: 100\n  voltage: 4062\n  temperature: 320\n  technology: Li-poly\n",
+  "utc": "2026-11-22T15:50:58.770319+00:00",
+  "order": [
+    "HU02",
+    "HU04",
+    "HU05",
+    "HU07",
+    "HU09",
+    "HU10",
+    "HU12",
+    "HU13",
+    "HU14",
+    "HU15"
+  ],
+  "method": "ADB coordinate replay; fresh app data and isolated database each pass; process kept between stories; no forced GC; SDK clock; Studio Total and CPU App."
+}
