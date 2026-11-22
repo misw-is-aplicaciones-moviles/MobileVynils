@@ -71,6 +71,7 @@ class AppContainer(
                 ioDispatcher = Dispatchers.IO,
                 defaultDispatcher = Dispatchers.Default,
             ),
+            defaultDispatcher = Dispatchers.Default,
         )
     }
 

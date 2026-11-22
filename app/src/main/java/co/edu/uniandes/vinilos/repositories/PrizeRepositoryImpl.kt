@@ -10,10 +10,14 @@ import co.edu.uniandes.vinilos.models.PrizeAssignmentRef
 import co.edu.uniandes.vinilos.network.PrizeServiceAdapter
 import co.edu.uniandes.vinilos.network.networkRequest
 import com.google.gson.JsonParseException
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
 internal class PrizeRepositoryImpl(
     private val serviceAdapter: PrizeServiceAdapter,
+    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : PrizeRepository {
     override suspend fun getPrizes(forceRefresh: Boolean): DataResult<List<Prize>, DataError> =
         networkRequest { serviceAdapter.getPrizes(forceRefresh) }
@@ -24,8 +28,15 @@ internal class PrizeRepositoryImpl(
     ): DataResult<List<ArtistPrize>, DataError> {
         if (assignments.isEmpty()) return DataResult.Success(emptyList())
         return when (val catalog = getPrizes(forceRefresh)) {
-            is DataResult.Failure -> catalog
-            is DataResult.Success -> networkRequest { resolveArtistPrizes(assignments, catalog.value) }
+            is DataResult.Failure -> {
+                catalog
+            }
+
+            is DataResult.Success -> {
+                networkRequest {
+                    withContext(defaultDispatcher) { resolveArtistPrizes(assignments, catalog.value) }
+                }
+            }
         }
     }
 

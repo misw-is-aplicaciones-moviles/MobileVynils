@@ -18,16 +18,24 @@ import co.edu.uniandes.vinilos.models.Prize
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.repositories.PrizeRepository
 import co.edu.uniandes.vinilos.repositories.SessionRepository
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
-/** One workflow state shared by the picker and its child date sheet. */
+/**
+ * One workflow state shared by the picker and its child date sheet.
+ * Visible rows are built in [defaultDispatcher]. A newer search cancels the previous one, so the main thread
+ * only draws the latest list.
+ */
 class PrizePickerViewModel(
     private val savedState: SavedStateHandle,
     private val repository: PrizeRepository,
     private val session: SessionRepository,
+    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
     val performerId: Int = savedState[PrizeFlowContract.PERFORMER_ID] ?: 0
     val performerName: String = savedState[PrizeFlowContract.PERFORMER_NAME] ?: ""
@@ -49,6 +57,7 @@ class PrizePickerViewModel(
         )
     val uiState: LiveData<PrizePickerUiState> = _uiState
     private var loadJob: Job? = null
+    private var filterJob: Job? = null
     private var createdPrize: Prize? = null
 
     init {
@@ -70,19 +79,12 @@ class PrizePickerViewModel(
                 when (val result = repository.getPrizes(forceRefresh)) {
                     is DataResult.Failure -> {
                         update { copy(isLoading = false, loadError = result.error) }
+                        // A search or a selection during this reload returned before the rows were built.
+                        refreshVisiblePrizes()
                     }
 
                     is DataResult.Success -> {
-                        val prizes =
-                            createdPrize?.let { new -> listOf(new) + result.value.filter { it.id != new.id } }
-                                ?: result.value
-                        val assigned =
-                            prizes
-                                .filter { p ->
-                                    p.assignments.any { it.id in assignmentIds }
-                                }.map { it.id }
-                                .toSet()
-                        update { copy(prizes = prizes, assignedIds = assigned, isLoading = false, loadError = null) }
+                        publishCatalog(result.value)
                     }
                 }
             }
@@ -92,15 +94,18 @@ class PrizePickerViewModel(
         if (current().isSubmitting) return
         savedState[QUERY] = query
         update { copy(query = query) }
+        refreshVisiblePrizes()
     }
 
     fun onPrizeSelected(id: Int) {
         val state = current()
         if (!state.canEdit || state.isSubmitting || state.isUncertain) return
-        if (id in state.assignedIds || id == state.selectedId || state.prizes.none { it.id == id }) return
+        if (id in state.assignedIds || id == state.selectedId) return
+        val prize = state.prizes.firstOrNull { it.id == id } ?: return
         savedState[SELECTED_ID] = id
         savedState[DATE] = null
-        update { copy(selectedId = id, date = null, submitError = null, dateRequired = false) }
+        update { copy(selectedId = id, selectedPrize = prize, date = null, submitError = null, dateRequired = false) }
+        refreshVisiblePrizes()
     }
 
     fun onContinue() {
@@ -132,10 +137,12 @@ class PrizePickerViewModel(
                 prizes = listOf(prize) + prizes.filter { it.id != prize.id },
                 query = "",
                 selectedId = prize.id,
+                selectedPrize = prize,
                 date = null,
             )
         }
         emit(PrizePickerEvent.PrizeCreated)
+        refreshVisiblePrizes()
     }
 
     fun onSave() {
@@ -155,7 +162,10 @@ class PrizePickerViewModel(
             when (val result = repository.assignPrize(performerId, type, prize.id, date)) {
                 is DataResult.Success -> {
                     savedState[WRITE_PENDING] = false
-                    update { copy(isSubmitting = false, assignedIds = assignedIds + prize.id) }
+                    update {
+                        copy(isSubmitting = false, assignedIds = assignedIds + prize.id, selectedPrize = null)
+                    }
+                    refreshVisiblePrizes()
                     emit(PrizePickerEvent.Assigned(result.value))
                 }
 
@@ -175,6 +185,66 @@ class PrizePickerViewModel(
     fun onRoleChipClicked() {
         if (!current().isSubmitting) session.clearRole()
     }
+
+    /** Rows and the resolved selection arrive together, so a render never filters the catalog. */
+    private suspend fun publishCatalog(catalog: List<Prize>) {
+        filterJob?.cancel()
+        val query = current().query
+        val selectedId = current().selectedId
+        val created = createdPrize
+        val snapshot =
+            withContext(defaultDispatcher) {
+                snapshotPrizeCatalog(catalog, created, assignmentIds, query, selectedId)
+            }
+        update {
+            copy(
+                prizes = snapshot.prizes,
+                assignedIds = snapshot.assignedIds,
+                visiblePrizes = snapshot.rows,
+                selectedPrize = snapshot.selectedPrize,
+                isLoading = false,
+                loadError = null,
+            )
+        }
+        // A search or a new prize that landed while the catalog was crossing is applied by the next build.
+        if (current().query != query || current().selectedId != selectedId || createdPrize !== created) {
+            refreshVisiblePrizes()
+        }
+    }
+
+    /** Rebuilds the rows for the current search and selection. Only the latest call publishes. */
+    private fun refreshVisiblePrizes() {
+        filterJob?.cancel()
+        val state = current()
+        if (state.isLoading || state.prizes.isEmpty()) return
+        val query = state.query
+        val selectedId = state.selectedId
+        val assignedIds = state.assignedIds
+        val prizes = state.prizes
+        val created = createdPrize
+        filterJob =
+            viewModelScope.launch {
+                val prepared =
+                    withContext(defaultDispatcher) {
+                        val merged = includingCreated(prizes, created)
+                        merged to prepareVisiblePrizes(merged, assignedIds, query, selectedId)
+                    }
+                // withContext checks cancellation on return: a result of an older search is never published.
+                update {
+                    copy(
+                        prizes = prepared.first,
+                        visiblePrizes = prepared.second.rows,
+                        selectedPrize = prepared.second.selectedPrize,
+                    )
+                }
+            }
+    }
+
+    /** Keeps a prize created while the catalog load was still crossing, and leaves an existing list untouched. */
+    private fun includingCreated(
+        prizes: List<Prize>,
+        created: Prize?,
+    ): List<Prize> = if (created == null || prizes.any { it.id == created.id }) prizes else listOf(created) + prizes
 
     private fun current() = checkNotNull(_uiState.value)
 

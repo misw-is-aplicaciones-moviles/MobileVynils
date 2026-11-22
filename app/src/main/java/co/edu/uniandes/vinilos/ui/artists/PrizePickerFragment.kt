@@ -30,6 +30,7 @@ import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.ui.common.showConfirmationSnackbar
 import co.edu.uniandes.vinilos.viewmodels.PrizeFlowContract
 import co.edu.uniandes.vinilos.viewmodels.PrizePickerEvent
+import co.edu.uniandes.vinilos.viewmodels.PrizePickerRow
 import co.edu.uniandes.vinilos.viewmodels.PrizePickerUiState
 import co.edu.uniandes.vinilos.viewmodels.PrizePickerViewModel
 import com.google.android.material.snackbar.Snackbar
@@ -41,6 +42,9 @@ class PrizePickerFragment : Fragment(R.layout.fragment_prize_picker) {
     private val viewModel: PrizePickerViewModel by viewModels { PrizePickerViewModel.Factory }
     private val adapter = PrizeAdapter { viewModel.onPrizeSelected(it) }
     private var revealCreatedPrizeOnNextList = false
+
+    /** The list last given to the adapter. [ListAdapter.currentList] is a wrapper, so identity is the cheap check. */
+    private var submittedRows: List<PrizePickerRow>? = null
 
     override fun onViewCreated(
         view: View,
@@ -129,10 +133,11 @@ class PrizePickerFragment : Fragment(R.layout.fragment_prize_picker) {
         binding.emptyMessage.setText(if (state.prizes.isEmpty()) R.string.prize_empty else R.string.prize_no_results)
         // Invisible, not gone: it heads the chain that keeps the card right below the rows.
         binding.prizeList.isInvisible = state.prizes.isEmpty()
-        adapter.submitList(
-            state.visiblePrizes.map { PrizeRow(it, it.id in state.assignedIds, it.id == state.selectedId) },
-            ::revealCreatedPrize,
-        )
+        // A date change or a save keeps this instance. Comparing contents would walk every row on the main thread.
+        if (state.visiblePrizes !== submittedRows) {
+            submittedRows = state.visiblePrizes
+            adapter.submitList(state.visiblePrizes, ::revealCreatedPrize)
+        }
         binding.continuePrize.isEnabled = state.canContinue || (state.isUncertain && !state.isSubmitting)
         binding.continuePrize.text = state.selectedPrize?.let { getString(R.string.prize_continue_action, it.name) }
             ?: getString(R.string.prize_select_action)
