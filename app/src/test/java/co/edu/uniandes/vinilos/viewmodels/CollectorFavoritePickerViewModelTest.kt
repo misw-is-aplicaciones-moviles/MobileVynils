@@ -100,11 +100,68 @@ class CollectorFavoritePickerViewModelTest {
         val angel = performer(ANGEL_ID, PerformerType.MUSICIAN, "Ángel")
         val zeta = performer(ZETA_ID, PerformerType.BAND, "zeta")
 
-        val rows = buildVisibleFavorites(listOf(angel, zeta), emptySet(), "   ", selectedId = null, selectedType = null)
+        val sorted = listOf(angel, zeta).sortedWith(FAVORITE_PICKER_ORDER)
+
+        val rows = buildVisibleFavorites(sorted, emptySet(), "   ", selectedId = null, selectedType = null)
 
         assertEquals(listOf(zeta, angel), rows.map { it.performer })
         assertTrue(rows.none { it.isSelected || it.isAlreadyFavorite })
     }
+
+    @Test
+    fun `the rows keep the order of the list they receive`() {
+        val rows = buildVisibleFavorites(catalog, emptySet(), "", selectedId = null, selectedType = null)
+
+        assertEquals(catalog, rows.map { it.performer })
+    }
+
+    @Test
+    fun `the picker order folds only ASCII case and breaks ties by id and then by type`() {
+        val upper = performer(QUEEN_ID, PerformerType.BAND, "ECO")
+        val lowerMusician = performer(FREDDIE_ID, PerformerType.MUSICIAN, "eco")
+        val lowerBand = performer(FREDDIE_ID, PerformerType.BAND, "eco")
+        val zeta = performer(ZETA_ID, PerformerType.BAND, "zeta")
+        val angel = performer(ANGEL_ID, PerformerType.MUSICIAN, "Ángel")
+
+        val sorted = listOf(angel, lowerBand, zeta, lowerMusician, upper).sortedWith(FAVORITE_PICKER_ORDER)
+
+        assertEquals(listOf(upper, lowerMusician, lowerBand, zeta, angel), sorted)
+    }
+
+    @Test
+    fun `the loaded catalog is kept sorted while searching and choosing`() =
+        runTest {
+            val viewModel = picker().viewModel
+            advanceUntilIdle()
+            assertEquals(byName, checkNotNull(viewModel.uiState.value).performers)
+
+            viewModel.onQueryChanged("e")
+            advanceUntilIdle()
+            assertEquals(listOf(freddie, queen, ruben), visible(viewModel))
+
+            viewModel.onPerformerSelected(queen.id, PerformerType.BAND)
+            viewModel.onQueryChanged("")
+            advanceUntilIdle()
+
+            assertEquals(byName, visible(viewModel))
+            assertEquals(byName, checkNotNull(viewModel.uiState.value).performers)
+        }
+
+    @Test
+    fun `a retry sorts the new catalog it receives`() =
+        runTest {
+            val harness = picker()
+            advanceUntilIdle()
+            val angel = performer(ANGEL_ID, PerformerType.MUSICIAN, "Ángel")
+            harness.performers.remoteResult = DataResult.Success(listOf(angel, queen, brian))
+
+            harness.viewModel.retry()
+            advanceUntilIdle()
+
+            assertEquals(listOf(brian, queen, angel), visible(harness.viewModel))
+            assertEquals(listOf(brian, queen, angel), checkNotNull(harness.viewModel.uiState.value).performers)
+            assertEquals(1, harness.performers.remoteCalls)
+        }
 
     @Test
     fun `only the latest of two quick searches is published`() =

@@ -74,6 +74,40 @@ class CommentAuthorDaoTest {
             assertEquals(many.toSet(), stored.toSet())
         }
 
+    @Test
+    fun get_by_ids_in_chunks_returns_only_the_requested_rows_and_skips_unknown_ids() =
+        runTest {
+            dao.upsertAll((1..10).map { entity(commentId = it, collectorId = 100) })
+
+            val read = dao.getByIdsInChunks(setOf(2, 5, 42))
+
+            assertEquals(
+                setOf(entity(commentId = 2, collectorId = 100), entity(commentId = 5, collectorId = 100)),
+                read.toSet(),
+            )
+        }
+
+    @Test
+    fun get_by_ids_in_chunks_without_ids_returns_nothing() =
+        runTest {
+            dao.upsertAll(listOf(entity(commentId = 1, collectorId = 100)))
+
+            assertEquals(emptyList<CommentAuthorEntity>(), dao.getByIdsInChunks(emptySet()))
+        }
+
+    @Test
+    fun get_by_ids_in_chunks_with_more_than_999_ids_does_not_hit_the_sqlite_variable_limit() =
+        runTest {
+            val many = (1..MANY_ROWS).map { entity(commentId = it, collectorId = it % 7) }
+            dao.upsertAll(many)
+
+            listOf(SOME_ROWS, MANY_ROWS).forEach { count ->
+                val read = dao.getByIdsInChunks((1..count).toSet())
+
+                assertEquals(many.take(count).toSet(), read.toSet())
+            }
+        }
+
     private fun entity(
         commentId: Int,
         collectorId: Int,
@@ -86,5 +120,6 @@ class CommentAuthorDaoTest {
     private companion object {
         // Above SQLITE_MAX_VARIABLE_NUMBER (999) of the SQLite in API 21 to API 30.
         const val MANY_ROWS = 2500
+        const val SOME_ROWS = 1500
     }
 }
