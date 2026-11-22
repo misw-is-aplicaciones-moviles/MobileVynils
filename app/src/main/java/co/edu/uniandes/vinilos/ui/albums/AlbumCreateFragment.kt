@@ -128,8 +128,8 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
     }
 
     private fun bindChips() {
-        addChips(binding.genreChips, Genre.entries.filter { it != Genre.UNKNOWN }) { it.apiName }
-        addChips(binding.recordLabelChips, RecordLabel.entries) { it.apiName }
+        addChips(binding.genreChips, R.string.field_genre, Genre.entries.filter { it != Genre.UNKNOWN }) { it.apiName }
+        addChips(binding.recordLabelChips, R.string.field_record_label, RecordLabel.entries) { it.apiName }
         binding.genreChips.setOnCheckedStateChangeListener { group, checkedIds ->
             viewModel.onGenreSelected(group.checkedValue(checkedIds) as? Genre)
         }
@@ -139,15 +139,19 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
     }
 
     // One chip per value; the value travels in the tag. The checked state comes from the ViewModel, not from the view.
+    // TalkBack reads the group after the value ("Rock, Género"), since the label above is not read with the chip (H07-2).
     private fun <T : Enum<T>> addChips(
         group: ChipGroup,
+        @StringRes groupLabel: Int,
         values: List<T>,
         label: (T) -> String,
     ) {
+        val groupName = getString(groupLabel)
         values.forEach { value ->
             val chip = ItemChoiceChipBinding.inflate(layoutInflater, group, false).root
             chip.id = View.generateViewId()
             chip.text = label(value)
+            chip.contentDescription = getString(R.string.chip_group_option_description, label(value), groupName)
             chip.tag = value
             chip.isSaveEnabled = false
             group.addView(chip)

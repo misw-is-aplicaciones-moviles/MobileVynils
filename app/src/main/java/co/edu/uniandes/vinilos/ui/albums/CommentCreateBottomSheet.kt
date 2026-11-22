@@ -142,10 +142,13 @@ class CommentCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_com
             renderedCollectors = state.collectors
             group.removeAllViews()
             val inflater = LayoutInflater.from(group.context)
+            // "Ana Lucía Pardo, autor del comentario": the chip alone does not say what it chooses (H09-1).
+            val groupName = getString(R.string.comment_author_group)
             state.collectors.forEach { option ->
                 val chip = inflater.inflate(R.layout.item_collector_chip, group, false) as Chip
                 chip.id = View.generateViewId()
                 chip.text = option.name
+                chip.contentDescription = getString(R.string.chip_group_option_description, option.name, groupName)
                 chip.chipIcon = InitialsAvatarDrawable(chip.context, option.initials)
                 chip.setOnCheckedChangeListener { _, isChecked ->
                     if (isChecked) viewModel.onCollectorSelected(option.id)

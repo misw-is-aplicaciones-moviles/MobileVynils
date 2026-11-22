@@ -10,6 +10,7 @@ import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -44,9 +45,9 @@ class AlbumCreateRobot {
         return this
     }
 
-    fun selectGenre(genre: String) = selectChip(genre)
+    fun selectGenre(genre: String) = selectChip(genre, R.string.field_genre)
 
-    fun selectRecordLabel(recordLabel: String) = selectChip(recordLabel)
+    fun selectRecordLabel(recordLabel: String) = selectChip(recordLabel, R.string.field_record_label)
 
     fun tapCreate(): AlbumCreateRobot {
         onView(withId(R.id.createButton)).perform(click())
@@ -115,8 +116,13 @@ class AlbumCreateRobot {
         return this
     }
 
-    private fun selectChip(label: String): AlbumCreateRobot {
-        onView(withText(label)).perform(scrollTo(), click())
+    // TalkBack lee el grupo después del valor («Rock, Género»), porque la etiqueta de arriba no se lee con el chip.
+    private fun selectChip(
+        label: String,
+        @StringRes group: Int,
+    ): AlbumCreateRobot {
+        val description = context.getString(R.string.chip_group_option_description, label, context.getString(group))
+        onView(withText(label)).perform(scrollTo(), click()).check(matches(withContentDescription(description)))
         return this
     }
 }
