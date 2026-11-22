@@ -55,8 +55,8 @@ android {
         // La rúbrica evalúa desde Lollipop (API 21). El catálogo fija versiones que admiten 21.
         minSdk = 21
         targetSdk = 36
-        versionCode = 2
-        versionName = "2.0.0"
+        versionCode = 3
+        versionName = "3.0.0b"
         buildConfigField("String", "BASE_URL", "\"${backendUri.toASCIIString()}\"")
 
         testInstrumentationRunner = "co.edu.uniandes.vinilos.testing.VinilosTestRunner"
