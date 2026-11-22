@@ -127,6 +127,7 @@
     <string name="state_error_title">No se pudo cargar</string>
     <string name="state_error_body">Inténtalo de nuevo.</string>
     <string name="action_retry">Reintentar</string>
+    <string name="action_refresh">Actualizar</string>
     <string name="action_cancel">Cancelar</string>
     <string name="action_create_album">Crear álbum</string>
     <string name="picker_select_album">Selecciona un álbum</string>

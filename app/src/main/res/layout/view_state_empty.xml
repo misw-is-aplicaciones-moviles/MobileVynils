@@ -22,4 +22,14 @@
         android:gravity="center"
         android:text="@string/state_empty_message"
         android:textAppearance="@style/TextAppearance.Vinilos.Body" />
+
+    <!-- Otra forma de recargar sin el gesto de deslizar (WCAG 2.5.1, ACC-15). Mismo botón que "Reintentar". -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/refreshButton"
+        style="@style/Widget.Vinilos.Button.Secondary"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/button_height"
+        android:layout_marginTop="@dimen/state_button_gap"
+        android:minWidth="@dimen/state_button_min_width"
+        android:text="@string/action_refresh" />
 </LinearLayout>
