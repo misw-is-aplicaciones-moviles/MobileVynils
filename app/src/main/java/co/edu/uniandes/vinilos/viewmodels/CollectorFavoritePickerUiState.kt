@@ -73,9 +73,12 @@ internal fun isFavorite(
     keys: Set<FavoriteKey>,
 ): Boolean = FavoriteKey(id, type) in keys || FavoriteKey(id, null) in keys
 
+/** The artist-list order: `name COLLATE NOCASE`, then id, then type. */
+internal val FAVORITE_PICKER_ORDER: Comparator<Performer> = compareBy({ nocaseKey(it.name) }, { it.id }, { it.type })
+
 /**
- * Name search, ignoring case. A blank query keeps every artist. Rows stay in the artist-list order
- * (`name COLLATE NOCASE`, then id, then type).
+ * Name search, ignoring case. A blank query keeps every artist. [performers] comes already sorted with
+ * [FAVORITE_PICKER_ORDER] and the rows keep that order.
  */
 internal fun buildVisibleFavorites(
     performers: List<Performer>,
@@ -85,9 +88,8 @@ internal fun buildVisibleFavorites(
     selectedType: PerformerType?,
 ): List<CollectorFavoriteOption> {
     val term = query.trim()
-    val sorted = performers.sortedWith(compareBy({ nocaseKey(it.name) }, { it.id }, { it.type }))
-    val rows = ArrayList<CollectorFavoriteOption>(sorted.size)
-    for (performer in sorted) {
+    val rows = ArrayList<CollectorFavoriteOption>(performers.size)
+    for (performer in performers) {
         if (term.isNotEmpty() && !performer.name.contains(term, ignoreCase = true)) continue
         val favorite = isFavorite(performer.id, performer.type, favoriteKeys)
         rows +=

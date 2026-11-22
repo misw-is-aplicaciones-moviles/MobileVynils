@@ -182,13 +182,10 @@ internal class CollectorRepositoryImpl(
         return withContext(defaultDispatcher) { rows.map { it.toModel() } }
     }
 
-    // The whole index is read and filtered here, so there is no SQL variable per id and no 999 limit (#139).
     private suspend fun readAuthorsOrEmpty(commentIds: Set<Int>): Map<Int, CommentAuthor> =
         try {
-            val rows = commentAuthorDao.getAll()
-            withContext(defaultDispatcher) {
-                rows.filter { it.commentId in commentIds }.associate { it.commentId to it.toModel() }
-            }
+            val rows = commentAuthorDao.getByIdsInChunks(commentIds)
+            withContext(defaultDispatcher) { rows.associate { it.commentId to it.toModel() } }
         } catch (_: SQLiteException) {
             emptyMap()
         }
