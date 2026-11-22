@@ -209,6 +209,56 @@ class PrizePickerViewModelTest {
         }
 
     @Test
+    fun `a search during a failed reload still filters the rows`() =
+        runTest {
+            val repository = repository()
+            val vm = viewModel(repository)
+            advanceUntilIdle()
+            val gate = CompletableDeferred<Unit>().also { repository.loadGate = it }
+            repository.catalog = DataResult.Failure(DataError.Network)
+            vm.load(forceRefresh = true)
+            runCurrent()
+
+            vm.onQueryChanged("nuevo")
+            gate.complete(Unit)
+            advanceUntilIdle()
+
+            assertEquals(
+                listOf(prize),
+                vm.uiState.value
+                    ?.visiblePrizes
+                    ?.map { it.prize },
+            )
+            assertEquals(DataError.Network, vm.uiState.value?.loadError)
+            assertFalse(checkNotNull(vm.uiState.value).isLoading)
+        }
+
+    @Test
+    fun `a selection during a failed reload is marked on its row`() =
+        runTest {
+            val repository = repository()
+            val vm = viewModel(repository)
+            advanceUntilIdle()
+            val gate = CompletableDeferred<Unit>().also { repository.loadGate = it }
+            repository.catalog = DataResult.Failure(DataError.Network)
+            vm.load(forceRefresh = true)
+            runCurrent()
+
+            vm.onPrizeSelected(prize.id)
+            gate.complete(Unit)
+            advanceUntilIdle()
+
+            assertEquals(
+                listOf(false, true),
+                vm.uiState.value
+                    ?.visiblePrizes
+                    ?.map { it.selected },
+            )
+            assertEquals(prize, vm.uiState.value?.selectedPrize)
+            assertTrue(checkNotNull(vm.uiState.value).canContinue)
+        }
+
+    @Test
     fun `changing the selected prize clears its date and rejects an unknown prize`() =
         runTest {
             val second = prize.copy(id = 73, name = "Otro premio")

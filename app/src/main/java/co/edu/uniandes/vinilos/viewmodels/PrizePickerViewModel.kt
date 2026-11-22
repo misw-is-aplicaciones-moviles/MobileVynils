@@ -79,6 +79,8 @@ class PrizePickerViewModel(
                 when (val result = repository.getPrizes(forceRefresh)) {
                     is DataResult.Failure -> {
                         update { copy(isLoading = false, loadError = result.error) }
+                        // A search or a selection during this reload returned before the rows were built.
+                        refreshVisiblePrizes()
                     }
 
                     is DataResult.Success -> {
