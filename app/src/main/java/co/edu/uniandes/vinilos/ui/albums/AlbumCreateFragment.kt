@@ -2,10 +2,13 @@ package co.edu.uniandes.vinilos.ui.albums
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import androidx.annotation.StringRes
+import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
@@ -20,6 +23,7 @@ import co.edu.uniandes.vinilos.databinding.ItemChoiceChipBinding
 import co.edu.uniandes.vinilos.models.Genre
 import co.edu.uniandes.vinilos.models.RecordLabel
 import co.edu.uniandes.vinilos.models.UserRole
+import co.edu.uniandes.vinilos.ui.common.errorsJustAppeared
 import co.edu.uniandes.vinilos.ui.common.fieldErrorText
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.ui.common.showFieldError
@@ -54,6 +58,7 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
 
     // Waits for a pause in the cover URL before asking Glide for it; one per view, cancelled with it.
     private var coverPreview: CoverPreviewLoader? = null
+    private var hadErrors: Boolean? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,6 +88,7 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
     override fun onDestroyView() {
         super.onDestroyView()
         coverPreview = null
+        hadErrors = null
         bindingOrNull = null
     }
 
@@ -105,6 +111,19 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
         binding.coverInput.doAfterTextChanged { viewModel.onCoverChanged(it?.toString().orEmpty()) }
         binding.descriptionInput.doAfterTextChanged { viewModel.onDescriptionChanged(it?.toString().orEmpty()) }
         binding.dateInput.setOnClickListener { openDatePicker() }
+        // The date opens a calendar instead of a keyboard: TalkBack announces it as a button, as in HU14.
+        ViewCompat.setAccessibilityDelegate(
+            binding.dateInput,
+            object : AccessibilityDelegateCompat() {
+                override fun onInitializeAccessibilityNodeInfo(
+                    host: View,
+                    info: AccessibilityNodeInfoCompat,
+                ) {
+                    super.onInitializeAccessibilityNodeInfo(host, info)
+                    info.className = Button::class.java.name
+                }
+            },
+        )
         binding.dateLayout.setEndIconOnClickListener { openDatePicker() }
     }
 
@@ -155,6 +174,9 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
         renderRole(state.role)
         renderForm(state.form)
         renderErrors(state.errors)
+        val submitFailed = errorsJustAppeared(hadErrors, state.errors.hasErrors)
+        if (submitFailed) firstErrorField(state.errors)?.requestFocus()
+        hadErrors = state.errors.hasErrors
         binding.formScroll.alpha = if (state.isSubmitting) SUBMITTING_ALPHA else 1f
         binding.createButton.isEnabled = !state.isSubmitting
     }
@@ -212,6 +234,16 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
         binding.recordLabelError.isVisible = errors.recordLabel != null
         binding.recordLabelError.text = errors.recordLabel?.let(::errorText)
     }
+
+    // Only the text fields take the focus. The date opens a calendar and genre and label are chips: their errors
+    // are announced by their live regions.
+    private fun firstErrorField(errors: AlbumFormErrors): View? =
+        when {
+            errors.name != null -> binding.nameInput
+            errors.coverUrl != null -> binding.coverInput
+            errors.description != null -> binding.descriptionInput
+            else -> null
+        }
 
     private fun TextInputLayout.showError(error: FieldError?) {
         showFieldError(error?.let(::errorMessage))

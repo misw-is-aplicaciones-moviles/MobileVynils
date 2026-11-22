@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageButton
 import androidx.core.os.bundleOf
+import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.viewModels
@@ -49,6 +50,7 @@ class CommentCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_com
         savedInstanceState: Bundle?,
     ) {
         bindingOrNull = FragmentCommentCreateSheetBinding.bind(view)
+        ViewCompat.setAccessibilityHeading(binding.sheetTitle, true)
         stars = listOf(binding.star1, binding.star2, binding.star3, binding.star4, binding.star5)
         renderedState = null
         binding.sheetSubtitle.text = requireArguments().getString(ARG_ALBUM_NAME).orEmpty()

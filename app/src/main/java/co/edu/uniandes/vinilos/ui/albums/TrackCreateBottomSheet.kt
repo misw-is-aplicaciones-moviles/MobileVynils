@@ -7,6 +7,7 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
+import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.viewModels
@@ -37,6 +38,7 @@ class TrackCreateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_track
         savedInstanceState: Bundle?,
     ) {
         bindingOrNull = FragmentTrackCreateSheetBinding.bind(view)
+        ViewCompat.setAccessibilityHeading(binding.sheetTitle, true)
         bindAlbumContext()
         bindKeypad()
         bindFields()
