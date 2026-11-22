@@ -387,6 +387,9 @@ Claves para `res/values/strings.xml` según el prototipo. El código usa los nom
 | `artist_member_of` | Integrante de %1$s |
 | `artist_albums_count` / `artist_members_count` (`plurals`) | 1 álbum, %1$d álbumes / 1 integrante, %1$d integrantes |
 | `artist_item_description` | %1$s, %2$s, %3$s (descripción de la fila para TalkBack) |
+| `album_item_description` | %1$s. %2$s, %3$s, %4$s (posición, nombre, artista y metadatos de la fila del catálogo para TalkBack) |
+| `album_detail_track_description` | Canción %1$d, %2$s, %3$s (fila de canción del detalle para TalkBack) |
+| `collector_album_picker_row_added` | %1$s, %2$s, %3$s. Ya está en la colección. (fila «Ya agregado» del selector de HU11 para TalkBack) |
 | `artist_list_error_title` / `artist_list_error_body` | No se pudieron cargar los artistas / Revisa tu conexión e inténtalo de nuevo. |
 | `artist_list_empty` / `artist_list_empty_musicians` / `artist_list_empty_bands` | Aún no hay artistas / músicos / bandas |
 | `artist_list_offline_notice` / `artist_list_refresh_error` | Sin conexión. Mostrando los datos guardados / No se pudieron actualizar los artistas |
