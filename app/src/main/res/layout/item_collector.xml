@@ -19,7 +19,8 @@
 
     <TextView
         android:id="@+id/collectorNumber"
-        android:layout_width="@dimen/album_number_width"
+        android:layout_width="wrap_content"
+        android:minWidth="@dimen/album_number_width"
         android:layout_height="wrap_content"
         android:importantForAccessibility="no"
         android:includeFontPadding="false"
