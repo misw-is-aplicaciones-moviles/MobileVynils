@@ -1,0 +1,6 @@
+{"stage": "antes", "repetition": 3, "pilot": false, "pid": 3689,
+ "apk": "antes-6a8d5c1.apk", "apk_sha256": "beedf01d5da8de393da0570d912c791655aab5b2bb48ba4c35b85b5b6027efe0",
+ "device": "Android SDK built for x86_64 / Android 5.0.2 (API 21)",
+ "avd": "Vinilos_API_21", "utc": "2026-11-22T19:46:03Z",
+ "order": ["HU02","HU04","HU05","HU07","HU09","HU10","HU12","HU13","HU14","HU15"],
+ "method": "ADB coordinate replay with equal pauses (2 s per action, 0.3 s per character, 10 s final rest); preparation by view hierarchy outside the windows; fresh app data and reseeded backend each pass; process kept between stories; no forced GC; device uptime clock; CPU App from /proc every 0.2 s; memory from /proc/PID/smaps read with run-as outside the app every ~0.5 s, private memory grouped like Android App Summary (Studio Total formula, not PSS); dumpsys meminfo not used because on API 21 it forces GCs in the app."}

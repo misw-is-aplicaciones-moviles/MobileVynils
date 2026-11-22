@@ -1,0 +1,5 @@
+{"name":"API21 Perfilamiento","telephone":"3001234567","email":"api21@example.com","id":1}
+{"name":"API21 Perfilamiento","image":"https://example.com/api21-banda.jpg","description":"Banda de perfilamiento API 21","creationDate":"2000-01-01T00:00:00.000Z","id":1}
+{"name":"API21 Musico","image":"https://example.com/api21-musico.jpg","description":"Musico libre de perfilamiento API 21","birthDate":"1980-01-01T00:00:00.000Z","id":2}
+{"name":"API21 Album","cover":"https://example.com/api21-album.jpg","releaseDate":"2000-01-01T00:00:00.000Z","description":"Album de perfilamiento API 21","genre":"Rock","recordLabel":"EMI","id":1}
+{"name":"API21 Premio","description":"Premio de perfilamiento API 21","organization":"API21 Org","id":1}

@@ -1,0 +1,59 @@
+{
+  "app_logs": {
+    "antes-1": {
+      "pid": 21915,
+      "glide_load_failed": 88,
+      "fatal": 0,
+      "anr_or_crash_events": 0,
+      "explicit_gc": 0,
+      "skipped_frames_messages": 0,
+      "app_log_lines": 3786
+    },
+    "antes-2": {
+      "pid": 28805,
+      "glide_load_failed": 88,
+      "fatal": 0,
+      "anr_or_crash_events": 0,
+      "explicit_gc": 0,
+      "skipped_frames_messages": 0,
+      "app_log_lines": 3786
+    },
+    "antes-3": {
+      "pid": 3689,
+      "glide_load_failed": 93,
+      "fatal": 0,
+      "anr_or_crash_events": 0,
+      "explicit_gc": 0,
+      "skipped_frames_messages": 1,
+      "app_log_lines": 4054
+    },
+    "despues-1": {
+      "pid": 10578,
+      "glide_load_failed": 82,
+      "fatal": 0,
+      "anr_or_crash_events": 0,
+      "explicit_gc": 0,
+      "skipped_frames_messages": 1,
+      "app_log_lines": 3525
+    },
+    "despues-2": {
+      "pid": 17434,
+      "glide_load_failed": 85,
+      "fatal": 0,
+      "anr_or_crash_events": 0,
+      "explicit_gc": 0,
+      "skipped_frames_messages": 0,
+      "app_log_lines": 3669
+    },
+    "despues-3": {
+      "pid": 24349,
+      "glide_load_failed": 84,
+      "fatal": 0,
+      "anr_or_crash_events": 0,
+      "explicit_gc": 0,
+      "skipped_frames_messages": 2,
+      "app_log_lines": 3618
+    }
+  },
+  "note": "Counts are log messages for the app PID, not unique defects. StrictMode UntaggedSocketViolation does not exist on API 21 (added in API 26)."
+}

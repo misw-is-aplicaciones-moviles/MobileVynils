@@ -1,0 +1,12 @@
+{
+  "HU02": {"start_s": 1851.49, "end_s": 1869.64, "body_actions": 3},
+  "HU04": {"start_s": 1883.85, "end_s": 1912.33, "body_actions": 7},
+  "HU05": {"start_s": 1924.96, "end_s": 1943.11, "body_actions": 3},
+  "HU07": {"start_s": 1957.71, "end_s": 2040.70, "body_actions": 71},
+  "HU09": {"start_s": 2054.26, "end_s": 2101.09, "body_actions": 36},
+  "HU10": {"start_s": 2115.15, "end_s": 2140.25, "body_actions": 9},
+  "HU12": {"start_s": 2154.29, "end_s": 2179.38, "body_actions": 9},
+  "HU13": {"start_s": 2189.13, "end_s": 2240.68, "body_actions": 40},
+  "HU14": {"start_s": 2249.01, "end_s": 2283.51, "body_actions": 13},
+  "HU15": {"start_s": 2287.32, "end_s": 2313.72, "body_actions": 11}
+}

@@ -1,0 +1,17 @@
+{
+  "complete": true,
+  "pilot": false,
+  "stories": 10,
+  "backend_checks": {
+    "HU02": true,
+    "HU04": true,
+    "HU05": true,
+    "HU07": true,
+    "HU09": true,
+    "HU10": true,
+    "HU12": true,
+    "HU13": true,
+    "HU14": true,
+    "HU15": true
+  }
+}

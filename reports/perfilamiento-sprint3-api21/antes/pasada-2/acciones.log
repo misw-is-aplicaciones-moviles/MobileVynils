@@ -1,0 +1,37 @@
+[14:28:43] 1. Backend con semilla y datos API21
+[14:29:00] 2. Instalación limpia
+[14:29:11] 3. Arranque y entrada como coleccionista
+[14:29:19] PID 28805
+[14:29:19] Calentamiento 10 s
+[14:29:31] HU02 inicio 2367.07
+[14:29:49] HU02 fin 2385.18 (3 acciones)
+[14:29:51]   verificación HU02: OK
+[14:30:04] HU04 inicio 2400.02
+[14:30:33] HU04 fin 2428.65 (7 acciones)
+[14:30:35]   verificación HU04: OK
+[14:30:46] HU05 inicio 2442.25
+[14:31:05] HU05 fin 2460.75 (3 acciones)
+[14:31:10]   verificación HU05: OK
+[14:31:18] HU07 inicio 2473.56
+[14:32:42] HU07 fin 2558.32 (71 acciones)
+[14:32:43]   verificación HU07: OK
+[14:32:56] HU09 inicio 2572.25
+[14:33:43] HU09 fin 2619.09 (36 acciones)
+[14:33:44]   verificación HU09: OK
+[14:34:03] HU10 inicio 2638.63
+[14:34:28] HU10 fin 2663.70 (9 acciones)
+[14:34:29]   verificación HU10: OK
+[14:34:43] HU12 inicio 2678.35
+[14:35:08] HU12 fin 2703.47 (9 acciones)
+[14:35:08]   verificación HU12: OK
+[14:35:17] HU13 inicio 2713.31
+[14:36:09] HU13 fin 2764.78 (40 acciones)
+[14:36:10]   verificación HU13: OK
+[14:36:17] HU14 inicio 2773.19
+[14:36:52] HU14 fin 2807.76 (13 acciones)
+[14:36:53]   verificación HU14: OK
+[14:36:56] HU15 inicio 2811.75
+[14:37:22] HU15 fin 2838.20 (11 acciones)
+[14:37:23]   verificación HU15: OK
+[14:37:23] Fin de la pasada; detengo el muestreo
+[14:37:27] Listo: /c/WSL/pf-api21/formal/antes/pasada-2
