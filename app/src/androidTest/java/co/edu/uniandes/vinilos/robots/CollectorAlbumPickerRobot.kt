@@ -25,6 +25,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import co.edu.uniandes.vinilos.R
+import co.edu.uniandes.vinilos.testing.hasAccessibilityHint
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Description
 import org.hamcrest.Matcher
@@ -52,6 +53,9 @@ class CollectorAlbumPickerRobot {
 
     fun assertSearch(query: String): CollectorAlbumPickerRobot {
         onView(allOf(withId(R.id.searchField), withText(query), isDisplayed())).check(matches(isDisplayed()))
+        // Con texto escrito, TalkBack sigue diciendo qué busca el campo (T7).
+        onView(withId(R.id.searchField))
+            .check(matches(hasAccessibilityHint(R.string.collector_album_picker_search_hint)))
         return this
     }
 

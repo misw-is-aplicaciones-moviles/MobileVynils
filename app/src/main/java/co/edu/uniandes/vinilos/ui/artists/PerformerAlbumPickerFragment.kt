@@ -25,6 +25,7 @@ import co.edu.uniandes.vinilos.databinding.FragmentPerformerAlbumPickerBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerAlbumOptionBinding
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
+import co.edu.uniandes.vinilos.ui.common.keepHintForAccessibility
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.AlbumPickerBlock
 import co.edu.uniandes.vinilos.viewmodels.AlbumPickerNotice
@@ -60,6 +61,7 @@ class PerformerAlbumPickerFragment : Fragment(R.layout.fragment_performer_album_
                 ?.query
                 .orEmpty(),
         )
+        binding.searchField.keepHintForAccessibility()
         binding.searchField.doAfterTextChanged { viewModel.onQueryChanged(it?.toString().orEmpty()) }
         binding.confirmButton.setOnClickListener { viewModel.onConfirm() }
         binding.errorState.retryButton.setOnClickListener { viewModel.retry() }

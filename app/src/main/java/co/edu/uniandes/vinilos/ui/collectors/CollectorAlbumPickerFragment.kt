@@ -27,6 +27,7 @@ import co.edu.uniandes.vinilos.databinding.ItemCollectorAlbumOptionBinding
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
+import co.edu.uniandes.vinilos.ui.common.keepHintForAccessibility
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.CollectorAlbumPickerEvent
 import co.edu.uniandes.vinilos.viewmodels.CollectorAlbumPickerOption
@@ -62,6 +63,7 @@ class CollectorAlbumPickerFragment : Fragment(R.layout.fragment_collector_album_
         // Its height comes from the layout weight, not from the rows, so new lists do not re-measure it.
         binding.albumList.setHasFixedSize(true)
         binding.albumList.adapter = adapter
+        binding.searchField.keepHintForAccessibility()
         binding.searchField.doAfterTextChanged { text ->
             viewModel.onQueryChanged(text?.toString().orEmpty())
         }

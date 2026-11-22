@@ -26,6 +26,7 @@ import co.edu.uniandes.vinilos.models.ArtistPrize
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.models.Prize
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
+import co.edu.uniandes.vinilos.ui.common.keepHintForAccessibility
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.ui.common.showConfirmationSnackbar
 import co.edu.uniandes.vinilos.viewmodels.PrizeFlowContract
@@ -56,6 +57,7 @@ class PrizePickerFragment : Fragment(R.layout.fragment_prize_picker) {
         binding.prizeList.layoutManager = LinearLayoutManager(requireContext())
         binding.prizeList.adapter = adapter
         binding.artistContext.text = getString(R.string.prize_picker_context, viewModel.performerName)
+        binding.prizeSearch.keepHintForAccessibility()
         binding.prizeSearch.doAfterTextChanged { viewModel.onQueryChanged(it?.toString().orEmpty()) }
         binding.continuePrize.setOnClickListener { viewModel.onContinue() }
         binding.createPrize.setOnClickListener { viewModel.onCreatePrize() }

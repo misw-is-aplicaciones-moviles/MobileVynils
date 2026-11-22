@@ -29,6 +29,7 @@ import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.Performer
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
+import co.edu.uniandes.vinilos.ui.common.keepHintForAccessibility
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.CollectorFavoriteOption
 import co.edu.uniandes.vinilos.viewmodels.CollectorFavoritePickerEvent
@@ -122,6 +123,7 @@ class CollectorFavoritePickerFragment : Fragment(R.layout.fragment_collector_fav
                 .orEmpty()
         binding.searchField.setText(query)
         binding.searchField.setSelection(query.length)
+        binding.searchField.keepHintForAccessibility()
         binding.searchField.doAfterTextChanged { text ->
             viewModel.onQueryChanged(text?.toString().orEmpty())
         }
