@@ -258,7 +258,8 @@ private class PerformerAlbumPickerAdapter(
             binding.root.isClickable = row.block == null
             binding.root.isSelected = row.isSelected
             binding.root.setBackgroundResource(R.drawable.bg_picker_option)
-            binding.root.alpha = if (row.block == null) 1f else BLOCKED_ALPHA
+            // Only the cover fades: the title, the artist and the chip of a blocked album must stay readable.
+            binding.albumArtwork.alpha = if (row.block == null) 1f else BLOCKED_ALPHA
             binding.root.contentDescription =
                 context.getString(
                     R.string.picker_option_description,

@@ -276,7 +276,9 @@ private class CollectorFavoriteOptionHolder(
             if (option.isSelected) R.drawable.bg_picker_radio_checked else R.drawable.bg_picker_radio_unchecked,
         )
         binding.root.isEnabled = !option.isAlreadyFavorite
-        binding.root.alpha = if (option.isAlreadyFavorite) ALREADY_FAVORITE_ALPHA else 1f
+        binding.root.isSelected = option.isSelected
+        // Only the picture fades: the name and the chip of a favorite must stay readable.
+        binding.performerImage.alpha = if (option.isAlreadyFavorite) ALREADY_FAVORITE_ALPHA else 1f
         binding.root.setBackgroundColor(if (option.isSelected) selectedColor else unselectedColor)
         val description =
             if (option.isAlreadyFavorite) {
@@ -285,6 +287,10 @@ private class CollectorFavoriteOptionHolder(
                 R.string.collector_favorite_picker_row_description
             }
         binding.root.contentDescription = context.getString(description, performer.name, overline)
+        ViewCompat.setStateDescription(
+            binding.root,
+            pickerStateDescription(context, option.isAlreadyFavorite, option.isSelected),
+        )
         requestManager
             .load(performer.imageUrl)
             .placeholder(R.drawable.bg_performer_image_placeholder)

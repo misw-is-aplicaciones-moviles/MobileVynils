@@ -272,10 +272,21 @@ private class CollectorAlbumOptionHolder(
             },
         )
         binding.root.isEnabled = !option.isAlreadyAdded
-        binding.root.alpha = if (option.isAlreadyAdded) ALREADY_ADDED_ALPHA else 1f
+        binding.root.isSelected = option.isSelected
+        // Only the cover fades: the title, the artist and the chip of an added album must stay readable.
+        binding.albumArtwork.alpha = if (option.isAlreadyAdded) ALREADY_ADDED_ALPHA else 1f
         binding.root.setBackgroundColor(if (option.isSelected) selectedColor else unselectedColor)
-        binding.root.contentDescription =
-            context.getString(R.string.collector_album_picker_row_description, album.name, artist, meta)
+        val description =
+            if (option.isAlreadyAdded) {
+                R.string.collector_album_picker_row_added
+            } else {
+                R.string.collector_album_picker_row_description
+            }
+        binding.root.contentDescription = context.getString(description, album.name, artist, meta)
+        ViewCompat.setStateDescription(
+            binding.root,
+            pickerStateDescription(context, option.isAlreadyAdded, option.isSelected),
+        )
         requestManager
             .load(album.coverUrl)
             .placeholder(R.drawable.img_album_cover)
