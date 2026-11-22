@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Pestaña activa en carbón; inactivas en ceniza (kit v2). -->
+<!-- Pestaña activa en carbón; inactivas en grafito: la ceniza daba 3.12:1 y el texto pide 4.5:1 (WCAG 1.4.3). -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:color="@color/vinilos_charcoal" android:state_checked="true" />
-    <item android:color="@color/vinilos_ash" />
+    <item android:color="@color/vinilos_graphite" />
 </selector>
