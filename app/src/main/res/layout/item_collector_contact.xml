@@ -4,8 +4,11 @@
     android:layout_width="match_parent" android:layout_height="wrap_content"
     android:layout_marginTop="@dimen/space_xl" android:orientation="horizontal">
 
+    <!-- Each tile is one TalkBack stop: label and value are read together. -->
+
     <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
         android:orientation="vertical" android:background="@drawable/bg_collector_tile"
+        android:focusable="true"
         android:padding="@dimen/space_m" android:layout_marginEnd="@dimen/space_s">
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="@string/collector_phone" android:textAppearance="@style/TextAppearance.Vinilos.Overline" />
@@ -16,6 +19,7 @@
 
     <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
         android:orientation="vertical" android:background="@drawable/bg_collector_tile"
+        android:focusable="true"
         android:padding="@dimen/space_m" android:layout_marginStart="@dimen/space_s">
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="@string/collector_email" android:textAppearance="@style/TextAppearance.Vinilos.Overline" />

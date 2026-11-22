@@ -159,6 +159,13 @@ internal class AlbumDetailAdapter(
             binding.trackNumber.text = binding.root.context.getString(R.string.album_detail_track_number, row.number)
             binding.trackName.text = row.track.name
             binding.trackDuration.text = row.track.duration
+            binding.root.contentDescription =
+                binding.root.context.getString(
+                    R.string.album_detail_track_description,
+                    row.number,
+                    row.track.name,
+                    row.track.duration,
+                )
         }
     }
 
