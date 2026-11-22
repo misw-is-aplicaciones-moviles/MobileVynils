@@ -13,4 +13,12 @@ sealed interface AlbumCreateEvent {
     ) : AlbumCreateEvent
 
     data object OpenRoleSelector : AlbumCreateEvent
+
+    /**
+     * "Crear álbum" found [errors]. Sent on every invalid submit, also when errors were already shown, so the screen
+     * moves the focus back to the first text field that still has one (WCAG 3.3.1). Editing a field never sends it.
+     */
+    data class InvalidSubmit(
+        val errors: AlbumFormErrors,
+    ) : AlbumCreateEvent
 }

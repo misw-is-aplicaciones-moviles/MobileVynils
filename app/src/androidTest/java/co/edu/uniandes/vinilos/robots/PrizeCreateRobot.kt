@@ -8,6 +8,7 @@ import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.hasFocus
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -38,6 +39,22 @@ class PrizeCreateRobot {
     fun typeDescription(description: String) = type(R.id.prizeDescriptionInput, description)
 
     fun typeOrganization(organization: String) = type(R.id.prizeOrganizationInput, organization)
+
+    /** Toca el campo, como quien pasa a él con el dedo: recibe el foco de entrada. */
+    fun moveTo(
+        @IdRes input: Int,
+    ): PrizeCreateRobot {
+        onView(withId(input)).perform(scrollTo(), click(), closeSoftKeyboard())
+        return this
+    }
+
+    /** El foco de entrada, el que sigue TalkBack, está en [input]. */
+    fun assertFocusOn(
+        @IdRes input: Int,
+    ): PrizeCreateRobot {
+        onView(withId(input)).check(matches(hasFocus()))
+        return this
+    }
 
     fun tapCreate(): PrizeCreateRobot {
         onView(withId(R.id.createPrizeButton)).perform(click())

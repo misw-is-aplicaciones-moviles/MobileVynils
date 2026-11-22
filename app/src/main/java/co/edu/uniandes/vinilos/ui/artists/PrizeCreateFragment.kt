@@ -19,7 +19,6 @@ import androidx.navigation.fragment.findNavController
 import co.edu.uniandes.vinilos.R
 import co.edu.uniandes.vinilos.databinding.FragmentPrizeCreateBinding
 import co.edu.uniandes.vinilos.models.Prize
-import co.edu.uniandes.vinilos.ui.common.errorsJustAppeared
 import co.edu.uniandes.vinilos.ui.common.fieldErrorText
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.FieldError
@@ -41,7 +40,6 @@ class PrizeCreateFragment : Fragment(R.layout.fragment_prize_create) {
     private var bindingOrNull: FragmentPrizeCreateBinding? = null
     private val binding get() = checkNotNull(bindingOrNull)
     private val viewModel: PrizeCreateViewModel by viewModels { PrizeCreateViewModel.Factory }
-    private var hadErrors: Boolean? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,7 +70,6 @@ class PrizeCreateFragment : Fragment(R.layout.fragment_prize_create) {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        hadErrors = null
         bindingOrNull = null
     }
 
@@ -124,9 +121,6 @@ class PrizeCreateFragment : Fragment(R.layout.fragment_prize_create) {
         binding.prizeDescriptionInput.setTextIfChanged(state.form.description)
         binding.prizeOrganizationInput.setTextIfChanged(state.form.organization)
         renderErrors(state.errors)
-        val submitFailed = errorsJustAppeared(hadErrors, state.errors.hasErrors)
-        if (submitFailed) firstErrorField(state.errors)?.requestFocus()
-        hadErrors = state.errors.hasErrors
         listOf(binding.prizeNameLayout, binding.prizeDescriptionLayout, binding.prizeOrganizationLayout)
             .forEach { it.isEnabled = !state.isLocked }
         binding.formScroll.alpha = if (state.isBusy) BUSY_ALPHA else 1f
@@ -212,6 +206,11 @@ class PrizeCreateFragment : Fragment(R.layout.fragment_prize_create) {
 
             PrizeCreateEvent.OpenRoleSelector -> {
                 findNavController().navigateToRoleSelector()
+            }
+
+            // Every invalid submit, not only the first one: TalkBack follows the input focus to the field.
+            is PrizeCreateEvent.InvalidSubmit -> {
+                firstErrorField(event.errors)?.requestFocus()
             }
         }
     }

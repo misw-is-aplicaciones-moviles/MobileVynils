@@ -46,7 +46,25 @@ class PrizeCreateViewModelTest {
             assertEquals(PrizeFormErrors(required, required, required), state(vm).errors)
             assertFalse(state(vm).isSubmitting)
             assertTrue(repository.createdDrafts.isEmpty())
-            assertNull(vm.events.value)
+            val errors = PrizeFormErrors(required, required, required)
+            assertEquals(PrizeCreateEvent.InvalidSubmit(errors), vm.events.value?.getContentIfNotHandled())
+            assertNull(vm.events.value?.getContentIfNotHandled())
+        }
+
+    @Test
+    fun `a second invalid submit asks again for the first error and typing does not`() =
+        runTest {
+            val vm = viewModel(FakePrizeRepository())
+            vm.onSubmit()
+            vm.events.value?.getContentIfNotHandled()
+
+            vm.onOrganizationChanged(draft.organization)
+            assertNull(vm.events.value?.getContentIfNotHandled())
+
+            vm.onSubmit()
+            val again = vm.events.value?.getContentIfNotHandled() as PrizeCreateEvent.InvalidSubmit
+            assertEquals(PrizeFormErrors(FieldError.REQUIRED, FieldError.REQUIRED, null), again.errors)
+            assertNull(vm.events.value?.getContentIfNotHandled())
         }
 
     @Test

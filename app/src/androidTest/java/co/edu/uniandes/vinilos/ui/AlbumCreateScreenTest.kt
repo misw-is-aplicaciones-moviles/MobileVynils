@@ -68,6 +68,23 @@ class AlbumCreateScreenTest {
             .assertFormShown()
     }
 
+    // ACC-16: cada envío inválido lleva el foco al primer campo de texto con error, también si ya se mostraba.
+    @Test
+    fun focusesFirstErrorOnEveryInvalidSubmit() {
+        openFormAsCollector()
+
+        form
+            .tapCreate()
+            .assertFieldError(R.id.nameLayout, R.string.error_required)
+            .assertFocusOn(R.id.nameInput)
+            .moveTo(R.id.coverInput)
+            .typeCoverUrl("https://example.com/portada.jpg")
+            .assertFocusOn(R.id.coverInput)
+            .tapCreate()
+            .assertFieldError(R.id.nameLayout, R.string.error_required)
+            .assertFocusOn(R.id.nameInput)
+    }
+
     @Test
     fun showsErrorsForBlankNameAndMissingDate() {
         openFormAsCollector()

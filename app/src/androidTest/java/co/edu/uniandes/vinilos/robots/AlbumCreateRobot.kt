@@ -9,6 +9,7 @@ import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers.hasFocus
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
@@ -48,6 +49,22 @@ class AlbumCreateRobot {
     fun selectGenre(genre: String) = selectChip(genre, R.string.field_genre)
 
     fun selectRecordLabel(recordLabel: String) = selectChip(recordLabel, R.string.field_record_label)
+
+    /** Toca el campo, como quien pasa a él con el dedo: recibe el foco de entrada. */
+    fun moveTo(
+        @IdRes input: Int,
+    ): AlbumCreateRobot {
+        onView(withId(input)).perform(scrollTo(), click(), closeSoftKeyboard())
+        return this
+    }
+
+    /** El foco de entrada, el que sigue TalkBack, está en [input]. */
+    fun assertFocusOn(
+        @IdRes input: Int,
+    ): AlbumCreateRobot {
+        onView(withId(input)).check(matches(hasFocus()))
+        return this
+    }
 
     fun tapCreate(): AlbumCreateRobot {
         onView(withId(R.id.createButton)).perform(click())

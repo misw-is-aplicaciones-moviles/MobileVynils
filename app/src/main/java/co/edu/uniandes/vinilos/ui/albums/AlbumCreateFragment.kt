@@ -23,7 +23,6 @@ import co.edu.uniandes.vinilos.databinding.ItemChoiceChipBinding
 import co.edu.uniandes.vinilos.models.Genre
 import co.edu.uniandes.vinilos.models.RecordLabel
 import co.edu.uniandes.vinilos.models.UserRole
-import co.edu.uniandes.vinilos.ui.common.errorsJustAppeared
 import co.edu.uniandes.vinilos.ui.common.fieldErrorText
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.ui.common.showFieldError
@@ -58,7 +57,6 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
 
     // Waits for a pause in the cover URL before asking Glide for it; one per view, cancelled with it.
     private var coverPreview: CoverPreviewLoader? = null
-    private var hadErrors: Boolean? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,7 +86,6 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
     override fun onDestroyView() {
         super.onDestroyView()
         coverPreview = null
-        hadErrors = null
         bindingOrNull = null
     }
 
@@ -178,9 +175,6 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
         renderRole(state.role)
         renderForm(state.form)
         renderErrors(state.errors)
-        val submitFailed = errorsJustAppeared(hadErrors, state.errors.hasErrors)
-        if (submitFailed) firstErrorField(state.errors)?.requestFocus()
-        hadErrors = state.errors.hasErrors
         binding.formScroll.alpha = if (state.isSubmitting) SUBMITTING_ALPHA else 1f
         binding.createButton.isEnabled = !state.isSubmitting
     }
@@ -318,6 +312,11 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
 
             AlbumCreateEvent.OpenRoleSelector -> {
                 findNavController().navigateToRoleSelector()
+            }
+
+            // Every invalid submit, not only the first one: TalkBack follows the input focus to the field.
+            is AlbumCreateEvent.InvalidSubmit -> {
+                firstErrorField(event.errors)?.requestFocus()
             }
         }
     }
