@@ -10,8 +10,8 @@ Tokens del kit v2, declarados una sola vez en `res/values/colors.xml`, `dimens.x
 |---|---|---|
 | `vinilos_cream` | `#F2EFE7` | Hoja de contenido (fondo de cada pantalla), con textura sutil de puntos |
 | `vinilos_charcoal` | `#232323` | Cabecera, texto principal, botón primario |
-| `vinilos_graphite` | `#66645E` | Texto secundario |
-| `vinilos_ash` | `#8A8780` | Íconos y etiquetas inactivos de la barra inferior |
+| `vinilos_graphite` | `#66645E` | Texto secundario, pista de los campos y pestañas inactivas de la barra inferior (5.15:1 sobre crema) |
+| `vinilos_ash` | `#8A8780` | Solo íconos y bordes decorativos (3.12:1 sobre crema): nunca texto |
 | `vinilos_line` | `#D2CFC7` | Divisores y bordes suaves |
 | `vinilos_stone` | `#D9D6CE` | Botón deshabilitado y opción elegida |
 | `vinilos_paper_dot` | `#0F232323` | Puntos de la textura de papel (carbón al 6 %) |
@@ -67,7 +67,7 @@ Cada pantalla tiene cabecera carbón con el título (y la flecha o la X cuando c
 | Chip de rol | `Chip` con estilo propio ("⇄ VISITANTE" / "⇄ COLECCIONISTA") | Vuelve al selector de rol |
 | Tarjetas de lista | `item_album.xml`, `item_performer.xml`, `item_collector.xml` (imagen, título, subtítulo, número) | Listados y selectores |
 | Fila del catálogo | `item_album_catalog.xml` (136 dp: número, carátula de 96 dp con disco, título en dos líneas, artista, "Género · Año", chevron) | Catálogo de álbumes (HU01) |
-| Estados | `view_state_loading.xml`, `view_state_error.xml` (mensaje y "Reintentar"), `view_state_empty.xml` | Todas las listas y detalles |
+| Estados | `view_state_loading.xml`, `view_state_error.xml` (mensaje y "Reintentar"), `view_state_empty.xml` (mensaje y "Actualizar") | Todas las listas y detalles |
 | Ficha de dato | `view_info_tile.xml` (etiqueta y valor) | Sello, Lanzamiento, Canciones, Teléfono, Correo |
 | Campo de texto | Estilo `Widget.Vinilos.TextInputLayout` | Formularios |
 | Grupo de chips | `ChipGroup` con `app:singleSelection="true"` y estilo `Widget.Vinilos.Chip` | Género, sello, filtros |
@@ -85,12 +85,16 @@ Cada componente vive en `res/layout` o `res/values/styles.xml` y no conoce ViewM
 
 - Todo elemento tocable mide al menos 48 x 48 dp (`minHeight`/`minWidth` o `TouchDelegate`).
 - Todo `ImageButton` e ícono con acción tiene `contentDescription`; los decorativos usan `@null` o `importantForAccessibility="no"`.
-- Contraste mínimo 4.5:1 en texto normal. El carbón sobre crema y el crema sobre carbón lo cumplen; el gris `#8A8780` solo se usa para íconos inactivos, no para texto.
+- Contraste mínimo 4.5:1 en texto normal. El carbón sobre crema, el grafito sobre crema y el crema sobre carbón lo cumplen; el gris `#8A8780` (ceniza) solo se usa en íconos y bordes decorativos, no en texto. Una fila bloqueada atenúa la imagen y el radio, nunca el texto.
 - Encabezados (título de cabecera y de sección) con `ViewCompat.setAccessibilityHeading(view, true)`, que funciona desde API 21; `android:accessibilityHeading` solo existe desde API 28 y en API 21 a 27 se ignora.
 - Textos en `sp`; se prueba con fuente al 200 %.
 - Mensajes de carga y error que cambian en pantalla con `android:accessibilityLiveRegion="polite"`; un texto fijo no lo lleva.
 - Orden de foco lógico: el layout sigue el orden de lectura.
-- Verificación: Accessibility Scanner en cada pantalla nueva, TalkBack en el flujo principal y `AccessibilityChecks.enable()` en las pruebas Espresso (Sprint 3; requiere agregar `espresso-accessibility` al catálogo y verificarlo con `minSdk 21`).
+- Una lista vacía también se recarga con el botón «Actualizar», no solo deslizando (WCAG 2.5.1).
+- `isSelected` marca solo lo que el usuario elige, porque TalkBack lo anuncia como «seleccionado». El resaltado de lo recién agregado usa `isActivated`, que TalkBack no anuncia.
+- Un chip dice a qué grupo pertenece (`chip_group_option_description`: «Rock, Género»), porque la etiqueta de arriba no se lee con él.
+- Un buscador sin etiqueta visible conserva su pista para TalkBack con `keepHintForAccessibility()` (`ui/common`). Desde API 26 el sistema ya lo hace; en API 21 a 25 la pista se pierde al escribir.
+- Verificación: Accessibility Scanner en cada pantalla nueva y TalkBack en el flujo principal. `AccessibilityChecks` en las pruebas Espresso queda pospuesto: el curso no lo exige y requiere la dependencia `espresso-accessibility` (decisión del 2026-11-21).
 
 ## 7. Usabilidad
 
@@ -118,3 +122,5 @@ Cada componente vive en `res/layout` o `res/values/styles.xml` y no conoce ViewM
 | 2026-10-26 | Reinicio con Vistas: Material Components 1.12, tokens del kit v2 (crema, carbón, Outfit y Montserrat) en recursos XML, `BottomNavigationView` con Navigation Component, `MaterialFadeThrough` de 300 ms, estados con `include`, hoja de canción como `BottomSheetDialogFragment`. |
 | 2026-10-26 | TR-01 en XML: la barra de Material no aplica sus propios insets (lo hace su contenedor; en API 21 sumaba 48 dp); el punto bajo la pestaña activa se posiciona a 4 dp de la etiqueta visible, calculado en `MainActivity`, porque `BottomNavigationView` no lo ofrece; íconos inactivos con contorno por selector de estado. |
 | 2026-10-27 | Revisión del PR de TR-01: la tabla de tokens usa los nombres de `colors.xml`; la hoja es `PaperSheetLayout` con la textura en un `BitmapShader`; se aclara cuándo un vector puede ir en un selector en API 21 a 23; se quitan `montserrat_extrabold.ttf` y `outfit_medium.ttf` (sin uso, unos 530 KB); el título de cabecera se marca como encabezado con `ViewCompat`; el punto de la pestaña arranca invisible y se recalcula cuando cambia la medida de la barra. Pendiente: recorte a las esquinas de la hoja (HU01) y volver a la raíz al tocar de nuevo la pestaña activa (HU02 y HU04). |
+| 2026-11-21 | Revisión de accesibilidad del Sprint 3 (Scanner del 2026-11-20): las pestañas inactivas y la pista de los campos pasan de ceniza a grafito (de 3.12:1 a 5.15:1); teclas y botones compactos pasan de 44 a 48 dp, con el radio del botón compacto en 24 dp para conservar la píldora; filas, campos y teclas crecen con la fuente (`wrap_content` con `minHeight`); las filas bloqueadas atenúan solo la imagen. Se aparta del kit v2 en el color de la barra y en los 44 dp del mockup. `AccessibilityChecks` queda pospuesto. |
+| 2026-11-22 | Decisiones del equipo sobre la revisión de accesibilidad. ACC-13 (#170) se excluye: la barra (10 sp), el chip de rol (9.5 sp) y las etiquetas (10.5 sp) son los tamaños del kit v2, están en `sp` y crecen con la fuente del sistema, y ninguna pauta de WCAG fija un mínimo. ACC-15 (#172) se aprueba: el estado vacío de las listas lleva «Actualizar», el mismo botón secundario de «Reintentar» del estado de error, aunque el kit v2 no lo muestra. |

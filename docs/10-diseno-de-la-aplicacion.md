@@ -360,6 +360,7 @@ Claves para `res/values/strings.xml` según el prototipo. El código usa los nom
 | `nav_albums` / `nav_artists` / `nav_collectors` | Álbumes / Artistas / Coleccionistas |
 | `album_list_title` / `album_detail_title` | Catálogo / Álbum |
 | `album_list_error_title` / `album_list_error_body` / `action_retry` | No se pudo cargar el catálogo / Revisa tu conexión e inténtalo de nuevo. / Reintentar |
+| `action_refresh` | Actualizar (botón del estado vacío de las tres listas, alternativa al gesto de deslizar) |
 | `album_no_artist` | sin artista |
 | `album_list_empty` | Aún no hay álbumes en el catálogo |
 | `album_list_offline_notice` | Sin conexión. Mostrando los datos guardados |
@@ -387,6 +388,10 @@ Claves para `res/values/strings.xml` según el prototipo. El código usa los nom
 | `artist_member_of` | Integrante de %1$s |
 | `artist_albums_count` / `artist_members_count` (`plurals`) | 1 álbum, %1$d álbumes / 1 integrante, %1$d integrantes |
 | `artist_item_description` | %1$s, %2$s, %3$s (descripción de la fila para TalkBack) |
+| `album_item_description` | %1$s. %2$s, %3$s, %4$s (posición, nombre, artista y metadatos de la fila del catálogo para TalkBack) |
+| `album_detail_track_description` | Canción %1$d, %2$s, %3$s (fila de canción del detalle para TalkBack) |
+| `collector_album_picker_row_added` | %1$s, %2$s, %3$s. Ya está en la colección. (fila «Ya agregado» del selector de HU11 para TalkBack) |
+| `chip_group_option_description` | %1$s, %2$s (chip con su grupo para TalkBack: «Rock, Género», «Ana Lucía Pardo, autor del comentario») |
 | `artist_list_error_title` / `artist_list_error_body` | No se pudieron cargar los artistas / Revisa tu conexión e inténtalo de nuevo. |
 | `artist_list_empty` / `artist_list_empty_musicians` / `artist_list_empty_bands` | Aún no hay artistas / músicos / bandas |
 | `artist_list_offline_notice` / `artist_list_refresh_error` | Sin conexión. Mostrando los datos guardados / No se pudieron actualizar los artistas |
@@ -399,6 +404,7 @@ Claves para `res/values/strings.xml` según el prototipo. El código usa los nom
 | `album_status_available` / `album_status_unavailable` | Disponible / No disponible |
 | `action_add_favorite` | Agregar favorito |
 | `comment_sheet_title` / `comment_who` / `comment_rating` / `comment_rating_value` / `field_comment` / `comment_hint` | Comentar álbum / ¿Quién comenta? / Valoración (0 a 5) / Valoración · %1$d de 5 / Comentario / Escribe tu opinión |
+| `comment_author_group` | autor del comentario (grupo de los chips de «¿Quién comenta?» para TalkBack) |
 | `error_select_collector` / `error_select_rating` | Selecciona un coleccionista / Selecciona una valoración |
 | `action_publish_comment` / `snack_comment_published` | Publicar comentario / Comentario publicado |
 | `picker_album_title` / `picker_musician_title` / `picker_artist_title` | Elegir álbum / Elegir músico / Elegir artista |

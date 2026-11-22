@@ -129,7 +129,11 @@ class CollectorAlbumPickerScreenTest {
         data.createAlbum(album)
         openCollector(name, album)
         detail.tapAddAlbum()
-        picker.waitUntilOpen(name).select(album).tapContinue()
+        picker
+            .waitUntilOpen(name)
+            .select(album)
+            .assertSelected(album)
+            .tapContinue()
 
         sheet
             .assertOpen(album, name)
@@ -140,7 +144,7 @@ class CollectorAlbumPickerScreenTest {
         sheet.enterDigits(MINIMUM_PRICE).assertPrice(sheetPrice(MINIMUM_PRICE))
         sheet.assertPriceError(shown = false).assertStatusError(shown = false)
         sheet.tapAdd().assertPriceError(shown = false).assertStatusError(shown = true)
-        sheet.chooseAvailable().assertStatusError(shown = false)
+        sheet.chooseAvailable().assertStatusError(shown = false).assertStatusSelected(available = true)
         sheet
             .tapDelete()
             .assertPrice(sheetPrice(0))

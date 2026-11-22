@@ -83,6 +83,7 @@ class PrizeDateBottomSheet : BottomSheetDialogFragment(R.layout.fragment_prize_d
         savedInstanceState: Bundle?,
     ) {
         bindingOrNull = FragmentPrizeDateSheetBinding.bind(view)
+        ViewCompat.setAccessibilityHeading(binding.sheetTitle, true)
         binding.closeSheet.setOnClickListener { if (viewModel.uiState.value?.isSubmitting != true) dismiss() }
         binding.prizeDate.setOnClickListener { openCalendar() }
         binding.savePrize.setOnClickListener { viewModel.onSave() }

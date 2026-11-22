@@ -27,6 +27,7 @@ import co.edu.uniandes.vinilos.databinding.ItemCollectorAlbumOptionBinding
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
+import co.edu.uniandes.vinilos.ui.common.keepHintForAccessibility
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.CollectorAlbumPickerEvent
 import co.edu.uniandes.vinilos.viewmodels.CollectorAlbumPickerOption
@@ -62,6 +63,7 @@ class CollectorAlbumPickerFragment : Fragment(R.layout.fragment_collector_album_
         // Its height comes from the layout weight, not from the rows, so new lists do not re-measure it.
         binding.albumList.setHasFixedSize(true)
         binding.albumList.adapter = adapter
+        binding.searchField.keepHintForAccessibility()
         binding.searchField.doAfterTextChanged { text ->
             viewModel.onQueryChanged(text?.toString().orEmpty())
         }
@@ -272,10 +274,21 @@ private class CollectorAlbumOptionHolder(
             },
         )
         binding.root.isEnabled = !option.isAlreadyAdded
-        binding.root.alpha = if (option.isAlreadyAdded) ALREADY_ADDED_ALPHA else 1f
+        binding.root.isSelected = option.isSelected
+        // Only the cover fades: the title, the artist and the chip of an added album must stay readable.
+        binding.albumArtwork.alpha = if (option.isAlreadyAdded) ALREADY_ADDED_ALPHA else 1f
         binding.root.setBackgroundColor(if (option.isSelected) selectedColor else unselectedColor)
-        binding.root.contentDescription =
-            context.getString(R.string.collector_album_picker_row_description, album.name, artist, meta)
+        val description =
+            if (option.isAlreadyAdded) {
+                R.string.collector_album_picker_row_added
+            } else {
+                R.string.collector_album_picker_row_description
+            }
+        binding.root.contentDescription = context.getString(description, album.name, artist, meta)
+        ViewCompat.setStateDescription(
+            binding.root,
+            pickerStateDescription(context, option.isAlreadyAdded, option.isSelected),
+        )
         requestManager
             .load(album.coverUrl)
             .placeholder(R.drawable.img_album_cover)

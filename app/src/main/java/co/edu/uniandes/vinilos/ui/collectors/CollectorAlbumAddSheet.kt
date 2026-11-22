@@ -58,6 +58,7 @@ class CollectorAlbumAddSheet : BottomSheetDialogFragment(R.layout.fragment_colle
         savedInstanceState: Bundle?,
     ) {
         bindingOrNull = FragmentCollectorAlbumAddSheetBinding.bind(view)
+        ViewCompat.setAccessibilityHeading(binding.sheetTitle, true)
         colors = SheetColors.from(requireContext())
         bindSubtitle()
         bindKeypad()
@@ -144,6 +145,11 @@ class CollectorAlbumAddSheet : BottomSheetDialogFragment(R.layout.fragment_colle
         binding.statusAvailable.setTextColor(if (available) colors.cream else colors.charcoal)
         binding.statusUnavailable.setBackgroundColor(if (unavailable) colors.charcoal else colors.transparent)
         binding.statusUnavailable.setTextColor(if (unavailable) colors.cream else colors.charcoal)
+        // The fill alone does not tell TalkBack which status was chosen (WCAG 4.1.2 and 1.4.1).
+        binding.statusAvailable.isSelected = available
+        binding.statusUnavailable.isSelected = unavailable
+        ViewCompat.setStateDescription(binding.statusAvailable, selectedState(available))
+        ViewCompat.setStateDescription(binding.statusUnavailable, selectedState(unavailable))
 
         binding.addButton.isEnabled = !state.isSubmitting
         binding.addButton.setText(
@@ -160,6 +166,9 @@ class CollectorAlbumAddSheet : BottomSheetDialogFragment(R.layout.fragment_colle
         binding.statusUnavailable.isEnabled = !state.isSubmitting
         isCancelable = !state.isSubmitting
     }
+
+    private fun selectedState(selected: Boolean): CharSequence? =
+        if (selected) getString(R.string.picker_selected) else null
 
     private fun submitErrorMessage(error: DataError): Int =
         when (error) {

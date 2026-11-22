@@ -16,13 +16,16 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
+import androidx.test.espresso.matcher.ViewMatchers.isDescendantOfA
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayingAtLeast
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
+import androidx.test.espresso.matcher.ViewMatchers.isSelected
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import co.edu.uniandes.vinilos.R
+import co.edu.uniandes.vinilos.testing.hasAccessibilityHint
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Description
 import org.hamcrest.Matcher
@@ -50,6 +53,9 @@ class CollectorAlbumPickerRobot {
 
     fun assertSearch(query: String): CollectorAlbumPickerRobot {
         onView(allOf(withId(R.id.searchField), withText(query), isDisplayed())).check(matches(isDisplayed()))
+        // Con texto escrito, TalkBack sigue diciendo qué busca el campo (T7).
+        onView(withId(R.id.searchField))
+            .check(matches(hasAccessibilityHint(R.string.collector_album_picker_search_hint)))
         return this
     }
 
@@ -69,6 +75,18 @@ class CollectorAlbumPickerRobot {
     /** Espera la fila: tras una búsqueda, las filas se calculan fuera del hilo principal y llegan después. */
     fun select(name: String): CollectorAlbumPickerRobot {
         awaitRow(name) { onView(focusedList()).perform(choose(name)) }
+        return this
+    }
+
+    /** La fila elegida queda marcada para TalkBack (`isSelected`), no solo con el fondo. */
+    fun assertSelected(name: String): CollectorAlbumPickerRobot {
+        val row =
+            allOf(
+                withId(R.id.albumRow),
+                hasDescendant(allOf(withId(R.id.albumTitle), withText(name))),
+                isDescendantOfA(focusedList()),
+            )
+        awaitRow(name) { onView(row).check(matches(isSelected())) }
         return this
     }
 

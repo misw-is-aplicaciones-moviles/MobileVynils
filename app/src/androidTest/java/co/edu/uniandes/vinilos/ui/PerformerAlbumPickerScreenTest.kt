@@ -5,6 +5,7 @@ import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.isActivated
 import androidx.test.espresso.matcher.ViewMatchers.isClickable
 import androidx.test.espresso.matcher.ViewMatchers.isDescendantOfA
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -261,7 +262,7 @@ class PerformerAlbumPickerScreenTest {
             ),
         )
         onView(allOf(withId(R.id.albumTitle), withText(albumName))).check(
-            matches(isDescendantOfA(allOf(isSelected(), isDescendantOfA(withId(R.id.detailList))))),
+            matches(isDescendantOfA(allOf(isActivated(), isDescendantOfA(withId(R.id.detailList))))),
         )
         PerformerDetailRobot().scrollToText(context.getString(R.string.artist_detail_albums, count))
         onView(withId(R.id.performerListFragment)).check(matches(isSelected()))

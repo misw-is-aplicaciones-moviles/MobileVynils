@@ -2,10 +2,13 @@ package co.edu.uniandes.vinilos.ui.albums
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import androidx.annotation.StringRes
+import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
@@ -105,12 +108,25 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
         binding.coverInput.doAfterTextChanged { viewModel.onCoverChanged(it?.toString().orEmpty()) }
         binding.descriptionInput.doAfterTextChanged { viewModel.onDescriptionChanged(it?.toString().orEmpty()) }
         binding.dateInput.setOnClickListener { openDatePicker() }
+        // The date opens a calendar instead of a keyboard: TalkBack announces it as a button, as in HU14.
+        ViewCompat.setAccessibilityDelegate(
+            binding.dateInput,
+            object : AccessibilityDelegateCompat() {
+                override fun onInitializeAccessibilityNodeInfo(
+                    host: View,
+                    info: AccessibilityNodeInfoCompat,
+                ) {
+                    super.onInitializeAccessibilityNodeInfo(host, info)
+                    info.className = Button::class.java.name
+                }
+            },
+        )
         binding.dateLayout.setEndIconOnClickListener { openDatePicker() }
     }
 
     private fun bindChips() {
-        addChips(binding.genreChips, Genre.entries.filter { it != Genre.UNKNOWN }) { it.apiName }
-        addChips(binding.recordLabelChips, RecordLabel.entries) { it.apiName }
+        addChips(binding.genreChips, R.string.field_genre, Genre.entries.filter { it != Genre.UNKNOWN }) { it.apiName }
+        addChips(binding.recordLabelChips, R.string.field_record_label, RecordLabel.entries) { it.apiName }
         binding.genreChips.setOnCheckedStateChangeListener { group, checkedIds ->
             viewModel.onGenreSelected(group.checkedValue(checkedIds) as? Genre)
         }
@@ -120,15 +136,19 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
     }
 
     // One chip per value; the value travels in the tag. The checked state comes from the ViewModel, not from the view.
+    // TalkBack reads the group after the value ("Rock, Género"), since the label above is not read with the chip (H07-2).
     private fun <T : Enum<T>> addChips(
         group: ChipGroup,
+        @StringRes groupLabel: Int,
         values: List<T>,
         label: (T) -> String,
     ) {
+        val groupName = getString(groupLabel)
         values.forEach { value ->
             val chip = ItemChoiceChipBinding.inflate(layoutInflater, group, false).root
             chip.id = View.generateViewId()
             chip.text = label(value)
+            chip.contentDescription = getString(R.string.chip_group_option_description, label(value), groupName)
             chip.tag = value
             chip.isSaveEnabled = false
             group.addView(chip)
@@ -213,6 +233,16 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
         binding.recordLabelError.text = errors.recordLabel?.let(::errorText)
     }
 
+    // Only the text fields take the focus. The date opens a calendar and genre and label are chips: their errors
+    // are announced by their live regions.
+    private fun firstErrorField(errors: AlbumFormErrors): View? =
+        when {
+            errors.name != null -> binding.nameInput
+            errors.coverUrl != null -> binding.coverInput
+            errors.description != null -> binding.descriptionInput
+            else -> null
+        }
+
     private fun TextInputLayout.showError(error: FieldError?) {
         showFieldError(error?.let(::errorMessage))
     }
@@ -282,6 +312,11 @@ class AlbumCreateFragment : Fragment(R.layout.fragment_album_create) {
 
             AlbumCreateEvent.OpenRoleSelector -> {
                 findNavController().navigateToRoleSelector()
+            }
+
+            // Every invalid submit, not only the first one: TalkBack follows the input focus to the field.
+            is AlbumCreateEvent.InvalidSubmit -> {
+                firstErrorField(event.errors)?.requestFocus()
             }
         }
     }

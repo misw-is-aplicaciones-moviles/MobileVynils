@@ -33,6 +33,7 @@
     <string name="collector_album_picker_no_results">No se encontraron álbumes.</string>
     <string name="collector_album_picker_already_added">Ya agregado</string>
     <string name="collector_album_picker_row_description">%1$s, %2$s, %3$s. Elegir álbum.</string>
+    <string name="collector_album_picker_row_added">%1$s, %2$s, %3$s. Ya está en la colección.</string>
     <string name="collector_album_selected">Álbum seleccionado: %1$s</string>
     <string name="collector_album_add_title">Precio y estado</string>
     <string name="collector_album_add_price_label">Precio (USD)</string>

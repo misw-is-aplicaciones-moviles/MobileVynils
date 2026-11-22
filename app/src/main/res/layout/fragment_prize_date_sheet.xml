@@ -16,7 +16,7 @@
             android:orientation="vertical">
             <TextView android:id="@+id/sheetContext" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:gravity="center" android:textAppearance="@style/TextAppearance.Vinilos.Overline" />
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            <TextView android:id="@+id/sheetTitle" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_s" android:gravity="center"
                 android:text="@string/prize_date_title" android:textAppearance="@style/TextAppearance.Vinilos.SheetTitle" />
             <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -29,9 +29,11 @@
                 android:text="@string/prize_date_hint" app:icon="@drawable/ic_calendar" app:iconGravity="end"
                 app:iconTint="@color/vinilos_charcoal" />
             <TextView android:id="@+id/dateError" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:accessibilityLiveRegion="polite"
                 android:text="@string/prize_date_required_error" android:textAppearance="@style/TextAppearance.Vinilos.Body"
                 android:visibility="gone" />
             <TextView android:id="@+id/submitError" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:accessibilityLiveRegion="polite"
                 android:layout_marginTop="@dimen/space_m" android:textAppearance="@style/TextAppearance.Vinilos.Body"
                 android:visibility="gone" />
             <com.google.android.material.button.MaterialButton android:id="@+id/reviewArtist"

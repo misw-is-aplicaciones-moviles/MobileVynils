@@ -18,7 +18,7 @@ Define qué se prueba, con qué herramienta, en qué nivel y cómo se documenta.
 | E2E | Flujos completos de cada historia en la app | Espresso (core y contrib), `ActivityScenarioRule`, Robots | `src/androidTest` | Antes de pedir revisión y en la matriz antes del release |
 | Exploratorias | Escenarios del inventario exploratorio del sprint | Manual, con tester cruzado | Wiki | Al cerrar las historias |
 | Aleatorias y sistemáticas | Robustez ante entradas no previstas | Monkey (`adb`), RIP | Scripts en `tests/` (se crean en el Sprint 3) | Sprint 3 |
-| Accesibilidad | Reglas de accesibilidad en vistas reales | Accessibility Scanner, TalkBack, `AccessibilityChecks` | Manual + `androidTest` | Sprint 3 |
+| Accesibilidad | Reglas de accesibilidad en vistas reales | Accessibility Scanner, TalkBack | Manual, con capturas y grabaciones en la wiki; `AccessibilityChecks` pospuesto | Sprint 3 |
 | Desempeño | CPU, memoria, red | Android Profiler, StrictMode | Manual + informe | Sprint 2 y 3 (`07-desempeno.md`) |
 
 ## 3. Pruebas unitarias
@@ -861,7 +861,7 @@ Se enlazan desde el inventario y se cierran con el PR que los corrige, que inclu
 
 ## 8. Pruebas de accesibilidad (Sprint 3)
 
-- `AccessibilityChecks.enable().setRunChecksFromRootView(true)` en las pruebas Espresso, con `androidx.test.espresso:espresso-accessibility` agregado al catálogo (no está todavía).
+- `AccessibilityChecks` en las pruebas Espresso: pospuesto (decisión del 2026-11-21). El curso pide la revisión con Scanner y TalkBack; activarlo requiere la dependencia `espresso-accessibility` y haría fallar las E2E por hallazgos ya conocidos.
 - Accessibility Scanner en cada pantalla, con hallazgos y correcciones en la wiki.
 - Recorrido con TalkBack del flujo principal grabado como evidencia.
 

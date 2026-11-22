@@ -97,6 +97,7 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
         binding.swipeRefresh.setOnRefreshListener { viewModel.refresh() }
         binding.emptyRefresh.setColorSchemeColors(indicator)
         binding.emptyRefresh.setOnRefreshListener { viewModel.refresh() }
+        binding.emptyState.refreshButton.setOnClickListener { viewModel.refresh() }
     }
 
     private fun bindStateTexts() {

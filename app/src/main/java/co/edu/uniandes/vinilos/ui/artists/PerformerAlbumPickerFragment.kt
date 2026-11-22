@@ -25,6 +25,7 @@ import co.edu.uniandes.vinilos.databinding.FragmentPerformerAlbumPickerBinding
 import co.edu.uniandes.vinilos.databinding.ItemPerformerAlbumOptionBinding
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
+import co.edu.uniandes.vinilos.ui.common.keepHintForAccessibility
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.AlbumPickerBlock
 import co.edu.uniandes.vinilos.viewmodels.AlbumPickerNotice
@@ -60,6 +61,7 @@ class PerformerAlbumPickerFragment : Fragment(R.layout.fragment_performer_album_
                 ?.query
                 .orEmpty(),
         )
+        binding.searchField.keepHintForAccessibility()
         binding.searchField.doAfterTextChanged { viewModel.onQueryChanged(it?.toString().orEmpty()) }
         binding.confirmButton.setOnClickListener { viewModel.onConfirm() }
         binding.errorState.retryButton.setOnClickListener { viewModel.retry() }
@@ -258,7 +260,8 @@ private class PerformerAlbumPickerAdapter(
             binding.root.isClickable = row.block == null
             binding.root.isSelected = row.isSelected
             binding.root.setBackgroundResource(R.drawable.bg_picker_option)
-            binding.root.alpha = if (row.block == null) 1f else BLOCKED_ALPHA
+            // Only the cover fades: the title, the artist and the chip of a blocked album must stay readable.
+            binding.albumArtwork.alpha = if (row.block == null) 1f else BLOCKED_ALPHA
             binding.root.contentDescription =
                 context.getString(
                     R.string.picker_option_description,

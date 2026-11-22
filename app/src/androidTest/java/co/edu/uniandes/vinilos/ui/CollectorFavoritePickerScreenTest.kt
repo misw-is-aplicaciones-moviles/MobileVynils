@@ -140,6 +140,7 @@ class CollectorFavoritePickerScreenTest {
             .waitUntilOpen(name)
             .search(musician)
             .select(musician)
+            .assertSelected(musician)
             .assertAdd(musician)
         firewall.block()
         picker

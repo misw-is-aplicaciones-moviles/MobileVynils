@@ -15,7 +15,7 @@
     <string name="album_list_refresh_error">No se pudo actualizar el catálogo</string>
     <string name="album_no_artist">sin artista</string>
     <string name="album_genre_year">%1$s · %2$d</string>
-    <string name="album_item_description">%1$s, %2$s, %3$s</string>
+    <string name="album_item_description">%1$s. %2$s, %3$s, %4$s</string>
     <!-- Formulario de nuevo álbum (docs/10, sección 6 y textos) -->
     <string name="create_album_title">Nuevo álbum</string>
     <string name="create_album_all_required">Todos los campos son obligatorios.</string>
@@ -127,6 +127,8 @@
     <string name="state_error_title">No se pudo cargar</string>
     <string name="state_error_body">Inténtalo de nuevo.</string>
     <string name="action_retry">Reintentar</string>
+    <string name="action_refresh">Actualizar</string>
+    <string name="chip_group_option_description">%1$s, %2$s</string>
     <string name="action_cancel">Cancelar</string>
     <string name="action_create_album">Crear álbum</string>
     <string name="picker_select_album">Selecciona un álbum</string>
@@ -173,5 +175,6 @@
     <string name="comment_collectors_loading">Cargando coleccionistas…</string>
     <string name="comment_collectors_error">No se pudieron cargar los coleccionistas.</string>
     <string name="comment_star_description">Valoración %1$d de 5</string>
+    <string name="comment_author_group">autor del comentario</string>
     <string name="album_detail_comment_description">%1$s, %2$d de 5 estrellas. %3$s</string>
 </resources>

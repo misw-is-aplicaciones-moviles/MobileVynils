@@ -19,10 +19,10 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.isActivated
 import androidx.test.espresso.matcher.ViewMatchers.isDescendantOfA
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
-import androidx.test.espresso.matcher.ViewMatchers.isSelected
 import androidx.test.espresso.matcher.ViewMatchers.withAlpha
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -221,12 +221,13 @@ class PrizePickerScreenTest {
             allOf(
                 withId(R.id.prizeName),
                 withText(fixture.name),
-                isDescendantOfA(allOf(isSelected(), withAlpha(1f))),
+                // La fila recién asignada se resalta como activada, no seleccionada (H04-1).
+                isDescendantOfA(allOf(isActivated(), withAlpha(1f))),
             ),
         )
         onView(
             allOf(withId(R.id.prizeName), withText(fixture.name)),
-        ).check(matches(allOf(isDisplayed(), isDescendantOfA(isSelected()))))
+        ).check(matches(allOf(isDisplayed(), isDescendantOfA(isActivated()))))
         onView(withId(R.id.prizeOrganization)).check(matches(allOf(isDisplayed(), withText("Equipo de pruebas HU14"))))
         val shownDate = date.format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
         onView(withId(R.id.prizeAwardDate)).check(matches(allOf(isDisplayed(), withText(shownDate))))

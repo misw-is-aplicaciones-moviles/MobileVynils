@@ -26,6 +26,7 @@ import co.edu.uniandes.vinilos.databinding.ItemBandMemberOptionBinding
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
+import co.edu.uniandes.vinilos.ui.common.keepHintForAccessibility
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.BandMemberFlowContract
 import co.edu.uniandes.vinilos.viewmodels.BandMemberOption
@@ -55,6 +56,7 @@ class BandMemberPickerFragment : Fragment(R.layout.fragment_band_member_picker) 
         binding.musicianList.setHasFixedSize(true)
         binding.musicianList.adapter = adapter
         binding.bandContext.text = getString(R.string.band_member_context, viewModel.bandName)
+        binding.musicianSearch.keepHintForAccessibility()
         binding.musicianSearch.doAfterTextChanged { viewModel.onQueryChanged(it?.toString().orEmpty()) }
         binding.addMember.setOnClickListener { viewModel.onAdd() }
         binding.errorState.retryButton.setOnClickListener { viewModel.retry() }

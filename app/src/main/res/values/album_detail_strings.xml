@@ -14,4 +14,5 @@
     <string name="album_detail_comment_author">Coleccionista</string>
     <string name="album_detail_count">%1$d</string>
     <string name="album_detail_track_number">%1$02d</string>
+    <string name="album_detail_track_description">Canción %1$d, %2$s, %3$s</string>
 </resources>

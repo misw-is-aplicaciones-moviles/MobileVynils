@@ -16,6 +16,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
 import androidx.test.espresso.matcher.ViewMatchers.isNotSelected
 import androidx.test.espresso.matcher.ViewMatchers.isSelected
+import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -49,7 +50,14 @@ class CommentCreateRobot {
     fun chooseCollector(name: String): CommentCreateRobot {
         // En API 21 el toque sobre el centro visible del chip no lo marca.
         awaitChip(name).perform(clickListener())
-        onView(chip(name)).check(matches(isChecked()))
+        // TalkBack dice qué elige el chip: «Ana Lucía Pardo, autor del comentario».
+        val description =
+            context.getString(
+                R.string.chip_group_option_description,
+                name,
+                context.getString(R.string.comment_author_group),
+            )
+        onView(chip(name)).check(matches(allOf(isChecked(), withContentDescription(description))))
         return this
     }
 

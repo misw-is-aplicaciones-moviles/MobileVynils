@@ -310,7 +310,8 @@ internal class PerformerDetailAdapter(
             binding.prizeName.text = assignment.prize.name
             binding.prizeOrganization.text = assignment.prize.organization
             binding.prizeAwardDate.text = date
-            binding.root.isSelected = row.highlighted
+            // Activated, not selected: TalkBack would say "seleccionado" on a row nobody chose (H04-1).
+            binding.root.isActivated = row.highlighted
             binding.root.contentDescription =
                 binding.root.context.getString(
                     R.string.prize_detail_description,
@@ -387,7 +388,8 @@ internal class PerformerDetailAdapter(
         fun bind(row: PerformerDetailRow.Record) {
             albumId = row.album.id
             val album = row.album
-            binding.root.isSelected = row.highlighted
+            // Activated, not selected: TalkBack would say "seleccionado" on a row nobody chose (H04-1).
+            binding.root.isActivated = row.highlighted
             binding.root.setBackgroundResource(R.drawable.bg_picker_option)
             binding.albumTitle.text = album.name
             binding.albumYear.text = album.releaseDate.year.toString()
