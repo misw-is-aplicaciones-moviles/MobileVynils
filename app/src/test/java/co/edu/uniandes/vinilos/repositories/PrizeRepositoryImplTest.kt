@@ -574,6 +574,7 @@ class PrizeRepositoryImplTest {
                 ioDispatcher = dispatcher,
                 defaultDispatcher = dispatcher,
             ),
+            defaultDispatcher = dispatcher,
         )
     }
 }
