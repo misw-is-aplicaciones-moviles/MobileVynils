@@ -17,6 +17,7 @@ import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
 import co.edu.uniandes.vinilos.ui.common.createListDivider
+import co.edu.uniandes.vinilos.ui.common.navigateIfOn
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.AlbumDetailViewModel
 import co.edu.uniandes.vinilos.viewmodels.AlbumListEvent
@@ -151,7 +152,8 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
     private fun handle(event: AlbumListEvent) {
         when (event) {
             is AlbumListEvent.OpenDetail -> {
-                findNavController().navigate(
+                findNavController().navigateIfOn(
+                    R.id.albumListFragment,
                     R.id.action_albumList_to_albumDetail,
                     bundleOf(AlbumDetailViewModel.ARG_ALBUM_ID to event.albumId),
                 )
@@ -166,7 +168,10 @@ class AlbumListFragment : Fragment(R.layout.fragment_album_list) {
             }
 
             AlbumListEvent.OpenCreateAlbum -> {
-                findNavController().navigate(R.id.action_albumList_to_albumCreate)
+                findNavController().navigateIfOn(
+                    R.id.albumListFragment,
+                    R.id.action_albumList_to_albumCreate,
+                )
             }
 
             AlbumListEvent.ShowAlbumCreated -> {
