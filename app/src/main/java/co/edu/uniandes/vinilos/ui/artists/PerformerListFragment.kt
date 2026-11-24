@@ -17,6 +17,7 @@ import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
 import co.edu.uniandes.vinilos.ui.common.createListDivider
+import co.edu.uniandes.vinilos.ui.common.navigateIfOn
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.PerformerFilter
 import co.edu.uniandes.vinilos.viewmodels.PerformerListEvent
@@ -153,7 +154,8 @@ class PerformerListFragment : Fragment(R.layout.fragment_performer_list) {
     private fun handle(event: PerformerListEvent) {
         when (event) {
             is PerformerListEvent.OpenDetail -> {
-                findNavController().navigate(
+                findNavController().navigateIfOn(
+                    R.id.performerListFragment,
                     R.id.action_performerList_to_performerDetail,
                     bundleOf(
                         PerformerListViewModel.ARG_PERFORMER_ID to event.performerId,
