@@ -17,6 +17,7 @@ import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
 import co.edu.uniandes.vinilos.ui.common.createListDivider
+import co.edu.uniandes.vinilos.ui.common.navigateIfOn
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.PerformerFilter
 import co.edu.uniandes.vinilos.viewmodels.PerformerListEvent
@@ -58,6 +59,7 @@ class PerformerListFragment : Fragment(R.layout.fragment_performer_list) {
         viewModel.events.observe(viewLifecycleOwner) { event ->
             event.getContentIfNotHandled()?.let(::handle)
         }
+        viewModel.onListShown()
         // Esta pantalla no tiene acción principal en ningún rol. Se oculta una sola vez, al abrirla: el botón
         // "+" del catálogo no debe seguir visible aquí, y render() no debe tocarlo cuando esta vista ya sale.
         (activity as? PrimaryActionHost)?.hidePrimaryAction()
@@ -102,6 +104,7 @@ class PerformerListFragment : Fragment(R.layout.fragment_performer_list) {
         binding.swipeRefresh.setOnRefreshListener { viewModel.refresh() }
         binding.emptyRefresh.setColorSchemeColors(indicator)
         binding.emptyRefresh.setOnRefreshListener { viewModel.refresh() }
+        binding.emptyState.refreshButton.setOnClickListener { viewModel.refresh() }
     }
 
     private fun bindStateTexts() {
@@ -151,7 +154,8 @@ class PerformerListFragment : Fragment(R.layout.fragment_performer_list) {
     private fun handle(event: PerformerListEvent) {
         when (event) {
             is PerformerListEvent.OpenDetail -> {
-                findNavController().navigate(
+                findNavController().navigateIfOn(
+                    R.id.performerListFragment,
                     R.id.action_performerList_to_performerDetail,
                     bundleOf(
                         PerformerListViewModel.ARG_PERFORMER_ID to event.performerId,

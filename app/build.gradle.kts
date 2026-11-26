@@ -55,8 +55,8 @@ android {
         // La rúbrica evalúa desde Lollipop (API 21). El catálogo fija versiones que admiten 21.
         minSdk = 21
         targetSdk = 36
-        versionCode = 2
-        versionName = "2.0.0"
+        versionCode = 4
+        versionName = "3.0.0"
         buildConfigField("String", "BASE_URL", "\"${backendUri.toASCIIString()}\"")
 
         testInstrumentationRunner = "co.edu.uniandes.vinilos.testing.VinilosTestRunner"
@@ -141,6 +141,40 @@ tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
     jvmTarget = "17"
     jdkHome.unsetConvention()
     jdkHome.set(null as Directory?)
+}
+
+// 127.0.0.1 dentro del emulador es el emulador. El reverse se pierde al reiniciarlo.
+val loopbackBackend = backendUri.host == "127.0.0.1" || backendUri.host == "localhost"
+val backendPort = if (backendUri.port == -1) 80 else backendUri.port
+val adbExecutable = localProperties.getProperty("sdk.dir")?.let { File(it, "platform-tools/adb").absolutePath }
+
+tasks.matching { it.name.startsWith("connected") && it.name.endsWith("AndroidTest") }.configureEach {
+    if (!loopbackBackend || adbExecutable == null) return@configureEach
+    val adb = adbExecutable
+    val port = backendPort
+    doFirst {
+        val listed =
+            ProcessBuilder(adb, "devices")
+                .redirectErrorStream(true)
+                .start()
+        val output = listed.inputStream.bufferedReader().readText()
+        check(listed.waitFor() == 0) { "adb devices falló: $output" }
+        output
+            .lineSequence()
+            .drop(1)
+            .map { it.trim() }
+            .filter { it.endsWith("device") }
+            .map { it.substringBefore('\t').substringBefore(' ') }
+            .filter { it.isNotEmpty() }
+            .forEach { serial ->
+                val reverse =
+                    ProcessBuilder(adb, "-s", serial, "reverse", "tcp:$port", "tcp:$port")
+                        .redirectErrorStream(true)
+                        .start()
+                val reverseOutput = reverse.inputStream.bufferedReader().readText()
+                check(reverse.waitFor() == 0) { "adb reverse falló en $serial: $reverseOutput" }
+            }
+    }
 }
 
 dependencies {

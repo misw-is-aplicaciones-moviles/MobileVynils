@@ -7,6 +7,10 @@ sealed interface CollectorDetailEvent {
         val collectorId: Int,
     ) : CollectorDetailEvent
 
+    data class OpenFavoritePicker(
+        val collectorId: Int,
+    ) : CollectorDetailEvent
+
     data class OpenAlbum(
         val albumId: Int,
     ) : CollectorDetailEvent

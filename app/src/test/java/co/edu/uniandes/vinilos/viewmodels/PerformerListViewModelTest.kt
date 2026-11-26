@@ -429,6 +429,87 @@ class PerformerListViewModelTest {
     }
 
     @Test
+    fun `showing the list again reads Room and picks up a member added in the detail`() =
+        runTest {
+            val repository =
+                FakePerformerRepository(
+                    hasCache = true,
+                    localResult = DataResult.Success(performers),
+                    remoteResult = DataResult.Success(performers),
+                )
+            val viewModel = viewModel(repository)
+            val states = viewModel.recordStates()
+            advanceUntilIdle()
+            val joined = ruben.copy(bandId = queen.id, bandName = queen.name)
+            repository.localResult = DataResult.Success(listOf(brian, queen.copy(memberCount = 5), joined))
+
+            viewModel.onListShown()
+            advanceUntilIdle()
+
+            val items = states.last().performers.associateBy { it.name }
+            assertEquals(PerformerSummaryLine.BandCounts(albums = 2, members = 5), items.getValue("Queen").summary)
+            assertEquals(PerformerSummaryLine.MemberOf("Queen"), items.getValue("Rubén Blades").summary)
+            assertEquals(2, repository.localCalls)
+            assertEquals("Coming back must not call the backend", 1, repository.remoteCalls)
+        }
+
+    @Test
+    fun `showing the list again is ignored before the first list and while a refresh runs`() =
+        runTest {
+            val repository =
+                FakePerformerRepository(
+                    hasCache = true,
+                    localResult = DataResult.Success(performers),
+                    remoteResult = DataResult.Success(performers),
+                )
+            val gate = CompletableDeferred<Unit>().also { repository.remoteGate = it }
+            val viewModel = viewModel(repository)
+
+            viewModel.onListShown()
+            advanceUntilIdle()
+            assertTrue(viewModel.uiState.getOrAwaitValue().isRefreshing)
+            viewModel.onListShown()
+            advanceUntilIdle()
+
+            assertEquals(1, repository.localCalls)
+            gate.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(1, repository.remoteCalls)
+        }
+
+    @Test
+    fun `showing the list again revalidates an invalidated cache and keeps rows on failure`() =
+        runTest {
+            val repository = FakePerformerRepository(hasCache = false, localResult = DataResult.Success(performers))
+            val viewModel = viewModel(repository)
+            val states = viewModel.recordStates()
+            advanceUntilIdle()
+
+            repository.localResult = DataResult.Success(listOf(queen.copy(albumCount = 3)))
+            viewModel.onListShown()
+            advanceUntilIdle()
+            assertEquals(2, repository.localCalls)
+            assertEquals(
+                PerformerSummaryLine.BandCounts(albums = 3, members = 4),
+                states
+                    .last()
+                    .performers
+                    .single()
+                    .summary,
+            )
+
+            repository.hasCache = true
+            repository.localResult = DataResult.Failure(DataError.Network)
+            viewModel.onListShown()
+            advanceUntilIdle()
+
+            assertEquals(1, states.last().performers.size)
+            assertNull(states.last().error)
+            assertNull(viewModel.events.value)
+            assertEquals(0, repository.remoteCalls)
+        }
+
+    @Test
     fun `every filter accepts the types it should`() {
         assertTrue(PerformerType.entries.all { PerformerFilter.ALL.accepts(it) })
         assertTrue(PerformerFilter.MUSICIANS.accepts(PerformerType.MUSICIAN))

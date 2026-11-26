@@ -15,7 +15,8 @@ import org.junit.runner.RunWith
 import java.time.LocalDate
 
 /**
- * Migraciones 2 → 3 (HU03) y 3 → 4: agregan las tablas de artistas y de coleccionistas sin recrear la base.
+ * Migraciones 2 → 3 (HU03), 3 → 4 y 4 → 5 (HU09): agregan las tablas de artistas, de coleccionistas y de autores de
+ * comentarios sin recrear la base.
  * Usan los esquemas exportados en `app/schemas`, que Gradle agrega como assets de las pruebas instrumentadas.
  */
 @RunWith(AndroidJUnit4::class)
@@ -72,7 +73,7 @@ class VinilosMigrationTest {
             val database =
                 Room
                     .databaseBuilder(context, VinilosDatabase::class.java, DATABASE_NAME)
-                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
             try {
                 val albums = database.albumDao().getAll()
@@ -80,6 +81,7 @@ class VinilosMigrationTest {
                 assertEquals(LocalDate.of(1984, 8, 1), albums.single().releaseDate)
                 assertEquals(0, database.performerDao().count())
                 assertEquals(0, database.collectorDao().count())
+                assertEquals(0, database.commentAuthorDao().getAll().size)
             } finally {
                 database.close()
             }
@@ -111,6 +113,46 @@ class VinilosMigrationTest {
         migrated.query("SELECT COUNT(*) FROM collectors").use {
             it.moveToFirst()
             assertEquals(0, it.getInt(0))
+        }
+    }
+
+    @Test
+    fun migrating_from_4_to_5_keeps_every_table_and_creates_an_empty_comment_authors_table() {
+        helper.createDatabase(DATABASE_NAME, 4).apply {
+            execSQL(
+                "INSERT INTO albums (id, name, cover, releaseDate, description, genre, recordLabel, performerName) " +
+                    "VALUES (100, 'Buscando América', 'c', '1984-08-01', 'D', 'Salsa', 'Elektra', NULL)",
+            )
+            execSQL("INSERT INTO tracks (id, name, duration, albumId) VALUES (1, 'Decisiones', '5:05', 100)")
+            execSQL(
+                "INSERT INTO performers (id, type, name, image, date, albumCount, memberCount, bandId) " +
+                    "VALUES (101, 'BAND', 'Queen', 'i', '1970-01-01', 2, 4, NULL)",
+            )
+            execSQL(
+                "INSERT INTO collectors (id, name, email, albumCount, favoriteCount) " +
+                    "VALUES (100, 'Manolo Bellon', 'manollo@caracol.com.co', 1, 1)",
+            )
+            close()
+        }
+
+        val migrated = helper.runMigrationsAndValidate(DATABASE_NAME, 5, true, MIGRATION_4_5)
+
+        listOf("albums", "tracks", "performers", "collectors").forEach { table ->
+            migrated.query("SELECT COUNT(*) FROM $table").use {
+                it.moveToFirst()
+                assertEquals(table, 1, it.getInt(0))
+            }
+        }
+        migrated.query("SELECT COUNT(*) FROM comment_authors").use {
+            it.moveToFirst()
+            assertEquals(0, it.getInt(0))
+        }
+        migrated.execSQL(
+            "INSERT INTO comment_authors (commentId, collectorId, collectorName) VALUES (100, 100, 'Manolo Bellon')",
+        )
+        migrated.query("SELECT collectorName FROM comment_authors WHERE commentId = 100").use {
+            it.moveToFirst()
+            assertEquals("Manolo Bellon", it.getString(0))
         }
     }
 

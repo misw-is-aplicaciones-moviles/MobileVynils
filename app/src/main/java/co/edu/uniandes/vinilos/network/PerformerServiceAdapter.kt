@@ -2,9 +2,11 @@ package co.edu.uniandes.vinilos.network
 
 import co.edu.uniandes.vinilos.models.Performer
 import co.edu.uniandes.vinilos.models.PerformerDetail
+import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.network.dto.mergePerformers
 import co.edu.uniandes.vinilos.network.dto.toDetailModel
+import co.edu.uniandes.vinilos.network.dto.toMemberSummary
 import com.google.gson.JsonParseException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
@@ -19,7 +21,14 @@ internal interface PerformerServiceAdapter {
      * The backend has no single endpoint, so this calls two; if either fails the whole call fails with the
      * Retrofit, IO or JSON exception that the Repository converts. It never returns half of the list.
      */
-    suspend fun getPerformers(): List<Performer>
+    suspend fun getPerformers(forceRefresh: Boolean = false): List<Performer>
+
+    /** Sends one association POST; errors after sending may still require checking the remote result. */
+    suspend fun addAlbum(
+        performerId: Int,
+        type: PerformerType,
+        albumId: Int,
+    )
 
     /** Reads one remote detail, without replacing the cached list; retries revalidate HTTP. */
     suspend fun getPerformer(
@@ -27,6 +36,15 @@ internal interface PerformerServiceAdapter {
         type: PerformerType,
         forceRefresh: Boolean = false,
     ): PerformerDetail
+
+    /**
+     * Sends `POST /bands/:bandId/musicians/:musicianId` and returns the musician as the band's new member.
+     * The backend does not check that the musician is free: the one-band rule is applied before calling this.
+     */
+    suspend fun addMusicianToBand(
+        bandId: Int,
+        musicianId: Int,
+    ): PerformerSummary
 }
 
 internal class PerformerServiceAdapterImpl(
@@ -38,10 +56,11 @@ internal class PerformerServiceAdapterImpl(
     private val api by lazy(apiProvider)
 
     // The two requests are independent, so they go out together; a failure cancels the other one.
-    override suspend fun getPerformers(): List<Performer> =
+    override suspend fun getPerformers(forceRefresh: Boolean): List<Performer> =
         coroutineScope {
-            val musicians = async(ioDispatcher) { api.getMusicians() }
-            val bands = async(ioDispatcher) { api.getBands() }
+            val cacheControl = if (forceRefresh) "no-cache" else null
+            val musicians = async(ioDispatcher) { api.getMusicians(cacheControl) }
+            val bands = async(ioDispatcher) { api.getBands(cacheControl) }
             val musicianDtos = musicians.await()
             val bandDtos = bands.await()
             withContext(defaultDispatcher) { mergePerformers(musicianDtos, bandDtos) }
@@ -63,6 +82,41 @@ internal class PerformerServiceAdapterImpl(
             PerformerType.BAND -> {
                 val response = withContext(ioDispatcher) { api.getBand(id, cacheControl) }
                 withContext(defaultDispatcher) { response.requiredBody().toDetailModel() }
+            }
+        }
+    }
+
+    override suspend fun addAlbum(
+        performerId: Int,
+        type: PerformerType,
+        albumId: Int,
+    ) {
+        require(performerId > 0) { "performerId must be positive" }
+        require(albumId > 0) { "albumId must be positive" }
+        val response =
+            withContext(ioDispatcher) {
+                when (type) {
+                    PerformerType.MUSICIAN -> api.addAlbumToMusician(performerId, albumId)
+                    PerformerType.BAND -> api.addAlbumToBand(performerId, albumId)
+                }
+            }
+        withContext(defaultDispatcher) {
+            if (response.requiredBody().id != albumId) {
+                throw JsonParseException("Unexpected associated album id")
+            }
+        }
+    }
+
+    override suspend fun addMusicianToBand(
+        bandId: Int,
+        musicianId: Int,
+    ): PerformerSummary {
+        require(bandId > 0) { "bandId must be positive" }
+        require(musicianId > 0) { "musicianId must be positive" }
+        val response = withContext(ioDispatcher) { api.addMusicianToBand(bandId, musicianId) }
+        return withContext(defaultDispatcher) {
+            response.requiredBody().toMemberSummary().also {
+                if (it.id != musicianId) throw JsonParseException("Unexpected musician identity")
             }
         }
     }

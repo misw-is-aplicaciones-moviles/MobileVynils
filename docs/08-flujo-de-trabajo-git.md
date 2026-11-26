@@ -53,9 +53,9 @@ GitHub Actions (`.github/workflows/ci.yml`):
 
 ## 5. Releases y APK
 
-1. Al cerrar el sprint se crea una rama `release/*` desde `develop`. Para la entrega 2.0.0 se usa `release/2.0.0`; también se admite el nombre `release/sprint-N`.
+1. Al cerrar el sprint se crea una rama `release/*` desde `develop`. Para la entrega 3.0.0 se usa `release/3.0.0`; también se admite el nombre `release/sprint-N`.
 2. Se ejecuta la matriz de pruebas (`06-pruebas.md`, sección 4) y se corrigen defectos en la rama.
-3. En la misma rama se revisa el README y se versiona la APK de entrega en la **raíz del repositorio**. La entrega actual es `vinilos-2.0.0.apk`: versión 2.0.0, `versionCode = 2`, variante **debug** y backend Heroku. Las instrucciones de instalación y compilación están en el README. La rama `release/2.0.0` identifica la entrega; no implica que el archivo de la raíz sea de la variante `release`.
+3. En la misma rama se revisa el README y se versiona la APK de entrega en la **raíz del repositorio**. La entrega actual es `vinilos-v3.0.0.apk`: versión 3.0.0, `versionCode = 4`, variante **debug** y backend Heroku. Las instrucciones de instalación y compilación están en el README. La rama `release/3.0.0` identifica la entrega; no implica que el archivo de la raíz sea de la variante `release`.
 4. PR de la rama `release/*` a `main`, aprobación, merge (merge commit, no squash, para conservar historia) y tag `sprint-N` (`git tag -a sprint-1 -m "Sprint 1: HU01, HU02, HU07, HU08"`).
 5. La CI construye el APK de release desde el tag y publica un GitHub Release `Sprint N` con el APK, las historias incluidas y el enlace a la wiki.
 6. Merge de `main` de vuelta a `develop` (merge commit).

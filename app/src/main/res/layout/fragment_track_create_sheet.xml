@@ -67,7 +67,8 @@
         <EditText
             android:id="@+id/trackNameField"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/track_field_height"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/track_field_height"
             android:layout_marginStart="@dimen/track_sheet_margin"
             android:layout_marginTop="@dimen/track_label_gap"
             android:layout_marginEnd="@dimen/track_sheet_margin"
@@ -126,6 +127,7 @@
 
         <co.edu.uniandes.vinilos.ui.albums.TrackDurationView
             android:id="@+id/trackDuration"
+            android:accessibilityLiveRegion="polite"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/track_duration_margin_horizontal"
@@ -185,7 +187,7 @@
                 android:id="@+id/key1"
                 style="@style/Widget.Vinilos.Key"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/track_key_height"
+                android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/track_key_gap"
                 android:layout_weight="1" />
 
@@ -193,7 +195,7 @@
                 android:id="@+id/key2"
                 style="@style/Widget.Vinilos.Key"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/track_key_height"
+                android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/track_key_gap"
                 android:layout_weight="1" />
 
@@ -201,7 +203,7 @@
                 android:id="@+id/key3"
                 style="@style/Widget.Vinilos.Key"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/track_key_height"
+                android:layout_height="wrap_content"
                 android:layout_weight="1" />
         </LinearLayout>
 
@@ -216,7 +218,7 @@
                 android:id="@+id/key4"
                 style="@style/Widget.Vinilos.Key"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/track_key_height"
+                android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/track_key_gap"
                 android:layout_weight="1" />
 
@@ -224,7 +226,7 @@
                 android:id="@+id/key5"
                 style="@style/Widget.Vinilos.Key"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/track_key_height"
+                android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/track_key_gap"
                 android:layout_weight="1" />
 
@@ -232,7 +234,7 @@
                 android:id="@+id/key6"
                 style="@style/Widget.Vinilos.Key"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/track_key_height"
+                android:layout_height="wrap_content"
                 android:layout_weight="1" />
         </LinearLayout>
 
@@ -247,7 +249,7 @@
                 android:id="@+id/key7"
                 style="@style/Widget.Vinilos.Key"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/track_key_height"
+                android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/track_key_gap"
                 android:layout_weight="1" />
 
@@ -255,7 +257,7 @@
                 android:id="@+id/key8"
                 style="@style/Widget.Vinilos.Key"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/track_key_height"
+                android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/track_key_gap"
                 android:layout_weight="1" />
 
@@ -263,7 +265,7 @@
                 android:id="@+id/key9"
                 style="@style/Widget.Vinilos.Key"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/track_key_height"
+                android:layout_height="wrap_content"
                 android:layout_weight="1" />
         </LinearLayout>
 
@@ -278,7 +280,7 @@
                 android:id="@+id/keyClear"
                 style="@style/Widget.Vinilos.Key"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/track_key_height"
+                android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/track_key_gap"
                 android:layout_weight="1"
                 android:text="@string/action_clear"
@@ -288,14 +290,15 @@
                 android:id="@+id/key0"
                 style="@style/Widget.Vinilos.Key"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/track_key_height"
+                android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/track_key_gap"
                 android:layout_weight="1" />
 
             <ImageButton
                 android:id="@+id/keyDelete"
                 android:layout_width="0dp"
-                android:layout_height="@dimen/track_key_height"
+                android:layout_height="match_parent"
+                android:minHeight="@dimen/track_key_height"
                 android:layout_weight="1"
                 android:background="@drawable/bg_track_key"
                 android:contentDescription="@string/action_delete_digit"

@@ -150,9 +150,15 @@ class MainActivity :
                 val tabId =
                     when (destination.id) {
                         R.id.albumDetailFragment -> R.id.albumListFragment
-                        R.id.collectorAlbumPickerFragment -> R.id.collectorListFragment
+
+                        R.id.collectorAlbumPickerFragment,
+                        R.id.collectorFavoritePickerFragment,
+                        -> R.id.collectorListFragment
+
                         R.id.performerDetailFragment -> R.id.performerListFragment
+
                         R.id.collectorDetailFragment -> R.id.collectorListFragment
+
                         else -> destination.id
                     }
                 binding.bottomNav.menu
@@ -214,8 +220,11 @@ class MainActivity :
                 R.id.roleSelectFragment,
                 R.id.albumCreateFragment,
                 R.id.collectorAlbumPickerFragment,
+                R.id.collectorFavoritePickerFragment,
                 R.id.prizePickerFragment,
+                R.id.performerAlbumPickerFragment,
                 R.id.prizeCreateFragment,
+                R.id.bandMemberPickerFragment,
             )
     }
 }

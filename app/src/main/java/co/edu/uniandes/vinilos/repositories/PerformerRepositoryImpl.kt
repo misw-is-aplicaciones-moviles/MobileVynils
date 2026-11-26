@@ -9,11 +9,13 @@ import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.Performer
 import co.edu.uniandes.vinilos.models.PerformerDetail
+import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.network.PerformerServiceAdapter
 import co.edu.uniandes.vinilos.network.networkRequest
 import com.google.gson.JsonParseException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -27,14 +29,20 @@ internal class PerformerRepositoryImpl(
     private val performerDao: PerformerDao,
     private val serviceAdapter: PerformerServiceAdapter,
     private val defaultDispatcher: CoroutineDispatcher,
+    private val albumRepository: AlbumRepository,
 ) : PerformerRepository {
     private val mutex = Mutex()
 
+    // Guarded by the same mutex as catalog loads and writes, so an older refresh cannot clear this flag.
+    private var associationNeedsRefresh = false
+
     override suspend fun hasCachedPerformers(): Boolean =
-        try {
-            performerDao.count() > 0
-        } catch (_: SQLiteException) {
-            false
+        mutex.withLock {
+            try {
+                !associationNeedsRefresh && performerDao.count() > 0
+            } catch (_: SQLiteException) {
+                false
+            }
         }
 
     override suspend fun getPerformer(
@@ -43,8 +51,9 @@ internal class PerformerRepositoryImpl(
         forceRefresh: Boolean,
     ): DataResult<PerformerDetail, DataError> {
         require(id > 0) { "performerId must be positive" }
+        val revalidate = mutex.withLock { forceRefresh || associationNeedsRefresh }
         return networkRequest {
-            serviceAdapter.getPerformer(id, type, forceRefresh).also {
+            serviceAdapter.getPerformer(id, type, revalidate).also {
                 if (it.performer.id != id || it.performer.type != type) {
                     throw JsonParseException("Unexpected performer identity")
                 }
@@ -52,13 +61,35 @@ internal class PerformerRepositoryImpl(
         }
     }
 
+    override suspend fun addMusicianToBand(
+        bandId: Int,
+        musicianId: Int,
+    ): DataResult<PerformerSummary, DataError> {
+        require(bandId > 0) { "bandId must be positive" }
+        require(musicianId > 0) { "musicianId must be positive" }
+        val result = networkRequest { serviceAdapter.addMusicianToBand(bandId, musicianId) }
+        if (result is DataResult.Success) {
+            // The POST runs outside the mutex; the cache update waits for a refresh in progress, so a list fetched
+            // before the POST is stored first and this change is applied on top of it instead of being undone.
+            mutex.withLock {
+                try {
+                    performerDao.applyMembership(musicianId, bandId)
+                } catch (_: SQLiteException) {
+                    // Room is only a cache: the next refresh brings the membership from the backend.
+                }
+            }
+        }
+        return result
+    }
+
     override suspend fun getPerformers(forceRefresh: Boolean): DataResult<List<Performer>, DataError> =
         mutex.withLock {
-            val cached = if (forceRefresh) emptyList() else readCacheOrEmpty()
+            val revalidate = forceRefresh || associationNeedsRefresh
+            val cached = if (revalidate) emptyList() else readCacheOrEmpty()
             if (cached.isNotEmpty()) {
                 DataResult.Success(cached)
             } else {
-                when (val result = networkRequest { serviceAdapter.getPerformers() }) {
+                when (val result = networkRequest { serviceAdapter.getPerformers(revalidate) }) {
                     is DataResult.Success -> {
                         DataResult.Success(store(result.value))
                     }
@@ -70,6 +101,25 @@ internal class PerformerRepositoryImpl(
                 }
             }
         }
+
+    override suspend fun addAlbum(
+        performerId: Int,
+        type: PerformerType,
+        albumId: Int,
+    ): DataResult<Unit, DataError> {
+        require(performerId > 0) { "performerId must be positive" }
+        require(albumId > 0) { "albumId must be positive" }
+        return mutex.withLock {
+            // A lost response may still have changed the backend: the next read must revalidate.
+            associationNeedsRefresh = true
+            try {
+                networkRequest { serviceAdapter.addAlbum(performerId, type, albumId) }
+            } finally {
+                // Waits for any older album refresh, then invalidates even after cancellation or a lost response.
+                withContext(NonCancellable) { albumRepository.invalidateCatalog() }
+            }
+        }
+    }
 
     private suspend fun readCacheOrEmpty(): List<Performer> =
         try {
@@ -83,7 +133,7 @@ internal class PerformerRepositoryImpl(
     private suspend fun store(performers: List<Performer>): List<Performer> =
         try {
             performerDao.replaceAll(withContext(defaultDispatcher) { performers.map { it.toEntity() } })
-            readAll()
+            readAll().also { associationNeedsRefresh = false }
         } catch (_: SQLiteException) {
             withContext(defaultDispatcher) { performers.sortedWith(ROOM_ORDER) }
         }

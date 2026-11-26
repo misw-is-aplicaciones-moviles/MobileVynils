@@ -11,6 +11,8 @@
         <item name="colorOnSurfaceVariant">@color/vinilos_graphite</item>
         <item name="colorOutline">@color/vinilos_ash</item>
         <item name="colorOutlineVariant">@color/vinilos_line</item>
+        <!-- Pista de los campos en grafito: la ceniza daba 3.12:1 sobre crema (WCAG 1.4.3). -->
+        <item name="android:textColorHint">@color/vinilos_graphite</item>
         <item name="android:colorBackground">@color/vinilos_cream</item>
         <!-- Detrás de la hoja crema se ve el carbón de la cabecera. -->
         <item name="android:windowBackground">@color/vinilos_charcoal</item>
@@ -373,7 +375,7 @@
     </style>
 
     <!--
-        Píldora de sección, 44 dp. Conserva el borde carbón del mockup aunque la acción
+        Píldora de sección, 48 dp. Conserva el borde carbón del mockup aunque la acción
         siga deshabilitada: el secundario de formulario se rellena de piedra en ese estado.
     -->
     <style name="Widget.Vinilos.Button.Secondary.Compact" parent="Widget.Vinilos.Button.Secondary">
@@ -470,7 +472,7 @@
         <item name="cornerSize">@dimen/track_key_radius</item>
     </style>
 
-    <!-- Tecla sin fondo. 44 dp, como el mockup, por debajo del mínimo táctil de 48 dp. -->
+    <!-- Tecla sin fondo de 48 dp, el mínimo táctil (el mockup trae 44 dp). Crece con la fuente: minHeight y alto wrap_content. -->
     <style name="Widget.Vinilos.Key" parent="Widget.Material3.Button.TextButton">
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
@@ -557,7 +559,7 @@
     <style name="Widget.Vinilos.TextInputEditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">
         <item name="android:textAppearance">@style/TextAppearance.Vinilos.FieldInput</item>
         <item name="android:textColor">@color/vinilos_charcoal</item>
-        <item name="android:textColorHint">@color/vinilos_ash</item>
+        <item name="android:textColorHint">@color/vinilos_graphite</item>
     </style>
 
     <!-- Chip de una sola elección (género, sello; docs/05): borde carbón, relleno carbón al elegirlo. -->

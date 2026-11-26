@@ -1,6 +1,7 @@
 package co.edu.uniandes.vinilos.network
 
 import co.edu.uniandes.vinilos.models.AlbumStatus
+import co.edu.uniandes.vinilos.models.CommentAuthor
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.PerformerType
@@ -14,6 +15,7 @@ import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
+import okhttp3.mockwebserver.SocketPolicy
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -46,7 +48,7 @@ class CollectorServiceAdapterTest {
         runTest {
             serverRule.enqueueJson("api/collectors.json")
 
-            val collectors = newAdapter(testScheduler).getCollectors()
+            val collectors = newAdapter(testScheduler).getCollectors().collectors
 
             val request = serverRule.server.takeRequest()
             assertEquals("GET", request.method)
@@ -57,6 +59,36 @@ class CollectorServiceAdapterTest {
             assertEquals("manollo@caracol.com.co", manolo.email)
             assertEquals(1, manolo.albumCount)
             assertEquals(1, manolo.favoriteCount)
+        }
+
+    @Test
+    fun `GET collectors names the author of each seed comment from the same response`() =
+        runTest {
+            serverRule.enqueueJson("api/collectors.json")
+
+            val directory = newAdapter(testScheduler).getCollectors()
+
+            assertEquals(
+                mapOf(
+                    100 to CommentAuthor(collectorId = 100, name = "Manolo Bellon"),
+                    101 to CommentAuthor(collectorId = 101, name = "Jaime Monsalve"),
+                ),
+                directory.commentAuthors,
+            )
+            assertEquals(1, serverRule.server.requestCount)
+        }
+
+    @Test
+    fun `a collector comment without id is a serialization error`() =
+        runTest {
+            serverRule.server.enqueue(
+                MockResponse()
+                    .setHeader("Content-Type", "application/json")
+                    .setBody(COLLECTOR_WITH_COMMENT_WITHOUT_ID),
+            )
+            val adapter = newAdapter(testScheduler)
+
+            assertEquals(DataResult.Failure(DataError.Serialization), networkRequest { adapter.getCollectors() })
         }
 
     @Test
@@ -217,6 +249,124 @@ class CollectorServiceAdapterTest {
             assertEquals(0, serverRule.server.requestCount)
         }
 
+    @Test
+    fun `adding a musician posts an empty body and a 200 is success`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+
+            val result =
+                networkRequest {
+                    newAdapter(testScheduler).addFavorite(COLLECTOR_ID, MUSICIAN_ID, PerformerType.MUSICIAN)
+                }
+
+            val request = serverRule.server.takeRequest()
+            assertEquals("POST", request.method)
+            assertEquals("/collectors/100/musicians/7", request.path)
+            assertEquals("", request.body.readUtf8())
+            assertEquals(DataResult.Success(Unit), result)
+        }
+
+    @Test
+    fun `adding a band posts to the band route`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+
+            val result =
+                networkRequest {
+                    newAdapter(testScheduler).addFavorite(COLLECTOR_ID, BAND_ID, PerformerType.BAND)
+                }
+
+            val request = serverRule.server.takeRequest()
+            assertEquals("POST", request.method)
+            assertEquals("/collectors/100/bands/2", request.path)
+            assertEquals(DataResult.Success(Unit), result)
+        }
+
+    @Test
+    fun `a missing favorite is not treated as added`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setResponseCode(NOT_FOUND))
+
+            val result =
+                networkRequest {
+                    newAdapter(testScheduler).addFavorite(COLLECTOR_ID, MUSICIAN_ID, PerformerType.MUSICIAN)
+                }
+
+            assertEquals(DataResult.Failure(DataError.Http(NOT_FOUND)), result)
+            val request = serverRule.server.takeRequest()
+            assertEquals("POST", request.method)
+            assertEquals("/collectors/100/musicians/7", request.path)
+        }
+
+    @Test
+    fun `a non positive favorite id fails before any request`() =
+        runTest {
+            listOf(0, -1).forEach { id ->
+                val collectorError =
+                    runCatching {
+                        newAdapter(testScheduler).addFavorite(id, MUSICIAN_ID, PerformerType.MUSICIAN)
+                    }.exceptionOrNull()
+                val performerError =
+                    runCatching {
+                        newAdapter(testScheduler).addFavorite(COLLECTOR_ID, id, PerformerType.BAND)
+                    }.exceptionOrNull()
+                assertTrue(collectorError is IllegalArgumentException)
+                assertTrue(performerError is IllegalArgumentException)
+            }
+            assertEquals(0, serverRule.server.requestCount)
+        }
+
+    @Test
+    fun `a server error is not treated as a favorite added`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setResponseCode(SERVER_ERROR))
+
+            val result =
+                networkRequest {
+                    newAdapter(testScheduler).addFavorite(COLLECTOR_ID, MUSICIAN_ID, PerformerType.MUSICIAN)
+                }
+
+            assertEquals(DataResult.Failure(DataError.Http(SERVER_ERROR)), result)
+        }
+
+    @Test
+    fun `a connection cut is a network error and not a favorite added`() =
+        runTest {
+            serverRule.server.enqueue(MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AFTER_REQUEST))
+
+            val result =
+                networkRequest {
+                    newAdapter(testScheduler).addFavorite(COLLECTOR_ID, MUSICIAN_ID, PerformerType.MUSICIAN)
+                }
+
+            assertEquals(DataResult.Failure(DataError.Network), result)
+        }
+
+    @Test
+    fun `posting the same musician twice is success and the body is not parsed`() =
+        runTest {
+            repeat(2) {
+                serverRule.server.enqueue(
+                    MockResponse().setResponseCode(DUPLICATE_STATUS).setBody(UNPARSED_BODY),
+                )
+            }
+            val adapter = newAdapter(testScheduler)
+
+            val first =
+                networkRequest { adapter.addFavorite(COLLECTOR_ID, MUSICIAN_ID, PerformerType.MUSICIAN) }
+            val second =
+                networkRequest { adapter.addFavorite(COLLECTOR_ID, MUSICIAN_ID, PerformerType.MUSICIAN) }
+
+            assertEquals(DataResult.Success(Unit), first)
+            assertEquals(DataResult.Success(Unit), second)
+            repeat(2) {
+                val request = serverRule.server.takeRequest()
+                assertEquals("POST", request.method)
+                assertEquals("/collectors/$COLLECTOR_ID/musicians/$MUSICIAN_ID", request.path)
+                assertEquals("", request.body.readUtf8())
+            }
+        }
+
     // Both calls arrive together, so the answer is chosen by path.
     private fun serve(vararg routes: Pair<String, MockResponse>) {
         val byPath = routes.toMap()
@@ -264,5 +414,19 @@ class CollectorServiceAdapterTest {
 
     private companion object {
         const val IO_THREAD_NAME = "io-test"
+        const val COLLECTOR_ID = 100
+        const val MUSICIAN_ID = 7
+        const val BAND_ID = 2
+        const val NOT_FOUND = 404
+        const val SERVER_ERROR = 500
+
+        /**
+         * Sonda del 2026-11-17 contra BackVynils local, con un coleccionista y un músico desechables.
+         * El segundo POST del mismo par respondió 200 y `GET /collectors/:id` siguió con un solo favorito.
+         */
+        const val DUPLICATE_STATUS = 200
+        const val UNPARSED_BODY = "not-json"
+        const val COLLECTOR_WITH_COMMENT_WITHOUT_ID =
+            """[{"id":100,"name":"Manolo Bellon","email":"m@example.com","comments":[{"description":"Sin id"}]}]"""
     }
 }

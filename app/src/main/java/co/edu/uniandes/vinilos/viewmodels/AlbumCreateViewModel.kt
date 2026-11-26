@@ -70,6 +70,7 @@ class AlbumCreateViewModel(
         when (val result = AlbumFormValidator.validate(state.form)) {
             is AlbumFormResult.Invalid -> {
                 update { copy(errors = result.errors) }
+                _events.value = Event(AlbumCreateEvent.InvalidSubmit(result.errors))
             }
 
             is AlbumFormResult.Valid -> {

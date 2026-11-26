@@ -3,18 +3,20 @@ package co.edu.uniandes.vinilos.robots
 import androidx.annotation.IdRes
 import androidx.annotation.StringRes
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
+import androidx.test.espresso.matcher.ViewMatchers.isSelected
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import co.edu.uniandes.vinilos.R
+import co.edu.uniandes.vinilos.testing.clickListener
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.not
 
 /** Page Object de la hoja de precio y estado. El precio se arma en el teclado propio, de izquierda a derecha. */
 class CollectorAlbumAddRobot {
@@ -35,7 +37,8 @@ class CollectorAlbumAddRobot {
     }
 
     fun enterDigits(vararg digits: Int): CollectorAlbumAddRobot {
-        digits.forEach { digit -> onView(withId(keyId(digit))).perform(scrollTo(), click()) }
+        // En API 21 el toque inyectado no llega a la tecla y el primer dígito se pierde.
+        digits.forEach { digit -> onView(withId(keyId(digit))).perform(clickListener()) }
         return this
     }
 
@@ -59,6 +62,13 @@ class CollectorAlbumAddRobot {
     fun assertStatusError(shown: Boolean): CollectorAlbumAddRobot =
         assertError(R.id.statusError, R.string.collector_album_add_status_error, shown)
 
+    /** El estado elegido se anuncia como seleccionado, no solo con el relleno. */
+    fun assertStatusSelected(available: Boolean): CollectorAlbumAddRobot {
+        onView(withId(R.id.statusAvailable)).check(matches(if (available) isSelected() else not(isSelected())))
+        onView(withId(R.id.statusUnavailable)).check(matches(if (available) not(isSelected()) else isSelected()))
+        return this
+    }
+
     fun assertSubmitEnabled(): CollectorAlbumAddRobot {
         onView(withId(R.id.addButton)).perform(scrollTo()).check(matches(allOf(isDisplayed(), isEnabled())))
         return this
@@ -72,7 +82,8 @@ class CollectorAlbumAddRobot {
     private fun tap(
         @IdRes viewId: Int,
     ): CollectorAlbumAddRobot {
-        onView(withId(viewId)).perform(scrollTo(), click())
+        // En API 21 el clic inyectado cae sobre la barra de navegación y no dispara el botón.
+        onView(withId(viewId)).perform(clickListener())
         return this
     }
 

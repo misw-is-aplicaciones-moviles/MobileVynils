@@ -17,6 +17,7 @@ import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.UserRole
 import co.edu.uniandes.vinilos.ui.common.PrimaryActionHost
 import co.edu.uniandes.vinilos.ui.common.createListDivider
+import co.edu.uniandes.vinilos.ui.common.navigateIfOn
 import co.edu.uniandes.vinilos.ui.common.navigateToRoleSelector
 import co.edu.uniandes.vinilos.viewmodels.CollectorListEvent
 import co.edu.uniandes.vinilos.viewmodels.CollectorListUiState
@@ -87,6 +88,7 @@ class CollectorListFragment : Fragment(R.layout.fragment_collector_list) {
         binding.swipeRefresh.setOnRefreshListener { viewModel.refresh() }
         binding.emptyRefresh.setColorSchemeColors(indicator)
         binding.emptyRefresh.setOnRefreshListener { viewModel.refresh() }
+        binding.emptyState.refreshButton.setOnClickListener { viewModel.refresh() }
     }
 
     private fun bindStateTexts() {
@@ -130,7 +132,8 @@ class CollectorListFragment : Fragment(R.layout.fragment_collector_list) {
     private fun handle(event: CollectorListEvent) {
         when (event) {
             is CollectorListEvent.OpenDetail -> {
-                findNavController().navigate(
+                findNavController().navigateIfOn(
+                    R.id.collectorListFragment,
                     R.id.action_collectorList_to_collectorDetail,
                     bundleOf(CollectorListViewModel.ARG_COLLECTOR_ID to event.collectorId),
                 )

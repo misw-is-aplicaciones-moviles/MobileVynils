@@ -93,6 +93,24 @@ class AlbumCreateViewModelTest {
             assertEquals(expected, viewModel.state().errors)
             assertFalse(viewModel.state().isSubmitting)
             assertTrue(repository.createdDrafts.isEmpty())
+            assertEquals(AlbumCreateEvent.InvalidSubmit(expected), viewModel.nextEvent())
+            assertNull(viewModel.nextEvent())
+        }
+
+    @Test
+    fun `a second invalid submit asks again for the first error and typing does not`() =
+        runTest {
+            val viewModel = viewModel(FakeAlbumRepository())
+            viewModel.onSubmit()
+            viewModel.nextEvent()
+
+            viewModel.onCoverChanged(draft.coverUrl)
+            assertNull(viewModel.nextEvent())
+
+            viewModel.onSubmit()
+            val again = viewModel.nextEvent() as AlbumCreateEvent.InvalidSubmit
+            assertEquals(FieldError.REQUIRED, again.errors.name)
+            assertNull(again.errors.coverUrl)
             assertNull(viewModel.nextEvent())
         }
 

@@ -106,6 +106,54 @@ class PerformerDaoTest {
             assertEquals(0, dao.count())
         }
 
+    @Test
+    fun apply_membership_updates_the_musician_and_the_band_count() =
+        runTest {
+            val queen = entity(id = 101, name = "Queen", type = "BAND", memberCount = 4)
+            val adam = entity(id = 106, name = "Adam Lambert")
+            val other = entity(id = 110, name = "Ringo Starr", bandId = 120)
+            dao.upsertAll(listOf(queen, adam, other))
+
+            dao.applyMembership(musicianId = 106, bandId = 101)
+            // A second time is a no-op: the musician is already in the band, so the count is not added twice.
+            dao.applyMembership(musicianId = 106, bandId = 101)
+
+            val rows = dao.getAll().associateBy { it.id }
+            assertEquals(101, rows.getValue(106).bandId)
+            assertEquals(5, rows.getValue(101).memberCount)
+            assertEquals(other, rows.getValue(110))
+        }
+
+    @Test
+    fun apply_membership_with_unknown_ids_changes_nothing() =
+        runTest {
+            val rows = listOf(entity(id = 101, name = "Queen", type = "BAND", memberCount = 4), entity(1, "A"))
+            dao.upsertAll(rows)
+
+            dao.applyMembership(musicianId = 999, bandId = 101)
+            dao.applyMembership(musicianId = 1, bandId = 998)
+            // A band id is not a musician: it must not get a band of its own.
+            dao.applyMembership(musicianId = 101, bandId = 101)
+
+            val stored = dao.getAll().associateBy { it.id }
+            assertEquals(4, stored.getValue(101).memberCount)
+            assertNull(stored.getValue(101).bandId)
+            assertEquals(998, stored.getValue(1).bandId)
+        }
+
+    @Test
+    fun replace_all_handles_more_ids_than_the_sqlite_variable_limit_of_android_11() =
+        runTest {
+            dao.upsertAll((1..ROWS_ABOVE_LIMIT * 2).map { entity(id = it, name = "Artista $it") })
+            val kept = (1..ROWS_ABOVE_LIMIT).map { entity(id = it, name = "Artista $it") }
+
+            dao.replaceAll(kept)
+            assertEquals(kept.map { it.id }.toSet(), dao.getAll().map { it.id }.toSet())
+
+            dao.replaceAll(emptyList())
+            assertEquals(0, dao.count())
+        }
+
     private fun entity(
         id: Int,
         name: String,
@@ -123,4 +171,9 @@ class PerformerDaoTest {
         memberCount = memberCount,
         bandId = bandId,
     )
+
+    private companion object {
+        // Por encima de las 999 variables de SQLite anterior a 3.32 (Android 11 o anterior), #139.
+        const val ROWS_ABOVE_LIMIT = 1_050
+    }
 }

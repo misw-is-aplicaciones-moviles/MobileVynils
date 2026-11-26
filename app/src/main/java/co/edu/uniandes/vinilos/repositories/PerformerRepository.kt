@@ -4,6 +4,7 @@ import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.Performer
 import co.edu.uniandes.vinilos.models.PerformerDetail
+import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
 
 /** Source of artist data; the list is cached in Room and expected remote failures are returned as values. */
@@ -14,7 +15,17 @@ interface PerformerRepository {
      */
     suspend fun getPerformers(forceRefresh: Boolean = false): DataResult<List<Performer>, DataError>
 
-    /** Tells whether Room already holds artists, so the screen can show them before the network answers. */
+    /**
+     * Sends one association POST and makes subsequent artist reads revalidate their data.
+     * A failure after sending does not prove that the association was not saved; check before retrying.
+     */
+    suspend fun addAlbum(
+        performerId: Int,
+        type: PerformerType,
+        albumId: Int,
+    ): DataResult<Unit, DataError>
+
+    /** Tells whether a usable artist list is cached; false after an association attempt until revalidated. */
     suspend fun hasCachedPerformers(): Boolean
 
     /** Reads one remote detail, without replacing the cached list; retries revalidate HTTP. */
@@ -23,4 +34,14 @@ interface PerformerRepository {
         type: PerformerType,
         forceRefresh: Boolean = false,
     ): DataResult<PerformerDetail, DataError>
+
+    /**
+     * Adds the musician to the band in the backend and returns it as the band's new member. On success the cached
+     * list is updated in place (the musician's band and the band's member count); a Room failure does not change
+     * the result, because the backend already saved it. Callers apply the one-band rule before calling this.
+     */
+    suspend fun addMusicianToBand(
+        bandId: Int,
+        musicianId: Int,
+    ): DataResult<PerformerSummary, DataError>
 }

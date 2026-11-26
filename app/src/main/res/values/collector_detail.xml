@@ -33,6 +33,7 @@
     <string name="collector_album_picker_no_results">No se encontraron álbumes.</string>
     <string name="collector_album_picker_already_added">Ya agregado</string>
     <string name="collector_album_picker_row_description">%1$s, %2$s, %3$s. Elegir álbum.</string>
+    <string name="collector_album_picker_row_added">%1$s, %2$s, %3$s. Ya está en la colección.</string>
     <string name="collector_album_selected">Álbum seleccionado: %1$s</string>
     <string name="collector_album_add_title">Precio y estado</string>
     <string name="collector_album_add_price_label">Precio (USD)</string>
@@ -43,4 +44,19 @@
     <string name="collector_album_add_submitting">Agregando…</string>
     <string name="collector_album_add_error">No se pudo agregar el álbum. Inténtalo de nuevo.</string>
     <string name="collector_album_add_network_error">No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.</string>
+
+    <!-- Selector de artista favorito HU10 · Fase 1. -->
+    <string name="collector_favorite_picker_title">Elegir artista</string>
+    <string name="collector_favorite_picker_context">para %1$s</string>
+    <string name="collector_favorite_picker_search_hint">Buscar artista</string>
+    <string name="collector_favorite_picker_select">Selecciona un artista</string>
+    <string name="collector_favorite_picker_add">Agregar «%1$s» a favoritos</string>
+    <string name="collector_favorite_picker_empty">Aún no hay artistas.</string>
+    <string name="collector_favorite_picker_no_results">No se encontraron artistas.</string>
+    <string name="collector_favorite_picker_already">Ya es favorito</string>
+    <string name="collector_favorite_picker_row_description">%1$s, %2$s. Elegir artista.</string>
+    <string name="collector_favorite_picker_row_favorite">%1$s, %2$s. Ya es favorito.</string>
+    <string name="collector_favorite_picker_adding">Agregando…</string>
+    <string name="collector_favorite_add_error">No se pudo agregar el artista. Inténtalo de nuevo.</string>
+    <string name="collector_favorite_added">Artista favorito agregado</string>
 </resources>

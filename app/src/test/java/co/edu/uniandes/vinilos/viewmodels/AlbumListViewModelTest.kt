@@ -47,6 +47,47 @@ class AlbumListViewModelTest {
     }
 
     @Test
+    fun `returning to a loaded catalog picks up a changed performer and preserves rows on failure`() =
+        runTest {
+            val repository = FakeAlbumRepository(localResult = DataResult.Success(listOf(poeta)))
+            val vm = viewModel(repository)
+            advanceUntilIdle()
+            repository.localResult = DataResult.Success(listOf(poeta.copy(performerName = "New artist")))
+
+            vm.onListShown()
+            advanceUntilIdle()
+            assertEquals("New artist", checkNotNull(vm.uiState.value).albums.single().artistName)
+
+            repository.localResult = DataResult.Failure(DataError.Network)
+            vm.onListShown()
+            advanceUntilIdle()
+            assertEquals("New artist", checkNotNull(vm.uiState.value).albums.single().artistName)
+            assertNull(vm.events.value)
+        }
+
+    @Test
+    fun `showing the catalog while initial loading or refreshing does not start another read`() =
+        runTest {
+            val gate = CompletableDeferred<Unit>()
+            val repository =
+                FakeAlbumRepository(
+                    hasCache = true,
+                    localResult = DataResult.Success(albums),
+                    remoteResult = DataResult.Success(albums),
+                    remoteGate = gate,
+                )
+            val vm = viewModel(repository)
+            vm.onListShown()
+            advanceUntilIdle()
+            vm.onListShown()
+            advanceUntilIdle()
+            assertEquals(1, repository.localCalls)
+            gate.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(1, repository.remoteCalls)
+        }
+
+    @Test
     fun `catalog positions keep leading zeroes without truncating three digits`() =
         runTest {
             val catalog = List(101) { races.copy(id = it + 1) }

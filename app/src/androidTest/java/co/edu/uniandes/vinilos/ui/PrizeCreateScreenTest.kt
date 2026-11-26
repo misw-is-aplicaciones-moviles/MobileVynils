@@ -122,14 +122,19 @@ class PrizeCreateScreenTest {
             .assertFieldError(R.id.prizeDescriptionError, R.string.error_required)
             .assertFieldError(R.id.prizeOrganizationError, R.string.error_required)
             .assertFormShown()
+            .assertFocusOn(R.id.prizeNameInput)
         // Un campo con solo espacios es vacío: el backend lo aceptaría, la pantalla no.
         form
             .typeName("   ")
             .typeDescription(PRIZE_DESCRIPTION)
+            .moveTo(R.id.prizeOrganizationInput)
             .typeOrganization(PRIZE_ORGANIZATION)
+            .assertFocusOn(R.id.prizeOrganizationInput)
             .assertNoFieldError(R.id.prizeDescriptionError)
             .assertNoFieldError(R.id.prizeOrganizationError)
             .tapCreate()
+            // ACC-16: el nombre ya mostraba su error y el foco vuelve a él en el segundo envío.
+            .assertFocusOn(R.id.prizeNameInput)
             .assertFieldError(R.id.prizeNameError, R.string.error_required)
             .assertNoFieldError(R.id.prizeDescriptionError)
             .assertNoFieldError(R.id.prizeOrganizationError)

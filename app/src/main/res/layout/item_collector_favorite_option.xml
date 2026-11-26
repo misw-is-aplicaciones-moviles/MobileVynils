@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fila de artista en el selector HU10. Toda la fila es un nodo accesible. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/favoriteRow"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:clipChildren="false"
+    android:focusable="true"
+    android:minHeight="@dimen/performer_row_min_height"
+    android:paddingStart="@dimen/album_row_padding_horizontal"
+    android:paddingTop="@dimen/performer_row_padding_vertical"
+    android:paddingEnd="@dimen/album_row_padding_horizontal"
+    android:paddingBottom="@dimen/performer_row_padding_vertical">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/performerDisc"
+        android:layout_width="@dimen/performer_disc_size"
+        android:layout_height="@dimen/performer_disc_size"
+        android:background="@drawable/bg_performer_disc"
+        android:contentDescription="@null"
+        android:elevation="@dimen/performer_disc_elevation"
+        android:importantForAccessibility="no"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/img_vinyl_disc" />
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/performerImage"
+        android:layout_width="@dimen/performer_image_size"
+        android:layout_height="@dimen/performer_image_size"
+        android:contentDescription="@null"
+        android:elevation="@dimen/performer_disc_elevation"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="@id/performerDisc"
+        app:layout_constraintEnd_toEndOf="@id/performerDisc"
+        app:layout_constraintStart_toStartOf="@id/performerDisc"
+        app:layout_constraintTop_toTopOf="@id/performerDisc"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Vinilos.Circle"
+        app:srcCompat="@drawable/bg_performer_image_placeholder" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/trailingBarrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="start"
+        app:constraint_referenced_ids="radioIcon,addedChip" />
+
+    <TextView
+        android:id="@+id/performerName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/performer_row_gap"
+        android:layout_marginEnd="@dimen/performer_row_gap"
+        android:ellipsize="end"
+        android:importantForAccessibility="no"
+        android:includeFontPadding="false"
+        android:maxLines="2"
+        android:textAppearance="@style/TextAppearance.Vinilos.AlbumTitle"
+        app:layout_constraintBottom_toTopOf="@id/performerOverline"
+        app:layout_constraintEnd_toStartOf="@id/trailingBarrier"
+        app:layout_constraintStart_toEndOf="@id/performerDisc"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Rubén Blades Bellido de Luna" />
+
+    <TextView
+        android:id="@+id/performerOverline"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/performer_overline_gap"
+        android:ellipsize="end"
+        android:importantForAccessibility="no"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.Vinilos.Overline"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/performerName"
+        app:layout_constraintStart_toStartOf="@id/performerName"
+        app:layout_constraintTop_toBottomOf="@id/performerName"
+        tools:text="Músico · 1948" />
+
+    <ImageView
+        android:id="@+id/radioIcon"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:clickable="false"
+        android:focusable="false"
+        android:importantForAccessibility="no"
+        android:src="@drawable/bg_picker_radio_unchecked"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/addedChip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_album_status_unavailable"
+        android:importantForAccessibility="no"
+        android:paddingStart="@dimen/collector_status_radius"
+        android:paddingTop="@dimen/space_xs"
+        android:paddingEnd="@dimen/collector_status_radius"
+        android:paddingBottom="@dimen/space_xs"
+        android:text="@string/collector_favorite_picker_already"
+        android:textAppearance="@style/TextAppearance.Vinilos.Overline"
+        android:textColor="@color/vinilos_charcoal"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible" />
+</androidx.constraintlayout.widget.ConstraintLayout>

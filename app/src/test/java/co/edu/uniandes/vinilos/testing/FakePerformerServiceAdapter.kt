@@ -2,6 +2,7 @@ package co.edu.uniandes.vinilos.testing
 
 import co.edu.uniandes.vinilos.models.Performer
 import co.edu.uniandes.vinilos.models.PerformerDetail
+import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.network.PerformerServiceAdapter
 import kotlinx.coroutines.CompletableDeferred
@@ -16,6 +17,20 @@ internal class FakePerformerServiceAdapter(
         private set
 
     var detail: PerformerDetail? = null
+    val catalogRefreshRequests = mutableListOf<Boolean>()
+    val addedAlbumRequests = mutableListOf<Triple<Int, PerformerType, Int>>()
+    var addAlbumGate: CompletableDeferred<Unit>? = null
+
+    override suspend fun addAlbum(
+        performerId: Int,
+        type: PerformerType,
+        albumId: Int,
+    ) {
+        addedAlbumRequests += Triple(performerId, type, albumId)
+        addAlbumGate?.await()
+        failure?.let { throw it }
+    }
+
     val detailRequests = mutableListOf<Triple<Int, PerformerType, Boolean>>()
 
     override suspend fun getPerformer(
@@ -29,8 +44,25 @@ internal class FakePerformerServiceAdapter(
         return checkNotNull(detail) { "Configure the fake performer detail" }
     }
 
-    override suspend fun getPerformers(): List<Performer> {
+    /** Answer of [addMusicianToBand]; when null it answers the requested musician with a generic name. */
+    var addedMember: PerformerSummary? = null
+
+    /** Thrown by [addMusicianToBand], independently of the read and album-association failures. */
+    var addFailure: Throwable? = null
+    val addRequests = mutableListOf<Pair<Int, Int>>()
+
+    override suspend fun addMusicianToBand(
+        bandId: Int,
+        musicianId: Int,
+    ): PerformerSummary {
+        addRequests += bandId to musicianId
+        addFailure?.let { throw it }
+        return addedMember ?: PerformerSummary(musicianId, "Musician $musicianId", null, PerformerType.MUSICIAN)
+    }
+
+    override suspend fun getPerformers(forceRefresh: Boolean): List<Performer> {
         callCount++
+        catalogRefreshRequests += forceRefresh
         gate?.await()
         failure?.let { throw it }
         return performers

@@ -3,6 +3,7 @@ package co.edu.uniandes.vinilos.testing
 import android.database.sqlite.SQLiteException
 import co.edu.uniandes.vinilos.database.dao.PerformerDao
 import co.edu.uniandes.vinilos.database.entities.PerformerEntity
+import co.edu.uniandes.vinilos.models.PerformerType
 
 /** In-memory [PerformerDao] that sorts by name ignoring ASCII case and then by id, like the real query. */
 internal class FakePerformerDao(
@@ -35,11 +36,34 @@ internal class FakePerformerDao(
         performers.forEach { rows[it.id] = it }
     }
 
-    override suspend fun deleteAllExcept(ids: List<Int>) {
+    override suspend fun getIds(): List<Int> = rows.keys.toList()
+
+    override suspend fun deleteByIds(ids: List<Int>) {
         writeCount++
         writeFailure?.let { throw it }
-        rows.keys.retainAll(ids.toSet())
+        rows.keys.removeAll(ids.toSet())
     }
+
+    override suspend fun setMusicianBand(
+        musicianId: Int,
+        bandId: Int,
+    ): Int {
+        writeCount++
+        writeFailure?.let { throw it }
+        val row = rows[musicianId]?.takeIf { it.type == PerformerType.MUSICIAN.name && it.bandId != bandId } ?: return 0
+        rows[musicianId] = row.copy(bandId = bandId)
+        return 1
+    }
+
+    override suspend fun incrementMemberCount(bandId: Int) {
+        writeCount++
+        writeFailure?.let { throw it }
+        val row = rows[bandId]?.takeIf { it.type == PerformerType.BAND.name } ?: return
+        rows[bandId] = row.copy(memberCount = row.memberCount + 1)
+    }
+
+    /** Row as stored, for assertions on the cache. */
+    fun row(id: Int): PerformerEntity? = rows[id]
 
     // SQLite COLLATE NOCASE only folds A-Z, so "Ángel" sorts after "Zeta"; lowercase() would fold Unicode too.
     private fun asciiFolded(text: String): String =

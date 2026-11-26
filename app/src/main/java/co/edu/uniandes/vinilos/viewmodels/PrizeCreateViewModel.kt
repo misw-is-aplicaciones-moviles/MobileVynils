@@ -84,6 +84,7 @@ class PrizeCreateViewModel(
             is PrizeFormResult.Invalid -> {
                 persistErrors(result.errors)
                 update { copy(errors = result.errors, notice = null) }
+                emit(PrizeCreateEvent.InvalidSubmit(result.errors))
             }
 
             is PrizeFormResult.Valid -> {

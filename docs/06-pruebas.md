@@ -18,7 +18,7 @@ Define qué se prueba, con qué herramienta, en qué nivel y cómo se documenta.
 | E2E | Flujos completos de cada historia en la app | Espresso (core y contrib), `ActivityScenarioRule`, Robots | `src/androidTest` | Antes de pedir revisión y en la matriz antes del release |
 | Exploratorias | Escenarios del inventario exploratorio del sprint | Manual, con tester cruzado | Wiki | Al cerrar las historias |
 | Aleatorias y sistemáticas | Robustez ante entradas no previstas | Monkey (`adb`), RIP | Scripts en `tests/` (se crean en el Sprint 3) | Sprint 3 |
-| Accesibilidad | Reglas de accesibilidad en vistas reales | Accessibility Scanner, TalkBack, `AccessibilityChecks` | Manual + `androidTest` | Sprint 3 |
+| Accesibilidad | Reglas de accesibilidad en vistas reales | Accessibility Scanner, TalkBack | Manual, con capturas y grabaciones en la wiki; `AccessibilityChecks` pospuesto | Sprint 3 |
 | Desempeño | CPU, memoria, red | Android Profiler, StrictMode | Manual + informe | Sprint 2 y 3 (`07-desempeno.md`) |
 
 ## 3. Pruebas unitarias
@@ -293,6 +293,39 @@ PE-12 usa el fallo de transporte controlado de `BackendFirewall`, descrito en la
 
 El 2026-10-30 `TrackCreateScreenTest` pasó en el emulador Pixel 9 Pro (API 37, Android 17): 7 pruebas, 0 fallos, 49 s. API 21 queda pendiente, igual que el resto de la matriz E2E. Las unitarias y de API de la tabla pasaron el mismo día (`testDebugUnitTest`, 0 fallos).
 
+### Casos de HU09
+
+Diseño de referencia: [HU09](16-hu09-diseno-tecnico.md). Las E2E de `CommentCreateScreenTest` (Page Object `CommentCreateRobot`) siguen el estilo de HU08: cada caso crea su álbum (`Comentarios <número único>`) y sus coleccionistas (`<Nombre> <número único> <Apellido>`) con `BackendCollectors`, sin usar la semilla ni conteos fijos. Al terminar, la regla borra los comentarios que esos coleccionistas dejaron en esos álbumes (`DELETE /albums/:albumId/comments/:commentId`) y después los coleccionistas: un coleccionista con comentarios no se puede borrar, porque la llave foránea de `comment` hace que `DELETE /collectors/:id` responda 500 (comprobado contra el backend local el 2026-11-17). Los álbumes quedan, como en HU08. El corte de red usa `BackendFirewall` y la recreación `ActivityScenario.recreate()`.
+
+| Id | HU | Nombre | Precondición | Pasos | Resultado esperado | Tipo | Automatizado (clase.método) | Estado |
+|---|---|---|---|---|---|---|---|---|
+| CP-HU09-01 | HU09 | Publicar un comentario | Coleccionista; álbum propio sin comentarios; coleccionista propio | Tocar "Comentar", elegir el coleccionista, 4 estrellas, escribir "Una obra que no envejece." y publicar | "Comentario publicado"; la tarjeta es la última de la lista con el nombre, las iniciales, 4 de 5 y el texto; `GET /albums/:id` tiene exactamente ese comentario y `GET /collectors/:id` lo atribuye al coleccionista | E2E | `CommentCreateScreenTest.publishes_a_comment_that_appears_last_with_its_author_and_is_saved_once` | Pasa en API 37 (Gradle) y API 21 (`am instrument`) (2026-11-17) |
+| CP-HU09-02 | HU09 | Campos obligatorios | Coleccionista; álbum propio; hoja abierta | Publicar vacío; elegir coleccionista; elegir 2 estrellas; escribir solo espacios y publicar; escribir un texto; cancelar | Los tres errores tras el primer envío; cada uno desaparece al corregir su campo; con solo espacios sigue "Campo obligatorio" y la hoja abierta; no se crea nada en el backend | E2E | `CommentCreateScreenTest.required_errors_clear_per_field_and_blank_text_is_still_required` | Pasa en API 37 (Gradle) y API 21 (`am instrument`) (2026-11-17) |
+| CP-HU09-03 | HU09 | Cancelar y cerrar | Coleccionista; álbum propio | Llenar la hoja y tocar "Cancelar"; reabrir y repetir con la X | La hoja se cierra sin "Comentario publicado"; sigue "Este álbum no tiene comentarios."; la hoja reabre vacía; el backend no tiene comentarios | E2E | `CommentCreateScreenTest.cancel_and_close_write_nothing_and_reopen_an_empty_form` | Pasa en API 37 (Gradle) y API 21 (`am instrument`) (2026-11-17) |
+| CP-HU09-04 | HU09 | Sin conexión y reintento | Coleccionista; hoja llena (coleccionista, 3 estrellas, texto) | Cortar el transporte con `BackendFirewall`, publicar, restaurar y publicar de nuevo | "No se pudo conectar. Revisa tu conexión e inténtalo de nuevo."; la hoja conserva coleccionista, valoración y texto; al reintentar aparece la tarjeta y el backend tiene exactamente un comentario | E2E | `CommentCreateScreenTest.network_failure_keeps_the_form_and_a_retry_publishes_once` | Pasa en API 37 (Gradle) y API 21 (`am instrument`) (2026-11-17) |
+| CP-HU09-05 | HU09 | El visitante no comenta | Visitante; álbum propio | Abrir el álbum y desplazarse a "Comentarios" | Se ve el encabezado "Comentarios" sin el botón "Comentar" | E2E | `CommentCreateScreenTest.visitor_sees_the_comments_heading_without_the_comment_button` | Pasa en API 37 (Gradle) y API 21 (`am instrument`) (2026-11-17) |
+| CP-HU09-06 | HU09 | Recrear con la hoja abierta | Coleccionista; hoja con coleccionista, 2 estrellas y texto | `ActivityScenario.recreate()` y publicar | La hoja sigue abierta con el mismo coleccionista marcado, "Valoración · 2 de 5", la segunda estrella seleccionada y el texto, sin errores; al publicar queda un comentario | E2E | `CommentCreateScreenTest.recreation_keeps_the_chosen_collector_rating_and_text` | Pasa en API 37 (Gradle) y API 21 (`am instrument`) (2026-11-17) |
+| CP-HU09-07 | HU09 | HU08 + HU09 en ambos órdenes | Coleccionista; álbum propio | Publicar un comentario, agregar la canción "Después la canción" (03:05) y publicar otro comentario | La ficha de canciones pasa a "1" y se ve "01 Después la canción 3:05"; los dos comentarios siguen, el último al final; el backend tiene los dos | E2E | `CommentCreateScreenTest.comments_and_a_track_added_in_both_orders_show_on_the_same_album` | Pasa en API 37 (Gradle) y API 21 (`am instrument`) (2026-11-17) |
+| CP-HU09-08 | HU09 | Autor de los comentarios al volver a entrar | Coleccionista; álbum propio con un comentario publicado por HTTP (fuera de la app) | Abrir el álbum, publicar otro comentario, salir y volver a entrar | Las dos tarjetas muestran el nombre y las iniciales de su coleccionista, también la del comentario publicado fuera de la app; ninguna dice "Coleccionista" | E2E | `CommentCreateScreenTest.comment_authors_keep_their_names_after_reopening_the_detail` | Pasa en API 37 (Gradle) y API 21 (`am instrument`) (2026-11-17) |
+| CP-HU09-09 | HU09 | Validación de la hoja (tabla) | — | `CommentCreateValidator.validate` con texto recortado, cada campo faltante, formulario vacío, texto de solo espacios o saltos, valoración 0, 1, 5 y 6 | `Valid` con el texto recortado y los espacios internos; `Invalid` solo en el campo roto; 0 y 6 cuentan como sin valoración | Unitaria | `CommentCreateValidatorTest` (5 pruebas) | Pasa (2026-11-17) |
+| CP-HU09-10 | HU09 | Errores del formulario | Hoja sin datos | `onPublish` vacío; corregir cada campo; escribir antes del primer envío | Sin errores hasta publicar; publicar vacío no llama al repositorio; cada error se limpia con su campo | Unitaria | `CommentCreateViewModelTest.errors stay hidden until publish and an empty publish sends nothing`; `each error clears when its own field is fixed`; `typing before the first publish shows no error even when blank` | Pasa (2026-11-17) |
+| CP-HU09-11 | HU09 | Envío válido, fallo y doble toque | Formulario válido; repositorio con éxito, con `DataError.Network` o retenido | `onPublish` una o dos veces | Una sola petición con el borrador recortado y el evento `Created`; el fallo conserva el formulario y el error se oculta al editar; mientras envía se ignoran entradas, un coleccionista desconocido y valoraciones fuera de 1 a 5 | Unitaria | `CommentCreateViewModelTest.a valid publish sends the trimmed draft to the album and emits the created comment`; `a failed publish keeps the form and exposes a retryable error`; `editing a field after a failed publish hides the submit error`; `two publish taps while submitting make one request`; `inputs are ignored while submitting`; `an unknown collector and a rating outside one to five are ignored` | Pasa (2026-11-17) |
+| CP-HU09-12 | HU09 | Coleccionistas de la hoja y recreación | Repositorio con coleccionistas o con error; `SavedStateHandle` con datos | Crear el ViewModel | Chips con iniciales; error con reintento forzado; se restaura lo elegido y los errores; un coleccionista que ya no está se descarta; id de álbum inválido se rechaza | Unitaria | `CommentCreateViewModelTest.collectors load into options with their initials`; `a collector load failure exposes the error and retry forces a refresh`; `the form and its shown errors are restored from the saved state`; `a restored collector that is no longer in the list is dropped`; `a missing or non positive album id is rejected before loading collectors` | Pasa (2026-11-17) |
+| CP-HU09-13 | HU09 | Autores en el detalle | Índice con y sin el autor; fallos del álbum o de los autores | Abrir el detalle; `onCommentCreated` | Nombres desde el índice sin refresco; un autor desconocido pide un solo refresco forzado y se completa; un fallo de autores no convierte el detalle en error; el comentario creado va al final, resaltado y sin otro `GET` | Unitaria | `AlbumDetailViewModelTest.comments get their authors from the index without a forced refresh`; `an unknown author stays null and asks for a forced refresh only once`; `the forced refresh fills the authors that were missing`; `an authors failure still shows the album without error`; `an album failure cancels the pending authors and allows a retry`; `an album without comments is shown without waiting for the authors`; `the authors request starts before the album resolves and the album is drawn once with names`; `a created comment is appended at the end and highlighted without another request`; `a created comment before the album is shown is ignored`; `only a collector with a loaded album can edit` | Pasa (2026-11-17) |
+| CP-HU09-14 | HU09 | Repositorios: publicar e índice de autores | Fakes del adaptador y de los DAO | `addComment`; `getCommentAuthors`; `getCollectors` | El autor se guarda con el id del comentario; un fallo de Room no cambia el éxito; red y HTTP no tocan el índice; ids no positivos no llegan al adaptador; índice lleno sin red, vacío o forzado con una sola petición; Room ilegible cuenta como vacío | Unitaria | `AlbumRepositoryImplTest` (4 pruebas de comentarios); `CollectorRepositoryImplTest` (8 pruebas del índice de autores) | Pasa (2026-11-17) |
+| CP-HU09-15 | HU09 | Contrato de `POST /albums/:id/comments` | MockWebServer con `comment_created.json`, `comment_album_not_found.json`, `comment_collector_not_found.json`, `comment_rating_out_of_range.json` | `addComment` | Cuerpo con exactamente `description`, `rating` y `collector.id`; 404 y 400 reales como `DataError.Http`; respuesta de otro álbum, de otro coleccionista o sin coleccionista es `DataError.Serialization` | API | `AlbumServiceAdapterTest` (5 pruebas `add comment …`); `AlbumMappersTest` (4 pruebas de comentarios) | Pasa (2026-11-17) |
+| CP-HU09-16 | HU09 | Autores desde `GET /collectors` | MockWebServer con `collectors.json` con comentarios | `getCollectors()` | Cada comentario de la semilla queda con su coleccionista; un comentario sin id o un autor sin campo obligatorio es `DataError.Serialization` | API | `CollectorServiceAdapterTest.GET collectors names the author of each seed comment from the same response`; `a collector comment without id is a serialization error`; `CollectorMappersTest` (3 pruebas); `CommentAuthorEntityMappersTest.the entity is keyed by the comment and a round trip keeps the author` | Pasa (2026-11-17) |
+| CP-HU09-17 | HU09 | Índice de autores en Room y migración 4 → 5 | Room en memoria; base versión 4 con datos | `replaceAll`, `upsert`; migrar con `MIGRATION_4_5` | Queda exactamente lo recibido y `upsert` actualiza el autor; los datos siguen y `comment_authors` existe vacía | Instrumentada | `CommentAuthorDaoTest.replace_all_leaves_exactly_the_given_rows`; `upsert_adds_a_new_row_and_updates_the_author_of_an_existing_comment`; `VinilosMigrationTest.migrating_from_4_to_5_keeps_every_table_and_creates_an_empty_comment_authors_table` | Pasa en API 37 y API 21 (2026-11-17) |
+
+**Ejecuciones del 2026-11-17 (backend reiniciado con `docker compose down -v` y app desinstalada antes de cada ejecución de la clase).** API 37 con Gradle: `CommentCreateScreenTest` 8 de 8 (155 s en total), paquete `database` 30 de 30 (incluye `CommentAuthorDaoTest` y la migración 4 → 5) y `AlbumDetailScreenTest` 4 de 4. API 21 con `am instrument --no-window-animation`: `CommentCreateScreenTest` 8 de 8 en dos ejecuciones limpias (40 s y 39 s). Las primeras ejecuciones fallaron por D-HU09-1 (corregido) y, en API 21, por esperas con captura de Espresso que congelaron el emulador (I2 de `Sprint2/optimizaciones/diferencias-API21-API37.md`): las esperas que pueden fallar varias veces (el chip del coleccionista nuevo y el nombre del autor) sondean ahora sin el manejador de fallos, y los toques dentro de la hoja usan `bringIntoView()` y `clickVisible()` en lugar de `scrollTo()`, que en API 21 no mueve el `NestedScrollView` de la hoja.
+
+Defectos encontrados por las E2E (código de producción sin cambios; pendientes de registrar como issue):
+
+- **D-HU09-1 · La hoja ofrecía una lista de coleccionistas desactualizada (corregido el 2026-11-17: la hoja muestra Room y revalida con `GET /collectors`).** `CommentCreateViewModel` carga con `getCollectors(forceRefresh = false)` (`CommentCreateViewModel.kt:46`) y `CollectorRepositoryImpl.getCollectors` devuelve Room siempre que no esté vacío, sin revalidar (`CollectorRepositoryImpl.kt:47-48`). Pasos: abrir un álbum (llena Room con `GET /collectors`), crear un coleccionista en el backend, abrir otro álbum y tocar "Comentar". Obtenido: el coleccionista nuevo no está entre los chips, y sí aparecen coleccionistas ya borrados del backend (publicar con uno de ellos daría 404). Esperado: la hoja muestra los coleccionistas que tiene el backend, como la lista de HU05 que muestra lo guardado y revalida. "Reintentar" solo aparece si la carga falla, así que el usuario no tiene cómo actualizar la lista desde la hoja.
+- **D-HU09-2 · Autor equivocado tras reiniciar el backend (corregido el 2026-11-17: el índice se revalida una vez por sesión y el backend reemplaza a Room; `docs/16`, sección 5).** El índice `comment_authors` usa el id del comentario y el detalle solo pide un refresco cuando falta un id (`AlbumDetailViewModel.kt:132-136`). Si el backend se reinicia (`docker compose down -v`, nueva base en Heroku) los ids se reutilizan y un comentario nuevo toma el autor guardado para el comentario anterior con el mismo id. Observado en la primera ejecución: "Escrito fuera de la app.", de un coleccionista de la prueba, se mostró como de "Jaime Monsalve". Esperado: el autor real del comentario.
+
+Notas de las E2E: el aviso "Comentario publicado" dura poco y sale mientras la hoja suelta el foco; en 1 de 6 ejecuciones aisladas de CP-HU09-04 Espresso no alcanzó a verlo aunque el comentario quedó publicado. Por eso solo CP-HU09-01 comprueba el aviso y los demás casos esperan la tarjeta, que no desaparece. En CP-HU09-07 el aviso "Canción agregada al álbum" tapa el botón "Comentar" al final de la lista: la prueba espera a que salga, como en HU11.
+
 ### Casos de HU03
 
 Los casos E2E crean sus músicos, bandas y álbumes con `POST` (`testing/BackendPerformers.kt`), con nombres únicos, y los borran al terminar; no dependen de cuántos artistas haya además de los de la semilla (Rubén Blades Bellido de Luna y Queen). La secuencia de `performer` empieza en 1 tras reiniciar el backend, así que los artistas de prueba no chocan con los ids 100 y 101 de la semilla.
@@ -425,7 +458,7 @@ Corresponden a PE-27 a PE-33 del inventario de HU06. El coleccionista es uno que
 | Id | HU | Nombre | Precondición | Pasos | Resultado esperado | Tipo | Automatizado (clase.método) | Estado |
 |---|---|---|---|---|---|---|---|---|
 | CP-HU06-23 | HU06 | Detalle como visitante | Backend con al menos un coleccionista de nombre único | Elegir "Visitante", abrir Coleccionistas y tocar ese coleccionista | Cabecera, iniciales, teléfono y correo del GET; conteos iguales al tamaño de cada respuesta; sin "Agregar favorito" ni "Agregar álbum"; los comentarios del GET no se muestran | E2E | `CollectorDetailScreenTest.visitor_sees_contact_counts_and_no_add_actions` | Pasa en API 21 y API 37 (2026-11-05) |
-| CP-HU06-24 | HU06 | Detalle como coleccionista | Igual que CP-HU06-23 | Elegir "Coleccionista" y abrir el mismo tipo de detalle | Los mismos datos. "Agregar favorito" se ve deshabilitado. "Agregar álbum" se ve habilitado y la pantalla sigue siendo el detalle | E2E | `CollectorDetailScreenTest.collector_sees_the_same_detail_with_the_album_action_enabled` | Pasa en API 37 (2026-11-06); API 21 pendiente. La corrida del 2026-11-05 exigía los dos botones deshabilitados |
+| CP-HU06-24 | HU06 | Detalle como coleccionista | Igual que CP-HU06-23 | Elegir "Coleccionista" y abrir el mismo tipo de detalle | Los mismos datos. "Agregar favorito" y "Agregar álbum" se ven habilitados y la pantalla sigue siendo el detalle | E2E | `CollectorDetailScreenTest.collector_sees_the_same_detail_with_the_album_action_enabled` | Pasa en API 21 (2026-11-17). La corrida de API 37 del 2026-11-06 exigía el favorito deshabilitado |
 | CP-HU06-25 | HU06 | Álbumes del detalle | Igual que CP-HU06-23 | Abrir el detalle | Cada álbum de `GET /collectors/:id/albums` muestra nombre, `$` más el precio y "Disponible" o "No disponible" según `Active` o `Inactive`. Tocarlo abre ese álbum. Sin álbumes: "Sus álbumes · 0" y "Sin álbumes aún" | E2E | `CollectorDetailScreenTest.albums_section_matches_the_collectors_albums` | Pasa en API 21 y API 37 (2026-11-05) |
 | CP-HU06-26 | HU06 | Favoritos del detalle | Igual que CP-HU06-23 | Abrir el detalle | Cada favorito muestra nombre y "Músico" o "Banda" según tenga solo `birthDate` o solo `creationDate`. Tocarlo abre ese artista. Sin favoritos: "Artistas favoritos · 0" y "Aún no tiene artistas favoritos." | E2E | `CollectorDetailScreenTest.favorites_section_matches_the_collectors_favorites` | Pasa en API 21 y API 37 (2026-11-05) |
 | CP-HU06-27 | HU06 | Coleccionista inexistente | Lista de coleccionistas abierta | Navegar al detalle con un id que `GET /collectors` no devuelve | "No encontramos este coleccionista", el cuerpo de no encontrado y "Reintentar". Atrás vuelve a la lista con la pestaña Coleccionistas | E2E | `CollectorDetailScreenTest.missing_collector_shows_not_found_and_returns_to_the_list` | Pasa en API 21 y API 37 (2026-11-05) |
@@ -450,6 +483,34 @@ Al terminar, la regla borra con `DELETE /collectors/:id/albums/:albumId` solo un
 | CP-HU11-06 | HU11 | Búsqueda, álbum ya agregado y álbum de otro coleccionista | Dos coleccionistas de la prueba. El primero ya tiene un álbum Rock. El segundo tiene otro, de género Folk, en "No disponible" | Abrir el selector del primero. Buscar un texto sin coincidencias, luego el nombre del álbum propio en minúsculas y luego "folk". Elegir el ajeno y cerrar sin confirmar | Sin coincidencias: "No se encontraron álbumes." y "Selecciona un álbum". El propio muestra "sin artista", "Rock · 1980" y "Ya agregado"; no se puede elegir. "folk" encuentra el ajeno, con "Folk · 1980", y habilita continuar. Al cerrar, el primero conserva un solo vínculo y el segundo el suyo | E2E | `CollectorAlbumPickerScreenTest.search_blocks_an_album_already_added_and_allows_one_from_another_collector` | Pasa en API 37 y API 21 (2026-11-06) |
 | CP-HU11-07 | HU11 | Fallo de red en la hoja y un solo reintento | Hoja con 150 y "Disponible"; `BackendFirewall` corta el transporte antes de "Agregar a la colección" | Tocar agregar, restaurar el transporte y tocar de nuevo | La hoja sigue abierta, con el precio y el estado, y dice "No se pudo conectar. Revisa tu conexión e inténtalo de nuevo." No hay vínculo nuevo. El segundo toque crea uno solo y el detalle lo muestra una vez | E2E | `CollectorAlbumPickerScreenTest.network_failure_keeps_the_form_and_a_retry_saves_once` | Pasa en API 37 y API 21 (2026-11-06) |
 | CP-HU11-08 | HU11 | Error al abrir el selector y selección tras recrear | Detalle abierto; el transporte se corta antes de "Agregar álbum" | Abrir el selector, restaurar, reintentar, buscar el álbum, elegirlo y recrear la actividad. Cerrar sin confirmar | Título "No se pudo cargar", cuerpo "Revisa tu conexión e inténtalo de nuevo." y "Reintentar". Tras reintentar se ve el contexto del coleccionista. La búsqueda y "Continuar con «nombre»" siguen después de recrear la actividad. No hay POST | E2E | `CollectorAlbumPickerScreenTest.picker_network_error_recovers_and_selection_survives_recreation` | Pasa en API 37 y API 21 (2026-11-06) |
+
+#### Pruebas E2E (HU10)
+
+Corresponden a PE-78 a PE-82. La prueba crea el coleccionista, el músico y la banda con `POST` (`testing/BackendCollectorFavorites.kt`), con nombres únicos y fechas explícitas, antes de abrir el selector. No usa los coleccionistas 100 ni 101.
+
+Al terminar borra primero los músicos y las bandas de esa ejecución y después los coleccionistas. La tabla de favoritos hace `CASCADE` al borrar el artista y `NO ACTION` al borrar el coleccionista. No llama a `DELETE /collectors/:id/musicians/:id` ni a la ruta de bandas: responden 204 y no quitan el vínculo. Al empezar anota cuántos favoritos tenía cada coleccionista que ya existía y al final falla si ese número bajó.
+
+| Id | HU | Nombre | Precondición | Pasos | Resultado esperado | Tipo | Automatizado (clase.método) | Estado |
+|---|---|---|---|---|---|---|---|---|
+| CP-HU10-01 | HU10 | Agregar músico y banda | Rol Coleccionista; la prueba crea un coleccionista, un músico de 1947 y una banda de 1970 | "Agregar favorito", elegir el músico y "Agregar «nombre» a favoritos". Repetir con la banda | El selector dice "Elegir artista" y "para" ese coleccionista. El músico muestra "Músico · 1947". Tras guardarlo, el aviso "Artista favorito agregado" o "Artistas favoritos · 1", y la ficha dice "Músico". La banda muestra "Banda · desde 1970" y el detalle queda en "Artistas favoritos · 2", con la ficha "Banda". `GET /collectors/:id` trae los dos ids, cada uno una vez | E2E | `CollectorFavoritePickerScreenTest.adds_a_musician_and_then_a_band_on_the_same_collector` | Pasa en API 37, Pixel 9 Pro (2026-11-17) y en API 21, Vinilos_API_21 (2026-11-17) |
+| CP-HU10-02 | HU10 | Músico que ya es favorito | El coleccionista de la prueba ya tiene ese músico, asociado con un POST antes de abrir la app | Abrir "Agregar favorito" y buscar el músico | La fila muestra "Ya es favorito". El botón sigue en "Selecciona un artista". No hay otro POST. El GET sigue con un solo vínculo | E2E | `CollectorFavoritePickerScreenTest.already_favorite_musician_stays_blocked` | Pasa en API 37, Pixel 9 Pro (2026-11-17) y en API 21, Vinilos_API_21 (2026-11-17) |
+| CP-HU10-03 | HU10 | Búsqueda sin coincidencias y cierre | Coleccionista sin favoritos y un músico propio | Buscar un texto sin coincidencias, luego el nombre del músico en minúsculas, y cerrar con la X | "No se encontraron artistas." Al buscar queda solo esa fila. Al cerrar no hay aviso "Artista favorito agregado" y el GET sigue en cero | E2E | `CollectorFavoritePickerScreenTest.search_with_no_hits_then_the_musician_and_close_writes_nothing` | Pasa en API 37, Pixel 9 Pro (2026-11-17) y en API 21, Vinilos_API_21 (2026-11-17) |
+| CP-HU10-04 | HU10 | Fallo de red al agregar y un solo reintento | Músico elegido; `BackendFirewall` corta el transporte antes de agregar | Tocar agregar, restaurar el transporte y tocar de nuevo | La pantalla sigue en el selector, conserva la elección y dice "No se pudo conectar. Revisa tu conexión e inténtalo de nuevo." El GET sigue en cero. El segundo toque crea un solo vínculo | E2E | `CollectorFavoritePickerScreenTest.network_failure_keeps_the_picker_and_a_retry_saves_once` | Pasa en API 37, Pixel 9 Pro (2026-11-17) y en API 21, Vinilos_API_21 (2026-11-17) |
+| CP-HU10-05 | HU10 | Error al abrir el selector y selección tras recrear | Detalle abierto; el transporte se corta antes de "Agregar favorito" | Abrir el selector, restaurar, reintentar, buscar el músico, elegirlo y recrear la actividad. Cerrar sin agregar | "No se pudo cargar", "Revisa tu conexión e inténtalo de nuevo." y "Reintentar". Tras recrear siguen la búsqueda y "Agregar «nombre» a favoritos". No hay POST | E2E | `CollectorFavoritePickerScreenTest.picker_network_error_recovers_and_selection_survives_recreation` | Pasa en API 37, Pixel 9 Pro (2026-11-17) y en API 21, Vinilos_API_21 (2026-11-17) |
+
+#### Pruebas de API (HU10-06)
+
+MockWebServer, sin backend real. El 17/11/2026 una sonda creó un coleccionista y un músico desechables, hizo el POST del mismo par dos veces y leyó el GET: las dos respuestas fueron 200 y `favoritePerformers` quedó con un id. Después borró el músico y el coleccionista. CP-HU10-12 reproduce ese 200. El cuerpo no se convierte: la prueba responde `not-json` y el resultado sigue siendo éxito.
+
+| Id | HU | Nombre | Precondición | Pasos | Resultado esperado | Tipo | Automatizado (clase.método) | Estado |
+|---|---|---|---|---|---|---|---|---|
+| CP-HU10-06 | HU10 | POST de músico sin cuerpo | MockWebServer responde 200 con `{}` | `addFavorite` de un músico | `POST /collectors/100/musicians/7` con cuerpo vacío y `DataResult.Success` | API | `CollectorServiceAdapterTest.adding a musician posts an empty body and a 200 is success` | Pasa (2026-11-17) |
+| CP-HU10-07 | HU10 | POST de banda | MockWebServer responde 200 | `addFavorite` de una banda | `POST /collectors/100/bands/2` y éxito | API | `CollectorServiceAdapterTest.adding a band posts to the band route` | Pasa (2026-11-17) |
+| CP-HU10-08 | HU10 | Artista inexistente | MockWebServer responde 404 | `addFavorite` | `DataError.Http(404)` | API | `CollectorServiceAdapterTest.a missing favorite is not treated as added` | Pasa (2026-11-17) |
+| CP-HU10-09 | HU10 | Ids no positivos | Sin servidor | `addFavorite` con id 0 o negativo | `IllegalArgumentException` y ninguna petición | API | `CollectorServiceAdapterTest.a non positive favorite id fails before any request` | Pasa (2026-11-17) |
+| CP-HU10-10 | HU10 | Error 500 | MockWebServer responde 500 | `addFavorite` | `DataError.Http(500)`, no cuenta como agregado | API | `CollectorServiceAdapterTest.a server error is not treated as a favorite added` | Pasa (2026-11-17) |
+| CP-HU10-11 | HU10 | Corte de conexión | MockWebServer cierra el socket | `addFavorite` | `DataError.Network` | API | `CollectorServiceAdapterTest.a connection cut is a network error and not a favorite added` | Pasa (2026-11-17) |
+| CP-HU10-12 | HU10 | Repetir el mismo par | La sonda del 17/11/2026 dio 200 en el segundo POST | Dos `addFavorite` del mismo músico, con cuerpo `not-json` | Las dos llamadas son `DataResult.Success`. El cuerpo no se convierte | API | `CollectorServiceAdapterTest.posting the same musician twice is success and the body is not parsed` | Pasa (2026-11-17) |
 
 Ids: `CP-HUxx-nn`. Cada historia cubre al menos camino feliz, error de backend, estado vacío y, en formularios, las validaciones por campo.
 
@@ -524,6 +585,106 @@ La entrada desde HU03 se comprobará con la copia incorporada a nuestra base loc
 
 **Cobertura inicial HU04-02 (04/11/2026):** 18 pruebas nuevas aprobadas (11 en `PerformerDetailServiceAdapterTest`, 4 añadidas a `PerformerRepositoryImplTest` y 3 en `PerformerSummaryMappersTest`). Se reutilizan los JSON, fakes y reglas de HU03. La tabla distingue esa cobertura de datos de los estados y recorridos de UI pendientes; ningún escenario mixto se marca como totalmente aprobado por una prueba de API. Controles: `spotlessCheck detekt lintDebug testDebugUnitTest assembleDebugAndroidTest`, BUILD SUCCESSFUL con JDK 17, 212 pruebas JVM sin fallos, errores ni omisiones. Compilar las instrumentadas no equivale a ejecutarlas. No se ejecutaron E2E de HU04 ni se implementó todavía su pantalla. Ver métodos y contratos en [el avance HU04-02](13-hu04-diseno-tecnico.md#9-implementación-hu04-02--04112026).
 
+### HU12 — Agregar músicos a una banda
+
+Diseño: [15-hu12-diseno-tecnico.md](15-hu12-diseno-tecnico.md). **Tipo**: *Positivo* verifica el comportamiento esperado con datos válidos; *Negativo* evalúa la respuesta ante datos inválidos o errores. **Ejecución**: *Automatizada* (JVM con `testDebugUnitTest`, o instrumentada con `connectedDebugAndroidTest`) o *Manual* (pasos y captura en la wiki).
+
+Datos de los ejemplos: Queen con Brian May y Freddie Mercury; Adam Lambert sin banda; Ringo Starr de The Beatles. Las pruebas E2E crean su propia banda y sus músicos con nombres únicos y nunca usan Queen de la semilla. **BackVynils mueve al músico si ya tiene banda**, por eso la regla la aplica la app (CP-HU12-09, 44 y 49).
+
+Validación del 18/11/2026: suite completa en API 37 y API 21, con el backend recién reiniciado; 401 pruebas JVM y 142 instrumentadas.
+
+#### Unitarias (HU12-04) — JVM, automatizadas
+
+| ID | Nivel | Caso | Precondición → pasos | Resultado esperado | Tipo | Ejecución | Clase y método | Estado |
+|---|---|---|---|---|---|---|---|---|
+| CP-HU12-01 | ViewModel | Cargar la lista de músicos | Coleccionista; repo con 4 músicos y 2 bandas → abrir el selector de Queen | Solo músicos; Brian y Freddie como integrantes; Ringo con "The Beatles"; deja de cargar; lista forzada a red | Positivo | Automatizada | `BandMemberPickerViewModelTest.loads only musicians and marks current members` | Pasa (2026-11-17) |
+| CP-HU12-02 | ViewModel | No hay músicos | Repo solo con bandas → abrir | Estado vacío; botón deshabilitado | Positivo | Automatizada | `…without musicians shows the empty state` | Pasa (2026-11-17) |
+| CP-HU12-03 | ViewModel | Falla la carga y se reintenta | Repo responde sin red y luego la lista → abrir; `retry()` | Error sin filas; después la lista | Negativo | Automatizada | `…failed load shows the error and retry loads the list` | Pasa (2026-11-17) |
+| CP-HU12-04 | ViewModel | Buscar | Lista cargada → `"  ADAM "` | Solo Adam Lambert; sin texto vuelven todos | Positivo | Automatizada | `…search ignores case and surrounding spaces` | Pasa (2026-11-17) |
+| CP-HU12-05 | ViewModel | Búsqueda sin coincidencias | Lista cargada → `"zzz"` | Filas vacías y "sin resultados", no "no hay músicos" | Negativo | Automatizada | `…search without matches shows no results` | Pasa (2026-11-17) |
+| CP-HU12-06 | ViewModel | Escribir rápido | Lista cargada → "a" y enseguida "ad" | Solo se publica "ad" | Positivo | Automatizada | `…a newer search cancels the previous one` | Pasa (2026-11-17) |
+| CP-HU12-07 | ViewModel | Seleccionar músico libre | Lista cargada → Adam | Seleccionado y botón habilitado | Positivo | Automatizada | `…selecting a free musician enables the add button` | Pasa (2026-11-17) |
+| CP-HU12-08 | ViewModel | Seleccionar integrante o id inexistente | Lista cargada → Brian; id 999 | La selección no cambia | Negativo | Automatizada | `…members and unknown ids cannot be selected` | Pasa (2026-11-17) |
+| CP-HU12-09 | ViewModel | Músico de otra banda | Lista cargada → Ringo → Agregar | Aviso con "The Beatles"; **0 llamadas** al repositorio | Negativo | Automatizada | `…musician of another band shows the notice and sends nothing` | Pasa (2026-11-17) |
+| CP-HU12-10 | ViewModel | El aviso se quita | Aviso visible → elegir Adam | Sin aviso | Positivo | Automatizada | `…choosing another musician clears the notice` | Pasa (2026-11-17) |
+| CP-HU12-11 | ViewModel | Agregar con éxito | Adam elegido; repo con éxito → Agregar | Una llamada (Queen, Adam); `Added` una vez; termina el envío | Positivo | Automatizada | `…successful add emits the new member once` | Pasa (2026-11-17) |
+| CP-HU12-12 | ViewModel | Doble toque | Repo en pausa → Agregar dos veces | Una sola llamada y un solo `Added` | Negativo | Automatizada | `…double tap sends a single request` | Pasa (2026-11-17) |
+| CP-HU12-13 | ViewModel | Interactuar durante el envío | Envío en curso → buscar, elegir otro, chip de rol | Se ignoran (la X la bloquea el Fragment con `isSubmitting`) | Negativo | Automatizada | `…search selection and role chip are blocked while submitting` | Pasa (2026-11-17) |
+| CP-HU12-14 | ViewModel | Banda o músico inexistente | Repo responde 404 → Agregar | Error definitivo, no incierto; se puede elegir otro | Negativo | Automatizada | `…not found is a definite error` | Pasa (2026-11-17) |
+| CP-HU12-15 | ViewModel | Sin red o 500 al agregar | Repo responde Network o 500 → Agregar | Incierto, guardado en SavedState; el botón emite `ReviewBand` sin reenviar | Negativo | Automatizada | `…network failure leaves the write uncertain` | Pasa (2026-11-17) |
+| CP-HU12-16 | ViewModel | Abrir como Visitante | Rol Visitante → crear | `OpenRoleSelector`; no consulta | Negativo | Automatizada | `…visitor is sent to the role selector` | Pasa (2026-11-17) |
+| CP-HU12-17 | ViewModel | Cambiar de rol mientras carga | Carga en pausa → Visitante | Carga cancelada y `OpenRoleSelector` | Negativo | Automatizada | `…role change cancels the load` | Pasa (2026-11-17) |
+| CP-HU12-18 | ViewModel | Argumentos inválidos | `bandId = 0` o nombre en blanco | `Close`; no consulta | Negativo | Automatizada | `…invalid band arguments close the picker` | Pasa (2026-11-17) |
+| CP-HU12-19 | ViewModel | Restaurar tras recreación | SavedState con "ad", Adam y envío pendiente | Se recuperan; el botón emite `ReviewBand` | Positivo | Automatizada | `…restores search selection and pending write` | Pasa (2026-11-17) |
+| CP-HU12-20 | ViewModel | Selección restaurada que ya no vale | SavedState con Adam, que al recargar ya es integrante | Selección descartada | Negativo | Automatizada | `…restored selection that became a member is dropped` | Pasa (2026-11-17) |
+| CP-HU12-21 | ViewModel | Abrir el selector desde la banda | Detalle de banda, Coleccionista → tocar dos veces | Un solo `OpenMemberPicker`; tras volver se puede abrir otra vez | Positivo | Automatizada | `PerformerDetailViewModelTest.add member opens the picker once with the band members` | Pasa (2026-11-17) |
+| CP-HU12-22 | ViewModel | Quien no debe agregar | Visitante en banda; Coleccionista en músico | Sin evento | Negativo | Automatizada | `…visitors and musicians cannot add members` | Pasa (2026-11-17) |
+| CP-HU12-23 | ViewModel | Recibir el integrante | Banda con 1 integrante → `onMemberAdded` | Al final de la tira, resaltado y `MemberAdded` una vez | Positivo | Automatizada | `…added member is appended and confirmed once` | Pasa (2026-11-17) |
+| CP-HU12-24 | ViewModel | Resultado repetido o ajeno | Integrante repetido, otra banda o id 0 | Nada cambia y sin evento | Negativo | Automatizada | `…duplicate or foreign results are ignored` | Pasa (2026-11-17) |
+| CP-HU12-64 | ViewModel (lista de Artistas) | Volver a la lista tras agregar | Lista cargada; Room ya tiene a Queen con 5 y a Rubén en Queen → `onListShown()` | Queen "2 álbumes · 5 integrantes" y Rubén "Integrante de Queen"; una lectura de Room y ninguna a la red | Positivo | Automatizada | `PerformerListViewModelTest.showing the list again reads Room and picks up a member added in the detail` | Pasa (2026-11-18) |
+| CP-HU12-65 | ViewModel (lista de Artistas) | Volver antes de tener lista o durante una recarga | `onListShown()` antes de la primera carga y con la revalidación en pausa | No hay lecturas extra de Room ni de la red | Negativo | Automatizada | `…showing the list again is ignored before the first list and while a refresh runs` | Pasa (2026-11-18) |
+| CP-HU12-66 | ViewModel (lista de Artistas) | Room vacío o con error al volver | Room sin datos; luego Room responde error → `onListShown()` | La lista queda igual, sin error ni aviso y sin llamar a la red | Negativo | Automatizada | `…showing the list again keeps it when Room is empty or fails` | Pasa (2026-11-18) |
+| CP-HU12-25 | Repository | Éxito actualiza la caché | Room con Queen (2) y Adam libre | `Success`; Adam en Queen y Queen con 3; aplicarlo dos veces cuenta uno | Positivo | Automatizada | `PerformerRepositoryImplTest.added musician updates the band and the musician in Room`; `…applying the same membership twice counts the member once` | Pasa (2026-11-17) |
+| CP-HU12-26 | Repository | Falla Room tras el POST | DAO lanza `SQLiteException` | Sigue `Success` | Negativo | Automatizada | `…Room failure after the POST still reports success` | Pasa (2026-11-17) |
+| CP-HU12-27 | Repository | 404 | Adapter lanza 404 | `Http(404)`; Room intacto | Negativo | Automatizada | `…not found returns HTTP 404 and leaves Room intact` | Pasa (2026-11-17) |
+| CP-HU12-28 | Repository | Sin red | Adapter lanza `IOException` | `Network`; Room intacto | Negativo | Automatizada | `…IO failure returns a network error and leaves Room intact` | Pasa (2026-11-17) |
+| CP-HU12-29 | Repository | Otro músico en la respuesta | Adapter lanza `JsonParseException` | `Serialization`; Room intacto | Negativo | Automatizada | `…unexpected musician identity is a serialization error` | Pasa (2026-11-17) |
+| CP-HU12-30 | Repository | Ids no positivos | 0 o negativos | `IllegalArgumentException`; adapter sin llamadas | Negativo | Automatizada | `…non positive ids are rejected before the network` | Pasa (2026-11-17) |
+| CP-HU12-31 | Repository | Recarga simultánea | Recarga forzada en pausa con la lista vieja → agregar → liberar | Room conserva la pertenencia (`mutex`) | Negativo | Automatizada | `…refresh fetched before the POST does not undo the membership` | Pasa (2026-11-17) |
+| CP-HU12-32 | Room (instrumentada) | Guardar la pertenencia | Tabla con banda y músico → `applyMembership` dos veces | Músico con banda; conteo +1 una sola vez; otras filas intactas | Positivo | Automatizada | `PerformerDaoTest.apply_membership_updates_the_musician_and_the_band_count` | Pasa en API 37 y API 21 (2026-11-17) |
+| CP-HU12-33 | Room (instrumentada) | Ids desconocidos | Músico o banda inexistentes; banda como músico | No falla; no toca otras filas | Negativo | Automatizada | `PerformerDaoTest.apply_membership_with_unknown_ids_changes_nothing` | Pasa en API 37 y API 21 (2026-11-17) |
+
+#### API (HU12-06)
+
+Automatizadas con MockWebServer (Repository, Retrofit y adaptador reales; sin backend). Fixtures en [api/README.md](../app/src/test/resources/api/README.md).
+
+| ID | Caso | Precondición → pasos | Resultado esperado | Tipo | Ejecución | Clase y método | Estado |
+|---|---|---|---|---|---|---|---|
+| CP-HU12-34 | Petición y 200 | `band_musician_added.json` → `addMusicianToBand(101, 100)` | `POST /bands/101/musicians/100` sin cuerpo, una petición; integrante mapeado; Room actualizado | Positivo | Automatizada | `BandMemberServiceAdapterTest.add musician to band posts to the band route and maps the musician` | Pasa (2026-11-17) |
+| CP-HU12-35 | Banda inexistente | 404 real de banda | `Http(404)`; Room intacto | Negativo | Automatizada | `…unknown band becomes HTTP 404` | Pasa (2026-11-17) |
+| CP-HU12-36 | Músico inexistente | 404 real de músico | `Http(404)`; Room intacto | Negativo | Automatizada | `…unknown musician becomes HTTP 404` | Pasa (2026-11-17) |
+| CP-HU12-37 | Error del backend | 500 | `Http(500)` | Negativo | Automatizada | `…server error becomes HTTP 500` | Pasa (2026-11-17) |
+| CP-HU12-38 | Conexión cortada | Corte tras recibir el POST | `Network`; una sola petición (sin reintento) | Negativo | Automatizada | `…connection cut becomes a network error` | Pasa (2026-11-17) |
+| CP-HU12-39 | Respuesta dañada | JSON malformado, vacío, sin `id` u otro músico | `Serialization` | Negativo | Automatizada | `…malformed or incomplete body becomes a serialization error` | Pasa (2026-11-17) |
+| CP-HU12-40 | Origen de "Integrante de …" | `musicians_with_band.json` y `bands_with_members.json` | Los músicos de Queen traen `bandId` y `bandName` | Positivo | Automatizada | `PerformerServiceAdapterTest.members of a band are joined from the band list, not from the musician list` (HU03) | Pasa (2026-11-17) |
+| CP-HU12-42 | Banda inexistente (backend real) | `POST /bands/2147483647/musicians/100`, sin escribir en la base | 404 "The band with the given id was not found"; se guarda como fixture de CP-HU12-35 | Negativo | Manual | curl | Pasa (2026-11-17, captura del fixture) |
+| CP-HU12-43 | Músico inexistente (backend real) | `POST /bands/101/musicians/2147483647`, sin escribir en la base | 404 "The musician with the given id was not found"; se guarda como fixture de CP-HU12-36 | Negativo | Manual | curl | Pasa (2026-11-17, captura del fixture) |
+| CP-HU12-44 | Músico con otra banda (backend real) | La prueba crea un músico en una banda y otra banda vacía → `POST` del músico a la segunda | 200 y el músico se **mueve**: sale de la primera. Justifica el bloqueo en la app | Negativo | Automatizada (instrumentada) | `BandMusicianBackendTest.adding_a_musician_of_another_band_moves_it_instead_of_rejecting_it` | Pasa en API 37 y API 21 (2026-11-17) |
+
+CP-HU12-41 (POST válido con Postman) y CP-HU12-45 (id no numérico) se retiraron: el primero lo cubre CP-HU12-46 contra el backend real y el segundo no puede ocurrir, porque la app solo envía ids positivos (CP-HU12-30). Ninguna prueba requiere cargar datos a mano.
+
+#### E2E (HU12-05) — Espresso contra BackVynils local
+
+`BandMemberPickerScreenTest` con `BandMemberPickerRobot` y `BackendPerformers` (crea una banda con un integrante, un músico libre y uno ocupado en otra banda, todos con nombre único).
+
+| ID | Caso | Precondición → pasos | Resultado esperado | Tipo | Ejecución | Clase y método | Estado |
+|---|---|---|---|---|---|---|---|
+| CP-HU12-46 | Agregar y verlo en el detalle | Coleccionista → banda → "Agregar integrante" → músico libre → "Agregar a …" | Aviso "Integrante agregado a la banda"; integrante en la tira; "Integrantes · 2"; backend con los dos | Positivo | Automatizada | `BandMemberPickerScreenTest.collector_adds_a_free_musician_and_sees_it_in_the_band` | Pasa en API 37 y API 21 (2026-11-17) |
+| CP-HU12-47 | El cambio persiste | Tras agregar → Atrás a Artistas → abrir la banda otra vez | En la lista, la banda dice "0 álbumes · 1 integrante" y el músico "Integrante de <banda>", sin recargar; el integrante sigue en el detalle | Positivo | Automatizada | `…added_member_is_still_there_after_reopening_the_band` | Pasa en API 37 y API 21 (2026-11-18) |
+| CP-HU12-48 | Integrantes no elegibles | Abrir el selector → tocar el integrante | "YA INTEGRANTE"; no se selecciona; botón deshabilitado | Negativo | Automatizada | `…current_members_are_labelled_and_cannot_be_selected` | Pasa en API 37 y API 21 (2026-11-17) |
+| CP-HU12-49 | Músico de otra banda | Elegir el ocupado → Agregar | "Integrante de …"; aviso; sigue en el selector; backend sin cambios | Negativo | Automatizada | `…musician_of_another_band_shows_the_notice_and_is_not_added` | Pasa en API 37 y API 21 (2026-11-17) |
+| CP-HU12-50 | Buscar | Buscar el libre; luego un texto sin coincidencias | Solo ese músico; luego "sin resultados" | Positivo | Automatizada | `…search_filters_musicians_and_shows_no_results` | Pasa en API 37 y API 21 (2026-11-17) |
+| CP-HU12-51 | Salir sin agregar | Elegir → X; repetir con Atrás | Detalle sin aviso; backend sin cambios | Positivo | Automatizada | `…closing_the_picker_adds_nothing` | Pasa en API 37 y API 21 (2026-11-17) |
+| CP-HU12-52 | Visitante | Visitante → banda | Sin "Agregar integrante" | Negativo | Automatizada | `…visitor_does_not_see_add_member` | Pasa en API 37 y API 21 (2026-11-17) |
+| CP-HU12-53 | Detalle de músico | Coleccionista → músico | Sin sección ni botón de integrantes | Negativo | Automatizada | `…musician_detail_has_no_add_member` | Pasa en API 37 y API 21 (2026-11-17) |
+| CP-HU12-54 | Banda vacía | Banda sin integrantes → agregar el libre | "sin integrantes" se reemplaza por "Integrantes · 1" | Positivo | Automatizada | `…empty_band_gets_its_first_member` | Pasa en API 37 y API 21 (2026-11-17) |
+| CP-HU12-55 | Recrear | Búsqueda y selección → `recreate()` | Se conservan búsqueda, selección y botón | Positivo | Automatizada | `…recreating_keeps_search_and_selection` | Pasa en API 37 y API 21 (2026-11-17) |
+| CP-HU12-56 | Cambiar de rol | Chip "Coleccionista" en el selector | Selector de rol | Positivo | Automatizada | `…role_chip_opens_the_role_selector` | Pasa en API 37 y API 21 (2026-11-17) |
+| CP-HU12-57 | Sin conexión y reintento | `BackendFirewall` al abrir → restaurar → Reintentar | Error con Reintentar; luego la lista | Negativo | Automatizada | `…load_failure_offers_retry` | Pasa en API 37 y API 21 (2026-11-17) |
+| CP-HU12-58 | Se corta la red al agregar | Elegir el libre → `BackendFirewall` → Agregar → restaurar → "Revisar banda" | Aviso de resultado incierto y botón "Revisar banda"; el detalle se recarga con "Integrantes · 1", sin aviso de éxito ni duplicados | Negativo | Automatizada | `…network_failure_while_adding_asks_to_review_the_band` | Pasa en API 37 y API 21 (2026-11-17) |
+| CP-HU12-59 | El músico se borra con el selector abierto | Elegir el libre → la prueba lo borra por API → Agregar | Aviso de 404; sigue en el selector con el botón habilitado; backend sin cambios | Negativo | Automatizada | `…musician_deleted_while_choosing_shows_not_found` | Pasa en API 37 y API 21 (2026-11-17) |
+
+#### No funcionales — manuales
+
+Se hacen con la app y los datos que ya estén en el backend; no hay que cargar nada ni apagar el backend.
+
+| ID | Caso | Pasos | Resultado esperado | Tipo | Ejecución | Estado |
+|---|---|---|---|---|---|---|
+| CP-HU12-60 | Sin fugas de memoria | Abrir y cerrar el selector 10 veces; GC; heap dump (Profiler) | Sin instancias retenidas de `BandMemberPickerFragment`, su binding ni su adaptador | Positivo | Manual | Pendiente |
+| CP-HU12-61 | Búsqueda fluida | Con los músicos que ya tenga el backend, escribir rápido en "Buscar músico" con el Profiler de CPU | Filtrado fuera del hilo principal, sin saltos visibles | Positivo | Manual | Pendiente |
+| CP-HU12-62 | StrictMode | Recorrer todo el flujo en debug | Sin violaciones en Logcat | Negativo | Manual | Pendiente |
+| CP-HU12-63 | TalkBack | Recorrer botón, filas, "YA INTEGRANTE", aviso y confirmación | Se anuncian nombre, estado y el aviso al aparecer | Positivo | Manual | Pendiente |
+
 ### Navegación entre pestañas
 
 E2E en `TabNavigationTest`, contra BackVynils local. Los coleccionistas se leen del backend sin escribir; los artistas y sus álbumes los crea cada prueba y los borra al terminar. Requieren un coleccionista de nombre único con álbumes y favoritos: si no existe, la prueba falla con ese mensaje, no se omite.
@@ -540,6 +701,141 @@ E2E en `TabNavigationTest`, contra BackVynils local. Los coleccionistas se leen 
 | CP-NAV-08 | Atrás no cambia | Abrir álbum desde un coleccionista y pulsar Atrás | Detalle del coleccionista, con su pestaña marcada | E2E | `TabNavigationTest.back_from_an_album_still_returns_to_the_collector` | Pasa en API 21 y API 37 (2026-11-06) |
 | CP-NAV-09 | Botón de acción al cambiar de pestaña | Como coleccionista, salir de un álbum a Artistas, volver a Álbumes y salir de otro álbum a Coleccionistas | Sin botón en Artistas ni Coleccionistas; aparece en el catálogo | E2E | `TabNavigationTest.primary_action_follows_the_screen_when_leaving_an_album_as_collector` | Pasa en API 21 y API 37 (2026-11-06) |
 
+### Room: más de 999 ids al reemplazar una lista (#139)
+
+`replaceAll()` de `AlbumDao`, `PerformerDao` y `CollectorDao` borraba con `DELETE … WHERE id NOT IN (:ids)`, una variable por id. SQLite anterior a 3.32 (Android 11 o anterior) admite 999, así que con 1 000 o más elementos fallaba con "too many SQL variables". Ahora lee los ids guardados, calcula en Kotlin los que ya no llegan y los borra en bloques de `MAX_IDS_PER_STATEMENT` (900), dentro de la misma transacción. Las pruebas instrumentadas usan 2 100 filas y conservan 1 050, así que el borrado anterior y uno sin bloques fallarían. Antes del arreglo, CP-ROOM-01 a 03 fallaban en API 21 con `SQLiteException: too many SQL variables`.
+
+| Id | Nombre | Pasos | Resultado esperado | Tipo | Automatizado (clase.método) | Estado |
+|---|---|---|---|---|---|---|
+| CP-ROOM-01 | Álbumes por encima del límite | 2 100 álbumes con canción en el 1 y en el 2 100; `replaceAll()` con los 1 050 primeros | Quedan exactamente los 1 050; el álbum 1 conserva su canción y la del 2 100 se borra en cascada | Instrumentada | `AlbumDaoTest.replace_all_handles_more_ids_than_the_sqlite_variable_limit_of_android_11` | Pasa en API 21 y API 37 (2026-11-18) |
+| CP-ROOM-02 | Artistas por encima del límite | 2 100 artistas; `replaceAll()` con los 1 050 primeros y después con lista vacía | Quedan los 1 050 y luego la tabla vacía | Instrumentada | `PerformerDaoTest.replace_all_handles_more_ids_than_the_sqlite_variable_limit_of_android_11` | Pasa en API 21 y API 37 (2026-11-18) |
+| CP-ROOM-03 | Coleccionistas por encima del límite | 2 100 coleccionistas; `replaceAll()` con los 1 050 primeros y después con lista vacía | Quedan los 1 050 y luego la tabla vacía | Instrumentada | `CollectorDaoTest.replace_all_handles_more_ids_than_the_sqlite_variable_limit_of_android_11` | Pasa en API 21 y API 37 (2026-11-18) |
+| CP-ROOM-04 | Ids que sobran, en bloques | `staleIdChunks()` con ids que siguen, que sobran y más de 900 que sobran | Solo los que no siguen, en orden, en bloques de 900 o menos; nada si no sobra ninguno | Unitaria | `SqlVariablesTest` (4 casos) | Pasa (2026-11-18) |
+
+### HU15 — Capa de datos (HU15-02)
+
+Los siguientes casos de datos complementan el [diseño técnico de HU15](15-hu15-diseno-tecnico.md). Son pruebas JVM con MockWebServer/fakes; no se han ejecutado como validación de un backend BackVynils activo ni como recorridos E2E.
+
+| Grupo | Casos | Qué verifica | Implementación |
+|---|---:|---|---|
+| Lecturas completas de asociación | 11 | Relaciones preservadas, `performers` ausente/nulo/inválido, catálogo vacío, identidad, revalidación HTTP, error HTTP y red sin reintento, compatibilidad del catálogo histórico | `AlbumAssociationServiceAdapterTest` |
+| Escritura por tipo de artista | 8 | Rutas de músico/banda con iguales IDs, POST sin cuerpo, respuesta inconsistente, HTTP/red sin reenvío automático, refresco de detalle preservando integrantes/premios, ejecución en IO | `PerformerAlbumServiceAdapterTest` |
+| Repositorio de álbumes | 8 | Datos completos aunque Room tenga un resumen, orden NOCASE/id, errores y cancelación, identidad y ausencia de cambios en Room | `AlbumAssociationRepositoryTest` |
+| Repositorio de artistas | 9 | Asociación, invalidación tras éxito/error/cancelación, revalidación de detalle/lista, caché ilegible por escritura fallida e interacción concurrente entre refresco y POST | `PerformerAlbumRepositoryTest` |
+| **Total nuevo** | **36** | **Cobertura de HU15-02** | **`src/test`** |
+
+**Validación local (17/11/2026):** JDK 17; `spotlessCheck detekt lintDebug testDebugUnitTest assembleDebug` correctos. Suite JVM completa: **396 pruebas, 0 fallos, 0 errores y 0 omisiones**.
+
+No se marca ningún caso E2E CP-HU15 como aprobado por estas pruebas de datos. La cobertura inicial de ViewModel y la revisión visual se incorporan en HU15-03; su ampliación, Espresso y la auditoría de accesibilidad continúan en las subtareas correspondientes.
+
+### HU15-03 · Pruebas iniciales del selector
+
+La subtarea de interfaz añade 14 pruebas JVM, sin depender del backend real:
+
+| Clase | Casos | Cobertura |
+|---|---:|---|
+| `PerformerAlbumPickerViewModelTest` | 11 | Disponibilidad, búsqueda/selección, músico/banda, rol e identidad, preflight, doble toque, respuesta perdida, resultado incierto y restauración sin repetir POST |
+| `PerformerAlbumDetailResultTest` | 3 | Navegación solo para Coleccionista, identidad del resultado y refresco fallido sin repetir la asociación |
+
+Validación local del 17/11/2026: `spotlessCheck`, `detekt`, `lintDebug`, `testDebugUnitTest`, `assembleDebug` y `assembleDebugAndroidTest`. Suite JVM completa: **410 casos, 0 fallos, 0 errores, 0 omisiones**. Compilar el APK instrumentado no equivale a ejecutar Espresso.
+
+Revisión visual exploratoria mediante ADB en emuladores API 21 y API 37, usando exclusivamente un servidor HTTP simulado con fixtures en memoria: músico en API 21 y banda en API 37. Se verificó selector, confirmación, regreso al destino, incremento del contador obtenido del servidor y resaltado. El log del servidor simulado registró un POST por recorrido, seguido de GET de comprobación y refresco. En banda se conservaron los cuatro integrantes del fixture. No se modificó PostgreSQL ni se probó BackVynils real. Las capturas temporales de revisión no forman parte del entregable ni sustituyen las evidencias E2E.
+
+**Seguimiento:** HU15-04 amplía la cobertura en la sección siguiente. HU15-05 incorpora Espresso y regresión en su sección. HU15-06 verifica el contrato de ambas rutas en su sección. TalkBack, Accessibility Scanner y fuente ampliada siguen pendientes de auditoría.
+
+### HU15-04 · Ampliación de pruebas unitarias
+
+Rama: `feature/HU15-04-unitarias`, desde la integración de HU15-03. Issue: [#64](https://github.com/misw-is-aplicaciones-moviles/MobileVynils/issues/64). Se amplían las dos clases existentes, sin nuevas clases ni cambios en producción.
+
+| Clase | Casos antes → ahora | Cobertura añadida |
+|---|---:|---|
+| `PerformerAlbumPickerViewModelTest` | 11 → 20 | Fallo de catálogo/detalle y recuperación; catálogo vacío y búsqueda por artista; IDs ocupados/desconocidos; restauración y selección que pasa a estar ocupada; pérdida de rol antes/después de enviar; reintento explícito tras ausencia confirmada; pertenencia sin subtipo; cancelación y restauración sin repetir POST |
+| `PerformerAlbumDetailResultTest` | 3 → 5 | Refresco de músico/banda con álbum resaltado, integrantes y premios conservados; resultado de asociación ya existente consumido una sola vez |
+
+Además, el caso existente de identidad inválida cubre ID cero/negativo y tipo desconocido/ausente, sin lecturas ni escrituras. `FakePerformerRepository.addAlbumGate` permite detener un envío de forma determinista para comprobar pérdida de rol y cancelación, sin esperas temporizadas.
+
+Trazabilidad al diseño: CP-HU15-03/04 (bloqueos), 05 (búsqueda y vacío), 06 (rol/identidad), 07 (restauración/cierre), 08 (carga/reintento), 09 (resultado incierto y reintento explícito), 11 (refresco y conservación del detalle). Esta cobertura complementa las 36 pruebas de datos de HU15-02; **no acredita los escenarios E2E ni la auditoría de accesibilidad**.
+
+**Validación local (17/11/2026):** JDK 17; `spotlessCheck`, `detekt`, `lintDebug` y `testDebugUnitTest` correctos. **421 pruebas JVM, 0 fallos, 0 errores y 0 omisiones**; 25 pertenecen a las dos clases de ViewModel de HU15 (11 nuevas en esta subtarea). Reporte generado: `app/build/reports/tests/testDebugUnitTest/index.html` (local, no publicado). No se ejecutaron peticiones a BackVynils ni pruebas instrumentadas. Los resultados de HU15-05 figuran en la sección siguiente; La verificación de HU15-06 figura en su sección.
+
+### HU15-05 · Espresso del selector de álbumes de artista
+
+Implementación: `app/src/androidTest/java/co/edu/uniandes/vinilos/ui/PerformerAlbumPickerScreenTest.kt`, con `robots/PerformerAlbumPickerRobot.kt`. Usa `BackendPerformers` para crear artistas/álbumes propios y consultar las relaciones reales por HTTP. El helper solo permite preparar asociaciones entre sus propios fixtures; no usa DELETE de asociaciones de álbumes, sino eliminación de los artistas/álbumes que creó.
+
+| Escenario automatizado | Trazabilidad | Comprobación |
+|---|---|---|
+| `musician_association_returns_to_updated_detail_with_one_album_link` | CP-HU15-01 | Confirmación, regreso al músico, contador y álbum resaltado; relación en ambas lecturas HTTP |
+| `band_association_preserves_members_and_existing_albums` | CP-HU15-02 | Asociación a banda; conserva álbum anterior, integrantes y referencias de premios del fixture |
+| `own_and_foreign_albums_are_blocked_and_do_not_change_relations` | CP-HU15-03/04 | Propios con chip; ajenos sin radio; CTA deshabilitado y relaciones intactas |
+| `search_selection_and_cancel_survive_recreation_without_writing` | CP-HU15-05/07 | Búsqueda sin resultados, selección y consulta conservadas tras recreación; cerrar no escribe |
+| `visitor_cannot_open_the_album_picker` | CP-HU15-06 | Visitante no dispone de la acción de asociación |
+| `availability_is_rechecked_before_writing_and_another_artist_is_preserved` | CP-HU15-09 | Otro artista ocupa el álbum tras cargar el selector; se bloquea al confirmar y conserva el vínculo ajeno |
+| `removed_artist_returns_failed_save_without_false_success` | CP-HU15-10 | Artista eliminado después de cargar: POST falla, el álbum sigue libre y no se anuncia éxito |
+| `load_failure_can_be_retried_and_closed_without_a_write` | CP-HU15-08 | Error al cargar el artista, reintento y cierre del selector |
+
+Los casos usan nombres únicos, sin depender de IDs ni cantidades de la semilla. En banda el fixture tiene integrantes y un álbum anterior; sus referencias de premios están vacías, por lo que **no acredita conservar un premio existente en E2E** (ese caso está cubierto con datos no vacíos en las unitarias). Catálogo vacío, pérdida de respuesta y restauración de envío pendiente siguen cubiertos en JVM; la auditoría TalkBack/Scanner/fuente ampliada sigue pendiente.
+
+Ejecución en backend local aislado, con el APK apuntando a `http://127.0.0.1:3000/` y `adb reverse`. Construir con JDK 17:
+
+```bash
+./gradlew spotlessCheck detekt lintDebug testDebugUnitTest assembleDebug assembleDebugAndroidTest
+adb -s SERIAL install -r app/build/outputs/apk/debug/app-debug.apk
+adb -s SERIAL install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb -s SERIAL reverse tcp:3000 tcp:3000
+adb -s SERIAL shell am instrument -w -r \
+  -e class co.edu.uniandes.vinilos.ui.PerformerAlbumPickerScreenTest \
+  co.edu.uniandes.vinilos.test/co.edu.uniandes.vinilos.testing.VinilosTestRunner
+```
+
+Sustituir `SERIAL` por el emulador/dispositivo. Desactivar las tres escalas de animación del emulador antes de usar `am instrument`; la tarea Gradle no las configura en una invocación directa. Para la regresión pertinente, seleccionar además `PerformerListScreenTest`, `PerformerDetailScreenTest`, `CollectorAlbumPickerScreenTest` y `PrizePickerScreenTest` (38 pruebas en total con HU15). No se debe dar por correcta una corrida que ejecuta cero pruebas.
+
+**Resultados (17/11/2026):** HU15 **8/8 en API 21 y 8/8 en API 37**. Con regresión HU03/HU04/HU11/HU14: **38/38 en cada API, sin fallos**. Corridas finales con BackVynils real aislado y base nueva por API. Controles de calidad y 421 unitarias correctos. La matriz por clase, el ajuste del piloto y los límites están en [el diseño técnico, sección 13](15-hu15-diseno-tecnico.md#13-avance-hu15-05--e2e-y-regresión). Logs originales en `reports/hu15-05/` (locales, ignorados por Git y no publicados en la Wiki). No se ejecutó la suite instrumentada completa ni se reemplazó el APK de entrega.
+
+### HU15-06 · Contrato HTTP real de los dos endpoints
+
+`app/src/androidTest/java/co/edu/uniandes/vinilos/network/PerformerAlbumApiTest.kt` usa `NetworkClient`, `VinilosApiService` y los Service Adapters de producción, sin abrir pantallas. `BackendPerformers` acepta una URL de pruebas opcional, manteniendo su valor predeterminado para las E2E existentes. Cada test crea y elimina exclusivamente sus artistas y álbumes.
+
+| Caso | Resultado comprobado | API 21 | API 37 |
+|---|---|---:|---:|
+| `musician_returns_200_album_id_and_complete_relationships_without_a_body` | POST sin cuerpo/Content-Type, HTTP 200, ID y relaciones en catálogo/álbum/detalle | Pasa | Pasa |
+| `band_returns_200_and_refresh_preserves_its_other_album_and_member` | HTTP 200; conserva álbum anterior e integrante; relación nueva visible | Pasa | Pasa |
+| `unknown_artists_return_404_for_both_routes_and_leave_the_album_free` | Ambas rutas devuelven 404, convertido a `DataError.Http(404)`; álbum sin cambios | Pasa | Pasa |
+| `unknown_album_returns_404_for_both_routes_without_changing_the_artists` | Ambas rutas devuelven 404; artistas sin cambios | Pasa | Pasa |
+| `occupied_album_appends_musicians_but_band_replaces_the_existing_relationships` | Caracterización del riesgo: músico añade, banda sustituye las asociaciones previas | Pasa | Pasa |
+
+**Resultado (18/11/2026): 5/5 en cada API**, contra otra instancia real de BackVynils en el puerto 3001, con PostgreSQL desechable y sin modificar el entorno manual del puerto 3000. El último caso caracteriza un comportamiento peligroso del backend, **no un criterio deseable**: si BackVynils lo corrige habrá que actualizar esa expectativa. El selector impide elegir álbumes ocupados, pero no puede garantizar atomicidad frente a otro cliente entre GET y POST.
+
+Construir/instalar las dos APK como en HU15-05 y ejecutar:
+
+```bash
+adb -s SERIAL reverse tcp:3001 tcp:3001
+adb -s SERIAL shell am instrument -w -r \
+  -e class co.edu.uniandes.vinilos.network.PerformerAlbumApiTest \
+  -e hu15ApiBaseUrl http://127.0.0.1:3001/ \
+  co.edu.uniandes.vinilos.test/co.edu.uniandes.vinilos.testing.VinilosTestRunner
+```
+
+Sin `hu15ApiBaseUrl`, los cinco casos se omiten mediante `assumeTrue`, antes de crear datos o abrir el cliente. Para ejecutarlos, indicar ese argumento y seleccionar solo esta clase sobre otra base recién sembrada; no añadirlos a la suite completa. La clase exige host local. Usar una base de pruebas aislada: no ejecutar el caso de caracterización sobre datos compartidos. No se invocan DELETE de asociaciones; la limpieza elimina solo entidades propias.
+
+Controles `spotlessCheck`, `detekt`, `lintDebug`, `testDebugUnitTest`, `assembleDebug` y `assembleDebugAndroidTest` correctos. Las **421 JVM** siguen sin fallos, errores ni omisiones; estas cinco son instrumentadas y no aumentan ese total. Logs, resumen por caso y consulta final de la base en `reports/hu15-06/` (locales e ignorados por Git; no publicados en la Wiki). No se repitieron las 38 E2E/regresión de HU15-05 ni se reemplazó el APK de entrega.
+
+### Integración de HU12 y HU15 · 18/11/2026
+
+Validación de la fusión de `develop` (`6c263d5`, HU12) en `feature/HU15-agregar-album-artista` (base `14475e6`, HU15). Se conservaron ambos contratos de API, los dos selectores, acciones del detalle, resultados y estados resaltados. Los tipos de fila de las acciones de álbum/integrante usan valores distintos para no reutilizar un ViewHolder incompatible. El índice de documentación conserva las páginas de ambas historias.
+
+Se añadió a `PerformerAlbumPickerScreenTest` el caso `band_keeps_new_member_and_album_when_both_pickers_are_used`: agrega un integrante, luego un álbum, verifica ambas relaciones por HTTP y reabre el detalle para comprobar que siguen presentes. La clase pasa de ocho a nueve casos; los resultados anteriores de HU15-05 corresponden a su versión de ocho.
+
+| Clase | API 21 | API 37 |
+|---|---:|---:|
+| `PerformerAlbumPickerScreenTest` | 9/9 | 9/9 |
+| `BandMemberPickerScreenTest` | 14/14 | 14/14 |
+| `PerformerDetailScreenTest` | 6/6 | 6/6 |
+| `PrizePickerScreenTest` | 5/5 | 5/5 |
+| **Selección de regresión** | **34/34, sin fallos** | **34/34, sin fallos** |
+
+`spotlessCheck`, `detekt`, `lintDebug`, `testDebugUnitTest`, `assembleDebug` y `assembleDebugAndroidTest`: correctos. **462 JVM, 0 fallos, 0 errores y 0 omisiones**. La interfaz Retrofit central llega a 20 operaciones y tiene una excepción local documentada a `TooManyFunctions`; no se cambió la configuración global de detekt. Se extrajo la presentación común de avisos para mantener el manejador de eventos dentro del límite de longitud.
+
+Corridas con backend real desechable en el puerto 3002 y base nueva por API; se verificaron después los álbumes/artistas/vínculos de la semilla. La URL temporal de compilación se restauró a la original y se recompilaron las APK. El backend manual del puerto 3000 y su base no se modificaron. No es la suite instrumentada completa; la auditoría manual de accesibilidad sigue pendiente. Logs y resumen originales en `reports/hu15-integracion-develop/` (locales e ignorados por Git).
 
 ## 6. Reportes de defectos
 
@@ -565,7 +861,7 @@ Se enlazan desde el inventario y se cierran con el PR que los corrige, que inclu
 
 ## 8. Pruebas de accesibilidad (Sprint 3)
 
-- `AccessibilityChecks.enable().setRunChecksFromRootView(true)` en las pruebas Espresso, con `androidx.test.espresso:espresso-accessibility` agregado al catálogo (no está todavía).
+- `AccessibilityChecks` en las pruebas Espresso: pospuesto (decisión del 2026-11-21). El curso pide la revisión con Scanner y TalkBack; activarlo requiere la dependencia `espresso-accessibility` y haría fallar las E2E por hallazgos ya conocidos.
 - Accessibility Scanner en cada pantalla, con hallazgos y correcciones en la wiki.
 - Recorrido con TalkBack del flujo principal grabado como evidencia.
 
@@ -584,8 +880,9 @@ El entorno ya está configurado (TR-05): dependencias en `app/build.gradle.kts` 
 | `BackendPerformers` | `src/androidTest` | Crea músicos, bandas y álbumes en BackVynils local para los casos CP-HU03 y los borra al terminar |
 | `BackendCollectors` | `src/androidTest` | Crea y borra coleccionistas sin álbumes para los casos CP-HU05 y lee los que tiene el backend en ese momento |
 | `BackendCollectorAlbums` | `src/androidTest` | Crea coleccionistas y álbumes para CP-HU11 y borra solo los vínculos de esos pares |
+| `BackendCollectorFavorites` | `src/androidTest` | Crea coleccionista, músico y banda para CP-HU10. Borra los artistas y después el coleccionista, y comprueba que los favoritos previos no bajaron |
 | `VinilosTestRunner` | `src/androidTest` | Instala y restaura el selector de proxy requerido por `BackendFirewall` |
-| `robots/` | `src/androidTest` | Page Objects por pantalla (`MainRobot`, `AlbumListRobot`, `AlbumCreateRobot`, `TrackCreateRobot`, `PerformerListRobot`, `CollectorListRobot`, `CollectorDetailRobot`, `CollectorAlbumPickerRobot`, `CollectorAlbumAddRobot`, `PrizeCreateRobot`) |
+| `robots/` | `src/androidTest` | Page Objects por pantalla (`MainRobot`, `AlbumListRobot`, `AlbumCreateRobot`, `TrackCreateRobot`, `PerformerListRobot`, `CollectorListRobot`, `CollectorDetailRobot`, `CollectorAlbumPickerRobot`, `CollectorAlbumAddRobot`, `CollectorFavoritePickerRobot`, `PrizeCreateRobot`) |
 
 En las unitarias, las clases de `android.*` no lanzan error sino que devuelven valores por defecto (`unitTests.isReturnDefaultValues = true`, necesario porque OkHttp 5 llama a `android.util.Log`). Por eso la lógica que se prueba en `src/test` no usa clases de Android: `TextUtils.isEmpty` devolvería `false` en silencio y la prueba pasaría por error. En su lugar se usa Kotlin puro (`isBlank()`), como ya exige la arquitectura para ViewModels y modelos.
 
@@ -636,7 +933,7 @@ Para reproducir las E2E en otro equipo se necesita BackVynils con su semilla, Do
 
 #### Backend para las E2E
 
-Antes de cada corrida completa se reinicia BackVynils desde cero y se carga la semilla, según el `GETTING_STARTED.md` de BackVynils (Git Bash):
+Antes de cada corrida completa se reinicia **una instancia exclusiva de BackVynils para pruebas** desde cero y se carga la semilla, según el `GETTING_STARTED.md` de BackVynils (Git Bash). Los comandos siguientes eliminan sus datos: no ejecutarlos en una instancia compartida, manual o de producción. Confirmar primero el directorio y los contenedores de pruebas:
 
 ```bash
 cd BackVynils
@@ -648,6 +945,8 @@ docker compose exec -T db psql -U postgres -d vinyls < sql/data.sql
 ```
 
 Se verifica que `collector_album` y `performer_prize` tengan solo los ids 100 y 101 y que `GET /albums/100` muestre "Buscando América" con tilde. No se adelantan secuencias con `setval`, no se interrumpe una corrida a la mitad (deja vínculos huérfanos) y se repite el reinicio si se interrumpe. Las pruebas se ejecutan directamente con `./gradlew connectedDebugAndroidTest`, sin scripts.
+
+Con las secuencias en 1, una corrida completa puede crear como máximo 99 artistas: el siguiente `POST /musicians` o `POST /bands` choca con los ids 100 y 101 de la semilla y responde 500 "duplicate key". La ejecución previa a la corrección de HU15 llegó a 116 y falló por colisiones. Se retiraron creaciones redundantes de HU03 y HU15 sin quitar escenarios: HU03 crea el solista adicional únicamente cuando se comprueba su fila; el refresco parte de una fila de la semilla y crea solo el músico nuevo; la navegación por ID crea únicamente su banda. HU15 conserva un integrante previo en el caso de preservación, mientras que el caso combinado agrega el primero. Los cinco contratos reales de `PerformerAlbumApiTest` requieren ejecución explícita aparte. La validación del 18/11/2026 terminó en **98** (`is_called=true`) en API 21 y API 37. Queda un ID disponible antes del primer reservado (100): medir `SELECT last_value, is_called FROM performer_id_seq` al terminar cada suite completa y revisar el presupuesto al añadir casos. Repetir la suite requiere restaurar otra vez la base de pruebas.
 
 Hasta el 2026-11-08 existían `scripts/run_e2e.sh`, `scripts/preparar_backend_e2e.sql` y `scripts/limpiar_premios_e2e.sql`, que adelantaban las secuencias hasta el máximo id real. Se retiraron porque ese `setval` deja las secuencias por encima de la semilla y, con el `DELETE` de vínculos de BackVynils, las pruebas de premios borraban los vínculos 100 y 101 de la semilla y fallaban en cadena. Validación sin scripts (2026-11-08, backend recién reiniciado): 119 pruebas instrumentadas, 0 fallos, en API 21 y API 37.
 
@@ -707,3 +1006,53 @@ Todos los casos unitarios usan MockWebServer o excepciones controladas, sin depe
 | 2026-11-05 | HU13: inventario CP-HU13-01 a 20 (6 E2E en `PrizeCreateScreenTest`, 23 unitarias en el validador y el ViewModel, 10 de API de `POST /prizes`). Los premios que crea la pantalla usan los valores de los fixtures de HU14 para que `limpiar_premios_e2e.sql` los elimine; el resultado incierto se prueba con `BackendFirewall`. La E2E de doble toque falla sin `launchSingleTop`. Sin esperar Snackbars a ciegas: `isDisplayed()` en el matcher. Tras el ajuste a los mockups 70 a 75, los errores de campo se comprueban en su propia vista (`prizeNameError`, etc.) y la fecha del detalle en `prizeAwardDate`. Falla abierta en API 37: `PrizePickerScreenTest.required_date_and_selection_survive_recreation_and_cancel_does_not_write` falla a veces tras `ActivityScenario.recreate()` con la hoja abierta (`RootViewWithoutFocusException`); en API 21 no se observó. Con `develop` no se ha medido; la hoja con la configuración de `develop` dio 0 de 5 y con la nueva 3 de 6, así que la causa sigue sin aislarse. En el uso real, girar 8 veces con la hoja abierta la conservó con foco y operable. |
 | 2026-11-06 | Navegación entre pestañas: CP-NAV-01 a 09 en `TabNavigationTest`. Antes del arreglo fallaban los casos del defecto; con el arreglo pasan en API 37 y API 21. Necesitan un backend limpio: varios casos requieren un coleccionista de nombre único con álbumes y favoritos. En API 21 se ejecutan con `am instrument`. |
 | 2026-11-08 | Se retiran `scripts/run_e2e.sh`, `scripts/preparar_backend_e2e.sql` y `scripts/limpiar_premios_e2e.sql`. Su `setval` dejaba las secuencias por encima de la semilla y, con el `DELETE` de vínculos de BackVynils (borra el de id más bajo), las pruebas de premios borraban los vínculos 100 y 101 de la semilla y fallaban en cadena. Ahora el backend se reinicia antes de cada corrida completa con las secuencias en 1 y las pruebas se ejecutan con `./gradlew connectedDebugAndroidTest`. Validado en API 21 y API 37: 119 pruebas, 0 fallos. HU11: micro-optimizaciones sin cambio de comportamiento; `CollectorAlbumPickerRobot.select` espera la fila porque las filas se calculan fuera del hilo principal. |
+| 2026-11-17 | HU12: inventario CP-HU12-01 a 63 (41 y 45 retirados). Las E2E crean solo los artistas que usan para no pasar de 99 por corrida (sección 10). En API 21 el detalle de banda mostraba dos tiras de integrantes durante la animación al agregar uno; `PerformerDetailAdapter` ahora actualiza esa fila en su lugar. Pasan en API 37 y API 21. |
+| 2026-11-18 | HU12, revisión del PR: al volver del detalle la lista de Artistas no mostraba el integrante nuevo, porque cargaba una sola vez. Ahora vuelve a leer Room al mostrarse otra vez, sin llamar a la red. CP-HU12-47 comprueba la línea de resumen de la banda y del músico; CP-HU12-64 a 66 cubren el ViewModel de la lista. |
+| 2026-11-18 | #139: `replaceAll()` de álbumes, artistas y coleccionistas borra en bloques de 900 ids en lugar de `NOT IN` con un id por variable, que fallaba con 1 000 o más elementos en Android 11 o anterior. CP-ROOM-01 a 04; las tres instrumentadas fallaban antes del arreglo en API 21. Suite instrumentada completa sobre `develop` `1517004`, en cuatro lotes de menos de 10 minutos con la semilla restaurada en cada uno: API 21 171/171; API 37 168/172, con fallos intermitentes ajenos a Room (aviso sin conexión de Artistas, `PrizePickerScreenTest` tras recrear y un error de coleccionistas sin medir que pasó 6/6 en dos repeticiones). La suite sigue creando 98 artistas. |
+
+
+### Correcciones de revisión HU15 · 18/11/2026
+
+**Ejecución anterior al ajuste de sincronización HU14.** Los resultados posteriores figuran en la sección siguiente, «Estabilización de la interacción HU14».
+
+Se reprodujeron localmente las colisiones de IDs y los resúmenes desactualizados. Se corrigieron la relectura de Artistas, la invalidación del catálogo de álbumes tras HU15 (también si el resultado es incierto) y la relectura de HU01 al regresar. Se mantienen todos los escenarios, con menos fixtures; los cinco contratos reales de HU15 se ejecutan explícitamente aparte.
+
+| Comprobación final | API 21 | API 37 |
+|---|---:|---:|
+| Suite completa: exitosas | 150 | 151 |
+| Suite completa: fallidas | 1 | 0 |
+| Contratos HU15 omitidos por falta de argumento explícito | 5 | 5 |
+| Contratos HU15 ejecutados aparte, con `hu15ApiBaseUrl` | 5/5 | 5/5 |
+| `performer_id_seq.last_value` al cerrar la suite completa | 98 | 98 |
+
+**Calidad:** Spotless, detekt y Lint correctos; **467 unitarias JVM sin fallos, errores ni omisiones**. Mismos APK instalados en ambos emuladores, con un backend real aislado y semilla nueva por API. Sin `setval`, cambios de backend ni scripts nuevos.
+
+**Único fallo de la suite final:** en API 21, `PrizePickerScreenTest.required_date_and_selection_survive_recreation_and_cancel_does_not_write` falló al inyectar un toque sobre `continuePrize`, con `InjectEventSecurityException`. La clase completa pasó después **5/5**, sin modificar código y con otra base limpia. No se presenta la suite completa de API 21 como totalmente verde ni la repetición aislada como sustituto de esa ejecución.
+
+Las nueve E2E HU15 pasan en ambas APIs. El caso del músico verifica detalle y backend, contador actualizado al regresar a Artistas, artista visible en el selector HU11 y catálogo HU01 al volver; el caso combinado verifica el resumen de banda y pertenencia del integrante tras HU12+HU15.
+
+Los pilotos iniciales todavía alcanzaron la secuencia 101 y fallaron en dos pruebas finales de navegación; la reducción adicional de fixtures en refresco/navegación HU03 permitió cerrar en 98. Se conservan los pilotos, las suites finales, los contratos y la repetición HU14 en `reports/hu15-correcciones-pr/` (local, ignorado por Git; no publicado). No se reemplazó el APK de entrega.
+
+El workflow actual de Actions continúa ejecutando calidad, unitarias y compilación; no ejecuta las E2E. Estos resultados corresponden a ejecuciones locales, no a un run de Actions.
+
+
+### Estabilización de la interacción HU14 · 18/11/2026
+
+Se conserva `PrizePickerScreenTest.required_date_and_selection_survive_recreation_and_cancel_does_not_write`, con las mismas aserciones de fecha obligatoria, restauración de fecha/selección y cero asociaciones después de cancelar. No se omite ni se reintenta automáticamente.
+
+El cierre de la hoja usa ahora `clickVisible()` (toque inyectado), en lugar de invocar directamente su listener. Antes del siguiente toque se espera inactividad de eventos de ventana, se cierra cualquier teclado restaurado y se comprueban foco y teclado oculto mediante `WindowInsetsCompat`. La espera anterior solo verificaba desaparición del contenido y foco. No se atribuye el error original a una ventana concreta sin evidencia adicional; el ajuste refuerza las condiciones observables antes de interactuar. Solo cambia la sincronización de la prueba, sin cambios adicionales de producción para HU14.
+
+| Verificación posterior al ajuste | API 21 | API 37 |
+|---|---:|---:|
+| Caso conflictivo, repeticiones consecutivas sin reintentos | 10/10 | Incluido en suite |
+| Suite completa: exitosas | 151 | 151 |
+| Suite completa: fallidas | 0 | 0 |
+| Contratos HU15 opcionales omitidos en la suite general | 5 | 5 |
+| Contratos HU15 ejecutados explícitamente aparte | 5/5 | 5/5 |
+| Secuencia de artistas al terminar la suite completa | 98 | 98 |
+
+Cada suite descubrió 156 pruebas: 151 pasaron y las cinco opcionales se ejecutaron aparte, con base nueva y `hu15ApiBaseUrl`. HU14 pasó sus cinco casos en ambas suites, incluido el que había fallado en API 21. Las diez repeticiones se ejecutaron antes de la suite completa y se restauró la base de API 21 después, para no consumir su presupuesto de IDs.
+
+Spotless, detekt y Lint correctos; **467 unitarias JVM sin fallos, errores ni omisiones**. Mismos APK de pruebas en ambos emuladores, con hashes comprobados sobre los APK instalados. Backend real aislado por API, semilla nueva antes de cada suite, sin cambios de backend ni ajustes de secuencias. No se añadieron scripts ni se cambió el workflow de Actions.
+
+Logs, resumen por caso y hashes: `reports/hu14-sincronizacion/` (local, ignorado por Git; no publicado). Esta validación posterior sustituye el estado pendiente de la interacción HU14 indicado en la sección anterior; los registros de la ejecución fallida se conservan como antecedente. No se reemplazó el APK de entrega ni se hicieron commits como parte de esta comprobación.

@@ -2,9 +2,11 @@ package co.edu.uniandes.vinilos.repositories
 
 import co.edu.uniandes.vinilos.models.Collector
 import co.edu.uniandes.vinilos.models.CollectorDetail
+import co.edu.uniandes.vinilos.models.CommentAuthor
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
 import co.edu.uniandes.vinilos.models.NewCollectorAlbum
+import co.edu.uniandes.vinilos.models.PerformerType
 
 /** Source of collector data; the list is cached in Room and expected remote failures are returned as values. */
 interface CollectorRepository {
@@ -16,6 +18,17 @@ interface CollectorRepository {
 
     /** Tells whether Room already holds collectors, so the screen can show them before the network answers. */
     suspend fun hasCachedCollectors(): Boolean
+
+    /**
+     * Returns who wrote the comments in [commentIds] that are known, by comment id, from Room. With [revalidate], it asks
+     * `GET /collectors` (which also refreshes the list) when any of them is missing or when this session has not yet
+     * checked Room against the backend, whose recreated database reuses comment ids; the backend answer wins. Without
+     * [revalidate] it never makes a request. A failed request leaves Room as it was.
+     */
+    suspend fun getCommentAuthors(
+        commentIds: Set<Int>,
+        revalidate: Boolean,
+    ): DataResult<Map<Int, CommentAuthor>, DataError>
 
     /**
      * Returns one collector from the backend, joining `GET /collectors/:id` and `GET /collectors/:id/albums`.
@@ -31,5 +44,15 @@ interface CollectorRepository {
         collectorId: Int,
         albumId: Int,
         draft: NewCollectorAlbum,
+    ): DataResult<Unit, DataError>
+
+    /**
+     * Adds a musician or a band to the collector's favorites.
+     * Does not read or write the list cache.
+     */
+    suspend fun addFavorite(
+        collectorId: Int,
+        performerId: Int,
+        type: PerformerType,
     ): DataResult<Unit, DataError>
 }

@@ -18,6 +18,9 @@ Convenciones de ingeniería de la app Android Vinilos. Se acordaron antes de esc
 | [12-hu14-diseno-tecnico.md](12-hu14-diseno-tecnico.md) | Contratos compartidos con HU04/HU13, selector de premios, fecha, asignación y estados | Antes de implementar HU14 |
 | [13-hu04-diseno-tecnico.md](13-hu04-diseno-tecnico.md) | Diseño propuesto del detalle de músico/banda, reutilización de HU03, navegación e integración posterior con premios | Antes de implementar HU04 |
 | [14-hu13-diseno-tecnico.md](14-hu13-diseno-tecnico.md) | Creación de premios: contrato `POST /prizes`, formulario y validación, resultado incierto, retorno al selector, tarjeta "Crear un premio nuevo" | Antes de implementar HU13 |
+| [15-hu15-diseno-tecnico.md](15-hu15-diseno-tecnico.md) | Asociación de álbum a músico/banda: mockups, selector, datos completos, contrato de API, resultado incierto y plan de pruebas | Antes de implementar HU15 |
+| [15-hu12-diseno-tecnico.md](15-hu12-diseno-tecnico.md) | Agregar músicos a una banda: contrato `POST /bands/:bandId/musicians/:musicianId`, regla de una banda en la app, caché y selector | Antes de implementar HU12 |
+| [16-hu09-diseno-tecnico.md](16-hu09-diseno-tecnico.md) | Comentar un álbum: contrato `POST /albums/:id/comments`, autor por índice local con `GET /collectors` (Room primero, revalidado una vez por sesión), hoja con estrellas y accesibilidad | Antes de implementar HU09 |
 
 ## Principios
 

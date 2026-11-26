@@ -5,6 +5,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
 import co.edu.uniandes.vinilos.database.entities.CollectorEntity
+import co.edu.uniandes.vinilos.database.staleIdChunks
 
 @Dao
 internal interface CollectorDao {
@@ -18,13 +19,17 @@ internal interface CollectorDao {
     @Upsert
     suspend fun upsertAll(collectors: List<CollectorEntity>)
 
-    @Query("DELETE FROM collectors WHERE id NOT IN (:ids)")
-    suspend fun deleteAllExcept(ids: List<Int>)
+    @Query("SELECT id FROM collectors")
+    suspend fun getIds(): List<Int>
+
+    // Recibe a lo sumo MAX_IDS_PER_STATEMENT ids: Room crea una variable por id (#139).
+    @Query("DELETE FROM collectors WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Int>)
 
     /** Deja en la tabla exactamente los coleccionistas recibidos, en una sola transacción. */
     @Transaction
     suspend fun replaceAll(collectors: List<CollectorEntity>) {
-        deleteAllExcept(collectors.map { it.id })
+        staleIdChunks(getIds(), collectors.map { it.id }).forEach { deleteByIds(it) }
         upsertAll(collectors)
     }
 }

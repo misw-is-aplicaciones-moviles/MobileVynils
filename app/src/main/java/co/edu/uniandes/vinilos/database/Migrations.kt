@@ -30,3 +30,14 @@ internal val MIGRATION_3_4: Migration =
             )
         }
     }
+
+/** Versión 5: HU09 agrega el índice de autores de comentarios. No toca las demás tablas. */
+internal val MIGRATION_4_5: Migration =
+    object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `comment_authors` (`commentId` INTEGER NOT NULL, " +
+                    "`collectorId` INTEGER NOT NULL, `collectorName` TEXT NOT NULL, PRIMARY KEY(`commentId`))",
+            )
+        }
+    }

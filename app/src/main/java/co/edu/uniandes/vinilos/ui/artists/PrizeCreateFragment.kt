@@ -143,6 +143,14 @@ class PrizeCreateFragment : Fragment(R.layout.fragment_prize_create) {
         showRequired(binding.prizeOrganizationLayout, binding.prizeOrganizationError, errors.organization)
     }
 
+    private fun firstErrorField(errors: PrizeFormErrors): View? =
+        when {
+            errors.name != null -> binding.prizeNameInput
+            errors.description != null -> binding.prizeDescriptionInput
+            errors.organization != null -> binding.prizeOrganizationInput
+            else -> null
+        }
+
     // The mockups draw the field with a thicker border and the message flush with its edge.
     private fun showRequired(
         field: TextInputLayout,
@@ -198,6 +206,11 @@ class PrizeCreateFragment : Fragment(R.layout.fragment_prize_create) {
 
             PrizeCreateEvent.OpenRoleSelector -> {
                 findNavController().navigateToRoleSelector()
+            }
+
+            // Every invalid submit, not only the first one: TalkBack follows the input focus to the field.
+            is PrizeCreateEvent.InvalidSubmit -> {
+                firstErrorField(event.errors)?.requestFocus()
             }
         }
     }

@@ -1,9 +1,10 @@
 package co.edu.uniandes.vinilos.network
 
-import co.edu.uniandes.vinilos.models.Collector
 import co.edu.uniandes.vinilos.models.CollectorDetail
 import co.edu.uniandes.vinilos.models.NewCollectorAlbum
+import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.network.dto.CollectorAlbumDto
+import co.edu.uniandes.vinilos.network.dto.toCommentAuthors
 import co.edu.uniandes.vinilos.network.dto.toDetail
 import co.edu.uniandes.vinilos.network.dto.toModel
 import co.edu.uniandes.vinilos.network.dto.toRequest
@@ -17,10 +18,10 @@ import retrofit2.Response
 
 internal interface CollectorServiceAdapter {
     /**
-     * Returns every collector from the backend, in no particular order. A Retrofit, IO or JSON exception reaches the
-     * Repository, which converts it.
+     * Returns every collector from the backend, in no particular order, and who wrote each comment. A Retrofit, IO or
+     * JSON exception reaches the Repository, which converts it.
      */
-    suspend fun getCollectors(): List<Collector>
+    suspend fun getCollectors(): CollectorDirectory
 
     /**
      * Returns one collector and the albums of their collection. The two calls go out together; if either fails, the
@@ -37,6 +38,16 @@ internal interface CollectorServiceAdapter {
         albumId: Int,
         draft: NewCollectorAlbum,
     ): CollectorAlbumDto
+
+    /**
+     * Associates [performerId] as a favorite of [collectorId].
+     * A 2xx succeeds without reading the artist JSON, so a parse problem cannot hide a link that was already stored.
+     */
+    suspend fun addFavorite(
+        collectorId: Int,
+        performerId: Int,
+        type: PerformerType,
+    )
 }
 
 internal class CollectorServiceAdapterImpl(
@@ -47,9 +58,14 @@ internal class CollectorServiceAdapterImpl(
     // The first access creates the HTTP cache on disk, so it must never run on the main thread (StrictMode).
     private val api by lazy(apiProvider)
 
-    override suspend fun getCollectors(): List<Collector> {
+    override suspend fun getCollectors(): CollectorDirectory {
         val collectors = withContext(ioDispatcher) { api.getCollectors() }
-        return withContext(defaultDispatcher) { collectors.map { it.toModel() } }
+        return withContext(defaultDispatcher) {
+            CollectorDirectory(
+                collectors = collectors.map { it.toModel() },
+                commentAuthors = collectors.flatMap { it.toCommentAuthors() }.toMap(),
+            )
+        }
     }
 
     override suspend fun getCollector(
@@ -81,5 +97,23 @@ internal class CollectorServiceAdapterImpl(
         val request = draft.toRequest()
         val response = withContext(ioDispatcher) { api.addAlbumToCollector(collectorId, albumId, request) }
         return response.requiredBody()
+    }
+
+    override suspend fun addFavorite(
+        collectorId: Int,
+        performerId: Int,
+        type: PerformerType,
+    ) {
+        require(collectorId > 0) { "collectorId must be positive" }
+        require(performerId > 0) { "performerId must be positive" }
+        val response =
+            withContext(ioDispatcher) {
+                when (type) {
+                    PerformerType.MUSICIAN -> api.addMusicianToCollector(collectorId, performerId)
+                    PerformerType.BAND -> api.addBandToCollector(collectorId, performerId)
+                }
+            }
+        if (!response.isSuccessful) throw HttpException(response)
+        response.body()?.close()
     }
 }

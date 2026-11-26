@@ -1,21 +1,28 @@
 package co.edu.uniandes.vinilos.ui
 
 import android.graphics.Bitmap
+import android.os.SystemClock
 import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
+import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.isActivated
 import androidx.test.espresso.matcher.ViewMatchers.isDescendantOfA
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
-import androidx.test.espresso.matcher.ViewMatchers.isSelected
 import androidx.test.espresso.matcher.ViewMatchers.withAlpha
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -29,10 +36,10 @@ import co.edu.uniandes.vinilos.robots.PerformerDetailRobot
 import co.edu.uniandes.vinilos.robots.PerformerListRobot
 import co.edu.uniandes.vinilos.testing.BackendFirewall
 import co.edu.uniandes.vinilos.testing.BackendPrizes
-import co.edu.uniandes.vinilos.testing.clickListener
 import co.edu.uniandes.vinilos.testing.clickVisible
 import co.edu.uniandes.vinilos.testing.waitForDisplayed
 import co.edu.uniandes.vinilos.testing.waitUntilGone
+import co.edu.uniandes.vinilos.ui.artists.PrizeDateBottomSheet
 import org.hamcrest.Description
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
@@ -120,8 +127,9 @@ class PrizePickerScreenTest {
         waitForDisplayed(withId(R.id.savePrize)).check(matches(not(isEnabled())))
         capture("hu14-fecha-obligatoria.png")
         val selectedDate = chooseDate()
+        waitForDateSheetFocus().check(matches(isEnabled()))
         activityRule.scenario.recreate()
-        waitForDisplayed(withId(R.id.savePrize)).check(matches(isEnabled()))
+        waitForDateSheetFocus().check(matches(isEnabled()))
         onView(withId(R.id.prizeDate)).check(
             matches(
                 withText(
@@ -137,11 +145,12 @@ class PrizePickerScreenTest {
             ),
         )
         capture("hu14-fecha-restaurada.png")
-        onView(withId(R.id.closeSheet)).perform(clickListener())
+        onView(withId(R.id.closeSheet)).perform(clickVisible())
         waitUntilGone(withId(R.id.savePrize))
-        waitForPickerFocus().perform(click())
+        // Tras recrear, el centro de Continuar queda bajo la barra de navegación del Nexus 5.
+        waitForPickerFocus().perform(clickVisible())
         waitForDisplayed(withId(R.id.savePrize)).check(matches(isEnabled()))
-        onView(withId(R.id.closeSheet)).perform(clickListener())
+        onView(withId(R.id.closeSheet)).perform(clickVisible())
         waitUntilGone(withId(R.id.savePrize))
         waitForPickerFocus()
         onView(withId(R.id.headerClose)).perform(click())
@@ -212,12 +221,13 @@ class PrizePickerScreenTest {
             allOf(
                 withId(R.id.prizeName),
                 withText(fixture.name),
-                isDescendantOfA(allOf(isSelected(), withAlpha(1f))),
+                // La fila recién asignada se resalta como activada, no seleccionada (H04-1).
+                isDescendantOfA(allOf(isActivated(), withAlpha(1f))),
             ),
         )
         onView(
             allOf(withId(R.id.prizeName), withText(fixture.name)),
-        ).check(matches(allOf(isDisplayed(), isDescendantOfA(isSelected()))))
+        ).check(matches(allOf(isDisplayed(), isDescendantOfA(isActivated()))))
         onView(withId(R.id.prizeOrganization)).check(matches(allOf(isDisplayed(), withText("Equipo de pruebas HU14"))))
         val shownDate = date.format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
         onView(withId(R.id.prizeAwardDate)).check(matches(allOf(isDisplayed(), withText(shownDate))))
@@ -226,20 +236,65 @@ class PrizePickerScreenTest {
         assertEquals("${date}T00:00:00.000Z", saved.getJSONObject(0).getString("premiationDate"))
     }
 
-    private fun waitForPickerFocus() =
-        waitForDisplayed(
+    private fun waitForDateSheetFocus(): ViewInteraction {
+        // Calendar dismissal and activity recreation finish before WindowManager restores input.
+        // Inspect the actual dialog on the main thread before asking Espresso to select a root.
+        val deadline = SystemClock.uptimeMillis() + WINDOW_TIMEOUT_MILLIS
+        while (SystemClock.uptimeMillis() < deadline) {
+            var ready = false
+            activityRule.scenario.onActivity { activity ->
+                val sheet = findDateSheet(activity.supportFragmentManager)
+                ready = sheet
+                    ?.dialog
+                    ?.window
+                    ?.decorView
+                    ?.hasWindowFocus() == true &&
+                    sheet.view?.findViewById<View>(R.id.savePrize)?.isShown == true &&
+                    sheet.childFragmentManager.fragments.none {
+                        it is DialogFragment && it.dialog?.isShowing == true
+                    }
+            }
+            if (ready) return onView(withId(R.id.savePrize)).inRoot(isDialog())
+            SystemClock.sleep(100)
+        }
+        throw AssertionError(
+            "La hoja de fecha no recuperó el foco después de cerrar el calendario o recrear la actividad",
+        )
+    }
+
+    private fun findDateSheet(manager: FragmentManager): PrizeDateBottomSheet? {
+        for (fragment in manager.fragments) {
+            if (fragment is PrizeDateBottomSheet) return fragment
+            if (fragment.isAdded) findDateSheet(fragment.childFragmentManager)?.let { return it }
+        }
+        return null
+    }
+
+    private fun waitForPickerFocus(): ViewInteraction {
+        val ready =
             allOf(
                 withId(R.id.continuePrize),
                 isEnabled(),
                 object : TypeSafeMatcher<View>() {
                     override fun describeTo(description: Description) {
-                        description.appendText("ventana del selector con foco después de cerrar la hoja")
+                        description.appendText("selector con foco y teclado oculto después de cerrar la hoja")
                     }
 
-                    override fun matchesSafely(view: View) = view.hasWindowFocus()
+                    override fun matchesSafely(view: View): Boolean {
+                        val insets = ViewCompat.getRootWindowInsets(view) ?: return false
+                        return view.hasWindowFocus() && !insets.isVisible(WindowInsetsCompat.Type.ime())
+                    }
                 },
-            ),
-        )
+            )
+        // The date view can disappear before WindowManager finishes returning input to the activity.
+        // Wait for window events to settle, dismiss any restored IME, then verify focus and insets again.
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        instrumentation.waitForIdleSync()
+        instrumentation.uiAutomation.waitForIdle(WINDOW_IDLE_MILLIS, WINDOW_TIMEOUT_MILLIS)
+        closeSoftKeyboard()
+        instrumentation.uiAutomation.waitForIdle(WINDOW_IDLE_MILLIS, WINDOW_TIMEOUT_MILLIS)
+        return waitForDisplayed(ready)
+    }
 
     private fun fixture(type: PerformerType) = prizes.open(type)
 
@@ -288,6 +343,8 @@ class PrizePickerScreenTest {
     }
 
     private companion object {
+        const val WINDOW_IDLE_MILLIS = 100L
+        const val WINDOW_TIMEOUT_MILLIS = 5_000L
         const val PNG_QUALITY = 100
         const val SCREENSHOT_IDLE_MILLIS = 100L
         const val SCREENSHOT_TIMEOUT_MILLIS = 3_000L

@@ -49,8 +49,10 @@ class AlbumViewHolder(
         binding.albumTitle.text = item.name
         binding.albumSubtitle.text = artist
         binding.albumMeta.text = meta
-        // The row is a single accessibility node: its children are hidden from TalkBack.
-        binding.root.contentDescription = context.getString(R.string.album_item_description, item.name, artist, meta)
+        // The row is a single accessibility node: its children are hidden from TalkBack, so the visible position
+        // number goes into the description too.
+        binding.root.contentDescription =
+            context.getString(R.string.album_item_description, item.position, item.name, artist, meta)
         Glide
             .with(binding.root)
             .load(item.coverUrl)

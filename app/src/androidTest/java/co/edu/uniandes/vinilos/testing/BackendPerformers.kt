@@ -1,6 +1,7 @@
 package co.edu.uniandes.vinilos.testing
 
 import co.edu.uniandes.vinilos.BuildConfig
+import co.edu.uniandes.vinilos.models.PerformerType
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.rules.ExternalResource
@@ -17,7 +18,9 @@ private const val TIMEOUT_MILLIS = 10_000
  * Cada prueba usa nombres únicos, así que no depende de cuántos artistas haya además de la semilla.
  * Los errores de preparación y de limpieza fallan la prueba: no se reintentan ni se ignoran.
  */
-class BackendPerformers : ExternalResource() {
+class BackendPerformers(
+    private val baseUrl: String = BuildConfig.BASE_URL,
+) : ExternalResource() {
     private val albums = mutableListOf<Int>()
     private val musicians = mutableListOf<Int>()
     private val bands = mutableListOf<Int>()
@@ -62,6 +65,43 @@ class BackendPerformers : ExternalResource() {
         memberships.removeAll { it.second == id }
     }
 
+    /** Reads the real relationship lists for assertions; it does not use the Android cache. */
+    fun artist(
+        id: Int,
+        type: PerformerType,
+    ): JSONObject = send("GET", "${collection(type)}/$id", null, HTTP_OK)
+
+    fun album(id: Int): JSONObject = send("GET", "albums/$id", null, HTTP_OK)
+
+    /** Preparation only: never associates seed data or an artist outside this fixture. */
+    fun associateAlbum(
+        artistId: Int,
+        type: PerformerType,
+        albumId: Int,
+    ) {
+        val owned = if (type == PerformerType.MUSICIAN) musicians else bands
+        require(artistId in owned && albumId in albums) { "Only owned fixtures can be associated" }
+        send("POST", "${collection(type)}/$artistId/albums/$albumId", null, HTTP_OK)
+    }
+
+    private fun collection(type: PerformerType): String = if (type == PerformerType.MUSICIAN) "musicians" else "bands"
+
+    /** Asocia por API un músico propio a una banda propia; la limpieza deshace el vínculo. */
+    fun addMember(
+        bandId: Int,
+        musicianId: Int,
+    ) {
+        require(bandId in bands && musicianId in musicians) { "Only owned test artists can be linked" }
+        send("POST", "bands/$bandId/musicians/$musicianId", null, HTTP_OK)
+        memberships += bandId to musicianId
+    }
+
+    /** Ids de los integrantes que el backend tiene ahora para la banda [bandId]. */
+    fun memberIds(bandId: Int): Set<Int> {
+        val members = send("GET", "bands/$bandId", null, HTTP_OK).optJSONArray("musicians") ?: return emptySet()
+        return (0 until members.length()).mapTo(mutableSetOf()) { members.getJSONObject(it).getInt("id") }
+    }
+
     override fun after() {
         memberships.forEach { (bandId, musicianId) ->
             send("DELETE", "bands/$bandId/musicians/$musicianId", null, HTTP_NO_CONTENT)
@@ -83,7 +123,7 @@ class BackendPerformers : ExternalResource() {
         }
     }
 
-    private fun createAlbum(name: String): Int {
+    fun createAlbum(name: String): Int {
         val body =
             JSONObject()
                 .put("name", name)
@@ -107,7 +147,7 @@ class BackendPerformers : ExternalResource() {
         body: JSONObject?,
         expectedCode: Int,
     ): JSONObject {
-        val connection = URL("${BuildConfig.BASE_URL}$path").openConnection() as HttpURLConnection
+        val connection = URL("$baseUrl$path").openConnection() as HttpURLConnection
         try {
             connection.requestMethod = method
             connection.connectTimeout = TIMEOUT_MILLIS

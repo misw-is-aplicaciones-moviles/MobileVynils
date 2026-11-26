@@ -13,6 +13,7 @@ import co.edu.uniandes.vinilos.VinilosApplication
 import co.edu.uniandes.vinilos.models.ArtistPrize
 import co.edu.uniandes.vinilos.models.DataError
 import co.edu.uniandes.vinilos.models.DataResult
+import co.edu.uniandes.vinilos.models.PerformerSummary
 import co.edu.uniandes.vinilos.models.PerformerType
 import co.edu.uniandes.vinilos.models.PrizeAssignmentRef
 import co.edu.uniandes.vinilos.models.UserRole
@@ -63,6 +64,28 @@ class PerformerDetailViewModel(
         _events.value = Event(PerformerDetailEvent.OpenMember(memberId))
     }
 
+    fun onAddAlbumClicked() {
+        val state = current()
+        val detail = state.detail ?: return
+        if (navigationPending || state.role != UserRole.COLLECTOR || state.isLoading) return
+        navigationPending = true
+        _events.value = Event(PerformerDetailEvent.OpenAlbumPicker(detail))
+    }
+
+    fun onAlbumAssociated(
+        id: Int,
+        type: PerformerType?,
+        albumId: Int,
+        alreadyAssociated: Boolean,
+    ) {
+        if (id != performerId || type != performerType || albumId <= 0) return
+        loadJob?.cancel()
+        loadJob = null
+        update { copy(highlightedAlbumId = albumId) }
+        load(forceRefresh = true)
+        _events.value = Event(PerformerDetailEvent.AlbumAssociated(alreadyAssociated))
+    }
+
     fun onAddPrizeClicked() {
         val state = current()
         val detail = state.detail ?: return
@@ -92,6 +115,32 @@ class PerformerDetailViewModel(
         _events.value = Event(PerformerDetailEvent.PrizeAssigned)
     }
 
+    fun onAddMemberClicked() {
+        val state = current()
+        val detail = state.detail ?: return
+        if (navigationPending || state.role != UserRole.COLLECTOR) return
+        if (detail.performer.type != PerformerType.BAND) return
+        navigationPending = true
+        _events.value = Event(PerformerDetailEvent.OpenMemberPicker(detail))
+    }
+
+    /** The picker added [member] to the band [bandId]; a result for another band or a repeat is ignored. */
+    fun onMemberAdded(
+        bandId: Int,
+        member: PerformerSummary,
+    ) {
+        val detail = current().detail ?: return
+        if (performerType != PerformerType.BAND || bandId != performerId || member.id <= 0) return
+        if (detail.members.any { it.id == member.id }) return
+        update {
+            copy(
+                detail = detail.copy(members = detail.members + member),
+                highlightedMemberId = member.id,
+            )
+        }
+        _events.value = Event(PerformerDetailEvent.MemberAdded)
+    }
+
     fun onNavigationReturned() {
         navigationPending = false
     }
@@ -113,6 +162,7 @@ class PerformerDetailViewModel(
                 isLoadingPrizes = true,
                 prizeError = null,
                 highlightedAssignmentId = null,
+                highlightedMemberId = null,
             )
         }
         loadJob =

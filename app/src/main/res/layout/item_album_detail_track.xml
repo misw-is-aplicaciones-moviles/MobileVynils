@@ -2,20 +2,26 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:focusable="true"
     android:paddingTop="@dimen/space_m">
+
+    <!-- One TalkBack focus per song: the holder reads "Canción N, name, duration"; the three texts stay hidden. -->
 
     <TextView android:id="@+id/trackNumber"
         android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
         android:textAppearance="@style/TextAppearance.Vinilos.ListNumber" android:textColor="@color/vinilos_graphite"
         app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
     <TextView android:id="@+id/trackName"
         android:layout_width="0dp" android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
         android:layout_marginStart="@dimen/space_m" android:layout_marginEnd="@dimen/space_m"
         android:textAppearance="@style/TextAppearance.Vinilos.AlbumDetailBody"
         app:layout_constraintStart_toEndOf="@id/trackNumber" app:layout_constraintEnd_toStartOf="@id/trackDuration"
         app:layout_constraintTop_toTopOf="parent" />
     <TextView android:id="@+id/trackDuration"
         android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
         android:textAppearance="@style/TextAppearance.Vinilos.AlbumDetailValue"
         app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent" />
 
